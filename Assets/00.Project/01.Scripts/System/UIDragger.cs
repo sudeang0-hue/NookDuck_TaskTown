@@ -1,3 +1,5 @@
+//NB
+
 using UnityEngine;
 using UnityEngine.EventSystems; // IDragHandler, IPointerDownHandler를 쓰기 위해 필수!
 
