@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -15,6 +17,8 @@ namespace TaskTown.Gacha.Demo
         [Header("Buttons")]
         [SerializeField] private Button animalGachaButton;
         [SerializeField] private Button toolGachaButton;
+        [SerializeField] private Button animalGachaX10Button;
+        [SerializeField] private Button toolGachaX10Button;
         [SerializeField] private Button increaseTownLevelButton;
 
         [Header("Texts")]
@@ -22,10 +26,14 @@ namespace TaskTown.Gacha.Demo
         [SerializeField] private Text costText;
         [SerializeField] private Text townLevelText;
 
+        private const int MultiRollCount = 10;
+
         private void Awake()
         {
             if (animalGachaButton != null) animalGachaButton.onClick.AddListener(RollAnimal);
             if (toolGachaButton != null) toolGachaButton.onClick.AddListener(RollTool);
+            if (animalGachaX10Button != null) animalGachaX10Button.onClick.AddListener(RollAnimalMulti);
+            if (toolGachaX10Button != null) toolGachaX10Button.onClick.AddListener(RollToolMulti);
             if (increaseTownLevelButton != null) increaseTownLevelButton.onClick.AddListener(IncreaseTownLevel);
 
             if (animalGachaManager != null) animalGachaManager.OnGachaResolved += HandleAnimalResult;
@@ -57,6 +65,22 @@ namespace TaskTown.Gacha.Demo
             RefreshInfoTexts();
         }
 
+        private void RollAnimalMulti()
+        {
+            if (animalGachaManager == null) return;
+            List<GachaResult> results = animalGachaManager.RollMulti(MultiRollCount);
+            ShowMultiResult("Animal Gacha", results);
+            RefreshInfoTexts();
+        }
+
+        private void RollToolMulti()
+        {
+            if (toolGachaManager == null) return;
+            List<GachaResult> results = toolGachaManager.RollMulti(MultiRollCount);
+            ShowMultiResult("Tool Gacha", results);
+            RefreshInfoTexts();
+        }
+
         private void IncreaseTownLevel()
         {
             if (townLevelProvider == null) return;
@@ -82,13 +106,31 @@ namespace TaskTown.Gacha.Demo
             resultText.text = $"{gachaName} Result : [{result.Grade}] {entryName}";
         }
 
+        private void ShowMultiResult(string gachaName, List<GachaResult> results)
+        {
+            if (resultText == null) return;
+
+            StringBuilder builder = new StringBuilder();
+            builder.Append(gachaName).Append(" x").Append(results.Count).Append(" Result : ");
+            for (int i = 0; i < results.Count; i++)
+            {
+                if (i > 0) builder.Append(", ");
+                string entryName = results[i].Entry != null ? results[i].Entry.DisplayName : "(No entry)";
+                builder.Append('[').Append(results[i].Grade).Append("] ").Append(entryName);
+            }
+
+            resultText.text = builder.ToString();
+        }
+
         private void RefreshInfoTexts()
         {
             if (costText != null)
             {
                 long animalCost = animalGachaManager != null ? animalGachaManager.CurrentCost : 0;
                 long toolCost = toolGachaManager != null ? toolGachaManager.CurrentCost : 0;
-                costText.text = $"Next Animal Gacha Cost : {animalCost}   /   Next Tool Gacha Cost : {toolCost}";
+                long animalCostX10 = animalGachaManager != null ? animalGachaManager.GetCost(MultiRollCount) : 0;
+                long toolCostX10 = toolGachaManager != null ? toolGachaManager.GetCost(MultiRollCount) : 0;
+                costText.text = $"Animal Gacha Cost : {animalCost} (x10: {animalCostX10})   /   Tool Gacha Cost : {toolCost} (x10: {toolCostX10})";
             }
 
             if (townLevelText != null && townLevelProvider != null)

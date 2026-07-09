@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace TaskTown.Gacha
@@ -16,12 +17,10 @@ namespace TaskTown.Gacha
 
         private ITownLevelProvider townLevelProvider;
         private GachaSystem gachaSystem;
-        private int gachaCount;
 
         public event Action<GachaResult> OnGachaResolved;
 
-        public int GachaCount => gachaCount;
-        public long CurrentCost => GachaCostCalculator.CalculateCost(costConfig, gachaCount, GetTownLevel());
+        public long CurrentCost => GetCost(1);
 
         protected virtual void Awake()
         {
@@ -29,14 +28,31 @@ namespace TaskTown.Gacha
             townLevelProvider = townLevelProviderSource as ITownLevelProvider;
         }
 
+        // rollCount번 뽑을 때 필요한 총 비용입니다. 10연뽑기 버튼 등에서 사용합니다.
+        public long GetCost(int rollCount)
+        {
+            return costConfig.cost * rollCount;
+        }
+
         // UI/저장 시스템은 이 메서드를 호출하고 OnGachaResolved 이벤트로 결과를 받습니다.
         // 재화 차감 여부 판단은 UI/저장 담당 쪽에서 CurrentCost를 확인해 처리합니다.
         public virtual GachaResult Roll()
         {
             GachaResult result = gachaSystem.Roll(pool, GetTownLevel());
-            gachaCount++;
             OnGachaResolved?.Invoke(result);
             return result;
+        }
+
+        // count번 연속으로 뽑습니다. 10연뽑기처럼 여러 번을 한 번에 처리할 때 사용합니다.
+        public virtual List<GachaResult> RollMulti(int count)
+        {
+            List<GachaResult> results = new List<GachaResult>(count);
+            for (int i = 0; i < count; i++)
+            {
+                results.Add(Roll());
+            }
+
+            return results;
         }
 
         private int GetTownLevel()
