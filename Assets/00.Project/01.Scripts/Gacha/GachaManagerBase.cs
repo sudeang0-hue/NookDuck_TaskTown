@@ -29,9 +29,10 @@ namespace TaskTown.Gacha
         }
 
         // rollCount번 뽑을 때 필요한 총 비용입니다. 10연뽑기 버튼 등에서 사용합니다.
+        // 마을 레벨 구간별 비용은 costConfig에서 직접 관리하며(GachaCostConfig), rollCount는 단순 배수로 적용됩니다.
         public long GetCost(int rollCount)
         {
-            return costConfig.cost * rollCount;
+            return costConfig.GetCostForTownLevel(GetTownLevel()) * rollCount;
         }
 
         // UI/저장 시스템은 이 메서드를 호출하고 OnGachaResolved 이벤트로 결과를 받습니다.
