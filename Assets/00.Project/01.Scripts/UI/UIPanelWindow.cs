@@ -52,13 +52,21 @@ namespace KAY
         /// <summary>
         /// 초기 위치에서 패널 활성화
         /// </summary>
-        public void OpenPanel()
+        public void OpenPanelDefaultPosition()
         {
             Initialize();
 
             if (panelRect != null)
                 panelRect.anchoredPosition = defaultUIPanelPosition;
 
+            gameObject.SetActive(true);
+        }
+
+        /// <summary>
+        /// 이동한 위치에서 패널 활성화
+        /// </summary>
+        public void OpenPanelSetPosition()
+        {
             gameObject.SetActive(true);
         }
 
@@ -70,14 +78,23 @@ namespace KAY
             gameObject.SetActive(false);
         }
 
-        public void TogglePanel()
+
+        public void TogglePanelDefaultPosition()
         {
             if (gameObject.activeSelf)
                 ClosePanel();
             else
-                OpenPanel();
+                OpenPanelDefaultPosition();
         }
 
+
+        public void TogglePanelSetPosition()
+        {
+            if (gameObject.activeSelf)
+                ClosePanel();
+            else
+                OpenPanelSetPosition();
+        }
 
     }
 }
