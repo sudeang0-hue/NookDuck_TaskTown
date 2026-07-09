@@ -35,9 +35,9 @@ public class SoundSettingsApplier : MonoBehaviour
         ApplyVolume(SoundVolumeChannel.Animal, data.animalVolume);
     }
 
-    public void ApplyVolume(SoundVolumeChannel channel, float percent)
+    public bool ApplyVolume(SoundVolumeChannel channel, float percent)
     {
-        AudioVolumeUtility.ApplyPercent(audioMixer, GetParameterName(channel), percent);
+        return AudioVolumeUtility.ApplyPercent(audioMixer, GetParameterName(channel), percent);
     }
 
     public string GetParameterName(SoundVolumeChannel channel)

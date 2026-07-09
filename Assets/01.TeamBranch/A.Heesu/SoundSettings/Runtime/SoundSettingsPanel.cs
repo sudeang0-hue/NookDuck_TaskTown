@@ -15,19 +15,27 @@ public class SoundSettingsPanel : MonoBehaviour
     [SerializeField] private string uiVolumeParameter = "UIVolume";
     [SerializeField] private string animalVolumeParameter = "AnimalVolume";
 
+    [Header("Sound Icons")]
+    [SerializeField] private Sprite soundPlayingIcon;
+    [SerializeField] private Sprite soundMuteIcon;
+
     [Header("Master")]
+    [SerializeField] private Image masterIconImage;
     [SerializeField] private Slider masterSlider;
     [SerializeField] private TextMeshProUGUI masterPercentText;
 
     [Header("BGM")]
+    [SerializeField] private Image bgmIconImage;
     [SerializeField] private Slider bgmSlider;
     [SerializeField] private TextMeshProUGUI bgmPercentText;
 
     [Header("UI")]
+    [SerializeField] private Image uiIconImage;
     [SerializeField] private Slider uiSlider;
     [SerializeField] private TextMeshProUGUI uiPercentText;
 
     [Header("Animal")]
+    [SerializeField] private Image animalIconImage;
     [SerializeField] private Slider animalSlider;
     [SerializeField] private TextMeshProUGUI animalPercentText;
 
@@ -63,10 +71,10 @@ public class SoundSettingsPanel : MonoBehaviour
         UpdatePercentText(uiPercentText, data.uiVolume);
         UpdatePercentText(animalPercentText, data.animalVolume);
 
-        ApplyVolume(SoundVolumeChannel.Master, data.masterVolume);
-        ApplyVolume(SoundVolumeChannel.BGM, data.bgmVolume);
-        ApplyVolume(SoundVolumeChannel.UI, data.uiVolume);
-        ApplyVolume(SoundVolumeChannel.Animal, data.animalVolume);
+        ApplyVolumeAndRefreshIcon(SoundVolumeChannel.Master, data.masterVolume);
+        ApplyVolumeAndRefreshIcon(SoundVolumeChannel.BGM, data.bgmVolume);
+        ApplyVolumeAndRefreshIcon(SoundVolumeChannel.UI, data.uiVolume);
+        ApplyVolumeAndRefreshIcon(SoundVolumeChannel.Animal, data.animalVolume);
     }
 
     private void RegisterListeners()
@@ -184,19 +192,59 @@ public class SoundSettingsPanel : MonoBehaviour
         float percent = Mathf.Round(AudioVolumeUtility.SliderValueToPercent(sliderValue));
 
         UpdatePercentText(percentText, percent);
-        ApplyVolume(channel, percent);
+        ApplyVolumeAndRefreshIcon(channel, percent);
         SoundSettingsStore.SetVolume(channel, percent);
     }
 
-    private void ApplyVolume(SoundVolumeChannel channel, float percent)
+    private void ApplyVolumeAndRefreshIcon(SoundVolumeChannel channel, float percent)
+    {
+        if (ApplyVolume(channel, percent))
+        {
+            UpdateVolumeIcon(channel, percent);
+        }
+    }
+
+    private bool ApplyVolume(SoundVolumeChannel channel, float percent)
     {
         if (settingsApplier != null)
         {
-            settingsApplier.ApplyVolume(channel, percent);
+            return settingsApplier.ApplyVolume(channel, percent);
+        }
+
+        return AudioVolumeUtility.ApplyPercent(audioMixer, GetFallbackParameterName(channel), percent);
+    }
+
+    private void UpdateVolumeIcon(SoundVolumeChannel channel, float percent)
+    {
+        Image iconImage = GetIconImage(channel);
+
+        if (iconImage == null)
+        {
             return;
         }
 
-        AudioVolumeUtility.ApplyPercent(audioMixer, GetFallbackParameterName(channel), percent);
+        Sprite targetIcon = percent <= 0f ? soundMuteIcon : soundPlayingIcon;
+
+        if (targetIcon == null)
+        {
+            return;
+        }
+
+        iconImage.sprite = targetIcon;
+        iconImage.enabled = true;
+        iconImage.preserveAspect = true;
+    }
+
+    private Image GetIconImage(SoundVolumeChannel channel)
+    {
+        return channel switch
+        {
+            SoundVolumeChannel.Master => masterIconImage,
+            SoundVolumeChannel.BGM => bgmIconImage,
+            SoundVolumeChannel.UI => uiIconImage,
+            SoundVolumeChannel.Animal => animalIconImage,
+            _ => null
+        };
     }
 
     private string GetFallbackParameterName(SoundVolumeChannel channel)
