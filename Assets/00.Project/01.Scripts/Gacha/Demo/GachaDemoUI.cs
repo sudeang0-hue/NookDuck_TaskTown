@@ -14,12 +14,18 @@ namespace TaskTown.Gacha.Demo
         [SerializeField] private ToolGachaManager toolGachaManager;
         [SerializeField] private DemoTownLevelProvider townLevelProvider;
 
+        [Tooltip("ICoinWallet를 구현한 컴포넌트를 연결합니다(예: CoinManager). 비워두면 코스트 차감 없이 뽑기를 진행합니다.")]
+        [SerializeField] private MonoBehaviour coinWalletSource;
+
+        private ICoinWallet coinWallet;
+
         [Header("Buttons")]
         [SerializeField] private Button animalGachaButton;
         [SerializeField] private Button toolGachaButton;
         [SerializeField] private Button animalGachaX10Button;
         [SerializeField] private Button toolGachaX10Button;
         [SerializeField] private Button increaseTownLevelButton;
+        [SerializeField] private Button addTestCoinButton;
 
         [Header("Texts")]
         [SerializeField] private Text resultText;
@@ -35,6 +41,9 @@ namespace TaskTown.Gacha.Demo
             if (animalGachaX10Button != null) animalGachaX10Button.onClick.AddListener(RollAnimalMulti);
             if (toolGachaX10Button != null) toolGachaX10Button.onClick.AddListener(RollToolMulti);
             if (increaseTownLevelButton != null) increaseTownLevelButton.onClick.AddListener(IncreaseTownLevel);
+            if (addTestCoinButton != null) addTestCoinButton.onClick.AddListener(AddTestCoin);
+
+            coinWallet = coinWalletSource as ICoinWallet;
 
             if (animalGachaManager != null) animalGachaManager.OnGachaResolved += HandleAnimalResult;
             if (toolGachaManager != null) toolGachaManager.OnGachaResolved += HandleToolResult;
@@ -54,6 +63,7 @@ namespace TaskTown.Gacha.Demo
         private void RollAnimal()
         {
             if (animalGachaManager == null) return;
+            if (!TrySpendCost(animalGachaManager.CurrentCost)) return;
             animalGachaManager.Roll();
             RefreshInfoTexts();
         }
@@ -61,6 +71,7 @@ namespace TaskTown.Gacha.Demo
         private void RollTool()
         {
             if (toolGachaManager == null) return;
+            if (!TrySpendCost(toolGachaManager.CurrentCost)) return;
             toolGachaManager.Roll();
             RefreshInfoTexts();
         }
@@ -68,6 +79,7 @@ namespace TaskTown.Gacha.Demo
         private void RollAnimalMulti()
         {
             if (animalGachaManager == null) return;
+            if (!TrySpendCost(animalGachaManager.GetCost(MultiRollCount))) return;
             List<GachaResult> results = animalGachaManager.RollMulti(MultiRollCount);
             ShowMultiResult("Animal Gacha", results);
             RefreshInfoTexts();
@@ -76,15 +88,48 @@ namespace TaskTown.Gacha.Demo
         private void RollToolMulti()
         {
             if (toolGachaManager == null) return;
+            if (!TrySpendCost(toolGachaManager.GetCost(MultiRollCount))) return;
             List<GachaResult> results = toolGachaManager.RollMulti(MultiRollCount);
             ShowMultiResult("Tool Gacha", results);
             RefreshInfoTexts();
+        }
+
+        // 임시 재화 소비 처리입니다. 정식 재화 차감/저장 흐름은 UI·저장 담당(김아영)이 별도로 구현합니다.
+        private bool TrySpendCost(long cost)
+        {
+            if (coinWallet == null)
+            {
+                Debug.LogWarning("ICoinWallet가 연결되지 않아 코스트 차감 없이 뽑기를 진행합니다.");
+                return true;
+            }
+
+            if (!coinWallet.TrySpend(cost))
+            {
+                if (resultText != null)
+                {
+                    resultText.text = $"코인이 부족합니다. (필요: {cost}, 보유: {coinWallet.Balance})";
+                }
+
+                return false;
+            }
+
+            return true;
         }
 
         private void IncreaseTownLevel()
         {
             if (townLevelProvider == null) return;
             townLevelProvider.IncreaseLevel();
+            RefreshInfoTexts();
+        }
+
+        // 테스트 편의용 임시 코인 지급 버튼입니다. 실제 획득 흐름(클릭/타이핑)이 붙기 전까지 뽑기 테스트 용도로 사용합니다.
+        private const int TestCoinGrant = 1000;
+
+        private void AddTestCoin()
+        {
+            if (coinWallet == null) return;
+            coinWallet.Add(TestCoinGrant);
             RefreshInfoTexts();
         }
 
@@ -130,7 +175,8 @@ namespace TaskTown.Gacha.Demo
                 long toolCost = toolGachaManager != null ? toolGachaManager.CurrentCost : 0;
                 long animalCostX10 = animalGachaManager != null ? animalGachaManager.GetCost(MultiRollCount) : 0;
                 long toolCostX10 = toolGachaManager != null ? toolGachaManager.GetCost(MultiRollCount) : 0;
-                costText.text = $"Animal Gacha Cost : {animalCost} (x10: {animalCostX10})   /   Tool Gacha Cost : {toolCost} (x10: {toolCostX10})";
+                string coinLine = coinWallet != null ? $"Coin : {coinWallet.Balance}   /   " : string.Empty;
+                costText.text = $"{coinLine}Animal Gacha Cost : {animalCost} (x10: {animalCostX10})   /   Tool Gacha Cost : {toolCost} (x10: {toolCostX10})";
             }
 
             if (townLevelText != null && townLevelProvider != null)
