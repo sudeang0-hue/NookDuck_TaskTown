@@ -1,4 +1,5 @@
 //NB
+
 using System;
 using System.Runtime.InteropServices;
 using UnityEngine;
@@ -53,7 +54,7 @@ public class TransparentWindow : MonoBehaviour
         if (mainCam != null)
         {
             Ray ray = mainCam.ScreenPointToRay(Input.mousePosition);
-
+            // 광산 오브젝트에 Collider가 필수입니다.
             if (Physics.Raycast(ray))
             {
                 isOver3D = true;
@@ -62,7 +63,7 @@ public class TransparentWindow : MonoBehaviour
 
         uint currentStyle = GetWindowLong(hWnd, GWL_EXSTYLE);
 
-        // 2. 게임 요소 위에 있으면: 투명 관통 속성(TRANSPARENT)(클릭 가능)
+        // 2. 게임 요소 위에 있으면: 투명 관통 속성(TRANSPARENT)을 끕니다. (클릭 가능)
         if (isOverUI || isOver3D)
         {
             if ((currentStyle & WS_EX_TRANSPARENT) != 0)
@@ -70,7 +71,7 @@ public class TransparentWindow : MonoBehaviour
                 SetWindowLong(hWnd, GWL_EXSTYLE, currentStyle & ~WS_EX_TRANSPARENT);
             }
         }
-        // 3. 허공에 있으면: 투명 관통 속성(TRANSPARENT)(바탕화면 클릭 통과)
+        // 3. 허공에 있으면: 투명 관통 속성(TRANSPARENT)을 켭니다. (바탕화면 클릭 통과)
         else
         {
             if ((currentStyle & WS_EX_TRANSPARENT) == 0)

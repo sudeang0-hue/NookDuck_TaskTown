@@ -1,21 +1,22 @@
-//NB
+// NB
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
 using Unity.AI.Navigation;
 using UnityEngine.AI;
-using System.Collections.Generic; 
+using System.Collections.Generic;
 
 public class GameMasterManager : MonoBehaviour
 {
-    [Header("3D 오브젝트 셋팅")]
+    [Header("3D 오브젝트 및 카메라 설정")]
     public Transform villageOrigin;
-    public Transform miniVillagePos;
-    public NavMeshSurface navMeshSurface;
-    private Vector3 originalVillagePos;
-    private Vector3 originalVillageScale;
+    private Camera mainCamera;
 
-    private Dictionary<NavMeshAgent, Vector3> recordedLocalPositions = new Dictionary<NavMeshAgent, Vector3>();
+    private Vector3 camOriginalPos;
+    private float camOriginalSize;
+
+    [Header("축소 화면용 카메라 타겟 셋팅")]
+    public Transform miniVillagePos;
 
     [Header("메인 패널 참조")]
     public GameObject expandedPanel;
@@ -38,7 +39,7 @@ public class GameMasterManager : MonoBehaviour
     public Button btnQuit;
     public Button btnCloseMenu;
 
-    [Header("하단 메인 아이콘들 (통통 튀는 등장용)")]
+    [Header("하단 메인 아이콘들")]
     public RectTransform[] bottomIcons;
     private Vector2[] iconOriginalPositions;
 
@@ -53,10 +54,12 @@ public class GameMasterManager : MonoBehaviour
 
     void Start()
     {
-        if (villageOrigin != null)
+        // 메인 카메라 캐싱 및 초기 값 저장
+        mainCamera = Camera.main;
+        if (mainCamera != null)
         {
-            originalVillagePos = villageOrigin.position;
-            originalVillageScale = villageOrigin.localScale;
+            camOriginalPos = mainCamera.transform.position;
+            camOriginalSize = mainCamera.orthographicSize;
         }
 
         iconOriginalPositions = new Vector2[bottomIcons.Length];
@@ -66,21 +69,10 @@ public class GameMasterManager : MonoBehaviour
             iconOriginalPositions[i] = bottomIcons[i].anchoredPosition;
         }
 
-        if (panelDex != null)
-        {
-            posDexOpen = panelDex.anchoredPosition;
-            panelDex.anchoredPosition = new Vector2(posDexOpen.x - 2000f, posDexOpen.y);
-        }
-        if (panelGacha != null)
-        {
-            posGachaOpen = panelGacha.anchoredPosition;
-            panelGacha.anchoredPosition = new Vector2(posGachaOpen.x, posGachaOpen.y - 1200f);
-        }
-        if (panelManage != null)
-        {
-            posManageOpen = panelManage.anchoredPosition;
-            panelManage.anchoredPosition = new Vector2(posManageOpen.x + 2000f, posManageOpen.y);
-        }
+        // 팝업 오프셋 설정
+        if (panelDex != null) { posDexOpen = panelDex.anchoredPosition; panelDex.anchoredPosition = new Vector2(posDexOpen.x - 2000f, posDexOpen.y); }
+        if (panelGacha != null) { posGachaOpen = panelGacha.anchoredPosition; panelGacha.anchoredPosition = new Vector2(posGachaOpen.x, posGachaOpen.y - 1200f); }
+        if (panelManage != null) { posManageOpen = panelManage.anchoredPosition; panelManage.anchoredPosition = new Vector2(posManageOpen.x + 2000f, posManageOpen.y); }
 
         if (btnMinimize) btnMinimize.onClick.AddListener(SetMinimizedScreen);
         if (btnMaximize) btnMaximize.onClick.AddListener(SetExpandedScreen);
@@ -112,43 +104,7 @@ public class GameMasterManager : MonoBehaviour
         }
     }
 
-    public void OpenDex()
-    {
-        CloseAllPopups();
-        if (panelDex != null) panelDex.DOAnchorPosX(posDexOpen.x, 0.4f).SetEase(Ease.OutQuad);
-    }
-    public void CloseDex()
-    {
-        if (panelDex != null) panelDex.DOAnchorPosX(posDexOpen.x - 2000f, 0.4f).SetEase(Ease.InQuad);
-    }
-
-    public void OpenGacha()
-    {
-        CloseAllPopups();
-        if (panelGacha != null) panelGacha.DOAnchorPosY(posGachaOpen.y, 0.4f).SetEase(Ease.OutQuad);
-    }
-    public void CloseGacha()
-    {
-        if (panelGacha != null) panelGacha.DOAnchorPosY(posGachaOpen.y - 1200f, 0.4f).SetEase(Ease.InQuad);
-    }
-
-    public void OpenManage()
-    {
-        CloseAllPopups();
-        if (panelManage != null) panelManage.DOAnchorPosX(posManageOpen.x, 0.4f).SetEase(Ease.OutQuad);
-    }
-    public void CloseManage()
-    {
-        if (panelManage != null) panelManage.DOAnchorPosX(posManageOpen.x + 2000f, 0.4f).SetEase(Ease.InQuad);
-    }
-
-    private void CloseAllPopups()
-    {
-        if (panelDex != null) panelDex.DOAnchorPosX(posDexOpen.x - 2000f, 0.2f);
-        if (panelGacha != null) panelGacha.DOAnchorPosY(posGachaOpen.y - 1200f, 0.2f);
-        if (panelManage != null) panelManage.DOAnchorPosX(posManageOpen.x + 2000f, 0.2f);
-    }
-
+    // [축소 화면 상태로 전환]
     public void SetMinimizedScreen()
     {
         isExpanded = false;
@@ -157,14 +113,15 @@ public class GameMasterManager : MonoBehaviour
         expandedPanel.SetActive(false);
         minimizedPanel.SetActive(true);
 
-        // 이동 전에 현재 마을 기준의 상대 좌표를 싹 백업
-        PrepareAgentsForTransition();
-
-        if (villageOrigin != null && miniVillagePos != null)
+        if (mainCamera != null && miniVillagePos != null)
         {
-            villageOrigin.DOMove(miniVillagePos.position, 0.5f).SetEase(Ease.InOutQuad);
-            villageOrigin.DOScale(originalVillageScale * 0.3f, 0.5f).SetEase(Ease.InOutQuad)
-                .OnComplete(() => StartCoroutine(RebakeAndEnableAgentsRoutine(0.3f)));
+            //1.카메라 배율 설정
+            float targetSize = camOriginalSize / 0.3f;
+            mainCamera.DOOrthoSize(targetSize, 0.5f).SetEase(Ease.InOutQuad);
+
+            // 2. 위치 이동
+            Vector3 targetCamPos = miniVillagePos.position + (camOriginalPos - villageOrigin.position);
+            mainCamera.transform.DOMove(targetCamPos, 0.5f).SetEase(Ease.InOutQuad);
         }
 
         for (int i = 0; i < bottomIcons.Length; i++)
@@ -174,6 +131,13 @@ public class GameMasterManager : MonoBehaviour
         }
     }
 
+    //축소화면일때 드래그 잠금 기능
+    public bool GetIsExpanded()
+    {
+        return isExpanded;
+    }
+
+    // [확장 화면 상태로 복귀]
     public void SetExpandedScreen()
     {
         isExpanded = true;
@@ -183,81 +147,31 @@ public class GameMasterManager : MonoBehaviour
         if (ticketNotification) ticketNotification.SetActive(false);
         ticketTimer = 0f;
 
-        // 이동 전에 현재 마을 기준의 상대 좌표를 싹 백업
-        PrepareAgentsForTransition();
-
-        if (villageOrigin != null)
+        if (mainCamera != null)
         {
-            villageOrigin.DOMove(originalVillagePos, 0.5f).SetEase(Ease.InOutQuad);
-            villageOrigin.DOScale(originalVillageScale, 0.5f).SetEase(Ease.InOutQuad)
-                .OnComplete(() => StartCoroutine(RebakeAndEnableAgentsRoutine(1.0f)));
+            mainCamera.DOOrthoSize(camOriginalSize, 0.5f).SetEase(Ease.InOutQuad);
+
+            //위치 복귀
+            mainCamera.transform.DOMove(camOriginalPos, 0.5f).SetEase(Ease.InOutQuad);
         }
 
         AnimateIcons();
     }
 
-    //전환 전 주민들의 상대적 위치 백업
-    private void PrepareAgentsForTransition()
+
+    #region UI 및 시스템 팝업 로직 (기존 유지)
+    public void OpenDex() { CloseAllPopups(); if (panelDex != null) panelDex.DOAnchorPosX(posDexOpen.x, 0.4f).SetEase(Ease.OutQuad); }
+    public void CloseDex() { if (panelDex != null) panelDex.DOAnchorPosX(posDexOpen.x - 2000f, 0.4f).SetEase(Ease.InQuad); }
+    public void OpenGacha() { CloseAllPopups(); if (panelGacha != null) panelGacha.DOAnchorPosY(posGachaOpen.y, 0.4f).SetEase(Ease.OutQuad); }
+    public void CloseGacha() { if (panelGacha != null) panelGacha.DOAnchorPosY(posGachaOpen.y - 1200f, 0.4f).SetEase(Ease.InQuad); }
+    public void OpenManage() { CloseAllPopups(); if (panelManage != null) panelManage.DOAnchorPosX(posManageOpen.x, 0.4f).SetEase(Ease.OutQuad); }
+    public void CloseManage() { if (panelManage != null) panelManage.DOAnchorPosX(posManageOpen.x + 2000f, 0.4f).SetEase(Ease.InQuad); }
+
+    private void CloseAllPopups()
     {
-        recordedLocalPositions.Clear();
-        if (villageOrigin == null) return;
-
-        NavMeshAgent[] agents = Object.FindObjectsByType<NavMeshAgent>(FindObjectsSortMode.None);
-        foreach (var agent in agents)
-        {
-            if (agent == null) continue;
-            agent.enabled = false;
-
-            // 이 시점의 마을을 기준으로 주민이 몇 미터 거리에 서 있는지 로컬 위치를 기억
-            Vector3 localPos = villageOrigin.InverseTransformPoint(agent.transform.position);
-            recordedLocalPositions[agent] = localPos;
-        }
-    }
-
-    private System.Collections.IEnumerator RebakeAndEnableAgentsRoutine(float scale)
-    {
-        if (navMeshSurface != null)
-        {
-            navMeshSurface.BuildNavMesh();
-        }
-
-        // 유니티 엔진이 새 길을 완벽히 인식하도록 1프레임 대기
-        yield return null;
-
-        // 딕셔너리에 저장해둔 백업 데이터를 기반으로 주민들을 정밀 복구
-        foreach (var pair in recordedLocalPositions)
-        {
-            NavMeshAgent agent = pair.Key;
-            Vector3 storedLocalPos = pair.Value;
-
-            if (agent == null) continue;
-
-            agent.radius = 0.5f * scale;
-            agent.height = 2.0f * scale;
-            agent.speed = 1.5f * scale;
-            agent.acceleration = 8f * scale;
-
-            Vector3 expectedWorldPos = villageOrigin.TransformPoint(storedLocalPos);
-
-            // 허공에서 새 마을 바닥 근처로 강제 순간이동
-            agent.transform.position = expectedWorldPos;
-
-            NavMeshHit hit;
-            float searchRadius = 10f * scale;
-
-            // 예상 위치 근처에서 바닥을 스캔하여 완벽히 밀착
-            if (NavMesh.SamplePosition(expectedWorldPos, out hit, searchRadius, NavMesh.AllAreas))
-            {
-                agent.transform.position = hit.position;
-                agent.enabled = true;
-                agent.Warp(hit.position);
-                agent.ResetPath();
-            }
-            else
-            {
-                Debug.LogWarning($"[NavMesh] {agent.name} 바닥을 여전히 못 찾음! 위치: {expectedWorldPos}");
-            }
-        }
+        if (panelDex != null) panelDex.DOAnchorPosX(posDexOpen.x - 2000f, 0.2f);
+        if (panelGacha != null) panelGacha.DOAnchorPosY(posGachaOpen.y - 1200f, 0.2f);
+        if (panelManage != null) panelManage.DOAnchorPosX(posManageOpen.x + 2000f, 0.2f);
     }
 
     private void AnimateIcons()
@@ -267,16 +181,13 @@ public class GameMasterManager : MonoBehaviour
             if (bottomIcons[i] == null) continue;
             float startY = iconOriginalPositions[i].y - 300f;
             bottomIcons[i].anchoredPosition = new Vector2(iconOriginalPositions[i].x, startY);
-            bottomIcons[i].DOAnchorPosY(iconOriginalPositions[i].y, 0.6f)
-                          .SetEase(Ease.OutBounce)
-                          .SetDelay(0.2f + (i * 0.15f));
+            bottomIcons[i].DOAnchorPosY(iconOriginalPositions[i].y, 0.6f).SetEase(Ease.OutBounce).SetDelay(0.2f + (i * 0.15f));
         }
     }
 
     private void ToggleMenu()
     {
         if (isMenuAnimating || menuPanel == null) return;
-
         isMenuOpen = !isMenuOpen;
         isMenuAnimating = true;
 
@@ -287,10 +198,7 @@ public class GameMasterManager : MonoBehaviour
         }
         else
         {
-            menuCanvasGroup.DOFade(0f, 0.25f).SetUpdate(true).OnComplete(() => {
-                menuPanel.SetActive(false);
-                isMenuAnimating = false;
-            });
+            menuCanvasGroup.DOFade(0f, 0.25f).SetUpdate(true).OnComplete(() => { menuPanel.SetActive(false); isMenuAnimating = false; });
         }
     }
 
@@ -301,4 +209,5 @@ public class GameMasterManager : MonoBehaviour
         UnityEditor.EditorApplication.isPlaying = false;
 #endif
     }
+    #endregion
 }
