@@ -18,6 +18,8 @@ public class UIController_Menu : MonoBehaviour
     [SerializeField] private UIPanelWindow animalDexPanel;
     [SerializeField] private UIPanelWindow optionPanel;
 
+    [Header("패널 오픈시 초기 위치 고정")]
+    [SerializeField] private bool usePanelOpenDefaultPosition;
 
     private void Awake()
     {
@@ -36,6 +38,14 @@ public class UIController_Menu : MonoBehaviour
             return;
         }
 
-        panel.TogglePanel();
+        if(usePanelOpenDefaultPosition == true)
+        {
+            panel.TogglePanelDefaultPosition();
+        }
+        else
+        {
+            panel.TogglePanelSetPosition();
+        }
+
     }
 }
