@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public enum GameMenuState
 {
@@ -15,11 +16,12 @@ public enum GameMenuState
 namespace KAY
 {
 
-    public class UIPanelWindow : MonoBehaviour
+    public class UIPanelWindow : MonoBehaviour, IBeginDragHandler, IDragHandler, IPointerDownHandler
     {
 
         [SerializeField] private RectTransform panelRect;
         private Vector2 defaultUIPanelPosition; // UI 패널의 초기 위치
+        private Vector2 dragOffset;
 
         private bool isInitialized;
 
@@ -96,5 +98,53 @@ namespace KAY
                 OpenPanelSetPosition();
         }
 
+        public void OnBeginDrag(PointerEventData eventData)
+        {
+            if (panelRect == null)
+                return;
+
+            BringToFront();
+
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                panelRect.parent as RectTransform,
+                eventData.position,
+                eventData.pressEventCamera,
+                out Vector2 localPointerPosition);
+
+            dragOffset = panelRect.anchoredPosition - localPointerPosition;
+        }
+
+        public void OnDrag(PointerEventData eventData)
+        {
+            if (panelRect == null)
+                return;
+
+            RectTransform parentRect = panelRect.parent as RectTransform;
+
+            if (parentRect == null)
+                return;
+
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    parentRect,
+                    eventData.position,
+                    eventData.pressEventCamera,
+                    out Vector2 localPointerPosition))
+            {
+                panelRect.anchoredPosition = localPointerPosition + dragOffset;
+            }
+        }
+
+        public void OnPointerDown(PointerEventData eventData)
+        {
+            BringToFront();
+        }
+
+        private void BringToFront()
+        {
+            if (panelRect == null)
+                return;
+
+            panelRect.SetAsLastSibling();
+        }
     }
 }

@@ -1,4 +1,4 @@
-// 모든 동물 AnimalData 를 모아두는 SO
+// 모든 동물 AnimalDataSO 를 모아두는 SO
 
 using System.Collections.Generic;
 using TaskTown.Gacha;
@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Animal.Data
 {
-    [CreateAssetMenu(menuName = "Inventory/Animal/Animal Database", fileName = "AnimalDatabase")]
+    [CreateAssetMenu(menuName = "Inventory/Animal/Animal Database SO", fileName = "AnimalDatabaseSO")]
     public class AnimalDatabase : ScriptableObject
     {
         [Header("전체 동물 데이터 목록")]
