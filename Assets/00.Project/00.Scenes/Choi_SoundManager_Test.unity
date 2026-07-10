@@ -540,7 +540,7 @@ GameObject:
   - component: {fileID: 132043565}
   - component: {fileID: 132043564}
   m_Layer: 5
-  m_Name: AnimalSlider
+  m_Name: EnvironmentSlider
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2478,7 +2478,7 @@ MonoBehaviour:
   masterVolumeParameter: MasterVolume
   bgmVolumeParameter: BGMVolume
   uiVolumeParameter: UIVolume
-  animalVolumeParameter: AnimalVolume
+  environmentVolumeParameter: EnvironmentVolume
   dontDestroyOnLoad: 0
 --- !u!4 &893596778
 Transform:
@@ -2886,7 +2886,7 @@ GameObject:
   - component: {fileID: 1083331332}
   - component: {fileID: 1083331331}
   m_Layer: 5
-  m_Name: AnimalRow
+  m_Name: EnvironmentRow
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4387,7 +4387,7 @@ MonoBehaviour:
   masterVolumeParameter: MasterVolume
   bgmVolumeParameter: BGMVolume
   uiVolumeParameter: UIVolume
-  animalVolumeParameter: AnimalVolume
+  environmentVolumeParameter: EnvironmentVolume
   soundPlayingIcon: {fileID: -1652366997, guid: 859313b7d16edc04faa141480dd1fa30, type: 3}
   soundMuteIcon: {fileID: 429115353, guid: 859313b7d16edc04faa141480dd1fa30, type: 3}
   masterIconImage: {fileID: 59682016}
@@ -4399,9 +4399,9 @@ MonoBehaviour:
   uiIconImage: {fileID: 860556865}
   uiSlider: {fileID: 1182948562}
   uiPercentText: {fileID: 824479677}
-  animalIconImage: {fileID: 1033890048}
-  animalSlider: {fileID: 132043565}
-  animalPercentText: {fileID: 1520213583}
+  environmentIconImage: {fileID: 1033890048}
+  environmentSlider: {fileID: 132043565}
+  environmentPercentText: {fileID: 1520213583}
 --- !u!114 &1759225313
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4627,7 +4627,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Animal
+  m_text: Environment
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}

@@ -1,6 +1,7 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.Audio;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 public class SoundSettingsPanel : MonoBehaviour
@@ -13,7 +14,8 @@ public class SoundSettingsPanel : MonoBehaviour
     [SerializeField] private string masterVolumeParameter = "MasterVolume";
     [SerializeField] private string bgmVolumeParameter = "BGMVolume";
     [SerializeField] private string uiVolumeParameter = "UIVolume";
-    [SerializeField] private string animalVolumeParameter = "AnimalVolume";
+    [FormerlySerializedAs("animalVolumeParameter")]
+    [SerializeField] private string environmentVolumeParameter = "EnvironmentVolume";
 
     [Header("Sound Icons")]
     [SerializeField] private Sprite soundPlayingIcon;
@@ -34,10 +36,13 @@ public class SoundSettingsPanel : MonoBehaviour
     [SerializeField] private Slider uiSlider;
     [SerializeField] private TextMeshProUGUI uiPercentText;
 
-    [Header("Animal")]
-    [SerializeField] private Image animalIconImage;
-    [SerializeField] private Slider animalSlider;
-    [SerializeField] private TextMeshProUGUI animalPercentText;
+    [Header("Environment")]
+    [FormerlySerializedAs("animalIconImage")]
+    [SerializeField] private Image environmentIconImage;
+    [FormerlySerializedAs("animalSlider")]
+    [SerializeField] private Slider environmentSlider;
+    [FormerlySerializedAs("animalPercentText")]
+    [SerializeField] private TextMeshProUGUI environmentPercentText;
 
     private bool listenersRegistered;
 
@@ -64,17 +69,17 @@ public class SoundSettingsPanel : MonoBehaviour
         SetSliderWithoutNotify(masterSlider, data.masterVolume);
         SetSliderWithoutNotify(bgmSlider, data.bgmVolume);
         SetSliderWithoutNotify(uiSlider, data.uiVolume);
-        SetSliderWithoutNotify(animalSlider, data.animalVolume);
+        SetSliderWithoutNotify(environmentSlider, data.environmentVolume);
 
         UpdatePercentText(masterPercentText, data.masterVolume);
         UpdatePercentText(bgmPercentText, data.bgmVolume);
         UpdatePercentText(uiPercentText, data.uiVolume);
-        UpdatePercentText(animalPercentText, data.animalVolume);
+        UpdatePercentText(environmentPercentText, data.environmentVolume);
 
         ApplyVolumeAndRefreshIcon(SoundVolumeChannel.Master, data.masterVolume);
         ApplyVolumeAndRefreshIcon(SoundVolumeChannel.BGM, data.bgmVolume);
         ApplyVolumeAndRefreshIcon(SoundVolumeChannel.UI, data.uiVolume);
-        ApplyVolumeAndRefreshIcon(SoundVolumeChannel.Animal, data.animalVolume);
+        ApplyVolumeAndRefreshIcon(SoundVolumeChannel.Environment, data.environmentVolume);
     }
 
     private void RegisterListeners()
@@ -99,9 +104,9 @@ public class SoundSettingsPanel : MonoBehaviour
             uiSlider.onValueChanged.AddListener(OnUISliderChanged);
         }
 
-        if (animalSlider != null)
+        if (environmentSlider != null)
         {
-            animalSlider.onValueChanged.AddListener(OnAnimalSliderChanged);
+            environmentSlider.onValueChanged.AddListener(OnEnvironmentSliderChanged);
         }
 
         listenersRegistered = true;
@@ -129,9 +134,9 @@ public class SoundSettingsPanel : MonoBehaviour
             uiSlider.onValueChanged.RemoveListener(OnUISliderChanged);
         }
 
-        if (animalSlider != null)
+        if (environmentSlider != null)
         {
-            animalSlider.onValueChanged.RemoveListener(OnAnimalSliderChanged);
+            environmentSlider.onValueChanged.RemoveListener(OnEnvironmentSliderChanged);
         }
 
         listenersRegistered = false;
@@ -142,7 +147,7 @@ public class SoundSettingsPanel : MonoBehaviour
         ConfigureSlider(masterSlider);
         ConfigureSlider(bgmSlider);
         ConfigureSlider(uiSlider);
-        ConfigureSlider(animalSlider);
+        ConfigureSlider(environmentSlider);
     }
 
     private void ConfigureSlider(Slider slider)
@@ -182,9 +187,9 @@ public class SoundSettingsPanel : MonoBehaviour
         HandleSliderChanged(SoundVolumeChannel.UI, sliderValue, uiPercentText);
     }
 
-    private void OnAnimalSliderChanged(float sliderValue)
+    private void OnEnvironmentSliderChanged(float sliderValue)
     {
-        HandleSliderChanged(SoundVolumeChannel.Animal, sliderValue, animalPercentText);
+        HandleSliderChanged(SoundVolumeChannel.Environment, sliderValue, environmentPercentText);
     }
 
     private void HandleSliderChanged(SoundVolumeChannel channel, float sliderValue, TextMeshProUGUI percentText)
@@ -242,7 +247,7 @@ public class SoundSettingsPanel : MonoBehaviour
             SoundVolumeChannel.Master => masterIconImage,
             SoundVolumeChannel.BGM => bgmIconImage,
             SoundVolumeChannel.UI => uiIconImage,
-            SoundVolumeChannel.Animal => animalIconImage,
+            SoundVolumeChannel.Environment => environmentIconImage,
             _ => null
         };
     }
@@ -254,7 +259,7 @@ public class SoundSettingsPanel : MonoBehaviour
             SoundVolumeChannel.Master => masterVolumeParameter,
             SoundVolumeChannel.BGM => bgmVolumeParameter,
             SoundVolumeChannel.UI => uiVolumeParameter,
-            SoundVolumeChannel.Animal => animalVolumeParameter,
+            SoundVolumeChannel.Environment => environmentVolumeParameter,
             _ => masterVolumeParameter
         };
     }

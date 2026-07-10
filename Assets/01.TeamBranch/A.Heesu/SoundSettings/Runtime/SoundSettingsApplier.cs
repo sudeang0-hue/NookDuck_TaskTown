@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Audio;
+using UnityEngine.Serialization;
 
 public class SoundSettingsApplier : MonoBehaviour
 {
@@ -10,7 +11,8 @@ public class SoundSettingsApplier : MonoBehaviour
     [SerializeField] private string masterVolumeParameter = "MasterVolume";
     [SerializeField] private string bgmVolumeParameter = "BGMVolume";
     [SerializeField] private string uiVolumeParameter = "UIVolume";
-    [SerializeField] private string animalVolumeParameter = "AnimalVolume";
+    [FormerlySerializedAs("animalVolumeParameter")]
+    [SerializeField] private string environmentVolumeParameter = "EnvironmentVolume";
 
     [Header("Lifetime")]
     [SerializeField] private bool dontDestroyOnLoad = true;
@@ -32,7 +34,7 @@ public class SoundSettingsApplier : MonoBehaviour
         ApplyVolume(SoundVolumeChannel.Master, data.masterVolume);
         ApplyVolume(SoundVolumeChannel.BGM, data.bgmVolume);
         ApplyVolume(SoundVolumeChannel.UI, data.uiVolume);
-        ApplyVolume(SoundVolumeChannel.Animal, data.animalVolume);
+        ApplyVolume(SoundVolumeChannel.Environment, data.environmentVolume);
     }
 
     public bool ApplyVolume(SoundVolumeChannel channel, float percent)
@@ -47,7 +49,7 @@ public class SoundSettingsApplier : MonoBehaviour
             SoundVolumeChannel.Master => masterVolumeParameter,
             SoundVolumeChannel.BGM => bgmVolumeParameter,
             SoundVolumeChannel.UI => uiVolumeParameter,
-            SoundVolumeChannel.Animal => animalVolumeParameter,
+            SoundVolumeChannel.Environment => environmentVolumeParameter,
             _ => masterVolumeParameter
         };
     }

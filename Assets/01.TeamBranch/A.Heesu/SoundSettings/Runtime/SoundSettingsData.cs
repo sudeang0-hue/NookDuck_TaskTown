@@ -1,12 +1,13 @@
 using System;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public enum SoundVolumeChannel
 {
     Master,
     BGM,
     UI,
-    Animal
+    Environment
 }
 
 [Serializable]
@@ -15,14 +16,14 @@ public class SoundSettingsData
     public float masterVolume = 100f;
     public float bgmVolume = 100f;
     public float uiVolume = 100f;
-    public float animalVolume = 100f;
+    [FormerlySerializedAs("animalVolume")] public float environmentVolume = 100f;
 
     public void Clamp()
     {
         masterVolume = ClampPercent(masterVolume);
         bgmVolume = ClampPercent(bgmVolume);
         uiVolume = ClampPercent(uiVolume);
-        animalVolume = ClampPercent(animalVolume);
+        environmentVolume = ClampPercent(environmentVolume);
     }
 
     public float GetVolume(SoundVolumeChannel channel)
@@ -32,7 +33,7 @@ public class SoundSettingsData
             SoundVolumeChannel.Master => masterVolume,
             SoundVolumeChannel.BGM => bgmVolume,
             SoundVolumeChannel.UI => uiVolume,
-            SoundVolumeChannel.Animal => animalVolume,
+            SoundVolumeChannel.Environment => environmentVolume,
             _ => 100f
         };
     }
@@ -52,8 +53,8 @@ public class SoundSettingsData
             case SoundVolumeChannel.UI:
                 uiVolume = clampedPercent;
                 break;
-            case SoundVolumeChannel.Animal:
-                animalVolume = clampedPercent;
+            case SoundVolumeChannel.Environment:
+                environmentVolume = clampedPercent;
                 break;
         }
     }
@@ -65,7 +66,7 @@ public class SoundSettingsData
             masterVolume = masterVolume,
             bgmVolume = bgmVolume,
             uiVolume = uiVolume,
-            animalVolume = animalVolume
+            environmentVolume = environmentVolume
         };
     }
 

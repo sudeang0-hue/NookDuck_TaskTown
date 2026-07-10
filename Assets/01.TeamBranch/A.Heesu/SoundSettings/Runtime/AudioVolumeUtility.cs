@@ -27,7 +27,7 @@ public static class AudioVolumeUtility
 
         return Mathf.Clamp(Mathf.Log10(normalizedVolume) * 20f, MinDecibel, MaxDecibel);
     }
-
+    
     public static bool ApplyPercent(AudioMixer audioMixer, string exposedParameterName, float percent)
     {
         if (audioMixer == null)
