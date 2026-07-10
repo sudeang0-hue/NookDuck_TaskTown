@@ -9,7 +9,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "SoundLibrary", menuName = "A.Heesu/Sound/Sound Library")]
+[CreateAssetMenu(fileName = "SoundLibrary", menuName = "Sound/SoundLibrary")]
 public class SoundLibrary : ScriptableObject
 {
     [SerializeField] private SoundClipData[] sounds;

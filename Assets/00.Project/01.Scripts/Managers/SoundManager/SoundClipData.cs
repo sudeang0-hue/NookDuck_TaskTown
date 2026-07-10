@@ -9,7 +9,7 @@
  */
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "SoundClipData", menuName = "A.Heesu/Sound/Sound Clip Data")]
+[CreateAssetMenu(fileName = "SoundClipData", menuName = "Sound/SoundClipData")]
 public class SoundClipData : ScriptableObject
 {
     [Header("Identity")]

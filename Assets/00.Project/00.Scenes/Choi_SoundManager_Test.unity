@@ -6750,6 +6750,7 @@ GameObject:
   - component: {fileID: 2130158148}
   - component: {fileID: 2130158147}
   - component: {fileID: 2130158146}
+  - component: {fileID: 2130158149}
   m_Layer: 5
   m_Name: SoundTabButton
   m_TagString: Untagged
@@ -6859,6 +6860,21 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2130158144}
   m_CullTransparentMesh: 1
+--- !u!114 &2130158149
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2130158144}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0af9290513608304ca5b0c851a28d019, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIButtonSoundPlayer
+  targetButton: {fileID: 2130158146}
+  uiSoundId: Test_UI_PopUp
+  soundManager: {fileID: 0}
 --- !u!1 &2135663941
 GameObject:
   m_ObjectHideFlags: 0
