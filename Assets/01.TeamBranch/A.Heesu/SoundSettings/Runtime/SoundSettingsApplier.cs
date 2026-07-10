@@ -1,3 +1,12 @@
+/*
+ * 역할:
+ * - 저장된 사운드 설정 JSON 값을 AudioMixer에 적용하는 컴포넌트입니다.
+ *
+ * 주요 기능:
+ * - SoundSettingsStore에서 Master/BGM/UI/Environment 볼륨을 읽습니다.
+ * - 각 값을 CompanionAudioMixer의 exposed parameter에 적용합니다.
+ * - SoundManager가 재생 직전 저장 볼륨을 보장할 때 호출합니다.
+ */
 using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.Serialization;
@@ -29,12 +38,19 @@ public class SoundSettingsApplier : MonoBehaviour
 
     public void ApplySavedSettings()
     {
+        TryApplySavedSettings();
+    }
+
+    public bool TryApplySavedSettings()
+    {
         SoundSettingsData data = SoundSettingsStore.Load();
 
-        ApplyVolume(SoundVolumeChannel.Master, data.masterVolume);
-        ApplyVolume(SoundVolumeChannel.BGM, data.bgmVolume);
-        ApplyVolume(SoundVolumeChannel.UI, data.uiVolume);
-        ApplyVolume(SoundVolumeChannel.Environment, data.environmentVolume);
+        bool masterApplied = ApplyVolume(SoundVolumeChannel.Master, data.masterVolume);
+        bool bgmApplied = ApplyVolume(SoundVolumeChannel.BGM, data.bgmVolume);
+        bool uiApplied = ApplyVolume(SoundVolumeChannel.UI, data.uiVolume);
+        bool environmentApplied = ApplyVolume(SoundVolumeChannel.Environment, data.environmentVolume);
+
+        return masterApplied && bgmApplied && uiApplied && environmentApplied;
     }
 
     public bool ApplyVolume(SoundVolumeChannel channel, float percent)

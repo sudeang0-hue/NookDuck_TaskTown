@@ -1,3 +1,12 @@
+/*
+ * 역할:
+ * - 사운드 설정 UI의 슬라이더, 퍼센트 텍스트, 아이콘을 제어하는 패널 스크립트입니다.
+ *
+ * 주요 기능:
+ * - JSON에 저장된 볼륨을 로드해 UI에 반영합니다.
+ * - 슬라이더 변경 시 AudioMixer에 즉시 적용하고 SoundSettingsStore에 저장합니다.
+ * - 볼륨이 0이면 mute icon, 0보다 크면 playing icon으로 갱신합니다.
+ */
 using TMPro;
 using UnityEngine;
 using UnityEngine.Audio;

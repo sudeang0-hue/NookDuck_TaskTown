@@ -1,3 +1,15 @@
+/*
+ * 역할:
+ * - BGM, UI, Environment 사운드 재생을 담당하는 전역 사운드 매니저입니다.
+ *
+ * 주요 기능:
+ * - SoundLibrary에서 SoundClipData를 찾아 AudioSource로 재생합니다.
+ * - CompanionAudioMixer의 BGM/UI/Environment MixerGroup으로 라우팅합니다.
+ * - 저장된 SoundSettings 값을 재생 전 적용하여 씬 시작 직후에도 사용자 볼륨을 유지합니다.
+ *
+ * 배치:
+ * - 실제 게임에서는 SoundSettingsApplier, EnvironmentSoundRuntime과 같은 오브젝트에 두고 DontDestroyOnLoad로 유지하는 구조를 권장합니다.
+ */
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Audio;
@@ -30,6 +42,8 @@ public class SoundManager : MonoBehaviour
 
     private readonly List<AudioSource> oneShotSources = new List<AudioSource>();
     private bool savedSettingsApplied;
+    private bool savedSettingsAppliedAfterStartup;
+    private bool startPhaseReached;
     private string currentBgmSoundId;
 
     private void Awake()
@@ -62,6 +76,9 @@ public class SoundManager : MonoBehaviour
 
     private void Start()
     {
+        startPhaseReached = true;
+        EnsureSettingsAppliedBeforePlayback();
+
         if (playBgmOnStart && !string.IsNullOrWhiteSpace(startBgmSoundId))
         {
             PlayBGM(startBgmSoundId);
@@ -76,14 +93,20 @@ public class SoundManager : MonoBehaviour
             return false;
         }
 
-        settingsApplier.ApplySavedSettings();
-        savedSettingsApplied = true;
-        return true;
+        bool applied = settingsApplier.TryApplySavedSettings();
+        savedSettingsApplied = applied;
+
+        if (applied && startPhaseReached)
+        {
+            savedSettingsAppliedAfterStartup = true;
+        }
+
+        return applied;
     }
 
     public bool PlayBGM(string soundId, bool restartIfSame = false)
     {
-        EnsureSettingsApplied();
+        EnsureSettingsAppliedBeforePlayback();
 
         if (!TryGetSound(soundId, SoundCategory.BGM, out SoundClipData soundData))
         {
@@ -137,7 +160,7 @@ public class SoundManager : MonoBehaviour
 
     public bool PlayRandomEnvironment()
     {
-        EnsureSettingsApplied();
+        EnsureSettingsAppliedBeforePlayback();
 
         if (soundLibrary == null || !soundLibrary.TryGetRandomSound(SoundCategory.Environment, out SoundClipData soundData))
         {
@@ -150,7 +173,7 @@ public class SoundManager : MonoBehaviour
 
     private bool PlayOneShot(string soundId, SoundCategory expectedCategory, AudioMixerGroup mixerGroup)
     {
-        EnsureSettingsApplied();
+        EnsureSettingsAppliedBeforePlayback();
 
         if (!TryGetSound(soundId, expectedCategory, out SoundClipData soundData))
         {
@@ -205,9 +228,9 @@ public class SoundManager : MonoBehaviour
         return true;
     }
 
-    private void EnsureSettingsApplied()
+    private void EnsureSettingsAppliedBeforePlayback()
     {
-        if (savedSettingsApplied)
+        if (savedSettingsApplied && savedSettingsAppliedAfterStartup)
         {
             return;
         }

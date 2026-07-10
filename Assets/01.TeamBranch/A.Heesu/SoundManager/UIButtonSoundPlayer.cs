@@ -1,3 +1,11 @@
+/*
+ * 역할:
+ * - Unity UI Button 클릭에 UI 사운드를 연결하는 브릿지 컴포넌트입니다.
+ *
+ * 주요 기능:
+ * - Button.onClick에 Play()를 등록/해제합니다.
+ * - 클릭 시 SoundManager.PlayUI(uiSoundId)를 호출합니다.
+ */
 using UnityEngine;
 using UnityEngine.UI;
 

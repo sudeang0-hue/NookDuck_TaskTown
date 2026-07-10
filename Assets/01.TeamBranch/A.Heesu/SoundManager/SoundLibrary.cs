@@ -1,3 +1,11 @@
+/*
+ * 역할:
+ * - SoundClipData 목록을 모아 SoundManager가 ID로 찾을 수 있게 하는 ScriptableObject입니다.
+ *
+ * 주요 기능:
+ * - soundId 기반 검색 캐시 생성
+ * - category별 랜덤 후보 선택
+ */
 using System.Collections.Generic;
 using UnityEngine;
 

@@ -1,3 +1,13 @@
+/*
+ * 역할:
+ * - 런타임에 등록된 Environment 사운드 ID를 관리하는 환경음 실행 허브입니다.
+ * - 실제 재생은 SoundManager에 위임합니다.
+ *
+ * 주요 기능:
+ * - 환경음 ID 등록/해제
+ * - 랜덤 간격 환경음 반복 재생
+ * - 등록된 ID가 없으면 SoundLibrary의 Environment 후보에서 랜덤 재생
+ */
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;

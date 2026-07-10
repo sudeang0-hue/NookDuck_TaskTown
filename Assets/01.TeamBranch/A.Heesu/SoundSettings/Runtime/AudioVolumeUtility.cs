@@ -1,3 +1,12 @@
+/*
+ * 역할:
+ * - UI 슬라이더 퍼센트 값을 AudioMixer dB 값으로 변환/적용하는 유틸리티입니다.
+ *
+ * 주요 기능:
+ * - 0~100 percent와 0~1 slider value 변환
+ * - percent를 -80dB~0dB 범위로 변환
+ * - AudioMixer exposed parameter에 SetFloat 적용
+ */
 using UnityEngine;
 using UnityEngine.Audio;
 

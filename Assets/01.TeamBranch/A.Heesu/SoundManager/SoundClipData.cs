@@ -1,3 +1,12 @@
+/*
+ * 역할:
+ * - 하나의 사운드 ID에 연결되는 재생 설정 ScriptableObject입니다.
+ *
+ * 주요 기능:
+ * - BGM/UI/Environment category 지정
+ * - 하나 이상의 AudioClip 중 랜덤 선택
+ * - 개별 볼륨 스케일, 루프, 피치 랜덤 범위 관리
+ */
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "SoundClipData", menuName = "A.Heesu/Sound/Sound Clip Data")]

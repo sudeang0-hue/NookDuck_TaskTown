@@ -1,3 +1,12 @@
+/*
+ * 역할:
+ * - sound_settings.json 파일 저장/로드를 담당하는 정적 저장소입니다.
+ *
+ * 주요 기능:
+ * - Application.persistentDataPath에 사용자별 사운드 설정을 저장합니다.
+ * - 파일이 없거나 손상되면 기본값으로 복구합니다.
+ * - Git 프로젝트 폴더가 아닌 로컬 실행 데이터 경로를 사용합니다.
+ */
 using System;
 using System.IO;
 using System.Text;

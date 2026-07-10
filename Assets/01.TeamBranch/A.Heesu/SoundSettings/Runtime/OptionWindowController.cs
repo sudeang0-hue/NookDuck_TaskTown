@@ -1,3 +1,11 @@
+/*
+ * 역할:
+ * - 옵션/사운드 설정 창의 열기/닫기 상태를 제어하는 UI 컨트롤러입니다.
+ *
+ * 주요 기능:
+ * - Awake에서 옵션 창 초기 숨김 처리
+ * - Open, Close, Toggle 메서드 제공
+ */
 using UnityEngine;
 
 public enum OptionWindowSourceMode
