@@ -1,12 +1,18 @@
-[System.Serializable]
-public class AnimalInventorySlot
+namespace TaskTown.KDH
 {
-    public AnimalData animalData;
-    public int currentCount;
+    using TaskTown.Gacha;
 
-    public AnimalInventorySlot(AnimalData data, int count)
+    [System.Serializable]
+
+    public class AnimalInventorySlot
     {
-        animalData = data;
-        currentCount = count;
+        public GachaEntryData gachaData;
+        public int currentCount;
+
+        public AnimalInventorySlot(GachaEntryData data, int count)
+        {
+            gachaData = data;
+            currentCount = count;
+        }
     }
 }
