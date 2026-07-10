@@ -1,12 +1,25 @@
+//NB
 using UnityEngine;
 
 public class ObjectDragger : MonoBehaviour
 {
     private Vector3 offset;
     private bool isDragging = false;
+    private GameMasterManager gameManager;
+
+    private void Start()
+    {
+        gameManager = Object.FindFirstObjectByType<GameMasterManager>();
+    }
 
     void Update()
     {
+        //확장상태일때만 드래그 로직 실행
+        if (gameManager != null && !gameManager.GetIsExpanded())
+        {
+            isDragging = false;
+            return;
+        }
         // 마우스 왼쪽 클릭 시
         if (Input.GetMouseButtonDown(0))
         {
