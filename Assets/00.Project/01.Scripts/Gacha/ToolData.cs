@@ -8,6 +8,10 @@ namespace TaskTown.Gacha
         [Header("생산량")]
         [SerializeField] private float baseCoinPerSecond;
 
+        [Header("레벨 보정")]
+        [Tooltip("도구 레벨 1당 생산량 증가율. 0.2 = 레벨 1당 20%씩 증가")]
+        [SerializeField, Min(0f)] private float levelBonusRatePerLevel = 0.2f;
+
         [Header("특화 동물")]
         [SerializeField] private string specialAnimalId;
         [SerializeField, Range(0f, 5f)] private float specialAnimalBonusRate;
@@ -19,5 +23,11 @@ namespace TaskTown.Gacha
         public string SpecialAnimalId => specialAnimalId;
         public float SpecialAnimalBonusRate => specialAnimalBonusRate;
         public GameObject ToolPrefab => toolPrefab;
+
+        // 도구 레벨에 따른 생산량 배율입니다. 레벨 1이면 배율 1(보정 없음).
+        public float CalculateLevelMultiplier(int toolLevel)
+        {
+            return 1f + Mathf.Max(0, toolLevel - 1) * levelBonusRatePerLevel;
+        }
     }
 }
