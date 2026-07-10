@@ -12,14 +12,21 @@ namespace TaskTown.Gacha
             return tool.SpecialAnimalId == assignedAnimal.Id;
         }
 
+        // 특화 매칭 여부에 따른 배율입니다. 매칭이면 1 + SpecialAnimalBonusRate, 아니면 1(보정 없음).
+        public static float GetBonusMultiplier(ToolData tool, AnimalData assignedAnimal)
+        {
+            if (tool == null) return 1f;
+
+            return IsSpecialMatch(tool, assignedAnimal) ? 1f + tool.SpecialAnimalBonusRate : 1f;
+        }
+
         // 도구에 동물을 배치했을 때의 초당 생산량입니다. 특화 동물이 배치되면 SpecialAnimalBonusRate만큼 증가합니다.
         // 예: baseCoinPerSecond 3, specialAnimalBonusRate 0.5 → 특화 동물 배치 시 3 * 1.5 = 4.5
         public static float CalculateCoinPerSecond(ToolData tool, AnimalData assignedAnimal)
         {
             if (tool == null) return 0f;
 
-            float bonusMultiplier = IsSpecialMatch(tool, assignedAnimal) ? 1f + tool.SpecialAnimalBonusRate : 1f;
-            return tool.BaseCoinPerSecond * bonusMultiplier;
+            return tool.BaseCoinPerSecond * GetBonusMultiplier(tool, assignedAnimal);
         }
     }
 }
