@@ -162,12 +162,35 @@ namespace TaskTown.Gacha.Tests
         }
 
         [Test]
-        public void CalculateCoinPerSecond_동물이_없으면_0을_반환한다()
+        public void CalculateCoinPerSecond_동물이_없어도_도구_생산량만으로_값을_반환한다()
         {
             ToolData tool = CreateTool(3f, 0.2f, string.Empty, 0f);
 
+            // 동물 없이 도구 생산량만: 3 * 1(레벨1) = 3
             float result = FinalProductionCalculator.CalculateCoinPerSecond(
                 null, tool, animalLevel: 1, toolLevel: 1, difficulty: DifficultyType.Normal, difficultyTable: null, townUpgradeMultiplier: 1f);
+
+            Assert.AreEqual(3f, result, 0.0001f);
+        }
+
+        [Test]
+        public void CalculateCoinPerSecond_동물이_없어도_도구레벨_난이도_마을업그레이드는_반영된다()
+        {
+            ToolData tool = CreateTool(3f, 0.2f, string.Empty, 0f);
+            DifficultyProductionTable table = CreateDifficultyTable(DifficultyType.Hard, 0.5f);
+
+            // 도구 3 * 1.4(레벨3) = 4.2 * 0.5(난이도) * 2(마을업그레이드) = 4.2
+            float result = FinalProductionCalculator.CalculateCoinPerSecond(
+                null, tool, animalLevel: 1, toolLevel: 3, difficulty: DifficultyType.Hard, difficultyTable: table, townUpgradeMultiplier: 2f);
+
+            Assert.AreEqual(4.2f, result, 0.0001f);
+        }
+
+        [Test]
+        public void CalculateCoinPerSecond_동물과_도구가_둘다_없으면_0을_반환한다()
+        {
+            float result = FinalProductionCalculator.CalculateCoinPerSecond(
+                null, null, animalLevel: 1, toolLevel: 1, difficulty: DifficultyType.Normal, difficultyTable: null, townUpgradeMultiplier: 1f);
 
             Assert.AreEqual(0f, result, 0.0001f);
         }

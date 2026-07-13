@@ -5,8 +5,8 @@ using UnityEngine.UI;
 namespace TaskTown.Gacha.Demo
 {
     // 처음에는 동물/도구가 없는 상태에서 시작해서, 가챠(AnimalGachaManager/ToolGachaManager)로
-    // 동물을 하나 얻으면 그때부터 동물 자체 생산량만으로 초당 코인이 생산되기 시작하고,
-    // 도구까지 얻으면 도구 추가 생산량(및 특화 보너스)이 합쳐지는지 확인하는 테스트 전용 데모입니다.
+    // 동물이나 도구 중 하나만 얻어도 그 자체 생산량만으로 초당 코인이 생산되기 시작하고,
+    // 둘 다 얻으면 합산(및 특화 보너스)이 반영되는지 확인하는 테스트 전용 데모입니다.
     // 배치 UI가 아직 없으므로, 뽑은 동물/도구 중 가장 최근 것을 "장착 중"으로 보고 생산량을 계산하되,
     // 각 동물/도구별 레벨과 중복 개수는 ID별로 계속 누적 보관합니다(다른 걸 뽑아도 이전 기록이 사라지지 않음).
     public class FinalProductionDemoUI : MonoBehaviour
@@ -85,10 +85,11 @@ namespace TaskTown.Gacha.Demo
         private void Update()
         {
             AnimalData animal = ActiveAnimal;
-            if (animal == null) return;
+            ToolData tool = ActiveTool;
+            if (animal == null && tool == null) return;
 
             float coinPerSecond = FinalProductionCalculator.CalculateCoinPerSecond(
-                animal, ActiveTool, ActiveAnimalProgress.level, ActiveToolProgress?.level ?? 1, difficulty, difficultyTable, townUpgradeMultiplier);
+                animal, tool, ActiveAnimalProgress?.level ?? 1, ActiveToolProgress?.level ?? 1, difficulty, difficultyTable, townUpgradeMultiplier);
 
             productionBuffer += coinPerSecond * Time.deltaTime;
             if (productionBuffer >= 1f && coinWallet != null)
@@ -234,26 +235,30 @@ namespace TaskTown.Gacha.Demo
             if (statusText == null) return;
 
             AnimalData animal = ActiveAnimal;
-            if (animal == null)
+            ToolData tool = ActiveTool;
+            OwnedProgress animalProgress = ActiveAnimalProgress;
+            OwnedProgress toolProgress = ActiveToolProgress;
+
+            if (animal == null && tool == null)
             {
-                statusText.text = "Animal: 없음   Tool: 없음\n동물을 뽑아야 생산이 시작됩니다.";
+                statusText.text = "Animal: 없음   Tool: 없음\n동물 또는 도구를 뽑으면 생산이 시작됩니다.";
                 return;
             }
 
-            OwnedProgress animalProgress = ActiveAnimalProgress;
-            ToolData tool = ActiveTool;
-            OwnedProgress toolProgress = ActiveToolProgress;
-
             float coinPerSecond = FinalProductionCalculator.CalculateCoinPerSecond(
-                animal, tool, animalProgress.level, toolProgress?.level ?? 1, difficulty, difficultyTable, townUpgradeMultiplier);
+                animal, tool, animalProgress?.level ?? 1, toolProgress?.level ?? 1, difficulty, difficultyTable, townUpgradeMultiplier);
 
             long balance = coinWallet != null ? coinWallet.Balance : 0;
 
-            int animalRequired = LevelUpRequirementCalculator.GetRequiredDuplicateCount(animalProgress.level);
-            long animalLevelUpCost = animal.CalculateLevelUpCoinCost(animalProgress.level);
-            string animalLabel =
-                $"{animal.DisplayName} (Lv.{animalProgress.level}, 중복 {animalProgress.duplicateCount}/{animalRequired}, 비용 {animalLevelUpCost})   " +
-                $"[보유 종류 {animalsById.Count}]";
+            string animalLabel = "없음";
+            if (animal != null && animalProgress != null)
+            {
+                int animalRequired = LevelUpRequirementCalculator.GetRequiredDuplicateCount(animalProgress.level);
+                long animalLevelUpCost = animal.CalculateLevelUpCoinCost(animalProgress.level);
+                animalLabel =
+                    $"{animal.DisplayName} (Lv.{animalProgress.level}, 중복 {animalProgress.duplicateCount}/{animalRequired}, 비용 {animalLevelUpCost})   " +
+                    $"[보유 종류 {animalsById.Count}]";
+            }
 
             string toolLabel = "없음";
             if (tool != null && toolProgress != null)
