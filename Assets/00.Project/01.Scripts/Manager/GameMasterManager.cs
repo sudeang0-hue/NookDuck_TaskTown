@@ -15,6 +15,10 @@ public class GameMasterManager : MonoBehaviour
     private Vector3 camOriginalPos;
     private float camOriginalSize;
 
+    //마을의 최초 위치 및 유저가 드래그한 위치를 기억할 변수
+    private Vector3 originalVillagePos;
+    private Vector3 savedDraggedPosition;
+
     [Header("축소 화면용 카메라 타겟 셋팅")]
     public Transform miniVillagePos;
 
@@ -60,6 +64,13 @@ public class GameMasterManager : MonoBehaviour
         {
             camOriginalPos = mainCamera.transform.position;
             camOriginalSize = mainCamera.orthographicSize;
+        }
+
+        //마을의 최초 원본 위치 저장 및 드래그 위치 초기화
+        if (villageOrigin != null)
+        {
+            originalVillagePos = villageOrigin.position;
+            savedDraggedPosition = originalVillagePos;
         }
 
         iconOriginalPositions = new Vector2[bottomIcons.Length];
@@ -113,14 +124,23 @@ public class GameMasterManager : MonoBehaviour
         expandedPanel.SetActive(false);
         minimizedPanel.SetActive(true);
 
+        if (villageOrigin != null)
+        {
+            // 1. 현재 유저가 드래그해 놓은 마지막 위치를 저장
+            savedDraggedPosition = villageOrigin.position;
+
+            // 2. 마을을 카메라 연출 규격에 맞는 '최초 위치(원점)'로 부드럽게 복귀
+            villageOrigin.DOMove(originalVillagePos, 0.5f).SetEase(Ease.InOutQuad);
+        }
+
         if (mainCamera != null && miniVillagePos != null)
         {
             //1.카메라 배율 설정
             float targetSize = camOriginalSize / 0.3f;
             mainCamera.DOOrthoSize(targetSize, 0.5f).SetEase(Ease.InOutQuad);
 
-            // 2. 위치 이동
-            Vector3 targetCamPos = miniVillagePos.position + (camOriginalPos - villageOrigin.position);
+            //마을이 최초 위치(originalVillagePos)로 가므로 카메라 타겟 계산도 안정적으로 고정
+            Vector3 targetCamPos = miniVillagePos.position + (camOriginalPos - originalVillagePos);
             mainCamera.transform.DOMove(targetCamPos, 0.5f).SetEase(Ease.InOutQuad);
         }
 
@@ -147,11 +167,15 @@ public class GameMasterManager : MonoBehaviour
         if (ticketNotification) ticketNotification.SetActive(false);
         ticketTimer = 0f;
 
+        if (villageOrigin != null)
+        {
+            // 다시 확대될 때는 유저가 원래 드래그해서 배치해 두었던 위치로 마을을 돌려놓기
+            villageOrigin.DOMove(savedDraggedPosition, 0.5f).SetEase(Ease.InOutQuad);
+        }
+
         if (mainCamera != null)
         {
             mainCamera.DOOrthoSize(camOriginalSize, 0.5f).SetEase(Ease.InOutQuad);
-
-            //위치 복귀
             mainCamera.transform.DOMove(camOriginalPos, 0.5f).SetEase(Ease.InOutQuad);
         }
 
