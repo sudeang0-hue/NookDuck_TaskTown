@@ -14,6 +14,9 @@ namespace TaskTown.Gacha.Demo
         [SerializeField] private ToolGachaManager toolGachaManager;
         [SerializeField] private DemoTownLevelProvider townLevelProvider;
 
+        [Tooltip("마을 레벨업 비용 테이블입니다. 비워두면 무료로 레벨업됩니다.")]
+        [SerializeField] private TownUpgradeCostConfig townUpgradeCostConfig;
+
         [Tooltip("ICoinWallet를 구현한 컴포넌트를 연결합니다(예: CoinManager). 비워두면 코스트 차감 없이 뽑기를 진행합니다.")]
         [SerializeField] private MonoBehaviour coinWalletSource;
 
@@ -116,9 +119,14 @@ namespace TaskTown.Gacha.Demo
             return true;
         }
 
+        // 마을 업그레이드는 돈으로 하는 소비처이므로, 레벨업 전에 코스트를 먼저 확인합니다.
         private void IncreaseTownLevel()
         {
             if (townLevelProvider == null) return;
+
+            long cost = townUpgradeCostConfig != null ? townUpgradeCostConfig.GetCostForTownLevel(townLevelProvider.CurrentTownLevel) : 0;
+            if (!TrySpendCost(cost)) return;
+
             townLevelProvider.IncreaseLevel();
             RefreshInfoTexts();
         }
@@ -181,7 +189,8 @@ namespace TaskTown.Gacha.Demo
 
             if (townLevelText != null && townLevelProvider != null)
             {
-                townLevelText.text = $"Current Town Level : {townLevelProvider.CurrentTownLevel}";
+                long upgradeCost = townUpgradeCostConfig != null ? townUpgradeCostConfig.GetCostForTownLevel(townLevelProvider.CurrentTownLevel) : 0;
+                townLevelText.text = $"Current Town Level : {townLevelProvider.CurrentTownLevel}   (Upgrade Cost : {upgradeCost})";
             }
         }
     }
