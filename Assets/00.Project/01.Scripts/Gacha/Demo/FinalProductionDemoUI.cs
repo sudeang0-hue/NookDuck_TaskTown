@@ -31,6 +31,8 @@ namespace TaskTown.Gacha.Demo
         private ToolData ownedTool;
         private int animalLevel = 1;
         private int toolLevel = 1;
+        private int animalDuplicateCount = 1;
+        private int toolDuplicateCount = 1;
         private DifficultyType difficulty = DifficultyType.Normal;
         private float townUpgradeMultiplier = 1f;
 
@@ -80,15 +82,42 @@ namespace TaskTown.Gacha.Demo
             RefreshStatusText();
         }
 
+        // 같은 동물/도구가 다시 뽑히면 중복 개수를 늘리고, 다른 동물/도구가 뽑히면 새로 교체합니다.
         private void HandleAnimalGachaResolved(GachaResult result)
         {
-            ownedAnimal = result.Entry as AnimalData;
+            AnimalData rolled = result.Entry as AnimalData;
+            if (rolled == null) return;
+
+            if (ownedAnimal != null && rolled.Id == ownedAnimal.Id)
+            {
+                animalDuplicateCount++;
+            }
+            else
+            {
+                ownedAnimal = rolled;
+                animalLevel = 1;
+                animalDuplicateCount = 1;
+            }
+
             RefreshStatusText();
         }
 
         private void HandleToolGachaResolved(GachaResult result)
         {
-            ownedTool = result.Entry as ToolData;
+            ToolData rolled = result.Entry as ToolData;
+            if (rolled == null) return;
+
+            if (ownedTool != null && rolled.Id == ownedTool.Id)
+            {
+                toolDuplicateCount++;
+            }
+            else
+            {
+                ownedTool = rolled;
+                toolLevel = 1;
+                toolDuplicateCount = 1;
+            }
+
             RefreshStatusText();
         }
 
@@ -97,7 +126,12 @@ namespace TaskTown.Gacha.Demo
         {
             ownedAnimal = null;
             ownedTool = null;
+            animalLevel = 1;
+            toolLevel = 1;
+            animalDuplicateCount = 1;
+            toolDuplicateCount = 1;
             productionBuffer = 0f;
+            levelUpFailureMessage = null;
             RefreshStatusText();
         }
 
@@ -108,15 +142,60 @@ namespace TaskTown.Gacha.Demo
             RefreshStatusText();
         }
 
+        // 중복 개수(4^레벨)와 코인 비용을 모두 충족해야 레벨업됩니다.
         private void AnimalLevelUp()
         {
+            if (ownedAnimal == null) return;
+
+            int required = LevelUpRequirementCalculator.GetRequiredDuplicateCount(animalLevel);
+            if (animalDuplicateCount < required)
+            {
+                ShowLevelUpFailure($"동물 레벨업 실패: 중복 {animalDuplicateCount}/{required}개 필요");
+                return;
+            }
+
+            long cost = ownedAnimal.CalculateLevelUpCoinCost(animalLevel);
+            if (coinWallet == null || !coinWallet.TrySpend(cost))
+            {
+                ShowLevelUpFailure($"동물 레벨업 실패: 코인 부족 (필요 {cost})");
+                return;
+            }
+
+            animalDuplicateCount -= required;
             animalLevel++;
+            levelUpFailureMessage = null;
             RefreshStatusText();
         }
 
         private void ToolLevelUp()
         {
+            if (ownedTool == null) return;
+
+            int required = LevelUpRequirementCalculator.GetRequiredDuplicateCount(toolLevel);
+            if (toolDuplicateCount < required)
+            {
+                ShowLevelUpFailure($"도구 레벨업 실패: 중복 {toolDuplicateCount}/{required}개 필요");
+                return;
+            }
+
+            long cost = ownedTool.CalculateLevelUpCoinCost(toolLevel);
+            if (coinWallet == null || !coinWallet.TrySpend(cost))
+            {
+                ShowLevelUpFailure($"도구 레벨업 실패: 코인 부족 (필요 {cost})");
+                return;
+            }
+
+            toolDuplicateCount -= required;
             toolLevel++;
+            levelUpFailureMessage = null;
+            RefreshStatusText();
+        }
+
+        private string levelUpFailureMessage;
+
+        private void ShowLevelUpFailure(string message)
+        {
+            levelUpFailureMessage = message;
             RefreshStatusText();
         }
 
@@ -141,13 +220,26 @@ namespace TaskTown.Gacha.Demo
 
             long balance = coinWallet != null ? coinWallet.Balance : 0;
 
-            string toolLabel = ownedTool != null ? $"{ownedTool.DisplayName} (Lv.{toolLevel})" : "없음";
+            int animalRequired = LevelUpRequirementCalculator.GetRequiredDuplicateCount(animalLevel);
+            long animalLevelUpCost = ownedAnimal.CalculateLevelUpCoinCost(animalLevel);
+            string animalLabel = $"{ownedAnimal.DisplayName} (Lv.{animalLevel}, 중복 {animalDuplicateCount}/{animalRequired}, 비용 {animalLevelUpCost})";
+
+            string toolLabel = "없음";
+            if (ownedTool != null)
+            {
+                int toolRequired = LevelUpRequirementCalculator.GetRequiredDuplicateCount(toolLevel);
+                long toolLevelUpCost = ownedTool.CalculateLevelUpCoinCost(toolLevel);
+                toolLabel = $"{ownedTool.DisplayName} (Lv.{toolLevel}, 중복 {toolDuplicateCount}/{toolRequired}, 비용 {toolLevelUpCost})";
+            }
+
+            string failureLine = string.IsNullOrEmpty(levelUpFailureMessage) ? string.Empty : $"\n{levelUpFailureMessage}";
 
             statusText.text =
-                $"Tool: {toolLabel}   Animal: {ownedAnimal.DisplayName} (Lv.{animalLevel})\n" +
+                $"Tool: {toolLabel}\nAnimal: {animalLabel}\n" +
                 $"Difficulty: {difficulty}   Town Upgrade: x{townUpgradeMultiplier:0.0}\n" +
                 $"Coin/s: {coinPerSecond:0.##}\n" +
-                $"Coin: {balance}";
+                $"Coin: {balance}" +
+                failureLine;
         }
     }
 }
