@@ -18,8 +18,13 @@ namespace KAY
 
     public class UIPanelWindow : MonoBehaviour, IBeginDragHandler, IDragHandler, IPointerDownHandler
     {
+        [Header("Canvas Layer")]
+        [SerializeField] private Canvas panelCanvas;
 
+        [Header("Panel")]
         [SerializeField] private RectTransform panelRect;
+
+        private Canvas rootCanvas;
         private Vector2 defaultUIPanelPosition; // UI 패널의 초기 위치
         private Vector2 dragOffset;
 
@@ -32,17 +37,29 @@ namespace KAY
 
         }
 
+        private void Start()
+        {
+            if(panelCanvas == null)
+            {
+                panelCanvas = gameObject.GetComponentInParent<Canvas>();
+            }
+        }
+
         private void Initialize()
         {
             if (isInitialized)
                 return;
 
-            if (panelRect == null)
-                panelRect = GetComponent<RectTransform>();
+            if (panelRect == null) panelRect = GetComponent<RectTransform>();
+
+            if (panelCanvas == null) panelCanvas = GetComponentInParent<Canvas>();
+
+            if (panelCanvas != null) rootCanvas = panelCanvas.rootCanvas;
 
             if (panelRect == null)
             {
-                Debug.LogWarning($"[UIPanelWindow] RectTransform이 없습니다 : {name}");
+                Debug.LogWarning($"[UIPanelWindow] {gameObject.name}에 RectTransform이 없습니다.");
+
                 return;
             }
 
@@ -62,6 +79,8 @@ namespace KAY
                 panelRect.anchoredPosition = defaultUIPanelPosition;
 
             gameObject.SetActive(true);
+            
+            BringToFront();
         }
 
         /// <summary>
@@ -70,6 +89,8 @@ namespace KAY
         public void OpenPanelSetPosition()
         {
             gameObject.SetActive(true);
+            ResetPosition();
+            BringToFront();
         }
 
         /// <summary>
@@ -77,9 +98,16 @@ namespace KAY
         /// </summary>
         public void ClosePanel()
         {
+            ResetPosition();
             gameObject.SetActive(false);
         }
 
+        private void ResetPosition()
+        {
+            if (!isInitialized) Initialize();
+
+            if (panelRect != null) panelRect.anchoredPosition = defaultUIPanelPosition;
+        }
 
         public void TogglePanelDefaultPosition()
         {
@@ -134,6 +162,9 @@ namespace KAY
             }
         }
 
+        /// <summary>
+        /// 패널을 클릭했을 때 해당 Canvas를 가장 앞으로 이동합니다.
+        /// </summary>
         public void OnPointerDown(PointerEventData eventData)
         {
             BringToFront();
@@ -141,10 +172,14 @@ namespace KAY
 
         private void BringToFront()
         {
-            if (panelRect == null)
-                return;
+            if (UIWindowLayerManager.Instance == null)
+            {
+                Debug.LogWarning("[UIPanelWindow] UIWindowLayerManager.Instance가 없습니다.");
 
-            panelRect.SetAsLastSibling();
+                return;
+            }
+
+            UIWindowLayerManager.Instance.BringToFront(panelCanvas);
         }
     }
 }
