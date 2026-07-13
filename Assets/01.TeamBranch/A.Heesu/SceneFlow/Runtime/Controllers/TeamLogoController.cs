@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace TaskTown.SceneFlow
 {
@@ -15,6 +16,11 @@ namespace TaskTown.SceneFlow
         [SerializeField, Min(0f)] private float fadeInDuration = 0.5f;
         [SerializeField, Min(0f)] private float displayDuration = 1.5f;
         [SerializeField, Min(0f)] private float fadeOutDuration = 0.5f;
+
+        [Header("Sound")]
+        [FormerlySerializedAs("playLogoSoundOnStart")]
+        [SerializeField] private bool playLogoSoundAfterFadeIn = true;
+        [SerializeField] private string logoSoundId = "TeamLogo_DuckQuack";
 
         [Header("Flow")]
         [SerializeField] private SceneId nextScene = SceneId.Title;
@@ -33,6 +39,7 @@ namespace TaskTown.SceneFlow
             logoCanvasGroup.alpha = 0f;
             logoCanvasGroup.interactable = false;
             logoCanvasGroup.blocksRaycasts = false;
+
             logoRoutine = StartCoroutine(PlayLogoRoutine());
         }
 
@@ -47,6 +54,7 @@ namespace TaskTown.SceneFlow
         private IEnumerator PlayLogoRoutine()
         {
             yield return FadeRoutine(0f, 1f, fadeInDuration);
+            PlayLogoSound();
 
             float elapsed = 0f;
             while (elapsed < displayDuration && !skipRequested)
@@ -64,6 +72,28 @@ namespace TaskTown.SceneFlow
             }
 
             logoRoutine = null;
+        }
+
+        private void PlayLogoSound()
+        {
+            if (!playLogoSoundAfterFadeIn || string.IsNullOrWhiteSpace(logoSoundId))
+            {
+                return;
+            }
+
+            if (SoundManager.Instance == null)
+            {
+                Debug.LogWarning(
+                    "[TeamLogoController] SoundManager가 준비되지 않아 로고 사운드를 재생하지 못했습니다. " +
+                    "BootstrapScene에서 시작했는지 확인해 주세요.",
+                    this);
+                return;
+            }
+
+            if (!SoundManager.Instance.PlayUI(logoSoundId))
+            {
+                Debug.LogWarning($"[TeamLogoController] 로고 사운드 재생에 실패했습니다: {logoSoundId}", this);
+            }
         }
 
         private IEnumerator FadeRoutine(float from, float to, float duration)

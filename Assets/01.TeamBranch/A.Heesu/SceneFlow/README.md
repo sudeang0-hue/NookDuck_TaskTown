@@ -3,7 +3,8 @@
 ## 실행 흐름
 
 ```text
-TeamLogoScene
+BootstrapScene에서 SceneFlowManager와 SoundManager 준비
+→ TeamLogoScene에서 로고와 효과음 재생
 → TitleScene에서 StartupLoadPipeline 실행
 → MainScene 사전 로드
 → 전체 진행률 100%
@@ -11,6 +12,19 @@ TeamLogoScene
 ```
 
 정상 흐름에는 Start 버튼이나 사용자 입력 대기가 없습니다.
+
+## Bootstrap 역할
+
+`BootstrapScene`은 화면 연출용 Scene이 아니라 전역 Manager를 먼저 준비하는 시작점입니다.
+
+```text
+AppRoot
+├─ SceneFlowManager
+├─ SoundManager
+└─ SoundSettingsApplier
+```
+
+사운드 설정과 AudioSource Pool이 준비된 다음 `TeamLogoScene`으로 자동 전환합니다.
 
 ## Unity 메뉴
 
@@ -27,7 +41,7 @@ TeamLogoScene
 | Phase | 용도 |
 |---|---|
 | `CoreValidation` | 필수 설정 검증 |
-| `LocalSettings` | 사운드, 그래픽, 언어 설정 |
+| `LocalSettings` | Bootstrap 이후 추가 설정이 필요한 경우 사용 |
 | `SaveRead` | 저장 파일 읽기 |
 | `SaveConvert` | 역직렬화 및 버전 마이그레이션 |
 | `SaveValidation` | 누락값과 잘못된 값 검증 |
@@ -69,6 +83,6 @@ public sealed class CoinInitializer : MonoBehaviour, IMainSceneInitializer
 
 ## 현재 UI
 
-- `TeamLogoScene`은 실제 로고 이미지가 준비되기 전 사용할 텍스트 Placeholder를 포함합니다.
-- 실제 로고 적용 시 `LogoGroup` 아래 UI만 교체하고 `CanvasGroup` 연결은 유지합니다.
+- 현재 `TeamLogoScene`은 팀 로고 이미지와 `TeamLogo_DuckQuack` 효과음을 사용합니다.
+- 실제 로고를 다시 교체할 때도 `LogoGroup`의 `CanvasGroup` 연결은 유지합니다.
 - `TitleScene`은 진행률 Slider와 현재 Step 이름을 표시합니다.

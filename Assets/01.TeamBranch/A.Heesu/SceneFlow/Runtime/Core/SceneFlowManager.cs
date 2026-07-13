@@ -41,12 +41,6 @@ namespace TaskTown.SceneFlow
             Instance = null;
         }
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        private static void CreateRuntimeInstance()
-        {
-            EnsureInstance();
-        }
-
         public static SceneFlowManager EnsureInstance()
         {
             if (Instance != null)

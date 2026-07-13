@@ -6,6 +6,7 @@ using TaskTown.SceneFlow;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.Audio;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
@@ -23,7 +24,9 @@ namespace TaskTown.SceneFlowEditor
         private const string SceneFolder = RootFolder + "/Scenes";
         private const string ResourceFolder = RootFolder + "/Resources/SceneFlow";
         private const string StepFolder = ResourceFolder + "/Steps";
+        private const string SoundResourceFolder = RootFolder + "/Resources/Sound";
 
+        private const string BootstrapScenePath = SceneFolder + "/BootstrapScene.unity";
         private const string LogoScenePath = SceneFolder + "/TeamLogoScene.unity";
         private const string TitleScenePath = SceneFolder + "/TitleScene.unity";
         private const string MainScenePath = "Assets/00.Project/00.Scenes/Project_Scene/MainScene.unity";
@@ -33,8 +36,14 @@ namespace TaskTown.SceneFlowEditor
         private const string CoreStepPath = StepFolder + "/CoreValidationStep.asset";
         private const string SoundStepPath = StepFolder + "/LoadSoundSettingsStep.asset";
         private const string PreloadStepPath = StepFolder + "/PreloadMainSceneStep.asset";
+        private const string LogoSoundDataPath = SoundResourceFolder + "/TeamLogo_DuckQuack.asset";
 
-        private const string AutoRunSessionKey = "TaskTown.SceneFlowSetupTool.AutoRun.1";
+        private const string SoundLibraryPath = "Assets/00.Project/07.Audio/SoundLibrary/SoundLibrary.asset";
+        private const string AudioMixerPath = "Assets/00.Project/07.Audio/CompanionAudioMixer.mixer";
+        private const string LogoSoundClipPathA = RootFolder + "/Resources/Mp3/Duck1.mp3";
+        private const string LogoSoundClipPathB = RootFolder + "/Resources/Mp3/Duck2.mp3";
+
+        private const string AutoRunSessionKey = "TaskTown.SceneFlowSetupTool.AutoRun.2";
         private const string ValidationSessionKey = "TaskTown.SceneFlowSetupTool.ValidationRunning";
         private const string ValidationReportPath = "Temp/SceneFlowValidationResult.txt";
         private const double ValidationTimeoutSeconds = 30d;
@@ -56,12 +65,10 @@ namespace TaskTown.SceneFlowEditor
                 EnsureFolder(SceneFolder);
                 EnsureFolder(ResourceFolder);
                 EnsureFolder(StepFolder);
+                EnsureFolder(SoundResourceFolder);
 
-                SceneCatalogSO catalog = CreateAssetIfMissing<SceneCatalogSO>(CatalogPath, out bool catalogCreated);
-                if (catalogCreated || IsArrayPropertyEmpty(catalog, "entries"))
-                {
-                    ConfigureCatalog(catalog);
-                }
+                SceneCatalogSO catalog = CreateAssetIfMissing<SceneCatalogSO>(CatalogPath, out _);
+                ConfigureCatalog(catalog);
 
                 CoreValidationStep coreStep = CreateAssetIfMissing<CoreValidationStep>(CoreStepPath, out bool coreCreated);
                 if (coreCreated)
@@ -84,11 +91,25 @@ namespace TaskTown.SceneFlowEditor
                 StartupLoadPlanSO loadPlan = CreateAssetIfMissing<StartupLoadPlanSO>(LoadPlanPath, out bool planCreated);
                 if (planCreated || IsArrayPropertyEmpty(loadPlan, "steps"))
                 {
-                    ConfigureLoadPlan(loadPlan, coreStep, soundStep, preloadStep);
+                    ConfigureLoadPlan(loadPlan, coreStep, preloadStep);
+                }
+                else
+                {
+                    RemoveStepFromLoadPlan(loadPlan, soundStep);
                 }
 
+                SoundClipData logoSoundData = CreateAssetIfMissing<SoundClipData>(LogoSoundDataPath, out bool logoSoundCreated);
+                if (logoSoundCreated || IsArrayPropertyEmpty(logoSoundData, "clips"))
+                {
+                    ConfigureLogoSoundData(logoSoundData);
+                }
+
+                RegisterSoundData(logoSoundData);
+
+                GenerateBootstrapSceneIfMissing();
                 GenerateLogoSceneIfMissing();
                 GenerateTitleSceneIfMissing(loadPlan);
+                ConfigureStartupScenes();
                 ConfigureBuildSettings();
 
                 AssetDatabase.SaveAssets();
@@ -97,7 +118,7 @@ namespace TaskTown.SceneFlowEditor
 
                 Debug.Log(
                     "[SceneFlowSetupTool] 시작 Flow 생성 완료: " +
-                    "TeamLogoScene → TitleScene → MainScene");
+                    "BootstrapScene → TeamLogoScene → TitleScene → MainScene");
             }
             catch (Exception exception)
             {
@@ -121,10 +142,10 @@ namespace TaskTown.SceneFlowEditor
                 return;
             }
 
-            SceneAsset logoScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(LogoScenePath);
-            if (logoScene == null)
+            SceneAsset bootstrapScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(BootstrapScenePath);
+            if (bootstrapScene == null)
             {
-                Debug.LogError("[SceneFlowSetupTool] TeamLogoScene을 찾지 못했습니다.");
+                Debug.LogError("[SceneFlowSetupTool] BootstrapScene을 찾지 못했습니다.");
                 return;
             }
 
@@ -134,7 +155,7 @@ namespace TaskTown.SceneFlowEditor
             }
 
             SessionState.SetBool(ValidationSessionKey, true);
-            EditorSceneManager.playModeStartScene = logoScene;
+            EditorSceneManager.playModeStartScene = bootstrapScene;
             EditorApplication.isPlaying = true;
         }
 
@@ -199,7 +220,7 @@ namespace TaskTown.SceneFlowEditor
             Scene activeScene = SceneManager.GetActiveScene();
             if (activeScene.IsValid() && activeScene.name == "MainScene")
             {
-                string message = "SUCCESS: TeamLogoScene -> TitleScene -> MainScene";
+                string message = "SUCCESS: BootstrapScene -> TeamLogoScene -> TitleScene -> MainScene";
                 File.WriteAllText(ValidationReportPath, message);
                 Debug.Log($"[SceneFlowSetupTool] {message}");
                 EditorSceneManager.playModeStartScene = null;
@@ -225,8 +246,191 @@ namespace TaskTown.SceneFlowEditor
         {
             return AssetDatabase.LoadAssetAtPath<SceneCatalogSO>(CatalogPath) != null &&
                    AssetDatabase.LoadAssetAtPath<StartupLoadPlanSO>(LoadPlanPath) != null &&
+                   AssetDatabase.LoadAssetAtPath<SoundClipData>(LogoSoundDataPath) != null &&
+                   AssetDatabase.LoadAssetAtPath<SceneAsset>(BootstrapScenePath) != null &&
                    AssetDatabase.LoadAssetAtPath<SceneAsset>(LogoScenePath) != null &&
                    AssetDatabase.LoadAssetAtPath<SceneAsset>(TitleScenePath) != null;
+        }
+
+        private static void GenerateBootstrapSceneIfMissing()
+        {
+            if (AssetDatabase.LoadAssetAtPath<SceneAsset>(BootstrapScenePath) != null)
+            {
+                return;
+            }
+
+            SoundLibrary soundLibrary = AssetDatabase.LoadAssetAtPath<SoundLibrary>(SoundLibraryPath);
+            AudioMixer audioMixer = AssetDatabase.LoadAssetAtPath<AudioMixer>(AudioMixerPath);
+
+            if (soundLibrary == null)
+            {
+                throw new FileNotFoundException("SoundLibrary를 찾지 못했습니다.", SoundLibraryPath);
+            }
+
+            if (audioMixer == null)
+            {
+                throw new FileNotFoundException("CompanionAudioMixer를 찾지 못했습니다.", AudioMixerPath);
+            }
+
+            CreateAndSaveAdditiveScene(BootstrapScenePath, () =>
+            {
+                GameObject appRoot = new(
+                    "AppRoot",
+                    typeof(SceneFlowManager),
+                    typeof(SoundSettingsApplier),
+                    typeof(SoundManager));
+
+                SoundSettingsApplier settingsApplier = appRoot.GetComponent<SoundSettingsApplier>();
+                SerializedObject serializedSettings = new(settingsApplier);
+                serializedSettings.FindProperty("audioMixer").objectReferenceValue = audioMixer;
+                serializedSettings.FindProperty("dontDestroyOnLoad").boolValue = true;
+                serializedSettings.ApplyModifiedPropertiesWithoutUndo();
+
+                GameObject bgmSourceObject = new("BGM AudioSource", typeof(AudioSource));
+                bgmSourceObject.transform.SetParent(appRoot.transform, false);
+                AudioSource bgmSource = bgmSourceObject.GetComponent<AudioSource>();
+                bgmSource.playOnAwake = false;
+                bgmSource.loop = true;
+                bgmSource.spatialBlend = 0f;
+
+                GameObject oneShotRoot = new("One Shot AudioSources");
+                oneShotRoot.transform.SetParent(appRoot.transform, false);
+
+                SoundManager soundManager = appRoot.GetComponent<SoundManager>();
+                SerializedObject serializedSoundManager = new(soundManager);
+                serializedSoundManager.FindProperty("settingsApplier").objectReferenceValue = settingsApplier;
+                serializedSoundManager.FindProperty("applySavedSettingsOnAwake").boolValue = true;
+                serializedSoundManager.FindProperty("dontDestroyOnLoad").boolValue = true;
+                serializedSoundManager.FindProperty("soundLibrary").objectReferenceValue = soundLibrary;
+                serializedSoundManager.FindProperty("bgmMixerGroup").objectReferenceValue = FindMixerGroup(audioMixer, "BGM");
+                serializedSoundManager.FindProperty("uiMixerGroup").objectReferenceValue = FindMixerGroup(audioMixer, "UI");
+                serializedSoundManager.FindProperty("environmentMixerGroup").objectReferenceValue = FindMixerGroup(audioMixer, "Environment");
+                serializedSoundManager.FindProperty("bgmSource").objectReferenceValue = bgmSource;
+                serializedSoundManager.FindProperty("oneShotSourceRoot").objectReferenceValue = oneShotRoot.transform;
+                serializedSoundManager.FindProperty("oneShotPoolSize").intValue = 8;
+                serializedSoundManager.FindProperty("playBgmOnStart").boolValue = false;
+                serializedSoundManager.FindProperty("startBgmSoundId").stringValue = string.Empty;
+                serializedSoundManager.ApplyModifiedPropertiesWithoutUndo();
+
+                GameObject bootstrapObject = new("BootstrapFlow", typeof(BootstrapController));
+                BootstrapController bootstrapController = bootstrapObject.GetComponent<BootstrapController>();
+                SerializedObject serializedBootstrap = new(bootstrapController);
+                serializedBootstrap.FindProperty("nextScene").intValue = (int)SceneId.TeamLogo;
+                serializedBootstrap.FindProperty("requireSoundManager").boolValue = true;
+                serializedBootstrap.ApplyModifiedPropertiesWithoutUndo();
+
+                CreateStartupCamera("BootstrapCamera");
+            });
+        }
+
+        private static void ConfigureStartupScenes()
+        {
+            ConfigureScene(BootstrapScenePath, scene => EnsureStartupCamera(scene, "BootstrapCamera"));
+            ConfigureScene(LogoScenePath, scene =>
+            {
+                EnsureStartupCamera(scene, "TeamLogoCamera");
+
+                TeamLogoController controller = FindComponentInScene<TeamLogoController>(scene);
+                if (controller == null)
+                {
+                    throw new InvalidOperationException("TeamLogoScene에서 TeamLogoController를 찾지 못했습니다.");
+                }
+
+                SerializedObject serializedController = new(controller);
+                serializedController.FindProperty("playLogoSoundAfterFadeIn").boolValue = true;
+                serializedController.FindProperty("logoSoundId").stringValue = "TeamLogo_DuckQuack";
+                serializedController.ApplyModifiedPropertiesWithoutUndo();
+            });
+            ConfigureScene(TitleScenePath, scene => EnsureStartupCamera(scene, "TitleCamera"));
+        }
+
+        private static void ConfigureScene(string scenePath, Action<Scene> configure)
+        {
+            Scene originalActiveScene = SceneManager.GetActiveScene();
+            Scene targetScene = SceneManager.GetSceneByPath(scenePath);
+            bool openedForConfiguration = !targetScene.IsValid() || !targetScene.isLoaded;
+
+            if (openedForConfiguration)
+            {
+                targetScene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Additive);
+            }
+
+            SceneManager.SetActiveScene(targetScene);
+
+            try
+            {
+                configure.Invoke(targetScene);
+                EditorSceneManager.MarkSceneDirty(targetScene);
+                EditorSceneManager.SaveScene(targetScene);
+            }
+            finally
+            {
+                if (openedForConfiguration && targetScene.IsValid() && targetScene.isLoaded)
+                {
+                    EditorSceneManager.CloseScene(targetScene, true);
+                }
+
+                if (originalActiveScene.IsValid() && originalActiveScene.isLoaded)
+                {
+                    SceneManager.SetActiveScene(originalActiveScene);
+                }
+            }
+        }
+
+        private static void EnsureStartupCamera(Scene scene, string cameraName)
+        {
+            Camera camera = FindComponentInScene<Camera>(scene);
+            if (camera == null)
+            {
+                CreateStartupCamera(cameraName);
+                return;
+            }
+
+            if (!camera.TryGetComponent(out AudioListener _))
+            {
+                camera.gameObject.AddComponent<AudioListener>();
+            }
+        }
+
+        private static Camera CreateStartupCamera(string cameraName)
+        {
+            GameObject cameraObject = new(cameraName, typeof(Camera), typeof(AudioListener));
+            cameraObject.tag = "MainCamera";
+
+            Camera camera = cameraObject.GetComponent<Camera>();
+            camera.clearFlags = CameraClearFlags.SolidColor;
+            camera.backgroundColor = Color.black;
+            camera.cullingMask = 0;
+            camera.orthographic = true;
+            return camera;
+        }
+
+        private static T FindComponentInScene<T>(Scene scene) where T : Component
+        {
+            T[] components = Object.FindObjectsByType<T>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            for (int i = 0; i < components.Length; i++)
+            {
+                if (components[i] != null && components[i].gameObject.scene == scene)
+                {
+                    return components[i];
+                }
+            }
+
+            return null;
+        }
+
+        private static AudioMixerGroup FindMixerGroup(AudioMixer audioMixer, string groupName)
+        {
+            AudioMixerGroup group = audioMixer
+                .FindMatchingGroups(groupName)
+                .FirstOrDefault(candidate => candidate != null && candidate.name == groupName);
+
+            if (group == null)
+            {
+                throw new InvalidOperationException($"AudioMixer Group을 찾지 못했습니다: {groupName}");
+            }
+
+            return group;
         }
 
         private static void GenerateLogoSceneIfMissing()
@@ -479,15 +683,70 @@ namespace TaskTown.SceneFlowEditor
             rectTransform.offsetMax = Vector2.zero;
         }
 
+        private static void ConfigureLogoSoundData(SoundClipData soundData)
+        {
+            AudioClip clipA = AssetDatabase.LoadAssetAtPath<AudioClip>(LogoSoundClipPathA);
+            AudioClip clipB = AssetDatabase.LoadAssetAtPath<AudioClip>(LogoSoundClipPathB);
+
+            if (clipA == null || clipB == null)
+            {
+                throw new FileNotFoundException(
+                    "팀 로고용 AudioClip 두 개를 모두 찾지 못했습니다. " +
+                    $"Paths: {LogoSoundClipPathA}, {LogoSoundClipPathB}");
+            }
+
+            SerializedObject serializedSoundData = new(soundData);
+            serializedSoundData.FindProperty("soundId").stringValue = "TeamLogo_DuckQuack";
+            serializedSoundData.FindProperty("category").intValue = (int)SoundCategory.UI;
+
+            SerializedProperty clips = serializedSoundData.FindProperty("clips");
+            clips.arraySize = 2;
+            clips.GetArrayElementAtIndex(0).objectReferenceValue = clipA;
+            clips.GetArrayElementAtIndex(1).objectReferenceValue = clipB;
+
+            serializedSoundData.FindProperty("volumeScale").floatValue = 1f;
+            serializedSoundData.FindProperty("loop").boolValue = false;
+            serializedSoundData.FindProperty("randomizePitch").boolValue = false;
+            serializedSoundData.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(soundData);
+        }
+
+        private static void RegisterSoundData(SoundClipData soundData)
+        {
+            SoundLibrary soundLibrary = AssetDatabase.LoadAssetAtPath<SoundLibrary>(SoundLibraryPath);
+            if (soundLibrary == null)
+            {
+                throw new FileNotFoundException("SoundLibrary를 찾지 못했습니다.", SoundLibraryPath);
+            }
+
+            SerializedObject serializedLibrary = new(soundLibrary);
+            SerializedProperty sounds = serializedLibrary.FindProperty("sounds");
+
+            for (int i = 0; i < sounds.arraySize; i++)
+            {
+                if (sounds.GetArrayElementAtIndex(i).objectReferenceValue == soundData)
+                {
+                    return;
+                }
+            }
+
+            int newIndex = sounds.arraySize;
+            sounds.InsertArrayElementAtIndex(newIndex);
+            sounds.GetArrayElementAtIndex(newIndex).objectReferenceValue = soundData;
+            serializedLibrary.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(soundLibrary);
+        }
+
         private static void ConfigureCatalog(SceneCatalogSO catalog)
         {
             SerializedObject serializedCatalog = new(catalog);
             SerializedProperty entries = serializedCatalog.FindProperty("entries");
-            entries.arraySize = 3;
+            entries.arraySize = 4;
 
             ConfigureCatalogEntry(entries.GetArrayElementAtIndex(0), SceneId.TeamLogo, "TeamLogoScene");
             ConfigureCatalogEntry(entries.GetArrayElementAtIndex(1), SceneId.Title, "TitleScene");
             ConfigureCatalogEntry(entries.GetArrayElementAtIndex(2), SceneId.Main, "MainScene");
+            ConfigureCatalogEntry(entries.GetArrayElementAtIndex(3), SceneId.Bootstrap, "BootstrapScene");
 
             serializedCatalog.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(catalog);
@@ -530,6 +789,23 @@ namespace TaskTown.SceneFlowEditor
             EditorUtility.SetDirty(plan);
         }
 
+        private static void RemoveStepFromLoadPlan(StartupLoadPlanSO plan, StartupLoadStepSO stepToRemove)
+        {
+            SerializedObject serializedPlan = new(plan);
+            SerializedProperty stepList = serializedPlan.FindProperty("steps");
+
+            for (int i = stepList.arraySize - 1; i >= 0; i--)
+            {
+                if (stepList.GetArrayElementAtIndex(i).objectReferenceValue == stepToRemove)
+                {
+                    stepList.DeleteArrayElementAtIndex(i);
+                }
+            }
+
+            serializedPlan.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(plan);
+        }
+
         private static bool IsArrayPropertyEmpty(Object target, string propertyName)
         {
             SerializedObject serializedObject = new(target);
@@ -559,7 +835,7 @@ namespace TaskTown.SceneFlowEditor
                 throw new FileNotFoundException("MainScene을 찾지 못했습니다.", MainScenePath);
             }
 
-            string[] startupPaths = { LogoScenePath, TitleScenePath, MainScenePath };
+            string[] startupPaths = { BootstrapScenePath, LogoScenePath, TitleScenePath, MainScenePath };
             List<EditorBuildSettingsScene> scenes = startupPaths
                 .Select(path => new EditorBuildSettingsScene(path, true))
                 .ToList();

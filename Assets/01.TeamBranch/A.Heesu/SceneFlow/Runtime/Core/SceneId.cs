@@ -8,6 +8,8 @@ namespace TaskTown.SceneFlow
     {
         TeamLogo = 0,
         Title = 1,
-        Main = 2
+        Main = 2,
+        // 기존 직렬화 값을 유지하기 위해 Bootstrap은 마지막 ID로 추가합니다.
+        Bootstrap = 3
     }
 }
