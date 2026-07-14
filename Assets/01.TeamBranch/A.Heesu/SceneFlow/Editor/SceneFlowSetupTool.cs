@@ -37,14 +37,17 @@ namespace TaskTown.SceneFlowEditor
         private const string SoundStepPath = StepFolder + "/LoadSoundSettingsStep.asset";
         private const string PreloadStepPath = StepFolder + "/PreloadMainSceneStep.asset";
         private const string LogoSoundDataPath = SoundResourceFolder + "/TeamLogo_DuckQuack.asset";
+        private const string TitleLoadingBgmDataPath = SoundResourceFolder + "/Title_LodingBGM.asset";
 
         private const string SoundLibraryPath = "Assets/00.Project/07.Audio/SoundLibrary/SoundLibrary.asset";
         private const string AudioMixerPath = "Assets/00.Project/07.Audio/CompanionAudioMixer.mixer";
-        private const string LogoSoundClipPathA = RootFolder + "/Resources/Mp3/Duck1.mp3";
-        private const string LogoSoundClipPathB = RootFolder + "/Resources/Mp3/Duck2.mp3";
+        private const string LogoSoundClipPathA = RootFolder + "/Resources/Mp3/Logo_Duck1.mp3";
+        private const string LogoSoundClipPathB = RootFolder + "/Resources/Mp3/Logo_Duck2.mp3";
+        private const string TitleLoadingBgmClipPath = RootFolder + "/Resources/Mp3/Title_LodingBGM.mp3";
 
         private const string AutoRunSessionKey = "TaskTown.SceneFlowSetupTool.AutoRun.2";
         private const string ValidationSessionKey = "TaskTown.SceneFlowSetupTool.ValidationRunning";
+        private const string ValidationTitleBgmObservedKey = "TaskTown.SceneFlowSetupTool.TitleBgmObserved";
         private const string ValidationReportPath = "Temp/SceneFlowValidationResult.txt";
         private const double ValidationTimeoutSeconds = 30d;
         private static bool autoRunQueued;
@@ -104,7 +107,16 @@ namespace TaskTown.SceneFlowEditor
                     ConfigureLogoSoundData(logoSoundData);
                 }
 
+                SoundClipData titleLoadingBgmData = CreateAssetIfMissing<SoundClipData>(
+                    TitleLoadingBgmDataPath,
+                    out bool titleLoadingBgmCreated);
+                if (titleLoadingBgmCreated || IsArrayPropertyEmpty(titleLoadingBgmData, "clips"))
+                {
+                    ConfigureTitleLoadingBgmData(titleLoadingBgmData);
+                }
+
                 RegisterSoundData(logoSoundData);
+                RegisterSoundData(titleLoadingBgmData);
 
                 GenerateBootstrapSceneIfMissing();
                 GenerateLogoSceneIfMissing();
@@ -155,6 +167,7 @@ namespace TaskTown.SceneFlowEditor
             }
 
             SessionState.SetBool(ValidationSessionKey, true);
+            SessionState.SetBool(ValidationTitleBgmObservedKey, false);
             EditorSceneManager.playModeStartScene = bootstrapScene;
             EditorApplication.isPlaying = true;
         }
@@ -212,15 +225,33 @@ namespace TaskTown.SceneFlowEditor
             {
                 EditorSceneManager.playModeStartScene = null;
                 SessionState.SetBool(ValidationSessionKey, false);
+                SessionState.SetBool(ValidationTitleBgmObservedKey, false);
             }
         }
 
         private static void MonitorStartupFlow()
         {
             Scene activeScene = SceneManager.GetActiveScene();
+            if (activeScene.IsValid() && activeScene.name == "TitleScene")
+            {
+                ObserveTitleLoadingBgm();
+            }
+
             if (activeScene.IsValid() && activeScene.name == "MainScene")
             {
-                string message = "SUCCESS: BootstrapScene -> TeamLogoScene -> TitleScene -> MainScene";
+                if (!SessionState.GetBool(ValidationTitleBgmObservedKey, false))
+                {
+                    string bgmErrorMessage = "FAILED: TitleScene에서 Title_LodingBGM 재생을 확인하지 못했습니다.";
+                    File.WriteAllText(ValidationReportPath, bgmErrorMessage);
+                    Debug.LogError($"[SceneFlowSetupTool] {bgmErrorMessage}");
+                    EditorSceneManager.playModeStartScene = null;
+                    EditorApplication.update -= MonitorStartupFlow;
+                    EditorApplication.isPlaying = false;
+                    return;
+                }
+
+                string message =
+                    "SUCCESS: BootstrapScene -> TeamLogoScene -> TitleScene(Title_LodingBGM) -> MainScene";
                 File.WriteAllText(ValidationReportPath, message);
                 Debug.Log($"[SceneFlowSetupTool] {message}");
                 EditorSceneManager.playModeStartScene = null;
@@ -242,11 +273,32 @@ namespace TaskTown.SceneFlowEditor
             EditorApplication.isPlaying = false;
         }
 
+        private static void ObserveTitleLoadingBgm()
+        {
+            if (SessionState.GetBool(ValidationTitleBgmObservedKey, false) || SoundManager.Instance == null)
+            {
+                return;
+            }
+
+            AudioSource[] audioSources = SoundManager.Instance.GetComponentsInChildren<AudioSource>(true);
+            bool isPlaying = audioSources.Any(source =>
+                source != null &&
+                source.isPlaying &&
+                source.clip != null &&
+                source.clip.name == "Title_LodingBGM");
+
+            if (isPlaying)
+            {
+                SessionState.SetBool(ValidationTitleBgmObservedKey, true);
+            }
+        }
+
         private static bool IsSetupComplete()
         {
             return AssetDatabase.LoadAssetAtPath<SceneCatalogSO>(CatalogPath) != null &&
                    AssetDatabase.LoadAssetAtPath<StartupLoadPlanSO>(LoadPlanPath) != null &&
                    AssetDatabase.LoadAssetAtPath<SoundClipData>(LogoSoundDataPath) != null &&
+                   AssetDatabase.LoadAssetAtPath<SoundClipData>(TitleLoadingBgmDataPath) != null &&
                    AssetDatabase.LoadAssetAtPath<SceneAsset>(BootstrapScenePath) != null &&
                    AssetDatabase.LoadAssetAtPath<SceneAsset>(LogoScenePath) != null &&
                    AssetDatabase.LoadAssetAtPath<SceneAsset>(TitleScenePath) != null;
@@ -341,7 +393,22 @@ namespace TaskTown.SceneFlowEditor
                 serializedController.FindProperty("logoSoundId").stringValue = "TeamLogo_DuckQuack";
                 serializedController.ApplyModifiedPropertiesWithoutUndo();
             });
-            ConfigureScene(TitleScenePath, scene => EnsureStartupCamera(scene, "TitleCamera"));
+            ConfigureScene(TitleScenePath, scene =>
+            {
+                EnsureStartupCamera(scene, "TitleCamera");
+
+                TitleLoadingController controller = FindComponentInScene<TitleLoadingController>(scene);
+                if (controller == null)
+                {
+                    throw new InvalidOperationException("TitleScene에서 TitleLoadingController를 찾지 못했습니다.");
+                }
+
+                SerializedObject serializedController = new(controller);
+                serializedController.FindProperty("playLoadingBgmOnStart").boolValue = true;
+                serializedController.FindProperty("loadingBgmSoundId").stringValue = "Title_LodingBGM";
+                serializedController.FindProperty("stopLoadingBgmOnExit").boolValue = true;
+                serializedController.ApplyModifiedPropertiesWithoutUndo();
+            });
         }
 
         private static void ConfigureScene(string scenePath, Action<Scene> configure)
@@ -706,6 +773,31 @@ namespace TaskTown.SceneFlowEditor
 
             serializedSoundData.FindProperty("volumeScale").floatValue = 1f;
             serializedSoundData.FindProperty("loop").boolValue = false;
+            serializedSoundData.FindProperty("randomizePitch").boolValue = false;
+            serializedSoundData.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(soundData);
+        }
+
+        private static void ConfigureTitleLoadingBgmData(SoundClipData soundData)
+        {
+            AudioClip clip = AssetDatabase.LoadAssetAtPath<AudioClip>(TitleLoadingBgmClipPath);
+            if (clip == null)
+            {
+                throw new FileNotFoundException(
+                    "Title 로딩용 AudioClip을 찾지 못했습니다.",
+                    TitleLoadingBgmClipPath);
+            }
+
+            SerializedObject serializedSoundData = new(soundData);
+            serializedSoundData.FindProperty("soundId").stringValue = "Title_LodingBGM";
+            serializedSoundData.FindProperty("category").intValue = (int)SoundCategory.BGM;
+
+            SerializedProperty clips = serializedSoundData.FindProperty("clips");
+            clips.arraySize = 1;
+            clips.GetArrayElementAtIndex(0).objectReferenceValue = clip;
+
+            serializedSoundData.FindProperty("volumeScale").floatValue = 1f;
+            serializedSoundData.FindProperty("loop").boolValue = true;
             serializedSoundData.FindProperty("randomizePitch").boolValue = false;
             serializedSoundData.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(soundData);

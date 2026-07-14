@@ -5,10 +5,10 @@
 ```text
 BootstrapScene에서 SceneFlowManager와 SoundManager 준비
 → TeamLogoScene에서 로고와 효과음 재생
-→ TitleScene에서 StartupLoadPipeline 실행
+→ TitleScene에서 로딩 BGM과 StartupLoadPipeline 실행
 → MainScene 사전 로드
 → 전체 진행률 100%
-→ MainScene 자동 활성화
+→ 로딩 BGM 정지 후 MainScene 자동 활성화
 ```
 
 정상 흐름에는 Start 버튼이나 사용자 입력 대기가 없습니다.
@@ -85,4 +85,4 @@ public sealed class CoinInitializer : MonoBehaviour, IMainSceneInitializer
 
 - 현재 `TeamLogoScene`은 팀 로고 이미지와 `TeamLogo_DuckQuack` 효과음을 사용합니다.
 - 실제 로고를 다시 교체할 때도 `LogoGroup`의 `CanvasGroup` 연결은 유지합니다.
-- `TitleScene`은 진행률 Slider와 현재 Step 이름을 표시합니다.
+- `TitleScene`은 `Title_LodingBGM`을 재생하면서 진행률 Slider와 현재 Step 이름을 표시합니다.
