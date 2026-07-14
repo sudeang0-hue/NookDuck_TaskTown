@@ -6,9 +6,9 @@
 BootstrapScene에서 SceneFlowManager와 SoundManager 준비
 → TeamLogoScene에서 로고와 효과음 재생
 → TitleScene에서 로딩 BGM과 StartupLoadPipeline 실행
-→ MainScene 사전 로드
+→ TestMainGameScene 사전 로드
 → 전체 진행률 100%
-→ 로딩 BGM 정지 후 MainScene 자동 활성화
+→ 로딩 BGM 정지 후 TestMainGameScene 자동 활성화
 ```
 
 정상 흐름에는 Start 버튼이나 사용자 입력 대기가 없습니다.
@@ -47,7 +47,7 @@ AppRoot
 | `SaveValidation` | 누락값과 잘못된 값 검증 |
 | `SessionBuild` | 검증 데이터로 `GameSession` 구성 |
 | `RuntimeApply` | Runtime Manager에 데이터 적용 |
-| `ScenePreload` | MainScene 사전 로드 |
+| `ScenePreload` | Pipeline에 지정된 대상 Scene 사전 로드 |
 | `Finalize` | 최종 무결성 확인 |
 
 ## 새로운 로딩 Step 추가
@@ -62,9 +62,9 @@ AppRoot
 
 `StartupLoadPlan.asset`은 충돌 위험이 있는 중앙 통합 파일이므로 여러 팀원이 동시에 수정하지 않습니다.
 
-## MainScene Runtime 연결
+## 게임 Scene Runtime 연결
 
-저장 데이터가 준비되면 MainScene 시스템은 `IMainSceneInitializer`를 구현할 수 있습니다.
+저장 데이터가 준비되면 실제 게임 Scene 시스템은 `IMainSceneInitializer`를 구현할 수 있습니다.
 
 ```csharp
 public sealed class CoinInitializer : MonoBehaviour, IMainSceneInitializer
@@ -79,7 +79,48 @@ public sealed class CoinInitializer : MonoBehaviour, IMainSceneInitializer
 }
 ```
 
-저장 시스템 연결 시 MainScene에 `MainSceneBootstrapper`를 추가하면 `InitializationOrder` 순서대로 실행한 뒤 `GameReady` 이벤트를 발생시킵니다.
+저장 시스템 연결 시 대상 Scene에 `MainSceneBootstrapper`를 추가하면 `InitializationOrder` 순서대로 실행한 뒤 `GameReady` 이벤트를 발생시킵니다.
+
+## 다른 Scene 등록 및 불러오기
+
+Scene 이름 문자열을 직접 호출하지 않고 `SceneId`와 `SceneCatalog.asset`을 통해 불러옵니다.
+
+### Scene 등록
+
+1. `SceneId` enum 마지막에 새 ID를 추가합니다. 기존 숫자는 직렬화 호환성을 위해 변경하지 않습니다.
+2. `SceneCatalog.asset`에 같은 ID와 실제 Scene 이름을 등록합니다.
+3. Unity Build Settings의 Scene 목록에 해당 `.unity` 파일을 활성화 상태로 추가합니다.
+4. `SceneFlowManager.CanLoadScene`으로 Catalog와 Build Settings 연결을 확인합니다.
+
+`Generate Startup Flow` 도구는 기존 Catalog 항목과 추가 Build Scene을 보존합니다. Catalog와 Build Settings는 중앙 통합 파일이므로 한 명이 담당해서 수정하는 것을 권장합니다.
+
+### 즉시 Scene 전환
+
+```csharp
+SceneFlowManager manager = SceneFlowManager.EnsureInstance();
+if (!manager.LoadScene(SceneId.TestMainGame))
+{
+    Debug.LogError(manager.LastError);
+}
+```
+
+### 사전 로드 후 원하는 시점에 활성화
+
+```csharp
+SceneFlowManager manager = SceneFlowManager.EnsureInstance();
+manager.PreloadScene(SceneId.TestMainGame);
+
+// State가 ReadyToActivate가 되거나 SceneReady 이벤트를 받은 뒤 호출합니다.
+manager.ActivatePreloadedScene();
+```
+
+`SceneReady`, `SceneLoadCompleted`, `LoadFailed` 이벤트를 구독했다면 `OnDisable` 또는 `OnDestroy`에서 반드시 구독을 해제합니다.
+
+### Title 이후 시작 대상 변경
+
+1. `TitleScene/StartupLoading`의 `StartupLoadPipeline > Target Scene`을 변경합니다.
+2. 새로 생성되는 기본 Flow도 바꿀 경우 `SceneFlowSetupTool`의 `StartupTargetSceneId`와 `StartupTargetScenePath`를 함께 변경합니다.
+3. `Validate Startup Flow`를 실행해 목표 Scene 도달 여부를 확인합니다.
 
 ## 현재 UI
 

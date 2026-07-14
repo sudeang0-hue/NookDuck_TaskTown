@@ -10,6 +10,8 @@ namespace TaskTown.SceneFlow
         Title = 1,
         Main = 2,
         // 기존 직렬화 값을 유지하기 위해 Bootstrap은 마지막 ID로 추가합니다.
-        Bootstrap = 3
+        Bootstrap = 3,
+        // 팀 통합 전 게임 흐름을 확인하기 위한 테스트 Main Scene입니다.
+        TestMainGame = 4
     }
 }

@@ -11,7 +11,7 @@ namespace TaskTown.SceneFlow
     public sealed class StartupLoadPipeline : MonoBehaviour
     {
         [SerializeField] private StartupLoadPlanSO loadPlan;
-        [SerializeField] private SceneId targetScene = SceneId.Main;
+        [SerializeField] private SceneId targetScene = SceneId.TestMainGame;
 
         private Coroutine pipelineCoroutine;
 

@@ -5,7 +5,7 @@ using UnityEngine.UI;
 namespace TaskTown.SceneFlow
 {
     /// <summary>
-    /// Title 화면에서 Startup Pipeline 진행률을 표시하고 완료 시 Main Scene을 자동 활성화합니다.
+    /// Title 화면에서 Startup Pipeline 진행률을 표시하고 완료 시 대상 Scene을 자동 활성화합니다.
     /// </summary>
     public sealed class TitleLoadingController : MonoBehaviour
     {
@@ -92,11 +92,11 @@ namespace TaskTown.SceneFlow
 
             if (activationRoutine == null)
             {
-                activationRoutine = StartCoroutine(ActivateMainSceneRoutine());
+                activationRoutine = StartCoroutine(ActivateTargetSceneRoutine());
             }
         }
 
-        private IEnumerator ActivateMainSceneRoutine()
+        private IEnumerator ActivateTargetSceneRoutine()
         {
             // 100% UI가 반영된 다음 프레임에 입력 없이 자동 전환합니다.
             yield return null;

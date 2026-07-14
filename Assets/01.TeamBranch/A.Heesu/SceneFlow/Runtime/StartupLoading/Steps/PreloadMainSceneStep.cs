@@ -3,7 +3,10 @@ using UnityEngine;
 
 namespace TaskTown.SceneFlow
 {
-    [CreateAssetMenu(fileName = "PreloadMainSceneStep", menuName = "TaskTown/Scene Flow/Steps/Preload Main Scene")]
+    /// <summary>
+    /// 기존 에셋 연결을 유지하면서 Pipeline에 지정된 대상 Scene을 사전 로드합니다.
+    /// </summary>
+    [CreateAssetMenu(fileName = "PreloadTargetSceneStep", menuName = "TaskTown/Scene Flow/Steps/Preload Target Scene")]
     public sealed class PreloadMainSceneStep : StartupLoadStepSO
     {
         protected override IEnumerator ExecuteStep(StartupLoadStepContext context)
@@ -12,7 +15,7 @@ namespace TaskTown.SceneFlow
             context.ReportProgress(0f);
 
             // 새 Scene의 Start가 이전 LoadSceneAsync 완료 처리보다 먼저 호출될 수 있습니다.
-            // 이전 전환이 완전히 정리된 뒤 Main Scene 사전 로드를 시작합니다.
+            // 이전 전환이 완전히 정리된 뒤 Pipeline에 지정된 대상 Scene 사전 로드를 시작합니다.
             while (manager.State == SceneLoadState.Loading ||
                    manager.State == SceneLoadState.Activating)
             {
@@ -40,7 +43,7 @@ namespace TaskTown.SceneFlow
             if (manager.State != SceneLoadState.ReadyToActivate)
             {
                 context.Fail(string.IsNullOrWhiteSpace(manager.LastError)
-                    ? "Main Scene이 활성화 준비 상태에 도달하지 못했습니다."
+                    ? "대상 Scene이 활성화 준비 상태에 도달하지 못했습니다."
                     : manager.LastError);
                 yield break;
             }

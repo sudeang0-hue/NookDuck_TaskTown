@@ -29,7 +29,9 @@ namespace TaskTown.SceneFlowEditor
         private const string BootstrapScenePath = SceneFolder + "/BootstrapScene.unity";
         private const string LogoScenePath = SceneFolder + "/TeamLogoScene.unity";
         private const string TitleScenePath = SceneFolder + "/TitleScene.unity";
-        private const string MainScenePath = "Assets/00.Project/00.Scenes/Project_Scene/MainScene.unity";
+        private const SceneId StartupTargetSceneId = SceneId.TestMainGame;
+        private const string StartupTargetScenePath =
+            "Assets/00.Project/00.Scenes/Project_Scene/TestMainGameScene.unity";
 
         private const string CatalogPath = ResourceFolder + "/SceneCatalog.asset";
         private const string LoadPlanPath = ResourceFolder + "/StartupLoadPlan.asset";
@@ -52,6 +54,7 @@ namespace TaskTown.SceneFlowEditor
         private const double ValidationTimeoutSeconds = 30d;
         private static bool autoRunQueued;
         private static double validationStartedAt;
+        private static string StartupTargetSceneName => Path.GetFileNameWithoutExtension(StartupTargetScenePath);
 
         static SceneFlowSetupTool()
         {
@@ -88,7 +91,11 @@ namespace TaskTown.SceneFlowEditor
                 PreloadMainSceneStep preloadStep = CreateAssetIfMissing<PreloadMainSceneStep>(PreloadStepPath, out bool preloadCreated);
                 if (preloadCreated)
                 {
-                    ConfigureStep(preloadStep, StartupLoadPhase.ScenePreload, 710, 8f, "메인 Scene 불러오기");
+                    ConfigureStep(preloadStep, StartupLoadPhase.ScenePreload, 710, 8f, "대상 Scene 불러오기");
+                }
+                else
+                {
+                    ConfigureStepDisplayName(preloadStep, "대상 Scene 불러오기");
                 }
 
                 StartupLoadPlanSO loadPlan = CreateAssetIfMissing<StartupLoadPlanSO>(LoadPlanPath, out bool planCreated);
@@ -130,7 +137,7 @@ namespace TaskTown.SceneFlowEditor
 
                 Debug.Log(
                     "[SceneFlowSetupTool] 시작 Flow 생성 완료: " +
-                    "BootstrapScene → TeamLogoScene → TitleScene → MainScene");
+                    $"BootstrapScene → TeamLogoScene → TitleScene → {StartupTargetSceneName}");
             }
             catch (Exception exception)
             {
@@ -237,7 +244,7 @@ namespace TaskTown.SceneFlowEditor
                 ObserveTitleLoadingBgm();
             }
 
-            if (activeScene.IsValid() && activeScene.name == "MainScene")
+            if (activeScene.IsValid() && activeScene.name == StartupTargetSceneName)
             {
                 if (!SessionState.GetBool(ValidationTitleBgmObservedKey, false))
                 {
@@ -251,7 +258,8 @@ namespace TaskTown.SceneFlowEditor
                 }
 
                 string message =
-                    "SUCCESS: BootstrapScene -> TeamLogoScene -> TitleScene(Title_LodingBGM) -> MainScene";
+                    $"SUCCESS: BootstrapScene -> TeamLogoScene -> " +
+                    $"TitleScene(Title_LodingBGM) -> {StartupTargetSceneName}";
                 File.WriteAllText(ValidationReportPath, message);
                 Debug.Log($"[SceneFlowSetupTool] {message}");
                 EditorSceneManager.playModeStartScene = null;
@@ -265,7 +273,9 @@ namespace TaskTown.SceneFlowEditor
                 return;
             }
 
-            string errorMessage = $"FAILED: 제한 시간 안에 MainScene에 도달하지 못했습니다. Current={activeScene.name}";
+            string errorMessage =
+                $"FAILED: 제한 시간 안에 {StartupTargetSceneName}에 도달하지 못했습니다. " +
+                $"Current={activeScene.name}";
             File.WriteAllText(ValidationReportPath, errorMessage);
             Debug.LogError($"[SceneFlowSetupTool] {errorMessage}");
             EditorSceneManager.playModeStartScene = null;
@@ -586,7 +596,7 @@ namespace TaskTown.SceneFlowEditor
                 StartupLoadPipeline pipeline = loadingObject.GetComponent<StartupLoadPipeline>();
                 SerializedObject serializedPipeline = new(pipeline);
                 serializedPipeline.FindProperty("loadPlan").objectReferenceValue = loadPlan;
-                serializedPipeline.FindProperty("targetScene").intValue = (int)SceneId.Main;
+                serializedPipeline.FindProperty("targetScene").intValue = (int)StartupTargetSceneId;
                 serializedPipeline.ApplyModifiedPropertiesWithoutUndo();
 
                 TitleLoadingController controller = loadingObject.GetComponent<TitleLoadingController>();
@@ -833,15 +843,32 @@ namespace TaskTown.SceneFlowEditor
         {
             SerializedObject serializedCatalog = new(catalog);
             SerializedProperty entries = serializedCatalog.FindProperty("entries");
-            entries.arraySize = 4;
 
-            ConfigureCatalogEntry(entries.GetArrayElementAtIndex(0), SceneId.TeamLogo, "TeamLogoScene");
-            ConfigureCatalogEntry(entries.GetArrayElementAtIndex(1), SceneId.Title, "TitleScene");
-            ConfigureCatalogEntry(entries.GetArrayElementAtIndex(2), SceneId.Main, "MainScene");
-            ConfigureCatalogEntry(entries.GetArrayElementAtIndex(3), SceneId.Bootstrap, "BootstrapScene");
+            EnsureCatalogEntry(entries, SceneId.TeamLogo, "TeamLogoScene");
+            EnsureCatalogEntry(entries, SceneId.Title, "TitleScene");
+            EnsureCatalogEntry(entries, SceneId.Main, "MainScene");
+            EnsureCatalogEntry(entries, SceneId.Bootstrap, "BootstrapScene");
+            EnsureCatalogEntry(entries, SceneId.TestMainGame, StartupTargetSceneName);
 
             serializedCatalog.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(catalog);
+        }
+
+        private static void EnsureCatalogEntry(SerializedProperty entries, SceneId id, string sceneName)
+        {
+            for (int i = 0; i < entries.arraySize; i++)
+            {
+                SerializedProperty entry = entries.GetArrayElementAtIndex(i);
+                if (entry.FindPropertyRelative("id").intValue == (int)id)
+                {
+                    ConfigureCatalogEntry(entry, id, sceneName);
+                    return;
+                }
+            }
+
+            int newIndex = entries.arraySize;
+            entries.InsertArrayElementAtIndex(newIndex);
+            ConfigureCatalogEntry(entries.GetArrayElementAtIndex(newIndex), id, sceneName);
         }
 
         private static void ConfigureCatalogEntry(SerializedProperty entry, SceneId id, string sceneName)
@@ -861,6 +888,14 @@ namespace TaskTown.SceneFlowEditor
             serializedStep.FindProperty("phase").intValue = (int)phase;
             serializedStep.FindProperty("order").intValue = order;
             serializedStep.FindProperty("weight").floatValue = weight;
+            serializedStep.FindProperty("displayName").stringValue = displayName;
+            serializedStep.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(step);
+        }
+
+        private static void ConfigureStepDisplayName(StartupLoadStepSO step, string displayName)
+        {
+            SerializedObject serializedStep = new(step);
             serializedStep.FindProperty("displayName").stringValue = displayName;
             serializedStep.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(step);
@@ -922,12 +957,20 @@ namespace TaskTown.SceneFlowEditor
 
         private static void ConfigureBuildSettings()
         {
-            if (AssetDatabase.LoadAssetAtPath<SceneAsset>(MainScenePath) == null)
+            if (AssetDatabase.LoadAssetAtPath<SceneAsset>(StartupTargetScenePath) == null)
             {
-                throw new FileNotFoundException("MainScene을 찾지 못했습니다.", MainScenePath);
+                throw new FileNotFoundException(
+                    $"시작 Flow 대상 Scene을 찾지 못했습니다: {StartupTargetSceneName}",
+                    StartupTargetScenePath);
             }
 
-            string[] startupPaths = { BootstrapScenePath, LogoScenePath, TitleScenePath, MainScenePath };
+            string[] startupPaths =
+            {
+                BootstrapScenePath,
+                LogoScenePath,
+                TitleScenePath,
+                StartupTargetScenePath
+            };
             List<EditorBuildSettingsScene> scenes = startupPaths
                 .Select(path => new EditorBuildSettingsScene(path, true))
                 .ToList();
