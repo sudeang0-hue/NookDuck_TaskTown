@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using TaskTown.SceneFlow;
+using TaskTown.SceneFlow.Testing;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -31,7 +32,10 @@ namespace TaskTown.SceneFlowEditor
         private const string TitleScenePath = SceneFolder + "/TitleScene.unity";
         private const SceneId StartupTargetSceneId = SceneId.TestMainGame;
         private const string StartupTargetScenePath =
-            "Assets/00.Project/00.Scenes/Project_Scene/TestMainGameScene.unity";
+            SceneFolder + "/TestMainGameScene.unity";
+        private static readonly Vector2Int BootstrapWindowSize = new(700, 700);
+        private static readonly Vector2Int LogoWindowSize = new(900, 900);
+        private static readonly Vector2Int TransparentWindowFallbackSize = new(1920, 1080);
 
         private const string CatalogPath = ResourceFolder + "/SceneCatalog.asset";
         private const string LoadPlanPath = ResourceFolder + "/StartupLoadPlan.asset";
@@ -381,16 +385,23 @@ namespace TaskTown.SceneFlowEditor
                 serializedBootstrap.FindProperty("requireSoundManager").boolValue = true;
                 serializedBootstrap.ApplyModifiedPropertiesWithoutUndo();
 
+                EnsureBootstrapWindowInitializer(SceneManager.GetActiveScene());
                 CreateStartupCamera("BootstrapCamera");
             });
         }
 
         private static void ConfigureStartupScenes()
         {
-            ConfigureScene(BootstrapScenePath, scene => EnsureStartupCamera(scene, "BootstrapCamera"));
+            ConfigureScene(BootstrapScenePath, scene =>
+            {
+                Camera camera = EnsureStartupCamera(scene, "BootstrapCamera");
+                ConfigureTransparentCamera(camera);
+                EnsureBootstrapWindowInitializer(scene);
+            });
             ConfigureScene(LogoScenePath, scene =>
             {
-                EnsureStartupCamera(scene, "TeamLogoCamera");
+                Camera camera = EnsureStartupCamera(scene, "TeamLogoCamera");
+                ConfigureTransparentCamera(camera);
 
                 TeamLogoController controller = FindComponentInScene<TeamLogoController>(scene);
                 if (controller == null)
@@ -402,10 +413,18 @@ namespace TaskTown.SceneFlowEditor
                 serializedController.FindProperty("playLogoSoundAfterFadeIn").boolValue = true;
                 serializedController.FindProperty("logoSoundId").stringValue = "TeamLogo_DuckQuack";
                 serializedController.ApplyModifiedPropertiesWithoutUndo();
+
+                EnsureWindowResolutionController(
+                    controller.gameObject,
+                    false,
+                    LogoWindowSize,
+                    true);
+                ConfigureLogoCanvas(scene);
             });
             ConfigureScene(TitleScenePath, scene =>
             {
-                EnsureStartupCamera(scene, "TitleCamera");
+                Camera camera = EnsureStartupCamera(scene, "TitleCamera");
+                ConfigureTransparentWindowCamera(camera);
 
                 TitleLoadingController controller = FindComponentInScene<TitleLoadingController>(scene);
                 if (controller == null)
@@ -418,7 +437,21 @@ namespace TaskTown.SceneFlowEditor
                 serializedController.FindProperty("loadingBgmSoundId").stringValue = "Title_LodingBGM";
                 serializedController.FindProperty("stopLoadingBgmOnExit").boolValue = true;
                 serializedController.ApplyModifiedPropertiesWithoutUndo();
+
+                if (controller.TryGetComponent(out SceneWindowResolutionController oldWindowController))
+                {
+                    Object.DestroyImmediate(oldWindowController);
+                }
+
+                GameObject windowInitializer = EnsureTitleWindowInitializer(scene);
+                EnsureWindowResolutionController(
+                    windowInitializer,
+                    true,
+                    TransparentWindowFallbackSize,
+                    false);
+                ConfigureTitleCanvas(scene);
             });
+            ConfigureScene(StartupTargetScenePath, ConfigureTargetWindowTest);
         }
 
         private static void ConfigureScene(string scenePath, Action<Scene> configure)
@@ -454,19 +487,20 @@ namespace TaskTown.SceneFlowEditor
             }
         }
 
-        private static void EnsureStartupCamera(Scene scene, string cameraName)
+        private static Camera EnsureStartupCamera(Scene scene, string cameraName)
         {
             Camera camera = FindComponentInScene<Camera>(scene);
             if (camera == null)
             {
-                CreateStartupCamera(cameraName);
-                return;
+                return CreateStartupCamera(cameraName);
             }
 
             if (!camera.TryGetComponent(out AudioListener _))
             {
                 camera.gameObject.AddComponent<AudioListener>();
             }
+
+            return camera;
         }
 
         private static Camera CreateStartupCamera(string cameraName)
@@ -476,10 +510,195 @@ namespace TaskTown.SceneFlowEditor
 
             Camera camera = cameraObject.GetComponent<Camera>();
             camera.clearFlags = CameraClearFlags.SolidColor;
-            camera.backgroundColor = Color.black;
+            camera.backgroundColor = Color.clear;
             camera.cullingMask = 0;
             camera.orthographic = true;
             return camera;
+        }
+
+        private static void ConfigureTransparentCamera(Camera camera)
+        {
+            camera.clearFlags = CameraClearFlags.SolidColor;
+            camera.backgroundColor = Color.clear;
+        }
+
+        private static void ConfigureTransparentWindowCamera(Camera camera)
+        {
+            ConfigureTransparentCamera(camera);
+            camera.allowHDR = false;
+            camera.allowMSAA = false;
+        }
+
+        private static void EnsureBootstrapWindowInitializer(Scene scene)
+        {
+            GameObject initializer = FindRootGameObject(scene, "BootstrapWindowInitializer");
+            if (initializer == null)
+            {
+                initializer = new GameObject("BootstrapWindowInitializer");
+            }
+
+            if (initializer.TryGetComponent(out TransparentWindow originalWindow))
+            {
+                Object.DestroyImmediate(originalWindow);
+            }
+
+            if (initializer.TryGetComponent(out TransparentWindowFlowTest testWindow))
+            {
+                Object.DestroyImmediate(testWindow);
+            }
+
+            EnsureWindowResolutionController(initializer, false, BootstrapWindowSize, true);
+        }
+
+        private static GameObject EnsureTitleWindowInitializer(Scene scene)
+        {
+            GameObject initializer = FindRootGameObject(scene, "TitleWindowInitializer");
+            if (initializer == null)
+            {
+                initializer = new GameObject("TitleWindowInitializer");
+            }
+
+            if (initializer.TryGetComponent(out TransparentWindow originalWindow))
+            {
+                Object.DestroyImmediate(originalWindow);
+            }
+
+            if (!initializer.TryGetComponent(out TransparentWindowFlowTest _))
+            {
+                initializer.AddComponent<TransparentWindowFlowTest>();
+            }
+
+            return initializer;
+        }
+
+        private static void ConfigureTargetWindowTest(Scene scene)
+        {
+            Camera camera = FindComponentInScene<Camera>(scene);
+            if (camera == null)
+            {
+                throw new InvalidOperationException(
+                    $"{StartupTargetSceneName}에서 투명 창에 사용할 Camera를 찾지 못했습니다.");
+            }
+
+            ConfigureTransparentWindowCamera(camera);
+
+            TransparentWindow originalWindow = FindComponentInScene<TransparentWindow>(scene);
+            GameObject host = originalWindow != null
+                ? originalWindow.gameObject
+                : FindRootGameObject(scene, "_Window");
+
+            if (host == null)
+            {
+                host = new GameObject("SceneFlowWindowTest");
+            }
+
+            if (originalWindow != null)
+            {
+                Object.DestroyImmediate(originalWindow);
+            }
+
+            if (!host.TryGetComponent(out TransparentWindowFlowTest _))
+            {
+                host.AddComponent<TransparentWindowFlowTest>();
+            }
+        }
+
+        private static void EnsureWindowResolutionController(
+            GameObject target,
+            bool useCurrentDisplayResolution,
+            Vector2Int fallbackSize,
+            bool centerOnCurrentMonitor)
+        {
+            if (!target.TryGetComponent(out SceneWindowResolutionController controller))
+            {
+                controller = target.AddComponent<SceneWindowResolutionController>();
+            }
+
+            SerializedObject serializedController = new(controller);
+            serializedController.FindProperty("useCurrentDisplayResolution").boolValue =
+                useCurrentDisplayResolution;
+            serializedController.FindProperty("windowSize").vector2IntValue = fallbackSize;
+            serializedController.FindProperty("centerOnCurrentMonitor").boolValue =
+                centerOnCurrentMonitor;
+            serializedController.FindProperty("applyInEditor").boolValue = false;
+            serializedController.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static void ConfigureLogoCanvas(Scene scene)
+        {
+            Canvas canvas = FindComponentInScene<Canvas>(scene);
+            if (canvas == null)
+            {
+                throw new InvalidOperationException("TeamLogoScene에서 Canvas를 찾지 못했습니다.");
+            }
+
+            if (canvas.TryGetComponent(out CanvasScaler scaler))
+            {
+                scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+                scaler.referenceResolution = LogoWindowSize;
+                scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+                scaler.matchWidthOrHeight = 0.5f;
+            }
+
+            Image background = FindChildImage(canvas.transform, "Background");
+            if (background == null)
+            {
+                throw new InvalidOperationException("TeamLogoScene에서 Background Image를 찾지 못했습니다.");
+            }
+
+            SetFullStretch(background.rectTransform);
+            Color color = background.color;
+            color.a = 1f;
+            background.color = color;
+            background.raycastTarget = false;
+        }
+
+        private static void ConfigureTitleCanvas(Scene scene)
+        {
+            Canvas canvas = FindComponentInScene<Canvas>(scene);
+            if (canvas == null)
+            {
+                throw new InvalidOperationException("TitleScene에서 Canvas를 찾지 못했습니다.");
+            }
+
+            Image background = FindChildImage(canvas.transform, "Background");
+            if (background == null)
+            {
+                throw new InvalidOperationException("TitleScene에서 Background Image를 찾지 못했습니다.");
+            }
+
+            Color color = background.color;
+            color.a = 0f;
+            background.color = color;
+            background.raycastTarget = false;
+        }
+
+        private static Image FindChildImage(Transform root, string objectName)
+        {
+            Image[] images = root.GetComponentsInChildren<Image>(true);
+            for (int i = 0; i < images.Length; i++)
+            {
+                if (images[i] != null && images[i].name == objectName)
+                {
+                    return images[i];
+                }
+            }
+
+            return null;
+        }
+
+        private static GameObject FindRootGameObject(Scene scene, string objectName)
+        {
+            GameObject[] roots = scene.GetRootGameObjects();
+            for (int i = 0; i < roots.Length; i++)
+            {
+                if (roots[i] != null && roots[i].name == objectName)
+                {
+                    return roots[i];
+                }
+            }
+
+            return null;
         }
 
         private static T FindComponentInScene<T>(Scene scene) where T : Component

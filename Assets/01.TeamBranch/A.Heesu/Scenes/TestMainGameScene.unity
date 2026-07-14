@@ -3363,8 +3363,8 @@ Camera:
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0
   m_TargetEye: 3
-  m_HDR: 1
-  m_AllowMSAA: 1
+  m_HDR: 0
+  m_AllowMSAA: 0
   m_AllowDynamicResolution: 0
   m_ForceIntoRT: 0
   m_OcclusionCulling: 1
@@ -17794,9 +17794,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 1964602097}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e6b5172d51de1694b9540cc399ecdf75, type: 3}
+  m_Script: {fileID: 11500000, guid: 6f177131ac684014480d9461504ce1c6, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TransparentWindow
+  m_EditorClassIdentifier: Assembly-CSharp::TaskTown.SceneFlow.Testing.TransparentWindowFlowTest
+  keepWindowTopmost: 1
+  detectUi: 1
+  detect3DCollider: 1
+  detect2DCollider: 1
 --- !u!4 &1977345879 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 4a1f766979a337646afc316a8d29fdb0, type: 3}

@@ -127,3 +127,19 @@ manager.ActivatePreloadedScene();
 - 현재 `TeamLogoScene`은 팀 로고 이미지와 `TeamLogo_DuckQuack` 효과음을 사용합니다.
 - 실제 로고를 다시 교체할 때도 `LogoGroup`의 `CanvasGroup` 연결은 유지합니다.
 - `TitleScene`은 `Title_LodingBGM`을 재생하면서 진행률 Slider와 현재 Step 이름을 표시합니다.
+
+## Windows 창 표시 모드
+
+- `BootstrapScene`은 `700 x 700`, `TeamLogoScene`은 `900 x 900` 일반 Windowed 창을 사용하며, 두 Scene 모두 투명 창 컴포넌트를 사용하지 않습니다.
+- `TitleScene/TitleWindowInitializer`에서 테스트 복사본인 `TransparentWindowFlowTest`를 처음 실행하고 Main Scene까지 유지합니다.
+- 팀원이 작성한 원본 `TransparentWindow.cs`는 수정하지 않으며, 테스트 복사본과 동시에 실행되지 않도록 Flow Scene에서는 교체합니다.
+- `TransparentWindowFlowTest`는 Scene 전환 시 Main Camera와 네이티브 창 스타일을 다시 연결하므로 해상도 변경 뒤에도 무테·투명 상태를 복구합니다.
+- Title/Main의 투명 구간 Camera는 `Solid Color + Alpha 0`, HDR Off, MSAA Off를 사용합니다. 현재 PC URP의 32-bit HDR 버퍼에는 Alpha 채널이 없어, HDR을 켜면 DWM 적용이 성공해도 빈 영역이 검정색으로 출력되기 때문입니다.
+- 해상도 적용 완료 이벤트와 매 프레임 스타일 감시를 함께 사용해 Unity가 Title 전환 중 창 테두리를 다시 생성해도 즉시 무테 상태로 교정합니다.
+- `Screen.SetResolution` 중 HWND가 교체될 수 있으므로, 현재 프로세스의 표시 중인 `UnityWndClass`를 다시 검색해 실제 Player 창에만 적용합니다.
+- Player 프로세스 소유와 표시 상태가 확인된 창 핸들만 사용하므로 클릭 관통으로 포커스를 잃어도 다른 Windows 창을 잘못 수정하지 않습니다.
+- `SceneWindowResolutionController`는 Windows Player에서만 Scene별 창 해상도를 적용합니다.
+- `TeamLogoScene`은 `900 x 900` 창과 같은 Canvas 기준 해상도를 사용하며 Background가 창 전체를 채웁니다.
+- Logo 창은 현재 창이 위치한 모니터의 작업 영역을 기준으로 중앙에 배치됩니다.
+- `TitleScene`부터는 주 모니터 해상도의 Windowed 크기로 복원하고 창을 모니터 원점에 맞춘 뒤 Camera 및 전체 화면 Background의 Alpha를 0으로 사용합니다.
+- 이 동작은 `UNITY_EDITOR`에서 기본적으로 실행하지 않으므로 Windows Build에서 확인해야 합니다. 창 스타일뿐 아니라 다른 색상 창을 뒤에 둔 상태에서 빈 픽셀을 통해 그 색상이 실제로 보이는지도 확인해야 합니다.
