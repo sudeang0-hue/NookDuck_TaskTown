@@ -1,21 +1,20 @@
-using Animal.Data;
+using Tool.Data;
 
 namespace Test
 {
     [System.Serializable]
-    public class SlotSaveData_Animal
+    public class SlotSaveData_Tool
     {
 
-        public AnimalDataSO animaldata;    // 동물 정보
+        public ToolDataSO tooldata;    // 도구정보
         public int level;          // 현재 동물 레벨
         public int currentCount;   // 현재 보유 수량
 
-        public SlotSaveData_Animal(AnimalDataSO animaldata, int level, int currentCount)
+        public SlotSaveData_Tool (ToolDataSO tooldata, int level, int currentCount)
         {
-            this.animaldata = animaldata;
+            this.tooldata = tooldata;
             this.level = level;
             this.currentCount = currentCount;
         }
-
     }
 }

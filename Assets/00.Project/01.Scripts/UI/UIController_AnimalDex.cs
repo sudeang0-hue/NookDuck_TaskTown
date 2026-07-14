@@ -1,8 +1,6 @@
 using Animal.Data;
-using MCPForUnity.Editor.Tools;
-using System;
 using System.Collections.Generic;
-using Test.UI;
+using Test;
 using UnityEngine;
 
 namespace UI
@@ -107,7 +105,7 @@ namespace UI
 
                 SlotUI_AnimalList slot = Instantiate(animalSlotPrefab, animalSlotContentRoot);
 
-                // slot.Initialize(animalData, animalPageController);
+                // slot.Initialize(toolData, animalPageController);
                 slot.Initialize(animalData, animalPageController, false);
 
                 slotMap.Add(animalId, slot);

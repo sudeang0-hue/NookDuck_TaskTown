@@ -1,14 +1,14 @@
-using Animal.Data;
 using System;
+using Tool.Data;
 using UnityEngine;
 
 namespace Test
 {
     [Serializable]
-    public class SlotData_Animal
+    public class SlotData_Tool 
     {
         [Header("저장 데이터")]
-        [SerializeField] private AnimalDataSO animalData;
+        [SerializeField] private ToolDataSO toolData;
         [SerializeField] private int level;
         [SerializeField] private int currentCount;
 
@@ -17,9 +17,8 @@ namespace Test
         [SerializeField] private long levelUpCost;
         [SerializeField] private bool isMaxLevel;
 
-
-        public AnimalDataSO AnimalData => animalData;
-        public string AnimalId => animalData != null ? animalData.Id : string.Empty;
+        public ToolDataSO ToolData => toolData;
+        public string ToolId => toolData != null ? toolData.Id : string.Empty;
         public int Level => level;
         public int CurrentCount => currentCount;
 
@@ -28,9 +27,9 @@ namespace Test
         public bool IsMaxLevel => isMaxLevel;
 
 
-        public SlotData_Animal(AnimalDataSO animalData, int level, int currentCount)
+        public SlotData_Tool(ToolDataSO toolData, int level, int currentCount)
         {
-            this.animalData = animalData;
+            this.toolData = toolData;
             this.level = Mathf.Max(1, level);
             this.currentCount = Mathf.Max(1, currentCount);
 
@@ -71,7 +70,7 @@ namespace Test
         }
 
         /// <summary>
-        /// 레벨업 필요 총수량에서 강화되어 남는 동물 한 마리를 제외한
+        /// 레벨업 필요 총수량에서 강화되어 남는 도구 하나를 제외한
         /// 수량을 소비합니다.
         /// </summary>
         public bool TryConsumeForLevelUp()
@@ -88,7 +87,7 @@ namespace Test
         }
 
         /// <summary>
-        /// 현재 동물의 레벨을 1 증가시킵니다.
+        /// 현재 도구의 레벨을 1 증가시킵니다.
         /// </summary>
         public void IncreaseLevel()
         {
@@ -97,6 +96,8 @@ namespace Test
 
             level++;
         }
+
+
 
     }
 }

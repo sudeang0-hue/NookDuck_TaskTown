@@ -36,7 +36,7 @@ namespace TaskTown.KDH
             if (animalData == null) return false;
 
             //위에 maxSlots 주석 참조 
-            //if (!CanReceiveItem(animalData))
+            //if (!CanReceiveItem(toolData))
             //{
             //    Debug.Log("인벤토리가 가득 차서 동물이 들어올 수 없습니다.");
             //    return false;
