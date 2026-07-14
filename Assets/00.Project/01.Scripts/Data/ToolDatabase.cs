@@ -26,7 +26,7 @@ namespace Tool.Data
 
                 if (string.IsNullOrEmpty(tool.Id))
                 {
-                    Debug.LogWarning("[ToolDatabase] ID가 비어있는 ToolData 가 있습니다.");
+                    Debug.LogWarning("[ToolDatabase] ID가 비어있는 toolData 가 있습니다.");
                     continue;
                 }
 
