@@ -418,7 +418,8 @@ namespace TaskTown.SceneFlowEditor
                     controller.gameObject,
                     false,
                     LogoWindowSize,
-                    true);
+                    centerOnCurrentMonitor: true,
+                    useBorderlessWindow: true);
                 ConfigureLogoCanvas(scene);
             });
             ConfigureScene(TitleScenePath, scene =>
@@ -448,7 +449,8 @@ namespace TaskTown.SceneFlowEditor
                     windowInitializer,
                     true,
                     TransparentWindowFallbackSize,
-                    false);
+                    centerOnCurrentMonitor: false,
+                    useBorderlessWindow: false);
                 ConfigureTitleCanvas(scene);
             });
             ConfigureScene(StartupTargetScenePath, ConfigureTargetWindowTest);
@@ -547,7 +549,12 @@ namespace TaskTown.SceneFlowEditor
                 Object.DestroyImmediate(testWindow);
             }
 
-            EnsureWindowResolutionController(initializer, false, BootstrapWindowSize, true);
+            EnsureWindowResolutionController(
+                initializer,
+                false,
+                BootstrapWindowSize,
+                centerOnCurrentMonitor: true,
+                useBorderlessWindow: false);
         }
 
         private static GameObject EnsureTitleWindowInitializer(Scene scene)
@@ -607,7 +614,8 @@ namespace TaskTown.SceneFlowEditor
             GameObject target,
             bool useCurrentDisplayResolution,
             Vector2Int fallbackSize,
-            bool centerOnCurrentMonitor)
+            bool centerOnCurrentMonitor,
+            bool useBorderlessWindow)
         {
             if (!target.TryGetComponent(out SceneWindowResolutionController controller))
             {
@@ -620,6 +628,8 @@ namespace TaskTown.SceneFlowEditor
             serializedController.FindProperty("windowSize").vector2IntValue = fallbackSize;
             serializedController.FindProperty("centerOnCurrentMonitor").boolValue =
                 centerOnCurrentMonitor;
+            serializedController.FindProperty("useBorderlessWindow").boolValue =
+                useBorderlessWindow;
             serializedController.FindProperty("applyInEditor").boolValue = false;
             serializedController.ApplyModifiedPropertiesWithoutUndo();
         }
