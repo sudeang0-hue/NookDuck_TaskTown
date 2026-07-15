@@ -17,7 +17,8 @@ namespace TaskTown.SceneFlow
         [Header("BGM")]
         [SerializeField] private bool playLoadingBgmOnStart = true;
         [SerializeField] private string loadingBgmSoundId = "Title_LodingBGM";
-        [SerializeField] private bool stopLoadingBgmOnExit = true;
+        [Tooltip("활성화하면 Title 종료 시 BGM을 정지합니다. 공용 배경 BGM은 비활성화 상태로 유지합니다.")]
+        [SerializeField] private bool stopLoadingBgmOnExit = false;
 
         private Coroutine activationRoutine;
         private bool loadingBgmStarted;

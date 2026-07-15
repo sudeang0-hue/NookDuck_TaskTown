@@ -5,10 +5,10 @@
 ```text
 00.BootstrapScene에서 SceneFlowManager와 SoundManager 준비
 → 01.TeamLogoScene에서 로고와 효과음 재생
-→ 02.TitleLoadingScene에서 로딩 BGM과 StartupLoadPipeline 실행
+→ 02.TitleLoadingScene에서 공용 배경 BGM과 StartupLoadPipeline 실행
 → 03.MainScene 사전 로드
 → 전체 진행률 100%
-→ 로딩 BGM 정지 후 03.MainScene 자동 활성화
+→ 배경 BGM을 유지한 채 03.MainScene 자동 활성화
 ```
 
 정상 흐름에는 Start 버튼이나 사용자 입력 대기가 없습니다.
@@ -121,7 +121,8 @@ manager.ActivatePreloadedScene();
 
 - 현재 `01.TeamLogoScene`은 팀 로고 이미지와 `TeamLogo_DuckQuack` 효과음을 사용합니다.
 - 실제 로고를 다시 교체할 때도 `LogoGroup`의 `CanvasGroup` 연결은 유지합니다.
-- `02.TitleLoadingScene`은 `Title_LodingBGM`을 재생하면서 진행률 Slider와 현재 Step 이름을 표시합니다.
+- `02.TitleLoadingScene`은 공용 배경 BGM인 `Title_LodingBGM`을 먼저 재생하면서 진행률 Slider와 현재 Step 이름을 표시합니다.
+- 배경 BGM은 Bootstrap의 `SoundManager`와 함께 유지되므로 `03.MainScene` 전환 후에도 재생 위치가 끊기지 않고 Loop됩니다.
 
 ## Windows 창 표시 모드
 
