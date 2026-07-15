@@ -4,13 +4,14 @@
  * - 팀원이 작성한 원본은 수정하지 않고, Scene Flow 환경에서 먼저 검증하기 위해 복사·확장한 테스트 버전입니다.
  *
  * [원본과 다른 점 / 수정한 내용]
- * 1. Title에서 생성된 인스턴스를 DontDestroyOnLoad로 유지해 Title과 Main Scene에만 적용합니다.
+ * 1. Title에서 생성된 인스턴스를 DontDestroyOnLoad로 유지하되, 다음 Scene에 원본 TransparentWindow가 있으면 제어권을 넘깁니다.
  * 2. Scene 전환 및 해상도 적용 완료 이벤트에서 스타일을 재적용하고, Unity가 테두리를 복원하면 즉시 다시 무테로 교정합니다.
- * 3. Title Flow 진입과 TestMainGameScene 단독 실행을 모두 지원하도록 중복 인스턴스를 방지합니다.
+ * 3. Title Flow 재진입 시 중복 인스턴스가 생성되지 않도록 방지합니다.
  * 4. 원본의 UI 및 3D Collider 클릭 판정을 유지하면서 2D Collider 판정도 추가했습니다.
  * 5. 다른 앱의 Foreground 창을 잘못 수정하지 않도록 프로세스 소유 창 핸들만 사용하고 실패 경고를 추가했습니다.
  * 6. 실제 표시 중인 UnityWndClass 창을 다시 찾아 해상도 전환 중 교체된 HWND에 잘못 적용하는 문제를 방지합니다.
  * 7. 투명 구간 Camera를 Alpha가 있는 LDR 출력으로 고정해 HDR 32-bit 버퍼의 Alpha 소실을 방지합니다.
+ * 8. Main Scene에 팀 원본 TransparentWindow가 있으면 테스트 복사본 GameObject를 제거해 Win32 창 제어 충돌을 방지합니다.
  *
  * [역할 분리]
  * - 이 스크립트: Windows 창의 무테, DWM 투명화, Topmost, 빈 영역 클릭 관통을 담당합니다.
@@ -148,9 +149,39 @@ namespace TaskTown.SceneFlow.Testing
 
         private void HandleActiveSceneChanged(Scene previousScene, Scene nextScene)
         {
+            if (TryHandOffToOriginalTransparentWindow(nextScene))
+            {
+                return;
+            }
+
             InvalidateWindowHandle();
             BindAndConfigureMainCamera();
             QueueSceneRefresh();
+        }
+
+        private bool TryHandOffToOriginalTransparentWindow(Scene nextScene)
+        {
+            if (!nextScene.IsValid() || !nextScene.isLoaded)
+            {
+                return false;
+            }
+
+            GameObject[] rootObjects = nextScene.GetRootGameObjects();
+            for (int i = 0; i < rootObjects.Length; i++)
+            {
+                if (rootObjects[i].GetComponentInChildren<global::TransparentWindow>(true) == null)
+                {
+                    continue;
+                }
+
+                Debug.Log(
+                    "[TransparentWindowFlowTest] 다음 Scene의 원본 TransparentWindow에 창 제어를 인계합니다.",
+                    this);
+                Destroy(gameObject);
+                return true;
+            }
+
+            return false;
         }
 
         private void HandleResolutionApplied()

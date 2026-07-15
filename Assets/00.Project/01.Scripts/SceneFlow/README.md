@@ -3,19 +3,19 @@
 ## 실행 흐름
 
 ```text
-BootstrapScene에서 SceneFlowManager와 SoundManager 준비
-→ TeamLogoScene에서 로고와 효과음 재생
-→ TitleScene에서 로딩 BGM과 StartupLoadPipeline 실행
-→ TestMainGameScene 사전 로드
+00.BootstrapScene에서 SceneFlowManager와 SoundManager 준비
+→ 01.TeamLogoScene에서 로고와 효과음 재생
+→ 02.TitleLoadingScene에서 로딩 BGM과 StartupLoadPipeline 실행
+→ 03.MainScene 사전 로드
 → 전체 진행률 100%
-→ 로딩 BGM 정지 후 TestMainGameScene 자동 활성화
+→ 로딩 BGM 정지 후 03.MainScene 자동 활성화
 ```
 
 정상 흐름에는 Start 버튼이나 사용자 입력 대기가 없습니다.
 
 ## Bootstrap 역할
 
-`BootstrapScene`은 화면 연출용 Scene이 아니라 전역 Manager를 먼저 준비하는 시작점입니다.
+`00.BootstrapScene`은 화면 연출용 Scene이 아니라 전역 Manager를 먼저 준비하는 시작점입니다.
 
 ```text
 AppRoot
@@ -24,7 +24,7 @@ AppRoot
 └─ SoundSettingsApplier
 ```
 
-사운드 설정과 AudioSource Pool이 준비된 다음 `TeamLogoScene`으로 자동 전환합니다.
+사운드 설정과 AudioSource Pool이 준비된 다음 `01.TeamLogoScene`으로 자동 전환합니다.
 
 ## Scene Flow 설정 관리
 
@@ -93,7 +93,7 @@ Catalog와 Build Settings는 중앙 통합 파일이므로 한 명이 담당해�
 
 ```csharp
 SceneFlowManager manager = SceneFlowManager.EnsureInstance();
-if (!manager.LoadScene(SceneId.TestMainGame))
+if (!manager.LoadScene(SceneId.Main))
 {
     Debug.LogError(manager.LastError);
 }
@@ -103,7 +103,7 @@ if (!manager.LoadScene(SceneId.TestMainGame))
 
 ```csharp
 SceneFlowManager manager = SceneFlowManager.EnsureInstance();
-manager.PreloadScene(SceneId.TestMainGame);
+manager.PreloadScene(SceneId.Main);
 
 // State가 ReadyToActivate가 되거나 SceneReady 이벤트를 받은 뒤 호출합니다.
 manager.ActivatePreloadedScene();
@@ -113,20 +113,20 @@ manager.ActivatePreloadedScene();
 
 ### Title 이후 시작 대상 변경
 
-1. `TitleScene/StartupLoading`의 `StartupLoadPipeline > Target Scene`을 변경합니다.
-2. `Resources/SceneFlow/SceneCatalog.asset`에서 해당 SceneId와 Scene 경로가 맞는지 확인합니다.
-3. Play Mode 또는 빌드에서 `BootstrapScene > TeamLogoScene > TitleScene > Target Scene` 도달 여부를 확인합니다.
+1. `02.TitleLoadingScene/StartupLoading`의 `StartupLoadPipeline > Target Scene`을 변경합니다.
+2. `Assets/00.Project/03.ScriptableObjects/Resources/SceneFlow/SceneCatalog.asset`에서 해당 SceneId와 Scene 이름이 맞는지 확인합니다.
+3. Play Mode 또는 빌드에서 `00.BootstrapScene > 01.TeamLogoScene > 02.TitleLoadingScene > Target Scene` 도달 여부를 확인합니다.
 
 ## 현재 UI
 
-- 현재 `TeamLogoScene`은 팀 로고 이미지와 `TeamLogo_DuckQuack` 효과음을 사용합니다.
+- 현재 `01.TeamLogoScene`은 팀 로고 이미지와 `TeamLogo_DuckQuack` 효과음을 사용합니다.
 - 실제 로고를 다시 교체할 때도 `LogoGroup`의 `CanvasGroup` 연결은 유지합니다.
-- `TitleScene`은 `Title_LodingBGM`을 재생하면서 진행률 Slider와 현재 Step 이름을 표시합니다.
+- `02.TitleLoadingScene`은 `Title_LodingBGM`을 재생하면서 진행률 Slider와 현재 Step 이름을 표시합니다.
 
 ## Windows 창 표시 모드
 
-- `BootstrapScene`은 `700 x 700` 일반 Windowed 창을 사용하고, `TeamLogoScene`은 `900 x 900` 불투명 무테 창을 사용합니다. 두 Scene 모두 투명 창 컴포넌트는 사용하지 않습니다.
-- `TitleScene/TitleWindowInitializer`에서 테스트 복사본인 `TransparentWindowFlowTest`를 처음 실행하고 Main Scene까지 유지합니다.
+- `00.BootstrapScene`은 `700 x 700` 일반 Windowed 창을 사용하고, `01.TeamLogoScene`은 `900 x 900` 불투명 무테 창을 사용합니다. 두 Scene 모두 투명 창 컴포넌트는 사용하지 않습니다.
+- `02.TitleLoadingScene/TitleWindowInitializer`에서 테스트 복사본인 `TransparentWindowFlowTest`를 실행합니다. 다음 Scene에 팀 원본 `TransparentWindow`가 있으면 테스트 복사본이 제거되어 제어권을 원본에 넘깁니다.
 - 팀원이 작성한 원본 `TransparentWindow.cs`는 수정하지 않으며, 테스트 복사본과 동시에 실행되지 않도록 Flow Scene에서는 교체합니다.
 - `TransparentWindowFlowTest`는 Scene 전환 시 Main Camera와 네이티브 창 스타일을 다시 연결하므로 해상도 변경 뒤에도 무테·투명 상태를 복구합니다.
 - Title/Main의 투명 구간 Camera는 `Solid Color + Alpha 0`, HDR Off, MSAA Off를 사용합니다. 현재 PC URP의 32-bit HDR 버퍼에는 Alpha 채널이 없어, HDR을 켜면 DWM 적용이 성공해도 빈 영역이 검정색으로 출력되기 때문입니다.
@@ -134,8 +134,8 @@ manager.ActivatePreloadedScene();
 - `Screen.SetResolution` 중 HWND가 교체될 수 있으므로, 현재 프로세스의 표시 중인 `UnityWndClass`를 다시 검색해 실제 Player 창에만 적용합니다.
 - Player 프로세스 소유와 표시 상태가 확인된 창 핸들만 사용하므로 클릭 관통으로 포커스를 잃어도 다른 Windows 창을 잘못 수정하지 않습니다.
 - Logo 구간의 무테 처리는 DWM 투명화 없이 네이티브 테두리만 제거하므로 Title/Main의 투명 창 생명주기와 분리됩니다.
-- `TeamLogoScene`은 `900 x 900` 창과 같은 Canvas 기준 해상도를 사용하며 Background가 창 전체를 채웁니다.
+- `01.TeamLogoScene`은 `900 x 900` 창과 같은 Canvas 기준 해상도를 사용하며 Background가 창 전체를 채웁니다.
 - Logo 창은 무테 적용 뒤 외곽과 Client 영역을 모두 `900 x 900`으로 맞추고, 현재 창이 위치한 모니터의 작업 영역을 기준으로 중앙에 배치됩니다.
-- `TitleScene`부터는 현재 Player 창이 위치한 모니터의 네이티브 영역과 원점에 맞춘 뒤 Camera 및 전체 화면 Background의 Alpha를 0으로 사용합니다.
+- `02.TitleLoadingScene`부터는 현재 Player 창이 위치한 모니터의 네이티브 영역과 원점에 맞춘 뒤 Camera 및 전체 화면 Background의 Alpha를 0으로 사용합니다.
 - 현재 창 정책은 `Bootstrap → Logo → Title → Main` 단방향 Startup Flow를 기준으로 합니다. 추후 테두리가 필요한 Scene으로 되돌아가는 Flow를 추가할 때는 네이티브 테두리 복원과 지속 중인 `TransparentWindowFlowTest` 해제를 별도 정책으로 추가해야 합니다.
 - 이 동작은 `UNITY_EDITOR`에서 기본적으로 실행하지 않으므로 Windows Build에서 확인해야 합니다. 창 스타일뿐 아니라 다른 색상 창을 뒤에 둔 상태에서 빈 픽셀을 통해 그 색상이 실제로 보이는지도 확인해야 합니다.
