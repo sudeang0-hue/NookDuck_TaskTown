@@ -694,6 +694,86 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!1 &297052058
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 297052061}
+  - component: {fileID: 297052060}
+  - component: {fileID: 297052059}
+  m_Layer: 0
+  m_Name: OwnedItemsText
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &297052059
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 297052058}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
+  m_Material: {fileID: 0}
+  m_Color: {r: 0, g: 0, b: 0, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_FontData:
+    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_FontSize: 16
+    m_FontStyle: 0
+    m_BestFit: 0
+    m_MinSize: 10
+    m_MaxSize: 40
+    m_Alignment: 0
+    m_AlignByGeometry: 0
+    m_RichText: 1
+    m_HorizontalOverflow: 0
+    m_VerticalOverflow: 1
+    m_LineSpacing: 1
+  m_Text: "\uBCF4\uC720 \uB3D9\uBB3C/\uB3C4\uAD6C\n(\uAC00\uCC60\uB97C \uC9C4\uD589\uD558\uBA74
+    \uC5EC\uAE30 \uD45C\uC2DC\uB429\uB2C8\uB2E4)"
+--- !u!222 &297052060
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 297052058}
+  m_CullTransparentMesh: 1
+--- !u!224 &297052061
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 297052058}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2075142319}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: -675, y: 0}
+  m_SizeDelta: {x: 530, y: 980}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &319247123
 GameObject:
   m_ObjectHideFlags: 0
@@ -2867,13 +2947,16 @@ MonoBehaviour:
   animalGachaManager: {fileID: 2037981667}
   toolGachaManager: {fileID: 2037981666}
   difficultyTable: {fileID: 11400000, guid: 4da124aa23c3e5b4a9ca72f49b8448c2, type: 2}
+  townLevelProvider: {fileID: 2037981665}
+  townUpgradeEffectConfig:
+    efficiencyBuffPerLevel: 0.1
   coinWalletSource: {fileID: 900000003}
   resetOwnedButton: {fileID: 2055271443}
   nextDifficultyButton: {fileID: 1688430424}
   animalLevelUpButton: {fileID: 296190292}
   toolLevelUpButton: {fileID: 656030687}
-  townUpgradeUpButton: {fileID: 884011883}
   statusText: {fileID: 264293745}
+  ownedItemsText: {fileID: 297052059}
 --- !u!4 &1949157377
 Transform:
   m_ObjectHideFlags: 0
@@ -3259,6 +3342,7 @@ RectTransform:
   - {fileID: 884011880}
   - {fileID: 264293747}
   - {fileID: 296190289}
+  - {fileID: 297052061}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}

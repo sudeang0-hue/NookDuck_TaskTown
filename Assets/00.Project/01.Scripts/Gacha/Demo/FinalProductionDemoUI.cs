@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -33,11 +34,16 @@ namespace TaskTown.Gacha.Demo
         [Header("Texts")]
         [SerializeField] private Text statusText;
 
+        [Tooltip("지금까지 보유한 동물/도구 전체 목록을 표시합니다. 화면 왼쪽 빈 공간에 배치합니다.")]
+        [SerializeField] private Text ownedItemsText;
+
         // 동물/도구 ID별 레벨, 중복 보유 개수를 기억합니다. 다른 동물/도구를 뽑아도 여기 기록은 지워지지 않습니다.
+        // duplicateCount는 처음 뽑은 1개는 세지 않고, 그 이후에 추가로 뽑힌 개수만 셉니다.
+        // (예: 고양이를 5번 뽑으면 처음 1개 제외 duplicateCount=4가 되어 레벨1→2 요구치(4개)를 채움)
         private class OwnedProgress
         {
             public int level = 1;
-            public int duplicateCount = 1;
+            public int duplicateCount = 0;
         }
 
         private ICoinWallet coinWallet;
@@ -232,6 +238,8 @@ namespace TaskTown.Gacha.Demo
 
         private void RefreshStatusText()
         {
+            RefreshOwnedItemsText();
+
             if (statusText == null) return;
 
             AnimalData animal = ActiveAnimal;
@@ -278,6 +286,42 @@ namespace TaskTown.Gacha.Demo
                 $"Coin/s: {coinPerSecond:0.##}\n" +
                 $"Coin: {balance}" +
                 failureLine;
+        }
+
+        // 화면 왼쪽 빈 공간에 지금까지 뽑은 동물/도구 전체 목록(레벨, 중복 개수 포함)을 보여줍니다.
+        // "장착 중"인 것만 보여주는 statusText와 달리, 보유한 모든 종류를 다 나열합니다.
+        private void RefreshOwnedItemsText()
+        {
+            if (ownedItemsText == null) return;
+
+            if (animalsById.Count == 0 && toolsById.Count == 0)
+            {
+                ownedItemsText.text = "보유 동물/도구\n(가챠를 진행하면 여기 표시됩니다)";
+                return;
+            }
+
+            StringBuilder builder = new StringBuilder();
+            builder.Append("보유 동물 (").Append(animalsById.Count).Append("종)\n");
+            foreach (KeyValuePair<string, AnimalData> pair in animalsById)
+            {
+                OwnedProgress progress = animalProgressById[pair.Key];
+                int required = LevelUpRequirementCalculator.GetRequiredDuplicateCount(progress.level);
+                builder.Append("- ").Append(pair.Value.DisplayName)
+                    .Append(" Lv.").Append(progress.level)
+                    .Append(" (중복 ").Append(progress.duplicateCount).Append('/').Append(required).Append(")\n");
+            }
+
+            builder.Append("\n보유 도구 (").Append(toolsById.Count).Append("종)\n");
+            foreach (KeyValuePair<string, ToolData> pair in toolsById)
+            {
+                OwnedProgress progress = toolProgressById[pair.Key];
+                int required = LevelUpRequirementCalculator.GetRequiredDuplicateCount(progress.level);
+                builder.Append("- ").Append(pair.Value.DisplayName)
+                    .Append(" Lv.").Append(progress.level)
+                    .Append(" (중복 ").Append(progress.duplicateCount).Append('/').Append(required).Append(")\n");
+            }
+
+            ownedItemsText.text = builder.ToString();
         }
     }
 }
