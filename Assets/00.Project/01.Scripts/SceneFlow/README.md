@@ -26,15 +26,10 @@ AppRoot
 
 사운드 설정과 AudioSource Pool이 준비된 다음 `TeamLogoScene`으로 자동 전환합니다.
 
-## Unity 메뉴
+## Scene Flow 설정 관리
 
-- `Tools/TaskTown/Scene Flow/Generate Startup Flow`
-  - Scene, 설정 에셋, Build Settings를 생성하거나 누락 항목을 보완합니다.
-  - 기존 동명 Scene과 설정 에셋은 덮어쓰지 않습니다.
-- `Tools/TaskTown/Scene Flow/Validate Startup Flow`
-  - 현재 편집 중인 Scene을 바꾸지 않고 전체 시작 흐름을 Play Mode에서 검증합니다.
-- `Tools/TaskTown/Scene Flow/Select Startup Load Plan`
-  - 로딩 Step 통합 목록을 선택합니다.
+취합 브랜치에서는 자동 생성 Editor Tool을 사용하지 않습니다.
+Scene, 설정 에셋, Build Settings는 팀 충돌을 줄이기 위해 담당자가 직접 확인 후 수정합니다.
 
 ## 저장 시스템 연결 순서
 
@@ -92,7 +87,7 @@ Scene 이름 문자열을 직접 호출하지 않고 `SceneId`와 `SceneCatalog.
 3. Unity Build Settings의 Scene 목록에 해당 `.unity` 파일을 활성화 상태로 추가합니다.
 4. `SceneFlowManager.CanLoadScene`으로 Catalog와 Build Settings 연결을 확인합니다.
 
-`Generate Startup Flow` 도구는 기존 Catalog 항목과 추가 Build Scene을 보존합니다. Catalog와 Build Settings는 중앙 통합 파일이므로 한 명이 담당해서 수정하는 것을 권장합니다.
+Catalog와 Build Settings는 중앙 통합 파일이므로 한 명이 담당해서 수정하는 것을 권장합니다.
 
 ### 즉시 Scene 전환
 
@@ -119,8 +114,8 @@ manager.ActivatePreloadedScene();
 ### Title 이후 시작 대상 변경
 
 1. `TitleScene/StartupLoading`의 `StartupLoadPipeline > Target Scene`을 변경합니다.
-2. 새로 생성되는 기본 Flow도 바꿀 경우 `SceneFlowSetupTool`의 `StartupTargetSceneId`와 `StartupTargetScenePath`를 함께 변경합니다.
-3. `Validate Startup Flow`를 실행해 목표 Scene 도달 여부를 확인합니다.
+2. `Resources/SceneFlow/SceneCatalog.asset`에서 해당 SceneId와 Scene 경로가 맞는지 확인합니다.
+3. Play Mode 또는 빌드에서 `BootstrapScene > TeamLogoScene > TitleScene > Target Scene` 도달 여부를 확인합니다.
 
 ## 현재 UI
 

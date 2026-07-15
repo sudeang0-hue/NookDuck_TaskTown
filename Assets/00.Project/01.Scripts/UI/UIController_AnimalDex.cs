@@ -1,4 +1,5 @@
 using Animal.Data;
+using System;
 using System.Collections.Generic;
 using TaskTown.KDH;
 using UnityEngine;
@@ -7,20 +8,20 @@ namespace UI
 {
     public class UIController_AnimalDex : MonoBehaviour
     {
-        [Header("Å×½ºÆ®¿ë µ¿¹° ÀÎº¥Åä¸®\nÃßÈÄ ½ÇÁ¦ ÀÎº¥Åä¸® Å¬·¡½º·Î ¿¬°á")]
+        [Header("í…ŒìŠ¤íŠ¸ìš© ë™ë¬¼ ì¸ë²¤í† ë¦¬\nì¶”í›„ ì‹¤ì œ ì¸ë²¤í† ë¦¬ í´ë˜ìŠ¤ë¡œ ì—°ê²°")]
         [SerializeField] private InventoryManager_Animal animalInventory;
 
-        [Header("µ¿¹° µ¥ÀÌÅÍº£ÀÌ½º")]
+        [Header("ë™ë¬¼ ë°ì´í„°ë² ì´ìŠ¤")]
         [SerializeField] private AnimalDatabase animalDatabase;
 
-        [Header("µµ°¨ ½½·Ô")]
+        [Header("ë„ê° ìŠ¬ë¡¯")]
         [SerializeField] private SlotUI_AnimalList animalSlotPrefab;
         [SerializeField] private Transform animalSlotContentRoot;
 
-        [Header("µ¿¹° »ó¼¼ ÆäÀÌÁö")]
+        [Header("ë™ë¬¼ ìƒì„¸ í˜ì´ì§€")]
         [SerializeField] private UIController_AnimalPage animalPageController;
 
-        [Header("Runtime È®ÀÎ¿ë")]
+        [Header("Runtime í™•ì¸ìš©")]
         [SerializeField]
         private List<SlotUI_AnimalList> createdSlots = new List<SlotUI_AnimalList>();
         private readonly Dictionary<string, SlotUI_AnimalList> slotMap = new Dictionary<string, SlotUI_AnimalList>();
@@ -48,8 +49,8 @@ namespace UI
         }
 
         /// <summary>
-        /// AnimalDatabase¿¡ µî·ÏµÈ ÀüÃ¼ µ¿¹°À» ±âÁØÀ¸·Î µµ°¨ ½½·ÔÀ» »ı¼º.
-        /// Àá±İ »óÅÂÀÇ µµ°¨ ½½·ÔÀ¸·Î »ı¼ºÇÕ´Ï´Ù.
+        /// AnimalDatabaseì— ë“±ë¡ëœ ì „ì²´ ë™ë¬¼ì„ ê¸°ì¤€ìœ¼ë¡œ ë„ê° ìŠ¬ë¡¯ì„ ìƒì„±.
+        /// ì ê¸ˆ ìƒíƒœì˜ ë„ê° ìŠ¬ë¡¯ìœ¼ë¡œ ìƒì„±í•©ë‹ˆë‹¤.
         /// </summary>
         public void InitializeAnimalDex()
         {
@@ -66,8 +67,8 @@ namespace UI
 
 
         /// <summary>
-        /// AnimalDatabaseÀÇ µ¿¹° ¼ö¸¸Å­ ½½·ÔÀ» »ı¼ºÇÏ°í
-        /// °¢ ½½·Ô¿¡ AnimalDataSO¸¦ Àü´ŞÇÕ´Ï´Ù.
+        /// AnimalDatabaseì˜ ë™ë¬¼ ìˆ˜ë§Œí¼ ìŠ¬ë¡¯ì„ ìƒì„±í•˜ê³ 
+        /// ê° ìŠ¬ë¡¯ì— AnimalDataSOë¥¼ ì „ë‹¬í•©ë‹ˆë‹¤.
         /// </summary>
         private void CreateAnimalSlots()
         {
@@ -75,7 +76,7 @@ namespace UI
 
             if (animals == null || animals.Count == 0)
             {
-                Debug.LogWarning("[UIController_AnimalDex] AnimalDatabase¿¡ µî·ÏµÈ µ¿¹°ÀÌ ¾ø½À´Ï´Ù.");
+                Debug.LogWarning("[UIController_AnimalDex] AnimalDatabaseì— ë“±ë¡ëœ ë™ë¬¼ì´ ì—†ìŠµë‹ˆë‹¤.");
                 return;
             }
 
@@ -85,7 +86,7 @@ namespace UI
 
                 if (animalData == null)
                 {
-                    Debug.LogWarning($"[UIController_AnimalDex] AnimalDatabaseÀÇ {i}¹øÂ° µ¥ÀÌÅÍ°¡ ºñ¾î ÀÖ½À´Ï´Ù.");
+                    Debug.LogWarning($"[UIController_AnimalDex] AnimalDatabaseì˜ {i}ë²ˆì§¸ ë°ì´í„°ê°€ ë¹„ì–´ ìˆìŠµë‹ˆë‹¤.");
                     continue;
                 }
 
@@ -93,13 +94,13 @@ namespace UI
 
                 if (string.IsNullOrEmpty(animalId))
                 {
-                    Debug.LogWarning( $"[UIController_AnimalDex] {i}¹øÂ° µ¿¹° ID°¡ ºñ¾î ÀÖ½À´Ï´Ù.");
+                    Debug.LogWarning( $"[UIController_AnimalDex] {i}ë²ˆì§¸ ë™ë¬¼ IDê°€ ë¹„ì–´ ìˆìŠµë‹ˆë‹¤.");
                     continue;
                 }
 
                 if (slotMap.ContainsKey(animalId))
                 {
-                    Debug.LogWarning($"[UIController_AnimalDex] Áßº¹µÈ µ¿¹° IDÀÔ´Ï´Ù: {animalId}");
+                    Debug.LogWarning($"[UIController_AnimalDex] ì¤‘ë³µëœ ë™ë¬¼ IDì…ë‹ˆë‹¤: {animalId}");
                     continue;
                 }
 
@@ -115,15 +116,15 @@ namespace UI
         }
 
         /// <summary>
-        /// ÇöÀç µ¿¹° ÀÎº¥Åä¸®¿¡ Á¸ÀçÇÏ´Â µ¿¹°ÀÇ
-        /// µµ°¨ ½½·ÔÀ» ÇØ±İ »óÅÂ·Î °»½ÅÇÕ´Ï´Ù.
+        /// í˜„ì¬ ë™ë¬¼ ì¸ë²¤í† ë¦¬ì— ì¡´ì¬í•˜ëŠ” ë™ë¬¼ì˜
+        /// ë„ê° ìŠ¬ë¡¯ì„ í•´ê¸ˆ ìƒíƒœë¡œ ê°±ì‹ í•©ë‹ˆë‹¤.
         /// </summary>
         private void RefreshInventory()
         {
 
             if (animalInventory == null)
             {
-                Debug.LogWarning("[UIController_AnimalDex] InventoryManager_Animal.Instance°¡ ¾ø½À´Ï´Ù.");
+                Debug.LogWarning("[UIController_AnimalDex] InventoryManager_Animal.Instanceê°€ ì—†ìŠµë‹ˆë‹¤.");
                 return;
             }
 
@@ -137,7 +138,7 @@ namespace UI
         }
 
         /// <summary>
-        /// µ¿¹° È¹µæ ÀÌº¥Æ®·Î Àü´ŞµÈ IDÀÇ µµ°¨ ½½·Ô ÇÏ³ª¸¸ °»½ÅÇÕ´Ï´Ù.
+        /// ë™ë¬¼ íšë“ ì´ë²¤íŠ¸ë¡œ ì „ë‹¬ëœ IDì˜ ë„ê° ìŠ¬ë¡¯ í•˜ë‚˜ë§Œ ê°±ì‹ í•©ë‹ˆë‹¤.
         /// </summary>
         public void RefreshSlot(SlotData_Animal slotData)
         {
@@ -146,7 +147,7 @@ namespace UI
 
             if (!slotMap.TryGetValue(slotData.AnimalId, out SlotUI_AnimalList slot))
             {
-                Debug.LogWarning($"[UIController_AnimalDex] µµ°¨ ½½·ÔÀ» Ã£Áö ¸øÇß½À´Ï´Ù: {slotData.AnimalId}");
+                Debug.LogWarning($"[UIController_AnimalDex] ë„ê° ìŠ¬ë¡¯ì„ ì°¾ì§€ ëª»í–ˆìŠµë‹ˆë‹¤: {slotData.AnimalId}");
                 return;
             }
 
@@ -154,7 +155,7 @@ namespace UI
         }
 
         /// <summary>
-        /// ÀÎº¥Åä¸®ÀÇ µ¿¹° È¹µæ ÀÌº¥Æ® ±¸µ¶
+        /// ì¸ë²¤í† ë¦¬ì˜ ë™ë¬¼ íšë“ ì´ë²¤íŠ¸ êµ¬ë…
         /// </summary>
         private void SubscribeEvents()
         {
@@ -167,7 +168,7 @@ namespace UI
         }
 
         /// <summary>
-        /// µ¿¹° È¹µæ ÀÌº¥Æ® ±¸µ¶ ÇØÁ¦
+        /// ë™ë¬¼ íšë“ ì´ë²¤íŠ¸ êµ¬ë… í•´ì œ
         /// </summary>
         private void UnsubscribeEvents()
         {
@@ -181,37 +182,37 @@ namespace UI
 
 
         /// <summary>
-        /// ÇÊ¼ö Inspector ÂüÁ¶¸¦ °Ë»çÇÕ´Ï´Ù.
+        /// í•„ìˆ˜ Inspector ì°¸ì¡°ë¥¼ ê²€ì‚¬í•©ë‹ˆë‹¤.
         /// </summary>
         private bool ValidateReferences()
         {
             if (animalDatabase == null)
             {
-                Debug.LogWarning("[UIController_AnimalDex] AnimalDatabase°¡ ¿¬°áµÇÁö ¾Ê¾Ò½À´Ï´Ù.");
+                Debug.LogWarning("[UIController_AnimalDex] AnimalDatabaseê°€ ì—°ê²°ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.");
                 return false;
             }
             
             if (animalInventory == null)
             {
-                Debug.LogWarning("[UIController_AnimalDex] AnimalInventory °¡ ¿¬°áµÇÁö ¾Ê¾Ò½À´Ï´Ù.");
+                Debug.LogWarning("[UIController_AnimalDex] AnimalInventory ê°€ ì—°ê²°ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.");
                 return false;
             }
 
             if (animalSlotPrefab == null)
             {
-                Debug.LogWarning("[UIController_AnimalDex] µ¿¹° µµ°¨ ½½·Ô PrefabÀÌ ¿¬°áµÇÁö ¾Ê¾Ò½À´Ï´Ù.");
+                Debug.LogWarning("[UIController_AnimalDex] ë™ë¬¼ ë„ê° ìŠ¬ë¡¯ Prefabì´ ì—°ê²°ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.");
                 return false;
             }
 
             if (animalSlotContentRoot == null)
             {
-                Debug.LogWarning("[UIController_AnimalDex] µ¿¹° ½½·ÔÀ» »ı¼ºÇÒ Content Root°¡ ¿¬°áµÇÁö ¾Ê¾Ò½À´Ï´Ù.");
+                Debug.LogWarning("[UIController_AnimalDex] ë™ë¬¼ ìŠ¬ë¡¯ì„ ìƒì„±í•  Content Rootê°€ ì—°ê²°ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.");
                 return false;
             }
             
             if (animalPageController == null)
             {
-                Debug.LogWarning("[UIController_AnimalDex] µ¿¹° »ó¼¼ ÆäÀÌÁö UIController_AnimalPage°¡ ¿¬°áµÇÁö ¾Ê¾Ò½À´Ï´Ù.");
+                Debug.LogWarning("[UIController_AnimalDex] ë™ë¬¼ ìƒì„¸ í˜ì´ì§€ UIController_AnimalPageê°€ ì—°ê²°ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.");
 
                 return false;
             }
