@@ -4,29 +4,24 @@ using UnityEngine;
 
 namespace Tool.Data
 {
+    // ìƒì‚°ëŸ‰/ë ˆë²¨ì—…/í•´ê¸ˆ ë ˆë²¨ì€ ê³µí†µ ë² ì´ìŠ¤(GachaEntryData)ì—ì„œ ìƒì†ë°›ìŠµë‹ˆë‹¤.
+    // ISpecialToolEntryë¥¼ êµ¬í˜„í•´ì„œ FinalProductionCalculator/SpecialBonusCalculator(TaskTown.Gacha ì–´ì…ˆë¸”ë¦¬)ê°€
+    // Assembly-CSharpë¥¼ ì§ì ‘ ì°¸ì¡°í•˜ì§€ ì•Šê³ ë„ íŠ¹í™” ë³´ë„ˆìŠ¤ í•„ë“œë¥¼ ì½ì„ ìˆ˜ ìžˆê²Œ í•©ë‹ˆë‹¤.
     [CreateAssetMenu(menuName = "Inventory/Tool/Tool Data SO", fileName = "ToolDataSO")]
-    public class ToolDataSO : GachaEntryData
+    public class ToolDataSO : GachaEntryData, ISpecialToolEntry
     {
-        [Header("µµ±¸ ÇØ±Ý ·¹º§")]
-        [SerializeField] private int unlockLevel;  // µµ±¸ ÇØ±Ý ·¹º§
-
-        [Header("µµ±¸ ¼³¸í±Û")]
+        [Header("ë„êµ¬ ì„¤ëª…")]
         [TextArea(3, 5)]
-        [SerializeField] private string toolDescription;  // µµ±¸ ¼³¸í±Û
+        [SerializeField] private string toolDescription;
 
-        [Header("»ý»ê·®")]
-        [SerializeField] private float baseCoinPerSecond;
-
-        [Header("Æ¯È­ µ¿¹°")]
+        [Header("íŠ¹í™” ë™ë¬¼")]
         [SerializeField] private string specialAnimalId;
         [SerializeField, Range(0f, 5f)] private float specialAnimalBonusRate;
 
-        [Header("µ¥½ºÅ© Å¸¿î Ç¥½Ã¿ë")]
+        [Header("ë°°ì¹˜ìš© í”„ë¦¬íŒ¹")]
         [SerializeField] private GameObject toolPrefab;
 
-        public int UnlockLevel => unlockLevel;
         public string ToolDescription => toolDescription;
-        public float BaseCoinPerSecond => baseCoinPerSecond;
         public string SpecialAnimalId => specialAnimalId;
         public float SpecialAnimalBonusRate => specialAnimalBonusRate;
         public GameObject ToolPrefab => toolPrefab;

@@ -20,13 +20,25 @@ namespace TaskTown.Gacha
 
         public GachaRateTableData RateTable => rateTable;
 
-        public IReadOnlyList<GachaEntryData> GetEntries(ItemGrade grade)
+        // townLevel 미만에서 해금되는(unlockTownLevel <= townLevel) 종류만 반환합니다.
+        // 아직 해금되지 않은 종류는 등급 확률에 걸리더라도 뽑히지 않습니다.
+        public IReadOnlyList<GachaEntryData> GetEntries(ItemGrade grade, int townLevel)
         {
             for (int i = 0; i < entryGroups.Count; i++)
             {
                 if (entryGroups[i].grade == grade)
                 {
-                    return entryGroups[i].entries;
+                    List<GachaEntryData> entries = entryGroups[i].entries;
+                    List<GachaEntryData> unlocked = new List<GachaEntryData>(entries.Count);
+                    for (int e = 0; e < entries.Count; e++)
+                    {
+                        if (entries[e] != null && entries[e].UnlockTownLevel <= townLevel)
+                        {
+                            unlocked.Add(entries[e]);
+                        }
+                    }
+
+                    return unlocked;
                 }
             }
 
