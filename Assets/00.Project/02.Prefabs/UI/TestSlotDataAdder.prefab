@@ -1,0 +1,60 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &133620224503696087
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3931576683824452966}
+  - component: {fileID: 732193312123402512}
+  m_Layer: 0
+  m_Name: TestSlotDataAdder
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3931576683824452966
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 133620224503696087}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1599.7588, y: 545.1875, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &732193312123402512
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 133620224503696087}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9e82f746f7ac62847aabf0caa1d701b0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TestAnimalAdder
+  animalinventory: {fileID: 0}
+  animalinventoryui: {fileID: 0}
+  testAnimals:
+  - {fileID: 11400000, guid: ac100a4e84647ca49a4e5fe0ec5a04d6, type: 2}
+  - {fileID: 11400000, guid: 9441632b2d2672b4293f552b36d8e2df, type: 2}
+  - {fileID: 11400000, guid: 320ea65287fee064191e7b90ca2b4882, type: 2}
+  - {fileID: 11400000, guid: ed821d69a124ac64aaee6fc4915c2160, type: 2}
+  - {fileID: 11400000, guid: bf9c7c201049a6d40ae6e5ed97070f45, type: 2}
+  toolinventory: {fileID: 0}
+  toolinventoryui: {fileID: 0}
+  testTools:
+  - {fileID: 11400000, guid: 2aeff72e0708af24c8d2994576444863, type: 2}
+  - {fileID: 11400000, guid: 1c8f535a42fd6684ead0b29247764eab, type: 2}
+  - {fileID: 11400000, guid: 57a8ffbcb32cbf64298aead4abb43ae1, type: 2}
