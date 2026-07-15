@@ -46,7 +46,7 @@ public class SoundSettingsPanel : MonoBehaviour
     [SerializeField] private TextMeshProUGUI uiPercentText;
 
     [Header("Environment")]
-    [FormerlySerializedAs("animalIconImage")]
+    [FormerlySerializedAs("toolIconImage")]
     [SerializeField] private Image environmentIconImage;
     [FormerlySerializedAs("animalSlider")]
     [SerializeField] private Slider environmentSlider;

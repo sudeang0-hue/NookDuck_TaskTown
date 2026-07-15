@@ -13,7 +13,7 @@ public enum GameMenuState
     MiniGame
 }
 
-namespace KAY
+namespace UI
 {
 
     public class UIPanelWindow : MonoBehaviour, IBeginDragHandler, IDragHandler, IPointerDownHandler

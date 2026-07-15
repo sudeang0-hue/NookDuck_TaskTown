@@ -1,5 +1,5 @@
 using Animal.Data;
-using KAY;
+using UI;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
