@@ -1,6 +1,7 @@
+using Animal.Data;
 using System;
 using System.Collections.Generic;
-using Animal.Data;
+using TaskTown.Gacha;
 using UnityEngine;
 
 namespace TaskTown.KDH
@@ -82,7 +83,7 @@ namespace TaskTown.KDH
                 animalSlotsDic.Add(slot.AnimalId, slot);
 
                 // 성장 수치 계산 시스템 연결
-                //RefreshSlotGrowthData(slot);
+                RefreshSlotGrowthData(slot);
             }
         }
 
@@ -130,7 +131,7 @@ namespace TaskTown.KDH
                 existingSlot.AddCount();
 
                 // 성창 수치 계산 시스템 연결
-                // NotifySlotChanged(existingSlot);
+                NotifySlotChanged(existingSlot);
 
                 Debug.Log($"[InventoryManager_Animal] 중복 동물 획득:" +
                     $"{animalData.DisplayName} + 1 / 현재 수량: {existingSlot.CurrentCount}");
@@ -139,6 +140,8 @@ namespace TaskTown.KDH
             }
 
             SlotData_Animal newSlot = new SlotData_Animal(animalData, level: 1, currentCount: 1);
+
+            RefreshSlotGrowthData(newSlot);
 
             animalSlotsList.Add(newSlot);
             animalSlotsDic.Add(animalData.Id, newSlot);
@@ -213,25 +216,10 @@ namespace TaskTown.KDH
         /// </summary>
         public bool CanLevelUpAnimal(string animalId)
         {
-            if (!TryGetAnimalSlot(animalId, out SlotData_Animal slot)) return false;
-
-            if (slot.IsMaxLevel) return false;
-
-            int neededAmount = slot.GetLevelUpCost();
-
-            if (neededAmount <= 0)
-            {
-                Debug.Log("레벨업 요구 수량이 0이하 입니다.");
+            if (!TryGetAnimalSlot(animalId, out SlotData_Animal slot))
                 return false;
-            }
 
-            if (slot.CurrentCount < neededAmount) // 예: 렙업에 4마리가 필요하면 기본 1마리에 중복 4마리를 더해 5마리 필요
-            {
-                Debug.Log($"[InventoryManager_Animal] 레벨업 요구 수량이 부족합니다. 필요 수량: {neededAmount + 1 - slot.CurrentCount}");
-                return false;
-            }
-
-            return true;
+            return slot.CanLevelUp();
         }
 
         public bool TryLevelUpAnimal(string animalId)
@@ -248,21 +236,17 @@ namespace TaskTown.KDH
                 return false;
             }
 
-            //if (!slot.TryConsumeCount())
-            //{
-            //    int materialCount = Mathf.Max(0, slot.CurrentCount - 1);
-            //
-            //    Debug.Log($"[InventoryManager_Animal]" +
-            //        $"레벨업 재료 부족: {animalId} / 보유 수량 {materialCount} / 필요 수량 {requiredCount}");
-            //
-            //    return false;
-            //}
+            // 재료 소모 후 레벨업 (본체 1마리는 유지)
+            if (!slot.TryConsumeForLevelUp())
+            {
+                Debug.Log($"[InventoryManager_Animal] 레벨업 재료가 부족합니다: {animalId}");
+                return false;
+            }
 
-            if (CanLevelUpAnimal(animalId) == true) slot.AnimalLevelUp();
-            else return false;
+            slot.AnimalLevelUp();
 
             // 성장 수치 계산 시스템 연결
-            // RefreshSlotGrowthData(slot);
+            RefreshSlotGrowthData(slot);
 
             NotifySlotChanged(slot);
 
@@ -368,15 +352,19 @@ namespace TaskTown.KDH
 
         /// <summary>
         /// 현재 레벨을 기반으로 레벨업 요구 수량과 비용 갱신.
-        /// 성장 수치 계산 시스템이 구현되면 연결합니다.
+        /// 성장 수치 계산 시스템인 LevelUpRequirementCalculator 를 연결합니다.
         /// </summary>
-        //private void RefreshSlotGrowthData(SlotData_Animal slot)
-        //{
-        //    if (slot == null)
-        //        return;
-        //
-        //    Debug.Log("현재 레벨을 기반으로 레벨업 요구 수량과 비용을 갱신");
-        //}
+        private void RefreshSlotGrowthData(SlotData_Animal slot)
+        {
+            if (slot == null)
+                return;
+            
+            int requiredCount = LevelUpRequirementCalculator.GetRequiredDuplicateCount(slot.Level);
+
+            slot.ApplyGrowthData(requiredCount, slot.LevelUpCost, false);
+
+            Debug.Log("현재 레벨을 기반으로 레벨업 요구 수량과 비용을 갱신");
+        }
 
 
         /// <summary>

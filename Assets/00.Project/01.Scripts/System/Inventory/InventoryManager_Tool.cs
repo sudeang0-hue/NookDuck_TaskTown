@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using TaskTown.Gacha;
 using Tool.Data;
 using UnityEngine;
 
@@ -76,6 +77,9 @@ namespace TaskTown.KDH
                 }
 
                 toolSlotsDic.Add(slot.ToolId, slot);
+
+                // 성장 수치 계산 시스템 연결
+                RefreshSlotGrowthData(slot);
             }
         }
 
@@ -116,6 +120,9 @@ namespace TaskTown.KDH
             {
                 existingSlot.AddCount();
 
+                // 성장 수치 계산 시스템 연결
+                NotifySlotChanged(existingSlot);
+
                 Debug.Log($"[InventoryManager_Tool] 중복 도구 획득:" +
                     $"{toolData.DisplayName} + 1 / 현재 수량: {existingSlot.CurrentCount}");
 
@@ -129,6 +136,8 @@ namespace TaskTown.KDH
                 currentSet: false,
                 currentAnimalSet: false,
                 currentAnimalId: null);
+
+            RefreshSlotGrowthData(newSlot);
 
             toolSlotsList.Add(newSlot);
             toolSlotsDic.Add(toolData.Id, newSlot);
@@ -175,25 +184,10 @@ namespace TaskTown.KDH
         /// </summary>
         public bool CanLevelUpTool(string toolId)
         {
-            if (!TryGetToolSlot(toolId, out SlotData_Tool slot)) return false;
-
-            if (slot.IsMaxLevel) return false;
-
-            int neededAmount = slot.GetLevelUpCost();
-
-            if (neededAmount <= 0)
-            {
-                Debug.Log("[InventoryManager_Tool] 레벨업 요구 수량이 0 이하입니다.");
+            if (!TryGetToolSlot(toolId, out SlotData_Tool slot))
                 return false;
-            }
 
-            if (slot.CurrentCount < neededAmount)
-            {
-                Debug.Log($"[InventoryManager_Tool] 레벨업 요구 수량이 부족합니다. 필요 수량: {neededAmount + 1 - slot.CurrentCount}");
-                return false;
-            }
-
-            return true;
+            return slot.CanLevelUp();
         }
 
         /// <summary>
@@ -213,10 +207,17 @@ namespace TaskTown.KDH
                 return false;
             }
 
-            if (!CanLevelUpTool(toolId))
+            // 재료 소모 후 레벨업 (본체 1개는 유지)
+            if (!slot.TryConsumeForLevelUp())
+            {
+                Debug.Log($"[InventoryManager_Tool] 레벨업 재료가 부족합니다: {toolId}");
                 return false;
+            }
 
             slot.ToolLevelUp();
+
+            // 성장 수치 계산 시스템 연결
+            RefreshSlotGrowthData(slot);
 
             NotifySlotChanged(slot);
 
@@ -368,11 +369,28 @@ namespace TaskTown.KDH
                     saveData.currentAnimalSet,
                     saveData.currentAnimalId);
 
+                // 성장 수치 계산 시스템 연결
+                RefreshSlotGrowthData(runtimeSlot);
+
                 toolSlotsList.Add(runtimeSlot);
                 toolSlotsDic.Add(runtimeSlot.ToolId, runtimeSlot);
             }
 
             NotifyInventoryChanged();
+        }
+
+        /// <summary>
+        /// 현재 레벨을 기반으로 레벨업 요구 수량과 비용 갱신.
+        /// 성장 수치 계산 시스템이 구현되면 연결합니다.
+        /// </summary>
+        private void RefreshSlotGrowthData(SlotData_Tool slot)
+        {
+            if (slot == null)
+                return;
+
+            int requiredCount = LevelUpRequirementCalculator.GetRequiredDuplicateCount(slot.Level);
+
+            slot.ApplyGrowthData(requiredCount, slot.LevelUpCost, false);
         }
 
         /// <summary>

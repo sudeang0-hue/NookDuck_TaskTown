@@ -1,3 +1,4 @@
+using System;
 using Tool.Data;
 using UnityEngine;
 
@@ -17,6 +18,7 @@ namespace TaskTown.KDH
         [Header("레벨업 계산 데이터")]
         [SerializeField] private bool isMaxLevel;
         [SerializeField] private int levelUpCost;
+        [SerializeField] private int requiredUpgradeCount;
 
 
         // TODO : 총 생산량 ///  (동물 + 도구) * 특화 * 난이도 + (마을 업그레이드?)
@@ -30,6 +32,7 @@ namespace TaskTown.KDH
         public string CurrentAnimalId => currentAnimalId != null ? currentAnimalId : string.Empty;
         public bool IsMaxLevel => isMaxLevel;
         public int LevelUpCost => levelUpCost;
+        public int RequiredUpgradeCount => requiredUpgradeCount;
 
 
         public SlotData_Tool(ToolDataSO toolData, int level, int currentCount, bool currentSet, bool currentAnimalSet, string currentAnimalId)
@@ -112,11 +115,51 @@ namespace TaskTown.KDH
 
             levelUpCost = neededCost;
 
-
-
             return levelUpCost;
         }
 
+        /// <summary>
+        /// 요구 수량, 레벨업 비용, 최대 레벨 여부 설정
+        /// </summary>
+        public void ApplyGrowthData(int requiredCount, int cost, bool maxLevel)
+        {
+            requiredUpgradeCount = Mathf.Max(0, requiredCount);
+            levelUpCost = Math.Max(0, cost);
+            isMaxLevel = maxLevel;
+        }
 
+        /// <summary>
+        /// 레벨업 가능 여부.
+        /// 본체 1개를 제외한 재료 수량이 요구 수량 이상인지 확인합니다.
+        /// </summary>
+        public bool CanLevelUp()
+        {
+            if (isMaxLevel)
+                return false;
+
+            if (requiredUpgradeCount <= 0)
+                return false;
+
+            // UI 표시 수량(CurrentCount - 1)이 요구 수량에 도달했는지 판정
+            return (currentCount - 1) >= requiredUpgradeCount;
+        }
+
+        /// <summary>
+        /// 레벨업 재료 수량을 소비합니다.
+        /// 본체 1개는 남기고, 요구 수량만큼만 차감합니다.
+        /// </summary>
+        public bool TryConsumeForLevelUp()
+        {
+            if (!CanLevelUp())
+                return false;
+
+            currentCount -= requiredUpgradeCount;
+
+            // 본체 1개는 항상 유지
+            if (currentCount < 1)
+                currentCount = 1;
+
+            return true;
+        }
     }
 }
