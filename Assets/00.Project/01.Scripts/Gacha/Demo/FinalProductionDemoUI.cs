@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -15,6 +16,12 @@ namespace TaskTown.Gacha.Demo
         [SerializeField] private ToolGachaManager toolGachaManager;
         [SerializeField] private DifficultyProductionTable difficultyTable;
 
+        [Tooltip("GachaDemoUI와 같은 DemoTownLevelProvider를 연결하면, 실제 마을 레벨업 결과가 생산 효율 버프에 반영됩니다.")]
+        [SerializeField] private DemoTownLevelProvider townLevelProvider;
+
+        [Tooltip("마을 레벨당 전체 생산량에 곱해지는 효율 버프입니다.")]
+        [SerializeField] private TownUpgradeEffectConfig townUpgradeEffectConfig = new TownUpgradeEffectConfig();
+
         [Tooltip("ICoinWallet를 구현한 컴포넌트를 연결합니다(예: CoinManager). 비워두면 코인 누적 없이 수치만 표시합니다.")]
         [SerializeField] private MonoBehaviour coinWalletSource;
 
@@ -23,37 +30,43 @@ namespace TaskTown.Gacha.Demo
         [SerializeField] private Button nextDifficultyButton;
         [SerializeField] private Button animalLevelUpButton;
         [SerializeField] private Button toolLevelUpButton;
-        [SerializeField] private Button townUpgradeUpButton;
 
         [Header("Texts")]
         [SerializeField] private Text statusText;
 
+        [Tooltip("지금까지 보유한 동물/도구 전체 목록을 표시합니다. 화면 왼쪽 빈 공간에 배치합니다.")]
+        [SerializeField] private Text ownedItemsText;
+
         // 동물/도구 ID별 레벨, 중복 보유 개수를 기억합니다. 다른 동물/도구를 뽑아도 여기 기록은 지워지지 않습니다.
+        // duplicateCount는 처음 뽑은 1개는 세지 않고, 그 이후에 추가로 뽑힌 개수만 셉니다.
+        // (예: 고양이를 5번 뽑으면 처음 1개 제외 duplicateCount=4가 되어 레벨1→2 요구치(4개)를 채움)
         private class OwnedProgress
         {
             public int level = 1;
-            public int duplicateCount = 1;
+            public int duplicateCount = 0;
         }
 
         private ICoinWallet coinWallet;
 
-        private readonly Dictionary<string, AnimalData> animalsById = new Dictionary<string, AnimalData>();
+        private readonly Dictionary<string, GachaEntryData> animalsById = new Dictionary<string, GachaEntryData>();
         private readonly Dictionary<string, OwnedProgress> animalProgressById = new Dictionary<string, OwnedProgress>();
         private string activeAnimalId;
 
-        private readonly Dictionary<string, ToolData> toolsById = new Dictionary<string, ToolData>();
+        private readonly Dictionary<string, GachaEntryData> toolsById = new Dictionary<string, GachaEntryData>();
         private readonly Dictionary<string, OwnedProgress> toolProgressById = new Dictionary<string, OwnedProgress>();
         private string activeToolId;
 
         private DifficultyType difficulty = DifficultyType.Normal;
-        private float townUpgradeMultiplier = 1f;
         private string levelUpFailureMessage;
 
         // 초당 생산량의 소수점 이하를 보관하다가 1 이상 쌓이면 정수만큼 코인으로 반영합니다.
         private float productionBuffer;
 
-        private AnimalData ActiveAnimal => activeAnimalId != null && animalsById.TryGetValue(activeAnimalId, out AnimalData animal) ? animal : null;
-        private ToolData ActiveTool => activeToolId != null && toolsById.TryGetValue(activeToolId, out ToolData tool) ? tool : null;
+        // 마을 레벨업(GachaDemoUI 쪽 버튼)이 실제로 반영되도록, 매번 townLevelProvider의 현재 레벨을 기준으로 계산합니다.
+        private float TownUpgradeMultiplier => townUpgradeEffectConfig.GetProductionMultiplier(townLevelProvider != null ? townLevelProvider.CurrentTownLevel : 1);
+
+        private GachaEntryData ActiveAnimal => activeAnimalId != null && animalsById.TryGetValue(activeAnimalId, out GachaEntryData animal) ? animal : null;
+        private GachaEntryData ActiveTool => activeToolId != null && toolsById.TryGetValue(activeToolId, out GachaEntryData tool) ? tool : null;
         private OwnedProgress ActiveAnimalProgress => activeAnimalId != null ? animalProgressById[activeAnimalId] : null;
         private OwnedProgress ActiveToolProgress => activeToolId != null ? toolProgressById[activeToolId] : null;
 
@@ -63,7 +76,6 @@ namespace TaskTown.Gacha.Demo
             if (nextDifficultyButton != null) nextDifficultyButton.onClick.AddListener(NextDifficulty);
             if (animalLevelUpButton != null) animalLevelUpButton.onClick.AddListener(AnimalLevelUp);
             if (toolLevelUpButton != null) toolLevelUpButton.onClick.AddListener(ToolLevelUp);
-            if (townUpgradeUpButton != null) townUpgradeUpButton.onClick.AddListener(TownUpgradeUp);
 
             coinWallet = coinWalletSource as ICoinWallet;
 
@@ -84,12 +96,12 @@ namespace TaskTown.Gacha.Demo
 
         private void Update()
         {
-            AnimalData animal = ActiveAnimal;
-            ToolData tool = ActiveTool;
+            GachaEntryData animal = ActiveAnimal;
+            GachaEntryData tool = ActiveTool;
             if (animal == null && tool == null) return;
 
             float coinPerSecond = FinalProductionCalculator.CalculateCoinPerSecond(
-                animal, tool, ActiveAnimalProgress?.level ?? 1, ActiveToolProgress?.level ?? 1, difficulty, difficultyTable, townUpgradeMultiplier);
+                animal, tool, ActiveAnimalProgress?.level ?? 1, ActiveToolProgress?.level ?? 1, difficulty, difficultyTable, TownUpgradeMultiplier);
 
             productionBuffer += coinPerSecond * Time.deltaTime;
             if (productionBuffer >= 1f && coinWallet != null)
@@ -106,7 +118,7 @@ namespace TaskTown.Gacha.Demo
         // 어느 쪽이든 "장착 중" 대상은 방금 뽑은 것으로 바뀌지만, 기존 기록은 지워지지 않습니다.
         private void HandleAnimalGachaResolved(GachaResult result)
         {
-            AnimalData rolled = result.Entry as AnimalData;
+            GachaEntryData rolled = result.Entry;
             if (rolled == null) return;
 
             if (animalProgressById.TryGetValue(rolled.Id, out OwnedProgress progress))
@@ -125,7 +137,7 @@ namespace TaskTown.Gacha.Demo
 
         private void HandleToolGachaResolved(GachaResult result)
         {
-            ToolData rolled = result.Entry as ToolData;
+            GachaEntryData rolled = result.Entry;
             if (rolled == null) return;
 
             if (toolProgressById.TryGetValue(rolled.Id, out OwnedProgress progress))
@@ -168,7 +180,7 @@ namespace TaskTown.Gacha.Demo
         // 중복 개수(4^레벨)와 코인 비용을 모두 충족해야 레벨업됩니다. 장착 중인(가장 최근에 뽑은) 동물/도구 기준입니다.
         private void AnimalLevelUp()
         {
-            AnimalData animal = ActiveAnimal;
+            GachaEntryData animal = ActiveAnimal;
             OwnedProgress progress = ActiveAnimalProgress;
             if (animal == null || progress == null) return;
 
@@ -194,7 +206,7 @@ namespace TaskTown.Gacha.Demo
 
         private void ToolLevelUp()
         {
-            ToolData tool = ActiveTool;
+            GachaEntryData tool = ActiveTool;
             OwnedProgress progress = ActiveToolProgress;
             if (tool == null || progress == null) return;
 
@@ -224,18 +236,14 @@ namespace TaskTown.Gacha.Demo
             RefreshStatusText();
         }
 
-        private void TownUpgradeUp()
-        {
-            townUpgradeMultiplier += 0.1f;
-            RefreshStatusText();
-        }
-
         private void RefreshStatusText()
         {
+            RefreshOwnedItemsText();
+
             if (statusText == null) return;
 
-            AnimalData animal = ActiveAnimal;
-            ToolData tool = ActiveTool;
+            GachaEntryData animal = ActiveAnimal;
+            GachaEntryData tool = ActiveTool;
             OwnedProgress animalProgress = ActiveAnimalProgress;
             OwnedProgress toolProgress = ActiveToolProgress;
 
@@ -246,7 +254,7 @@ namespace TaskTown.Gacha.Demo
             }
 
             float coinPerSecond = FinalProductionCalculator.CalculateCoinPerSecond(
-                animal, tool, animalProgress?.level ?? 1, toolProgress?.level ?? 1, difficulty, difficultyTable, townUpgradeMultiplier);
+                animal, tool, animalProgress?.level ?? 1, toolProgress?.level ?? 1, difficulty, difficultyTable, TownUpgradeMultiplier);
 
             long balance = coinWallet != null ? coinWallet.Balance : 0;
 
@@ -274,10 +282,46 @@ namespace TaskTown.Gacha.Demo
 
             statusText.text =
                 $"Tool: {toolLabel}\nAnimal: {animalLabel}\n" +
-                $"Difficulty: {difficulty}   Town Upgrade: x{townUpgradeMultiplier:0.0}\n" +
+                $"Difficulty: {difficulty}   Town Upgrade: x{TownUpgradeMultiplier:0.0}\n" +
                 $"Coin/s: {coinPerSecond:0.##}\n" +
                 $"Coin: {balance}" +
                 failureLine;
+        }
+
+        // 화면 왼쪽 빈 공간에 지금까지 뽑은 동물/도구 전체 목록(레벨, 중복 개수 포함)을 보여줍니다.
+        // "장착 중"인 것만 보여주는 statusText와 달리, 보유한 모든 종류를 다 나열합니다.
+        private void RefreshOwnedItemsText()
+        {
+            if (ownedItemsText == null) return;
+
+            if (animalsById.Count == 0 && toolsById.Count == 0)
+            {
+                ownedItemsText.text = "보유 동물/도구\n(가챠를 진행하면 여기 표시됩니다)";
+                return;
+            }
+
+            StringBuilder builder = new StringBuilder();
+            builder.Append("보유 동물 (").Append(animalsById.Count).Append("종)\n");
+            foreach (KeyValuePair<string, GachaEntryData> pair in animalsById)
+            {
+                OwnedProgress progress = animalProgressById[pair.Key];
+                int required = LevelUpRequirementCalculator.GetRequiredDuplicateCount(progress.level);
+                builder.Append("- ").Append(pair.Value.DisplayName)
+                    .Append(" Lv.").Append(progress.level)
+                    .Append(" (중복 ").Append(progress.duplicateCount).Append('/').Append(required).Append(")\n");
+            }
+
+            builder.Append("\n보유 도구 (").Append(toolsById.Count).Append("종)\n");
+            foreach (KeyValuePair<string, GachaEntryData> pair in toolsById)
+            {
+                OwnedProgress progress = toolProgressById[pair.Key];
+                int required = LevelUpRequirementCalculator.GetRequiredDuplicateCount(progress.level);
+                builder.Append("- ").Append(pair.Value.DisplayName)
+                    .Append(" Lv.").Append(progress.level)
+                    .Append(" (중복 ").Append(progress.duplicateCount).Append('/').Append(required).Append(")\n");
+            }
+
+            ownedItemsText.text = builder.ToString();
         }
     }
 }

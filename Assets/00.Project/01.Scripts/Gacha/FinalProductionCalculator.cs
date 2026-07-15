@@ -10,13 +10,16 @@ namespace TaskTown.Gacha
     //             x 난이도 보정 x 마을 업그레이드 보정
     //
     // 난이도 보정과 마을 업그레이드 보정은 동물/도구 각각이 아니라 합산된 전체 생산량에 적용한다.
-    // 마을 업그레이드 보정은 아직 마을 업그레이드 시스템이 없어 값(townUpgradeMultiplier)을 파라미터로 받는다.
-    // 마을 업그레이드 시스템이 만들어지면 그 쪽에서 계산한 배율을 여기에 넘겨주면 된다.
+    // 마을 업그레이드 보정은 TownUpgradeEffectConfig가 계산한 배율을 townUpgradeMultiplier로 받는다.
+    //
+    // animal/tool은 GachaEntryData(공통 베이스)로 받습니다. 구체 타입(AnimalDataSO/ToolDataSO 등)은
+    // Assembly-CSharp에 있고 TaskTown.Gacha 어셈블리는 그쪽을 참조할 수 없어서(순환 참조),
+    // 여기서는 GachaEntryData 공통 필드/메서드만 쓰고, 특화 보너스는 ISpecialToolEntry 인터페이스로 처리합니다.
     public static class FinalProductionCalculator
     {
         public static float CalculateCoinPerSecond(
-            AnimalData animal,
-            ToolData tool,
+            GachaEntryData animal,
+            GachaEntryData tool,
             int animalLevel,
             int toolLevel,
             DifficultyType difficulty,
