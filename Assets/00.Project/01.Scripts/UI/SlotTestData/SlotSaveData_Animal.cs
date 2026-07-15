@@ -1,7 +1,6 @@
 using Animal.Data;
-using UnityEngine;
 
-namespace Test.UI
+namespace Test
 {
     [System.Serializable]
     public class SlotSaveData_Animal
