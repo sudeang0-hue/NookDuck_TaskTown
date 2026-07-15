@@ -4,31 +4,25 @@ using UnityEngine;
 
 namespace Animal.Data
 {
-
+    // ìƒì‚°ëŸ‰/ë ˆë²¨ì—…/í•´ê¸ˆ ë ˆë²¨ì€ ê³µí†µ ë² ì´ìŠ¤(GachaEntryData)ì—ì„œ ìƒì†ë°›ìŠµë‹ˆë‹¤.
     [CreateAssetMenu(menuName = "Inventory/Animal/Animal Data SO", fileName = "AnimalDataSO")]
     public class AnimalDataSO : GachaEntryData
     {
-        [Header("µ¿¹° ÇØ±Ý ·¹º§")]
-        [SerializeField] private int unlockLevel;  // µ¿¹° ÇØ±Ý ·¹º§
-
-        [Header("µ¿¹° µµ°¨ ¼³¸í±Û")]
+        [Header("ë„ê° ì„¤ëª…")]
         [TextArea(3, 5)]
-        [SerializeField] private string animalDescription;  // µ¿¹° µµ°¨ ¼³¸í±Û
+        [SerializeField] private string animalDescription;
 
-        [Header("µµ°¨ Á¤·Ä")]
+        [Header("ì •ë ¬ ìˆœì„œ")]
         [SerializeField] private int dexIndex;
 
-        [Header("³­ÀÌµµ Àü¿ë µ¿¹° ¿©ºÎ")]
+        [Header("ë‚œì´ë„ ì „ìš© ì—¬ë¶€")]
         [SerializeField] private bool isDifficultyExclusive;
         [SerializeField] private DifficultyType requiredDifficulty = DifficultyType.Normal;
 
 
-        public int UnlockLevel => unlockLevel;
         public string AnimalDescription => animalDescription;
         public int DexIndex => dexIndex;
         public bool IsDifficultyExclusive => isDifficultyExclusive;
         public DifficultyType RequiredDifficulty => requiredDifficulty;
-
     }
 }
-

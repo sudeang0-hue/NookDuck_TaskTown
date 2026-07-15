@@ -48,11 +48,11 @@ namespace TaskTown.Gacha.Demo
 
         private ICoinWallet coinWallet;
 
-        private readonly Dictionary<string, AnimalData> animalsById = new Dictionary<string, AnimalData>();
+        private readonly Dictionary<string, GachaEntryData> animalsById = new Dictionary<string, GachaEntryData>();
         private readonly Dictionary<string, OwnedProgress> animalProgressById = new Dictionary<string, OwnedProgress>();
         private string activeAnimalId;
 
-        private readonly Dictionary<string, ToolData> toolsById = new Dictionary<string, ToolData>();
+        private readonly Dictionary<string, GachaEntryData> toolsById = new Dictionary<string, GachaEntryData>();
         private readonly Dictionary<string, OwnedProgress> toolProgressById = new Dictionary<string, OwnedProgress>();
         private string activeToolId;
 
@@ -65,8 +65,8 @@ namespace TaskTown.Gacha.Demo
         // 마을 레벨업(GachaDemoUI 쪽 버튼)이 실제로 반영되도록, 매번 townLevelProvider의 현재 레벨을 기준으로 계산합니다.
         private float TownUpgradeMultiplier => townUpgradeEffectConfig.GetProductionMultiplier(townLevelProvider != null ? townLevelProvider.CurrentTownLevel : 1);
 
-        private AnimalData ActiveAnimal => activeAnimalId != null && animalsById.TryGetValue(activeAnimalId, out AnimalData animal) ? animal : null;
-        private ToolData ActiveTool => activeToolId != null && toolsById.TryGetValue(activeToolId, out ToolData tool) ? tool : null;
+        private GachaEntryData ActiveAnimal => activeAnimalId != null && animalsById.TryGetValue(activeAnimalId, out GachaEntryData animal) ? animal : null;
+        private GachaEntryData ActiveTool => activeToolId != null && toolsById.TryGetValue(activeToolId, out GachaEntryData tool) ? tool : null;
         private OwnedProgress ActiveAnimalProgress => activeAnimalId != null ? animalProgressById[activeAnimalId] : null;
         private OwnedProgress ActiveToolProgress => activeToolId != null ? toolProgressById[activeToolId] : null;
 
@@ -96,8 +96,8 @@ namespace TaskTown.Gacha.Demo
 
         private void Update()
         {
-            AnimalData animal = ActiveAnimal;
-            ToolData tool = ActiveTool;
+            GachaEntryData animal = ActiveAnimal;
+            GachaEntryData tool = ActiveTool;
             if (animal == null && tool == null) return;
 
             float coinPerSecond = FinalProductionCalculator.CalculateCoinPerSecond(
@@ -118,7 +118,7 @@ namespace TaskTown.Gacha.Demo
         // 어느 쪽이든 "장착 중" 대상은 방금 뽑은 것으로 바뀌지만, 기존 기록은 지워지지 않습니다.
         private void HandleAnimalGachaResolved(GachaResult result)
         {
-            AnimalData rolled = result.Entry as AnimalData;
+            GachaEntryData rolled = result.Entry;
             if (rolled == null) return;
 
             if (animalProgressById.TryGetValue(rolled.Id, out OwnedProgress progress))
@@ -137,7 +137,7 @@ namespace TaskTown.Gacha.Demo
 
         private void HandleToolGachaResolved(GachaResult result)
         {
-            ToolData rolled = result.Entry as ToolData;
+            GachaEntryData rolled = result.Entry;
             if (rolled == null) return;
 
             if (toolProgressById.TryGetValue(rolled.Id, out OwnedProgress progress))
@@ -180,7 +180,7 @@ namespace TaskTown.Gacha.Demo
         // 중복 개수(4^레벨)와 코인 비용을 모두 충족해야 레벨업됩니다. 장착 중인(가장 최근에 뽑은) 동물/도구 기준입니다.
         private void AnimalLevelUp()
         {
-            AnimalData animal = ActiveAnimal;
+            GachaEntryData animal = ActiveAnimal;
             OwnedProgress progress = ActiveAnimalProgress;
             if (animal == null || progress == null) return;
 
@@ -206,7 +206,7 @@ namespace TaskTown.Gacha.Demo
 
         private void ToolLevelUp()
         {
-            ToolData tool = ActiveTool;
+            GachaEntryData tool = ActiveTool;
             OwnedProgress progress = ActiveToolProgress;
             if (tool == null || progress == null) return;
 
@@ -242,8 +242,8 @@ namespace TaskTown.Gacha.Demo
 
             if (statusText == null) return;
 
-            AnimalData animal = ActiveAnimal;
-            ToolData tool = ActiveTool;
+            GachaEntryData animal = ActiveAnimal;
+            GachaEntryData tool = ActiveTool;
             OwnedProgress animalProgress = ActiveAnimalProgress;
             OwnedProgress toolProgress = ActiveToolProgress;
 
@@ -302,7 +302,7 @@ namespace TaskTown.Gacha.Demo
 
             StringBuilder builder = new StringBuilder();
             builder.Append("보유 동물 (").Append(animalsById.Count).Append("종)\n");
-            foreach (KeyValuePair<string, AnimalData> pair in animalsById)
+            foreach (KeyValuePair<string, GachaEntryData> pair in animalsById)
             {
                 OwnedProgress progress = animalProgressById[pair.Key];
                 int required = LevelUpRequirementCalculator.GetRequiredDuplicateCount(progress.level);
@@ -312,7 +312,7 @@ namespace TaskTown.Gacha.Demo
             }
 
             builder.Append("\n보유 도구 (").Append(toolsById.Count).Append("종)\n");
-            foreach (KeyValuePair<string, ToolData> pair in toolsById)
+            foreach (KeyValuePair<string, GachaEntryData> pair in toolsById)
             {
                 OwnedProgress progress = toolProgressById[pair.Key];
                 int required = LevelUpRequirementCalculator.GetRequiredDuplicateCount(progress.level);

@@ -7,9 +7,9 @@ namespace TaskTown.Gacha.Tests
 {
     public class GachaSystemTests
     {
-        private static AnimalData CreateAnimal(string id, string displayName, ItemGrade grade, int unlockTownLevel = 1)
+        private static TestAnimalEntry CreateAnimal(string id, string displayName, ItemGrade grade, int unlockTownLevel = 1)
         {
-            AnimalData data = ScriptableObject.CreateInstance<AnimalData>();
+            TestAnimalEntry data = ScriptableObject.CreateInstance<TestAnimalEntry>();
             SerializedObject so = new SerializedObject(data);
             so.FindProperty("id").stringValue = id;
             so.FindProperty("displayName").stringValue = displayName;
@@ -82,8 +82,8 @@ namespace TaskTown.Gacha.Tests
         [Test]
         public void Roll_가중치가_높은_구간의_등급이_뽑힌다()
         {
-            AnimalData normalAnimal = CreateAnimal("A_NORMAL", "오리", ItemGrade.Normal);
-            AnimalData rareAnimal = CreateAnimal("A_RARE", "고양이", ItemGrade.Rare);
+            TestAnimalEntry normalAnimal = CreateAnimal("A_NORMAL", "오리", ItemGrade.Normal);
+            TestAnimalEntry rareAnimal = CreateAnimal("A_RARE", "고양이", ItemGrade.Rare);
 
             GachaRateTableData rateTable = CreateRateTable(
                 (1, new (ItemGrade, float)[] { (ItemGrade.Normal, 60f), (ItemGrade.Rare, 40f) }));
@@ -106,8 +106,8 @@ namespace TaskTown.Gacha.Tests
         [Test]
         public void Roll_마을레벨_구간에_따라_확률테이블이_바뀐다()
         {
-            AnimalData normalAnimal = CreateAnimal("A_NORMAL", "오리", ItemGrade.Normal);
-            AnimalData epicAnimal = CreateAnimal("A_EPIC", "공룡", ItemGrade.Epic);
+            TestAnimalEntry normalAnimal = CreateAnimal("A_NORMAL", "오리", ItemGrade.Normal);
+            TestAnimalEntry epicAnimal = CreateAnimal("A_EPIC", "공룡", ItemGrade.Epic);
 
             GachaRateTableData rateTable = CreateRateTable(
                 (1, new (ItemGrade, float)[] { (ItemGrade.Normal, 1f) }),
@@ -130,7 +130,7 @@ namespace TaskTown.Gacha.Tests
         [Test]
         public void Roll_등급에_등록된_엔트리가_없으면_낮은등급으로_대체된다()
         {
-            AnimalData normalAnimal = CreateAnimal("A_NORMAL", "오리", ItemGrade.Normal);
+            TestAnimalEntry normalAnimal = CreateAnimal("A_NORMAL", "오리", ItemGrade.Normal);
 
             GachaRateTableData rateTable = CreateRateTable(
                 (1, new (ItemGrade, float)[] { (ItemGrade.Rare, 1f) }));
@@ -151,8 +151,8 @@ namespace TaskTown.Gacha.Tests
         [Test]
         public void Roll_아직_해금되지_않은_종류는_뽑히지_않는다()
         {
-            AnimalData unlockedAnimal = CreateAnimal("A_DUCK", "오리", ItemGrade.Normal, unlockTownLevel: 1);
-            AnimalData lockedAnimal = CreateAnimal("A_CAPYBARA", "카피바라", ItemGrade.Normal, unlockTownLevel: 9);
+            TestAnimalEntry unlockedAnimal = CreateAnimal("A_DUCK", "오리", ItemGrade.Normal, unlockTownLevel: 1);
+            TestAnimalEntry lockedAnimal = CreateAnimal("A_CAPYBARA", "카피바라", ItemGrade.Normal, unlockTownLevel: 9);
 
             GachaRateTableData rateTable = CreateRateTable(
                 (1, new (ItemGrade, float)[] { (ItemGrade.Normal, 1f) }));
@@ -174,8 +174,8 @@ namespace TaskTown.Gacha.Tests
         [Test]
         public void Roll_마을레벨이_오르면_잠겨있던_종류도_뽑힐_수_있다()
         {
-            AnimalData unlockedAnimal = CreateAnimal("A_DUCK", "오리", ItemGrade.Normal, unlockTownLevel: 1);
-            AnimalData lateAnimal = CreateAnimal("A_CAPYBARA", "카피바라", ItemGrade.Normal, unlockTownLevel: 9);
+            TestAnimalEntry unlockedAnimal = CreateAnimal("A_DUCK", "오리", ItemGrade.Normal, unlockTownLevel: 1);
+            TestAnimalEntry lateAnimal = CreateAnimal("A_CAPYBARA", "카피바라", ItemGrade.Normal, unlockTownLevel: 9);
 
             GachaRateTableData rateTable = CreateRateTable(
                 (1, new (ItemGrade, float)[] { (ItemGrade.Normal, 1f) }));
@@ -196,8 +196,8 @@ namespace TaskTown.Gacha.Tests
         [Test]
         public void Roll_해당등급에_해금된_종류가_하나도_없으면_낮은등급으로_대체된다()
         {
-            AnimalData normalAnimal = CreateAnimal("A_NORMAL", "오리", ItemGrade.Normal, unlockTownLevel: 1);
-            AnimalData lockedEpicAnimal = CreateAnimal("A_MONKEY", "원숭이", ItemGrade.Epic, unlockTownLevel: 5);
+            TestAnimalEntry normalAnimal = CreateAnimal("A_NORMAL", "오리", ItemGrade.Normal, unlockTownLevel: 1);
+            TestAnimalEntry lockedEpicAnimal = CreateAnimal("A_MONKEY", "원숭이", ItemGrade.Epic, unlockTownLevel: 5);
 
             GachaRateTableData rateTable = CreateRateTable(
                 (1, new (ItemGrade, float)[] { (ItemGrade.Epic, 1f) }));
