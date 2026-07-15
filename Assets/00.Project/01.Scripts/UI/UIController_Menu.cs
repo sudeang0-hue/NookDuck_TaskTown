@@ -5,11 +5,18 @@ using UnityEngine.UI;
 public class UIController_Menu : MonoBehaviour
 {
     [Header("메뉴 목록 버튼")]
+    [Tooltip("동물 인벤토리 오픈")]
     [SerializeField] private Button animalInventoryButton;
+    [Tooltip("도구 인벤토리 오픈")]
     [SerializeField] private Button toolInventoryButton;
+    [Tooltip("뽑기 패널 오픈")]
     [SerializeField] private Button gachaButton;
+    [Tooltip("동물 도감 오픈")]
     [SerializeField] private Button animalDexButton;
+    [Tooltip("옵션 패널 오픈")]
     [SerializeField] private Button optionButton;
+    [Tooltip("화면 축소 버튼")]
+    [SerializeField] private Button minimizeButton;
 
     [Header("오픈할 UI 창")]
     [SerializeField] private UIPanelWindow animalInventoryPanel;

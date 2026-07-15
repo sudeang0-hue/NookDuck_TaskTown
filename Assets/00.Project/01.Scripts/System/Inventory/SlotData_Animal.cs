@@ -1,4 +1,5 @@
 using Animal.Data;
+using System;
 using UnityEngine;
 
 namespace TaskTown.KDH
@@ -14,7 +15,7 @@ namespace TaskTown.KDH
         [Header("레벨업 계산 데이터")]
         [SerializeField] private bool isMaxLevel;
         [SerializeField] private int levelUpCost;
-        //[SerializeField] private int requiredUpgradeCount; 
+        [SerializeField] private int requiredUpgradeCount; 
         //[SerializeField] private long levelUpCost;
 
 
@@ -24,7 +25,7 @@ namespace TaskTown.KDH
         public int CurrentCount => currentCount;
         public bool IsMaxLevel => isMaxLevel;
         public int LevelUpCost => levelUpCost;
-        //public int RequiredUpgradeCount => requiredUpgradeCount;
+        public int RequiredUpgradeCount => requiredUpgradeCount;
 
 
         public SlotData_Animal(AnimalDataSO animalData, int level, int currentCount)
@@ -73,6 +74,16 @@ namespace TaskTown.KDH
             levelUpCost = neededCost;
 
             return levelUpCost;
+        }
+
+        /// <summary>
+        /// 요구 수량, 레벨업 비용, 최대 레벨 여부 설정
+        /// </summary>
+        public void ApplyGrowthData(int requiredCount, int cost, bool maxLevel)
+        {
+            requiredUpgradeCount = Mathf.Max(0, requiredCount);
+            levelUpCost = Math.Max(0, cost);
+            isMaxLevel = maxLevel;
         }
     }
 }

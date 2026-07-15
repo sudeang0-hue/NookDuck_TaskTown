@@ -1,6 +1,6 @@
 using Animal.Data;
 using System.Collections.Generic;
-using Test;
+using TaskTown.KDH;
 using UnityEngine;
 
 namespace UI
@@ -8,7 +8,7 @@ namespace UI
     public class UIController_AnimalDex : MonoBehaviour
     {
         [Header("테스트용 동물 인벤토리\n추후 실제 인벤토리 클래스로 연결")]
-        [SerializeField] private TestInventory_Animal animalInventory;
+        [SerializeField] private InventoryManager_Animal animalInventory;
 
         [Header("동물 데이터베이스")]
         [SerializeField] private AnimalDatabase animalDatabase;
@@ -129,7 +129,7 @@ namespace UI
 
             foreach (KeyValuePair<string, SlotUI_AnimalList> pair in slotMap)
             {
-                bool isUnlocked = animalInventory.HasAcquiredAnimal(pair.Key);
+                bool isUnlocked = animalInventory.TryGetAnimalSlot(pair.Key, out _);
 
                 pair.Value.SetUnlocked(isUnlocked);
             }
@@ -139,14 +139,14 @@ namespace UI
         /// <summary>
         /// 동물 획득 이벤트로 전달된 ID의 도감 슬롯 하나만 갱신합니다.
         /// </summary>
-        public void RefreshSlot(string animalId)
+        public void RefreshSlot(SlotData_Animal slotData)
         {
-            if (string.IsNullOrEmpty(animalId))
+            if (string.IsNullOrEmpty(slotData.AnimalId))
                 return;
 
-            if (!slotMap.TryGetValue(animalId,out SlotUI_AnimalList slot))
+            if (!slotMap.TryGetValue(slotData.AnimalId, out SlotUI_AnimalList slot))
             {
-                Debug.LogWarning($"[UIController_AnimalDex] 도감 슬롯을 찾지 못했습니다: {animalId}");
+                Debug.LogWarning($"[UIController_AnimalDex] 도감 슬롯을 찾지 못했습니다: {slotData.AnimalId}");
                 return;
             }
 
@@ -163,7 +163,7 @@ namespace UI
             if (animalInventory == null)
                 return;
 
-            animalInventory.OnAnimalAdded += RefreshSlot;
+            animalInventory.OnAnimalSlotChanged += RefreshSlot;
         }
 
         /// <summary>
@@ -176,7 +176,7 @@ namespace UI
             if (animalInventory == null)
                 return;
 
-            animalInventory.OnAnimalAdded -= RefreshSlot;
+            animalInventory.OnAnimalSlotChanged -= RefreshSlot;
         }
 
 

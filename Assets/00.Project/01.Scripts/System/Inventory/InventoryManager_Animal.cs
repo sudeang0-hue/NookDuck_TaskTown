@@ -1,6 +1,7 @@
+using Animal.Data;
 using System;
 using System.Collections.Generic;
-using Animal.Data;
+using TaskTown.Gacha;
 using UnityEngine;
 
 namespace TaskTown.KDH
@@ -82,7 +83,7 @@ namespace TaskTown.KDH
                 animalSlotsDic.Add(slot.AnimalId, slot);
 
                 // 성장 수치 계산 시스템 연결
-                //RefreshSlotGrowthData(slot);
+                RefreshSlotGrowthData(slot);
             }
         }
 
@@ -130,7 +131,7 @@ namespace TaskTown.KDH
                 existingSlot.AddCount();
 
                 // 성창 수치 계산 시스템 연결
-                // NotifySlotChanged(existingSlot);
+                NotifySlotChanged(existingSlot);
 
                 Debug.Log($"[InventoryManager_Animal] 중복 동물 획득:" +
                     $"{animalData.DisplayName} + 1 / 현재 수량: {existingSlot.CurrentCount}");
@@ -139,6 +140,8 @@ namespace TaskTown.KDH
             }
 
             SlotData_Animal newSlot = new SlotData_Animal(animalData, level: 1, currentCount: 1);
+
+            RefreshSlotGrowthData(newSlot);
 
             animalSlotsList.Add(newSlot);
             animalSlotsDic.Add(animalData.Id, newSlot);
@@ -262,7 +265,7 @@ namespace TaskTown.KDH
             else return false;
 
             // 성장 수치 계산 시스템 연결
-            // RefreshSlotGrowthData(slot);
+            RefreshSlotGrowthData(slot);
 
             NotifySlotChanged(slot);
 
@@ -370,13 +373,17 @@ namespace TaskTown.KDH
         /// 현재 레벨을 기반으로 레벨업 요구 수량과 비용 갱신.
         /// 성장 수치 계산 시스템이 구현되면 연결합니다.
         /// </summary>
-        //private void RefreshSlotGrowthData(SlotData_Animal slot)
-        //{
-        //    if (slot == null)
-        //        return;
-        //
-        //    Debug.Log("현재 레벨을 기반으로 레벨업 요구 수량과 비용을 갱신");
-        //}
+        private void RefreshSlotGrowthData(SlotData_Animal slot)
+        {
+            if (slot == null)
+                return;
+            
+            int requiredCount = LevelUpRequirementCalculator.GetRequiredDuplicateCount(slot.Level);
+
+            slot.ApplyGrowthData(requiredCount, slot.LevelUpCost, false);
+
+            Debug.Log("현재 레벨을 기반으로 레벨업 요구 수량과 비용을 갱신");
+        }
 
 
         /// <summary>

@@ -6,70 +6,54 @@
  */
 
 using Animal.Data;
-using UI;
-using Test;
+using TaskTown.KDH;
 using TMPro;
+using UI;
 using UnityEngine;
 using UnityEngine.UI;
-
 
 public class SlotUI_AnimalInv : SlotUIBase
 {
     [Header("References")]
-    [SerializeField] private TestInventory_Animal animalInventory;
-
+    [SerializeField] private InventoryManager_Animal animalInventory;
 
     [Header("해당 동물의 데이터")]
-    [SerializeField] private AnimalDataSO animalData;
     [SerializeField] private Image animalIconImage;
     [SerializeField] private TMP_Text animalNameText;
     [SerializeField] private TMP_Text currentCountText;
     [SerializeField] private TMP_Text requireCountText;
 
-
     [Header("동물 인벤토리 슬롯 UI")]
     [Tooltip("현재 레벨의 별 모양 이미지")]
     [SerializeField] private Image levelImage;
+
     [Header("레벨업 버튼")]
     [SerializeField] private Button levelupButton;
-
-    private SlotData_Animal currentSlotData; // 이 UI 슬롯이 표시하고 있는 런타임 슬롯 데이터
-    private int countText;  // 현재 보유중인 수량
-    private int needCountText;  // 다음 레벨업에 필요한 수량
 
     [Header("레벨업 이미지")]
     [Tooltip("1성 ~ 5성 이미지. 단일 컬러")]
     [SerializeField] private Sprite[] levelSprites;
 
-    //[Tooltip("1성 ~ 5성 이미지를 등급에 따라 나누는 경우 사용.\n" +
-    //    "ex. Normal 등급은 별 색상 노랑, Rare 등급에서는 녹색, Epic 등급은 파랑 등")]
-    //[SerializeField] private List<GradelevelIamge> levelIamges = new List<GradelevelIamge>();
-
-    //[System.Serializable]
-    //public class GradelevelIamge
-    //{
-    //    [SerializeField] private Image Levle_1;
-    //    [SerializeField] private Image Levle_2;
-    //    [SerializeField] private Image Levle_3;
-    //    [SerializeField] private Image Levle_4;
-    //    [SerializeField] private Image Levle_5;
-    //}
+    private SlotData_Animal currentSlotData;
 
     private void Awake()
     {
-        if(animalInventory == null)
-        {
-            animalInventory = FindAnyObjectByType<TestInventory_Animal>();
-        }
+        ResolveInventoryReference();
 
         if (levelupButton != null)
         {
             levelupButton.onClick.AddListener(OnClickLevelUp);
+            levelupButton.gameObject.SetActive(false);
         }
     }
 
-    public void Initialize(SlotData_Animal slotData)
+    public void Initialize(SlotData_Animal slotData, InventoryManager_Animal inventory = null)
     {
+        if (inventory != null)
+            animalInventory = inventory;
+
+        ResolveInventoryReference();
+
         if (slotData == null)
         {
             Debug.LogWarning("[SlotUI_AnimalInv] 초기화할 슬롯 데이터가 없습니다.", this);
@@ -84,7 +68,7 @@ public class SlotUI_AnimalInv : SlotUIBase
     {
         if (slotData == null)
         {
-            Debug.LogWarning("[SlotUI_AnimalInv] 초기화할 슬롯 데이터가 없습니다.", this);
+            Debug.LogWarning("[SlotUI_AnimalInv] 갱신할 슬롯 데이터가 없습니다.", this);
             return;
         }
 
@@ -92,90 +76,103 @@ public class SlotUI_AnimalInv : SlotUIBase
         RefreshView();
     }
 
+    private void ResolveInventoryReference()
+    {
+        if (animalInventory == null)
+            animalInventory = InventoryManager_Animal.Instance;
+    }
 
     private void RefreshView()
     {
         if (currentSlotData == null)
             return;
 
-        AnimalDataSO animalData = currentSlotData.AnimalData;
+        AnimalDataSO data = currentSlotData.AnimalData;
 
-        if (animalData == null)
+        if (data == null)
             return;
 
-        if (animalIconImage != null)
-        {
-            animalIconImage.sprite = animalData.Icon;
-        }
-
-        if (animalNameText != null)
-        {
-            animalNameText.text = animalData.DisplayName;
-        }
+        SetBaseInfo(data.Id, data.DisplayName, data.Icon);
+        ApplyIconAndName(data);
 
         if (currentCountText != null)
-        {
-            currentCountText.text = $"{currentSlotData.CurrentCount}";
-        }
+            currentCountText.text = currentSlotData.CurrentCount.ToString();
 
         if (requireCountText != null)
-        {
             requireCountText.text = $"/ {currentSlotData.RequiredUpgradeCount}";
-        }
 
         if (levelImage != null && levelSprites != null && levelSprites.Length > 0)
         {
             int levelIndex = Mathf.Clamp(currentSlotData.Level - 1, 0, levelSprites.Length - 1);
-
             levelImage.sprite = levelSprites[levelIndex];
+            levelImage.enabled = levelSprites[levelIndex] != null;
         }
 
-        if (levelupButton != null)
-        {
-            bool canLevelUp =
-                !currentSlotData.IsMaxLevel &&
-                currentSlotData.RequiredUpgradeCount > 0 &&
-                currentSlotData.CurrentCount >= currentSlotData.RequiredUpgradeCount;
-
-            levelupButton.gameObject.SetActive(canLevelUp);
-        }
-
+        UpdateLevelUpButton();
     }
 
-    /// <summary>
-    /// 현재 동물의 레벨업을 요청합니다.
-    /// 실제 레벨업 처리는 TestInventory_Animal에서 수행합니다.
-    /// </summary>
+    private void ApplyIconAndName(AnimalDataSO data)
+    {
+        if (animalIconImage != null)
+        {
+            animalIconImage.sprite = data.Icon;
+            animalIconImage.enabled = data.Icon != null;
+        }
+
+        if (animalNameText != null)
+            animalNameText.text = data.DisplayName;
+    }
+
+    private void UpdateLevelUpButton()
+    {
+        if (levelupButton == null)
+            return;
+
+        bool canLevelUp = animalInventory != null &&
+            animalInventory.CanLevelUpAnimal(currentSlotData.AnimalId);
+
+        levelupButton.gameObject.SetActive(canLevelUp);
+    }
+
     private void OnClickLevelUp()
     {
         if (currentSlotData == null)
         {
-            Debug.LogWarning("[SlotUI_AnimalInv] 레벨업할 슬롯 데이터가 없습니다..");
+            Debug.LogWarning("[SlotUI_AnimalInv] 레벨업할 슬롯 데이터가 없습니다.", this);
             return;
         }
 
+        ResolveInventoryReference();
+
         if (animalInventory == null)
         {
-            Debug.LogWarning("[SlotUI_AnimalInv] TestInventory_Animal이 연결되지 않았습니다.");
+            Debug.LogWarning("[SlotUI_AnimalInv] InventoryManager_Animal이 연결되지 않았습니다.", this);
             return;
         }
 
         animalInventory.TryLevelUpAnimal(currentSlotData.AnimalId);
     }
 
-
     private void OnDestroy()
     {
         if (levelupButton != null)
-        {
             levelupButton.onClick.RemoveListener(OnClickLevelUp);
-        }
     }
-
 
     public override void Clear()
     {
         base.Clear();
+
+        currentSlotData = null;
+
+        if (animalIconImage != null)
+        {
+            animalIconImage.sprite = null;
+            animalIconImage.enabled = false;
+        }
+
+        if (animalNameText != null)
+            animalNameText.text = string.Empty;
 
         if (currentCountText != null)
             currentCountText.text = string.Empty;
@@ -184,13 +181,12 @@ public class SlotUI_AnimalInv : SlotUIBase
             requireCountText.text = string.Empty;
 
         if (levelImage != null)
+        {
             levelImage.sprite = null;
+            levelImage.enabled = false;
+        }
 
         if (levelupButton != null)
             levelupButton.gameObject.SetActive(false);
-
-
     }
-
 }
-
