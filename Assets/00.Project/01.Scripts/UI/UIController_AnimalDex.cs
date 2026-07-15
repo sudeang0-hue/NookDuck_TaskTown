@@ -1,5 +1,4 @@
 using Animal.Data;
-//using MCPForUnity.Editor.Tools; >> 테스트 빌드시 오류떠서 주석 처리(데드코드)
 using System;
 using System.Collections.Generic;
 using Test.UI;
