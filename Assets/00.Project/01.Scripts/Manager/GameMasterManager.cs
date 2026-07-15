@@ -2,9 +2,6 @@
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
-using Unity.AI.Navigation;
-using UnityEngine.AI;
-using System.Collections.Generic;
 
 public class GameMasterManager : MonoBehaviour
 {
@@ -14,8 +11,6 @@ public class GameMasterManager : MonoBehaviour
 
     private Vector3 camOriginalPos;
     private float camOriginalSize;
-
-    //마을의 최초 위치 및 유저가 드래그한 위치를 기억할 변수
     private Vector3 originalVillagePos;
     private Vector3 savedDraggedPosition;
 
@@ -28,14 +23,19 @@ public class GameMasterManager : MonoBehaviour
     public GameObject menuPanel;
     public CanvasGroup menuCanvasGroup;
 
-    [Header("독립 하단 팝업 패널들 (RectTransform)")]
-    public RectTransform panelDex;
-    public RectTransform panelGacha;
-    public RectTransform panelManage;
+    [Header("독립 팝업 패널들 (RectTransform)")]
+    public RectTransform panelDex;       // 1. 도감 (좌 -> 우 등장)
+    public RectTransform panelGacha;     // 2. 가챠 (아래 -> 위 등장)
+    public RectTransform panelManage;    // 3. 동물 인벤토리/관리 (우 -> 좌 등장)
+    public RectTransform panelOption;    // 4. 옵션/설정 (위 -> 아래 등장)
+    public RectTransform panelToolInv;   // 5. 도구 인벤토리 (우 -> 좌 등장)
 
+    // 열렸을 때의 오리지널 기준 좌표 저장 변수들
     private Vector2 posDexOpen;
     private Vector2 posGachaOpen;
     private Vector2 posManageOpen;
+    private Vector2 posOptionOpen;
+    private Vector2 posToolInvOpen;
 
     [Header("전환 및 시스템 버튼들")]
     public Button btnMinimize;
@@ -56,9 +56,14 @@ public class GameMasterManager : MonoBehaviour
     private bool isMenuOpen = false;
     private bool isMenuAnimating = false;
 
+    void Awake()
+    {
+        // 씬 시작 시 오리지널 좌표를 기억하고, 우선은 패널들을 비활성화(-2000f 등 화면 바깥 배치 후 꺼두기)
+        CacheAndHidePanels();
+    }
+
     void Start()
     {
-        // 메인 카메라 캐싱 및 초기 값 저장
         mainCamera = Camera.main;
         if (mainCamera != null)
         {
@@ -66,7 +71,6 @@ public class GameMasterManager : MonoBehaviour
             camOriginalSize = mainCamera.orthographicSize;
         }
 
-        //마을의 최초 원본 위치 저장 및 드래그 위치 초기화
         if (villageOrigin != null)
         {
             originalVillagePos = villageOrigin.position;
@@ -80,11 +84,6 @@ public class GameMasterManager : MonoBehaviour
             iconOriginalPositions[i] = bottomIcons[i].anchoredPosition;
         }
 
-        // 팝업 오프셋 설정
-        if (panelDex != null) { posDexOpen = panelDex.anchoredPosition; panelDex.anchoredPosition = new Vector2(posDexOpen.x - 2000f, posDexOpen.y); }
-        if (panelGacha != null) { posGachaOpen = panelGacha.anchoredPosition; panelGacha.anchoredPosition = new Vector2(posGachaOpen.x, posGachaOpen.y - 1200f); }
-        if (panelManage != null) { posManageOpen = panelManage.anchoredPosition; panelManage.anchoredPosition = new Vector2(posManageOpen.x + 2000f, posManageOpen.y); }
-
         if (btnMinimize) btnMinimize.onClick.AddListener(SetMinimizedScreen);
         if (btnMaximize) btnMaximize.onClick.AddListener(SetExpandedScreen);
         if (btnQuit) btnQuit.onClick.AddListener(QuitGame);
@@ -96,6 +95,41 @@ public class GameMasterManager : MonoBehaviour
         menuCanvasGroup.alpha = 0f;
 
         AnimateIcons();
+    }
+
+    // 패널들의 원래 위치를 저장하고, 시작하자마자 구석으로 치운 뒤 비활성화
+    private void CacheAndHidePanels()
+    {
+        if (panelDex != null)
+        {
+            posDexOpen = panelDex.anchoredPosition;
+            panelDex.anchoredPosition = new Vector2(posDexOpen.x - 2000f, posDexOpen.y);
+            panelDex.gameObject.SetActive(false);
+        }
+        if (panelGacha != null)
+        {
+            posGachaOpen = panelGacha.anchoredPosition;
+            panelGacha.anchoredPosition = new Vector2(posGachaOpen.x, posGachaOpen.y - 1200f);
+            panelGacha.gameObject.SetActive(false);
+        }
+        if (panelManage != null)
+        {
+            posManageOpen = panelManage.anchoredPosition;
+            panelManage.anchoredPosition = new Vector2(posManageOpen.x + 2000f, posManageOpen.y);
+            panelManage.gameObject.SetActive(false);
+        }
+        if (panelOption != null)
+        {
+            posOptionOpen = panelOption.anchoredPosition;
+            panelOption.anchoredPosition = new Vector2(posOptionOpen.x, posOptionOpen.y + 1200f);
+            panelOption.gameObject.SetActive(false);
+        }
+        if (panelToolInv != null)
+        {
+            posToolInvOpen = panelToolInv.anchoredPosition;
+            panelToolInv.anchoredPosition = new Vector2(posToolInvOpen.x + 2000f, posToolInvOpen.y);
+            panelToolInv.gameObject.SetActive(false);
+        }
     }
 
     void Update()
@@ -115,31 +149,25 @@ public class GameMasterManager : MonoBehaviour
         }
     }
 
-    // [축소 화면 상태로 전환]
     public void SetMinimizedScreen()
     {
         isExpanded = false;
-        CloseAllPopups();
+        CloseAllPopups(); // 축소 상태가 될 때는 예외적으로 모든 팝업 닫기
 
         expandedPanel.SetActive(false);
         minimizedPanel.SetActive(true);
 
         if (villageOrigin != null)
         {
-            // 1. 현재 유저가 드래그해 놓은 마지막 위치를 저장
             savedDraggedPosition = villageOrigin.position;
-
-            // 2. 마을을 카메라 연출 규격에 맞는 '최초 위치(원점)'로 부드럽게 복귀
             villageOrigin.DOMove(originalVillagePos, 0.5f).SetEase(Ease.InOutQuad);
         }
 
         if (mainCamera != null && miniVillagePos != null)
         {
-            //1.카메라 배율 설정
             float targetSize = camOriginalSize / 0.3f;
             mainCamera.DOOrthoSize(targetSize, 0.5f).SetEase(Ease.InOutQuad);
 
-            //마을이 최초 위치(originalVillagePos)로 가므로 카메라 타겟 계산도 안정적으로 고정
             Vector3 targetCamPos = miniVillagePos.position + (camOriginalPos - originalVillagePos);
             mainCamera.transform.DOMove(targetCamPos, 0.5f).SetEase(Ease.InOutQuad);
         }
@@ -151,13 +179,11 @@ public class GameMasterManager : MonoBehaviour
         }
     }
 
-    //축소화면일때 드래그 잠금 기능
     public bool GetIsExpanded()
     {
         return isExpanded;
     }
 
-    // [확장 화면 상태로 복귀]
     public void SetExpandedScreen()
     {
         isExpanded = true;
@@ -169,7 +195,6 @@ public class GameMasterManager : MonoBehaviour
 
         if (villageOrigin != null)
         {
-            // 다시 확대될 때는 유저가 원래 드래그해서 배치해 두었던 위치로 마을을 돌려놓기
             villageOrigin.DOMove(savedDraggedPosition, 0.5f).SetEase(Ease.InOutQuad);
         }
 
@@ -183,19 +208,96 @@ public class GameMasterManager : MonoBehaviour
     }
 
 
-    #region UI 및 시스템 팝업 로직 (기존 유지)
-    public void OpenDex() { CloseAllPopups(); if (panelDex != null) panelDex.DOAnchorPosX(posDexOpen.x, 0.4f).SetEase(Ease.OutQuad); }
-    public void CloseDex() { if (panelDex != null) panelDex.DOAnchorPosX(posDexOpen.x - 2000f, 0.4f).SetEase(Ease.InQuad); }
-    public void OpenGacha() { CloseAllPopups(); if (panelGacha != null) panelGacha.DOAnchorPosY(posGachaOpen.y, 0.4f).SetEase(Ease.OutQuad); }
-    public void CloseGacha() { if (panelGacha != null) panelGacha.DOAnchorPosY(posGachaOpen.y - 1200f, 0.4f).SetEase(Ease.InQuad); }
-    public void OpenManage() { CloseAllPopups(); if (panelManage != null) panelManage.DOAnchorPosX(posManageOpen.x, 0.4f).SetEase(Ease.OutQuad); }
-    public void CloseManage() { if (panelManage != null) panelManage.DOAnchorPosX(posManageOpen.x + 2000f, 0.4f).SetEase(Ease.InQuad); }
+    #region UI 개별 제어 세트 (독립 제어 및 SetActive 통합 설계)
 
-    private void CloseAllPopups()
+    // 1. 도감 (Dex) 제어
+    public void OpenDex()
     {
-        if (panelDex != null) panelDex.DOAnchorPosX(posDexOpen.x - 2000f, 0.2f);
-        if (panelGacha != null) panelGacha.DOAnchorPosY(posGachaOpen.y - 1200f, 0.2f);
-        if (panelManage != null) panelManage.DOAnchorPosX(posManageOpen.x + 2000f, 0.2f);
+        if (panelDex == null) return;
+        panelDex.gameObject.SetActive(true); // 두트윈 실행 전 활성화!
+        panelDex.DOKill();
+        panelDex.DOAnchorPosX(posDexOpen.x, 0.4f).SetEase(Ease.OutQuad);
+    }
+    public void CloseDex()
+    {
+        if (panelDex == null) return;
+        panelDex.DOKill();
+        panelDex.DOAnchorPosX(posDexOpen.x - 2000f, 0.4f).SetEase(Ease.InQuad)
+                 .OnComplete(() => panelDex.gameObject.SetActive(false)); // 닫히는 연출 끝나면 완전히 비활성화!
+    }
+
+    // 2. 가챠 (Gacha) 제어
+    public void OpenGacha()
+    {
+        if (panelGacha == null) return;
+        panelGacha.gameObject.SetActive(true);
+        panelGacha.DOKill();
+        panelGacha.DOAnchorPosY(posGachaOpen.y, 0.4f).SetEase(Ease.OutQuad);
+    }
+    public void CloseGacha()
+    {
+        if (panelGacha == null) return;
+        panelGacha.DOKill();
+        panelGacha.DOAnchorPosY(posGachaOpen.y - 1200f, 0.4f).SetEase(Ease.InQuad)
+                 .OnComplete(() => panelGacha.gameObject.SetActive(false));
+    }
+
+    // 3. 동물 관리 (Manage) 제어
+    public void OpenManage()
+    {
+        if (panelManage == null) return;
+        panelManage.gameObject.SetActive(true);
+        panelManage.DOKill();
+        panelManage.DOAnchorPosX(posManageOpen.x, 0.4f).SetEase(Ease.OutQuad);
+    }
+    public void CloseManage()
+    {
+        if (panelManage == null) return;
+        panelManage.DOKill();
+        panelManage.DOAnchorPosX(posManageOpen.x + 2000f, 0.4f).SetEase(Ease.InQuad)
+                 .OnComplete(() => panelManage.gameObject.SetActive(false));
+    }
+
+    // 4. 옵션 (Option) 제어 
+    public void OpenOption()
+    {
+        if (panelOption == null) return;
+        panelOption.gameObject.SetActive(true);
+        panelOption.DOKill();
+        panelOption.DOAnchorPosY(posOptionOpen.y, 0.4f).SetEase(Ease.OutQuad);
+    }
+    public void CloseOption()
+    {
+        if (panelOption == null) return;
+        panelOption.DOKill();
+        panelOption.DOAnchorPosY(posOptionOpen.y + 1200f, 0.4f).SetEase(Ease.InQuad)
+                 .OnComplete(() => panelOption.gameObject.SetActive(false));
+    }
+
+    // 5. 도구 인벤토리 (Tool_Inv) 제어 
+    public void OpenToolInv()
+    {
+        if (panelToolInv == null) return;
+        panelToolInv.gameObject.SetActive(true);
+        panelToolInv.DOKill();
+        panelToolInv.DOAnchorPosX(posToolInvOpen.x, 0.4f).SetEase(Ease.OutQuad);
+    }
+    public void CloseToolInv()
+    {
+        if (panelToolInv == null) return;
+        panelToolInv.DOKill();
+        panelToolInv.DOAnchorPosX(posToolInvOpen.x + 2000f, 0.4f).SetEase(Ease.InQuad)
+                 .OnComplete(() => panelToolInv.gameObject.SetActive(false));
+    }
+
+    // 화면 축소 시 모든 UI를 쓸어 담는 전체 닫기 기능
+    public void CloseAllPopups()
+    {
+        if (panelDex != null) { panelDex.DOKill(); panelDex.DOAnchorPosX(posDexOpen.x - 2000f, 0.2f).OnComplete(() => panelDex.gameObject.SetActive(false)); }
+        if (panelGacha != null) { panelGacha.DOKill(); panelGacha.DOAnchorPosY(posGachaOpen.y - 1200f, 0.2f).OnComplete(() => panelGacha.gameObject.SetActive(false)); }
+        if (panelManage != null) { panelManage.DOKill(); panelManage.DOAnchorPosX(posManageOpen.x + 2000f, 0.2f).OnComplete(() => panelManage.gameObject.SetActive(false)); }
+        if (panelOption != null) { panelOption.DOKill(); panelOption.DOAnchorPosY(posOptionOpen.y + 1200f, 0.2f).OnComplete(() => panelOption.gameObject.SetActive(false)); }
+        if (panelToolInv != null) { panelToolInv.DOKill(); panelToolInv.DOAnchorPosX(posToolInvOpen.x + 2000f, 0.2f).OnComplete(() => panelToolInv.gameObject.SetActive(false)); }
     }
 
     private void AnimateIcons()
