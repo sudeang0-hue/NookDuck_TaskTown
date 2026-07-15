@@ -61,6 +61,14 @@ namespace Test
             {
                 AddSlot();
             }
+            else if (Input.GetKeyDown(KeyCode.F4))
+            {
+                AddSlot();
+            }
+            else if (Input.GetKeyDown(KeyCode.F5))
+            {
+                AddSlot();
+            }
             else
             {
                 return;
@@ -71,7 +79,7 @@ namespace Test
         private void PrintKeyInfo()
         {
             Debug.Log(
-                "µ¿¹° È¹µæ 3Á¾ : 1¹øÅ°, 2¹øÅ°, 3¹øÅ° / µµ±¸ È¹µæ 3Á¾ : F1, F2, F3");
+                "µ¿¹° È¹µæ 5Á¾ : 1¹ø, 2¹ø, 3¹ø, 4¹ø, 5¹ø / µµ±¸ È¹µæ 3Á¾ : F1, F2, F3");
         }
 
         private void AddSlot()
@@ -88,7 +96,14 @@ namespace Test
             {
                 animalinventory.AddAnimalSlot(testAnimals[2]);
             }
-
+            else if (Input.GetKeyDown(KeyCode.Alpha4))
+            {
+                animalinventory.AddAnimalSlot(testAnimals[3]);
+            }
+            else if (Input.GetKeyDown(KeyCode.Alpha5))
+            {
+                animalinventory.AddAnimalSlot(testAnimals[4]);
+            }
             else if(Input.GetKeyDown(KeyCode.F1))
             {
                 toolinventory.AddToolSlot(testTools[0]);

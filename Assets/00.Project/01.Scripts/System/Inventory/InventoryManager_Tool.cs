@@ -184,25 +184,10 @@ namespace TaskTown.KDH
         /// </summary>
         public bool CanLevelUpTool(string toolId)
         {
-            if (!TryGetToolSlot(toolId, out SlotData_Tool slot)) return false;
-
-            if (slot.IsMaxLevel) return false;
-
-            int neededAmount = slot.GetLevelUpCost();
-
-            if (neededAmount <= 0)
-            {
-                Debug.Log("[InventoryManager_Tool] 레벨업 요구 수량이 0 이하입니다.");
+            if (!TryGetToolSlot(toolId, out SlotData_Tool slot))
                 return false;
-            }
 
-            if (slot.CurrentCount < neededAmount)
-            {
-                Debug.Log($"[InventoryManager_Tool] 레벨업 요구 수량이 부족합니다. 필요 수량: {neededAmount + 1 - slot.CurrentCount}");
-                return false;
-            }
-
-            return true;
+            return slot.CanLevelUp();
         }
 
         /// <summary>
@@ -222,8 +207,12 @@ namespace TaskTown.KDH
                 return false;
             }
 
-            if (!CanLevelUpTool(toolId))
+            // 재료 소모 후 레벨업 (본체 1개는 유지)
+            if (!slot.TryConsumeForLevelUp())
+            {
+                Debug.Log($"[InventoryManager_Tool] 레벨업 재료가 부족합니다: {toolId}");
                 return false;
+            }
 
             slot.ToolLevelUp();
 

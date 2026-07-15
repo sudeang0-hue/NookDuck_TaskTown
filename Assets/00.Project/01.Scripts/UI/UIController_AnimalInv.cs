@@ -3,12 +3,17 @@
  * 중복 획득 -> 기존 UI 슬롯 갱신
  */
 
+using DG.Tweening;
 using System.Collections.Generic;
 using TaskTown.KDH;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace UI
 {
+
+
+
     public class UIController_AnimalInv : MonoBehaviour
     {
         [Header("동물 인벤토리")]
@@ -166,4 +171,6 @@ namespace UI
             slotView.Refresh(slotData);
         }
     }
+
+
 }

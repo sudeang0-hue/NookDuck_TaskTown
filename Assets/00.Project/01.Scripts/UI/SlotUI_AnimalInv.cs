@@ -95,8 +95,9 @@ public class SlotUI_AnimalInv : SlotUIBase
         SetBaseInfo(data.Id, data.DisplayName, data.Icon);
         ApplyIconAndName(data);
 
+        // 본체 1마리를 제외한 재료 수량을 UI에 표시 (예: 내부 1 → 0/4)
         if (currentCountText != null)
-            currentCountText.text = currentSlotData.CurrentCount.ToString();
+            currentCountText.text = Mathf.Max(0, currentSlotData.CurrentCount - 1).ToString();
 
         if (requireCountText != null)
             requireCountText.text = $"/ {currentSlotData.RequiredUpgradeCount}";
