@@ -23,12 +23,12 @@ namespace TaskTown.Gacha
             }
 
             ItemGrade grade = RollGrade(pool.RateTable, townLevel);
-            GachaEntryData entry = RollEntry(pool.GetEntries(grade));
+            GachaEntryData entry = RollEntry(pool.GetEntries(grade, townLevel));
 
-            // 해당 등급에 등록된 엔트리가 아직 없으면(작업 중인 콘텐츠 등) 낮은 등급으로 대체합니다.
+            // 해당 등급에 아직 해금된(또는 등록된) 엔트리가 없으면 낮은 등급으로 대체합니다.
             if (entry == null)
             {
-                entry = RollFallbackEntry(pool, grade);
+                entry = RollFallbackEntry(pool, grade, townLevel);
             }
 
             return new GachaResult(entry, grade);
@@ -79,11 +79,11 @@ namespace TaskTown.Gacha
             return entries[index];
         }
 
-        private GachaEntryData RollFallbackEntry(GachaPoolData pool, ItemGrade originalGrade)
+        private GachaEntryData RollFallbackEntry(GachaPoolData pool, ItemGrade originalGrade, int townLevel)
         {
             for (int g = (int)originalGrade; g >= 0; g--)
             {
-                IReadOnlyList<GachaEntryData> entries = pool.GetEntries((ItemGrade)g);
+                IReadOnlyList<GachaEntryData> entries = pool.GetEntries((ItemGrade)g, townLevel);
                 GachaEntryData entry = RollEntry(entries);
                 if (entry != null)
                 {

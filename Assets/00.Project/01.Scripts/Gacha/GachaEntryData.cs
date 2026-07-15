@@ -11,9 +11,13 @@ namespace TaskTown.Gacha
         [SerializeField] private ItemGrade grade;
         [SerializeField] private Sprite icon;
 
+        [Tooltip("이 종류가 뽑기에 등장하기 시작하는 마을 레벨입니다. 그 전까지는 잠겨 있어서 뽑히지 않습니다.")]
+        [SerializeField, Min(1)] private int unlockTownLevel = 1;
+
         public string Id => id;
         public string DisplayName => displayName;
         public ItemGrade Grade => grade;
         public Sprite Icon => icon;
+        public int UnlockTownLevel => unlockTownLevel;
     }
 }

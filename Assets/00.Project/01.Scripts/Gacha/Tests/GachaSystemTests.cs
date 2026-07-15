@@ -7,13 +7,14 @@ namespace TaskTown.Gacha.Tests
 {
     public class GachaSystemTests
     {
-        private static AnimalData CreateAnimal(string id, string displayName, ItemGrade grade)
+        private static AnimalData CreateAnimal(string id, string displayName, ItemGrade grade, int unlockTownLevel = 1)
         {
             AnimalData data = ScriptableObject.CreateInstance<AnimalData>();
             SerializedObject so = new SerializedObject(data);
             so.FindProperty("id").stringValue = id;
             so.FindProperty("displayName").stringValue = displayName;
             so.FindProperty("grade").enumValueIndex = (int)grade;
+            so.FindProperty("unlockTownLevel").intValue = unlockTownLevel;
             so.ApplyModifiedPropertiesWithoutUndo();
             return data;
         }
@@ -142,6 +143,74 @@ namespace TaskTown.Gacha.Tests
 
             GachaSystem system = new GachaSystem(new FixedRandomProvider(0f));
 
+            GachaResult result = system.Roll(pool, townLevel: 1);
+
+            Assert.AreEqual(normalAnimal, result.Entry);
+        }
+
+        [Test]
+        public void Roll_아직_해금되지_않은_종류는_뽑히지_않는다()
+        {
+            AnimalData unlockedAnimal = CreateAnimal("A_DUCK", "오리", ItemGrade.Normal, unlockTownLevel: 1);
+            AnimalData lockedAnimal = CreateAnimal("A_CAPYBARA", "카피바라", ItemGrade.Normal, unlockTownLevel: 9);
+
+            GachaRateTableData rateTable = CreateRateTable(
+                (1, new (ItemGrade, float)[] { (ItemGrade.Normal, 1f) }));
+
+            GachaPoolData pool = CreatePool(rateTable, new Dictionary<ItemGrade, List<GachaEntryData>>
+            {
+                { ItemGrade.Normal, new List<GachaEntryData> { unlockedAnimal, lockedAnimal } },
+            });
+
+            // randomProvider가 항상 1에 가까운 값을 반환해도(=인덱스상 뒤쪽인 lockedAnimal을 가리켜도)
+            // 마을 레벨 1에서는 lockedAnimal이 해금 목록에서 아예 제외되어야 하므로 unlockedAnimal만 나와야 함
+            GachaSystem system = new GachaSystem(new FixedRandomProvider(0f, 0.99f));
+
+            GachaResult result = system.Roll(pool, townLevel: 1);
+
+            Assert.AreEqual(unlockedAnimal, result.Entry);
+        }
+
+        [Test]
+        public void Roll_마을레벨이_오르면_잠겨있던_종류도_뽑힐_수_있다()
+        {
+            AnimalData unlockedAnimal = CreateAnimal("A_DUCK", "오리", ItemGrade.Normal, unlockTownLevel: 1);
+            AnimalData lateAnimal = CreateAnimal("A_CAPYBARA", "카피바라", ItemGrade.Normal, unlockTownLevel: 9);
+
+            GachaRateTableData rateTable = CreateRateTable(
+                (1, new (ItemGrade, float)[] { (ItemGrade.Normal, 1f) }));
+
+            GachaPoolData pool = CreatePool(rateTable, new Dictionary<ItemGrade, List<GachaEntryData>>
+            {
+                { ItemGrade.Normal, new List<GachaEntryData> { unlockedAnimal, lateAnimal } },
+            });
+
+            // 해금된 두 종류 중 뒤쪽 인덱스(lateAnimal)를 가리키는 난수
+            GachaSystem system = new GachaSystem(new FixedRandomProvider(0f, 0.99f));
+
+            GachaResult result = system.Roll(pool, townLevel: 9);
+
+            Assert.AreEqual(lateAnimal, result.Entry);
+        }
+
+        [Test]
+        public void Roll_해당등급에_해금된_종류가_하나도_없으면_낮은등급으로_대체된다()
+        {
+            AnimalData normalAnimal = CreateAnimal("A_NORMAL", "오리", ItemGrade.Normal, unlockTownLevel: 1);
+            AnimalData lockedEpicAnimal = CreateAnimal("A_MONKEY", "원숭이", ItemGrade.Epic, unlockTownLevel: 5);
+
+            GachaRateTableData rateTable = CreateRateTable(
+                (1, new (ItemGrade, float)[] { (ItemGrade.Epic, 1f) }));
+
+            GachaPoolData pool = CreatePool(rateTable, new Dictionary<ItemGrade, List<GachaEntryData>>
+            {
+                { ItemGrade.Normal, new List<GachaEntryData> { normalAnimal } },
+                { ItemGrade.Epic, new List<GachaEntryData> { lockedEpicAnimal } },
+            });
+
+            GachaSystem system = new GachaSystem(new FixedRandomProvider(0f));
+
+            // Epic 확률 100%지만 마을 레벨 1에서는 Epic 종류가 아직 하나도 해금되지 않음 -> Normal로 대체
             GachaResult result = system.Roll(pool, townLevel: 1);
 
             Assert.AreEqual(normalAnimal, result.Entry);
