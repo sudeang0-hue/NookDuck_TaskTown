@@ -15,6 +15,12 @@ namespace TaskTown.Gacha.Demo
         [SerializeField] private ToolGachaManager toolGachaManager;
         [SerializeField] private DifficultyProductionTable difficultyTable;
 
+        [Tooltip("GachaDemoUI와 같은 DemoTownLevelProvider를 연결하면, 실제 마을 레벨업 결과가 생산 효율 버프에 반영됩니다.")]
+        [SerializeField] private DemoTownLevelProvider townLevelProvider;
+
+        [Tooltip("마을 레벨당 전체 생산량에 곱해지는 효율 버프입니다.")]
+        [SerializeField] private TownUpgradeEffectConfig townUpgradeEffectConfig = new TownUpgradeEffectConfig();
+
         [Tooltip("ICoinWallet를 구현한 컴포넌트를 연결합니다(예: CoinManager). 비워두면 코인 누적 없이 수치만 표시합니다.")]
         [SerializeField] private MonoBehaviour coinWalletSource;
 
@@ -23,7 +29,6 @@ namespace TaskTown.Gacha.Demo
         [SerializeField] private Button nextDifficultyButton;
         [SerializeField] private Button animalLevelUpButton;
         [SerializeField] private Button toolLevelUpButton;
-        [SerializeField] private Button townUpgradeUpButton;
 
         [Header("Texts")]
         [SerializeField] private Text statusText;
@@ -46,11 +51,13 @@ namespace TaskTown.Gacha.Demo
         private string activeToolId;
 
         private DifficultyType difficulty = DifficultyType.Normal;
-        private float townUpgradeMultiplier = 1f;
         private string levelUpFailureMessage;
 
         // 초당 생산량의 소수점 이하를 보관하다가 1 이상 쌓이면 정수만큼 코인으로 반영합니다.
         private float productionBuffer;
+
+        // 마을 레벨업(GachaDemoUI 쪽 버튼)이 실제로 반영되도록, 매번 townLevelProvider의 현재 레벨을 기준으로 계산합니다.
+        private float TownUpgradeMultiplier => townUpgradeEffectConfig.GetProductionMultiplier(townLevelProvider != null ? townLevelProvider.CurrentTownLevel : 1);
 
         private AnimalData ActiveAnimal => activeAnimalId != null && animalsById.TryGetValue(activeAnimalId, out AnimalData animal) ? animal : null;
         private ToolData ActiveTool => activeToolId != null && toolsById.TryGetValue(activeToolId, out ToolData tool) ? tool : null;
@@ -63,7 +70,6 @@ namespace TaskTown.Gacha.Demo
             if (nextDifficultyButton != null) nextDifficultyButton.onClick.AddListener(NextDifficulty);
             if (animalLevelUpButton != null) animalLevelUpButton.onClick.AddListener(AnimalLevelUp);
             if (toolLevelUpButton != null) toolLevelUpButton.onClick.AddListener(ToolLevelUp);
-            if (townUpgradeUpButton != null) townUpgradeUpButton.onClick.AddListener(TownUpgradeUp);
 
             coinWallet = coinWalletSource as ICoinWallet;
 
@@ -89,7 +95,7 @@ namespace TaskTown.Gacha.Demo
             if (animal == null && tool == null) return;
 
             float coinPerSecond = FinalProductionCalculator.CalculateCoinPerSecond(
-                animal, tool, ActiveAnimalProgress?.level ?? 1, ActiveToolProgress?.level ?? 1, difficulty, difficultyTable, townUpgradeMultiplier);
+                animal, tool, ActiveAnimalProgress?.level ?? 1, ActiveToolProgress?.level ?? 1, difficulty, difficultyTable, TownUpgradeMultiplier);
 
             productionBuffer += coinPerSecond * Time.deltaTime;
             if (productionBuffer >= 1f && coinWallet != null)
@@ -224,12 +230,6 @@ namespace TaskTown.Gacha.Demo
             RefreshStatusText();
         }
 
-        private void TownUpgradeUp()
-        {
-            townUpgradeMultiplier += 0.1f;
-            RefreshStatusText();
-        }
-
         private void RefreshStatusText()
         {
             if (statusText == null) return;
@@ -246,7 +246,7 @@ namespace TaskTown.Gacha.Demo
             }
 
             float coinPerSecond = FinalProductionCalculator.CalculateCoinPerSecond(
-                animal, tool, animalProgress?.level ?? 1, toolProgress?.level ?? 1, difficulty, difficultyTable, townUpgradeMultiplier);
+                animal, tool, animalProgress?.level ?? 1, toolProgress?.level ?? 1, difficulty, difficultyTable, TownUpgradeMultiplier);
 
             long balance = coinWallet != null ? coinWallet.Balance : 0;
 
@@ -274,7 +274,7 @@ namespace TaskTown.Gacha.Demo
 
             statusText.text =
                 $"Tool: {toolLabel}\nAnimal: {animalLabel}\n" +
-                $"Difficulty: {difficulty}   Town Upgrade: x{townUpgradeMultiplier:0.0}\n" +
+                $"Difficulty: {difficulty}   Town Upgrade: x{TownUpgradeMultiplier:0.0}\n" +
                 $"Coin/s: {coinPerSecond:0.##}\n" +
                 $"Coin: {balance}" +
                 failureLine;
