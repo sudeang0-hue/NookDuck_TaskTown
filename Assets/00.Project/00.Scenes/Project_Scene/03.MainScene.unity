@@ -6437,6 +6437,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 619346637666187708, guid: 0c3bc518a8c206045b4251e435e075a6, type: 3}
+      propertyPath: coinWalletSource
+      value: 
+      objectReference: {fileID: 1566871428}
+    - target: {fileID: 619346637666187708, guid: 0c3bc518a8c206045b4251e435e075a6, type: 3}
+      propertyPath: townLevelProviderSource
+      value: 
+      objectReference: {fileID: 1168367924}
     - target: {fileID: 1522706846613846961, guid: 0c3bc518a8c206045b4251e435e075a6, type: 3}
       propertyPath: m_Name
       value: RealInventorySystems
@@ -11210,6 +11218,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UIController_Gacha
   animalGachaManager: {fileID: 0}
   toolGachaManager: {fileID: 0}
+  coinWalletSource: {fileID: 0}
   animalOnePickButton: {fileID: 0}
   animalTenPickButton: {fileID: 0}
   toolOnePickButton: {fileID: 0}
@@ -13252,6 +13261,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8fc1b46d3ec7ebe4d80d76fb82dbfc34, type: 3}
   m_Name: 
   m_EditorClassIdentifier: TaskTown.Gacha::TaskTown.Gacha.AnimalGachaManager
+--- !u!114 &1168367924 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7983547880734414462, guid: d3f7e9478acde854393b750a23d842e2, type: 3}
+  m_PrefabInstance: {fileID: 1466800560}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2fd360a2e13206f45ba7efcc7d6b5275, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TaskTown.Gacha.Demo::TaskTown.Gacha.Demo.DemoTownLevelProvider
 --- !u!1 &1182694229
 GameObject:
   m_ObjectHideFlags: 0
@@ -16868,9 +16888,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 61bad1cd03bdaa443a987e623aad5cde, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EarnProcessor
-  baseCoinPerClick: 1000
+  baseCoinPerClick: 100000
   baseCoinPerTyping: 1000
-  maxCoinPerHour: 10000
+  maxCoinPerHour: 1000000
   limitPeriodSeconds: 10
 --- !u!114 &1566871428
 MonoBehaviour:
@@ -19437,6 +19457,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UIController_Gacha
   animalGachaManager: {fileID: 1168367923}
   toolGachaManager: {fileID: 1168367922}
+  coinWalletSource: {fileID: 1566871428}
   animalOnePickButton: {fileID: 1654174008}
   animalTenPickButton: {fileID: 894207687}
   toolOnePickButton: {fileID: 1077273637}
