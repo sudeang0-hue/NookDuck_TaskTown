@@ -1661,103 +1661,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 08e3df8db85d0cc41872f3f55fb8ab69, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!1 &1048365030
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1048365035}
-  - component: {fileID: 1048365034}
-  - component: {fileID: 1048365033}
-  - component: {fileID: 1048365032}
-  - component: {fileID: 1048365031}
-  m_Layer: 0
-  m_Name: RealInventorySystems
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1048365031
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1048365030}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0f2f69539d68e6f41bab0f17d77436e8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TaskTown.KDH.RealProductionTicker
-  difficultyTable: {fileID: 11400000, guid: 4da124aa23c3e5b4a9ca72f49b8448c2, type: 2}
-  difficulty: 1
-  townLevelProviderSource: {fileID: 2037981665}
-  townUpgradeEffectConfig:
-    efficiencyBuffPerLevel: 0.1
-  coinWalletSource: {fileID: 900000003}
---- !u!114 &1048365032
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1048365030}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7df4da81a66972049a16a85845b3957c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TaskTown.KDH.GachaInventoryBridge
-  animalGachaManager: {fileID: 2037981667}
-  toolGachaManager: {fileID: 2037981666}
---- !u!114 &1048365033
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1048365030}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e541b9d195927554c92178abefb2284a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TaskTown.KDH.InventoryManager_Tool
-  coinWalletSource: {fileID: 900000003}
-  toolSlotsList: []
-  toolDatabase: {fileID: 11400000, guid: 5a440435476be43438c1ba6774400fc0, type: 2}
---- !u!114 &1048365034
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1048365030}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 30aa4bcf80c05934fa9f5d31793da672, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TaskTown.KDH.InventoryManager_Animal
-  coinWalletSource: {fileID: 900000003}
-  animalSlotsList: []
-  animalDatabase: {fileID: 11400000, guid: 3201111431adf4f4e82092ababad0f60, type: 2}
---- !u!4 &1048365035
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1048365030}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1141672982
 GameObject:
   m_ObjectHideFlags: 0
@@ -3069,167 +2972,39 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &2037981663
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 2037981668}
-  - component: {fileID: 2037981667}
-  - component: {fileID: 2037981666}
-  - component: {fileID: 2037981665}
-  - component: {fileID: 2037981664}
-  m_Layer: 0
-  m_Name: GachaSystems
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &2037981664
+--- !u!114 &2037981665 stripped
 MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 7983547880734414462, guid: d3f7e9478acde854393b750a23d842e2, type: 3}
+  m_PrefabInstance: {fileID: 2861862724570829225}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2037981663}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 88b7fd53951b8c847851f6400b5305e2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: TaskTown.Gacha.Demo::TaskTown.Gacha.Demo.GachaDemoUI
-  animalGachaManager: {fileID: 2037981667}
-  toolGachaManager: {fileID: 2037981666}
-  townLevelProvider: {fileID: 2037981665}
-  townUpgradeCostConfig:
-    levelCosts:
-    - townLevelThreshold: 1
-      cost: 220000
-    - townLevelThreshold: 2
-      cost: 1000000
-    - townLevelThreshold: 3
-      cost: 1750000
-    - townLevelThreshold: 4
-      cost: 2200000
-    - townLevelThreshold: 5
-      cost: 2900000
-    - townLevelThreshold: 6
-      cost: 4350000
-    - townLevelThreshold: 7
-      cost: 5800000
-    - townLevelThreshold: 8
-      cost: 6000000
-    - townLevelThreshold: 9
-      cost: 15500000
-  coinWalletSource: {fileID: 900000003}
-  animalGachaButton: {fileID: 1350688762}
-  toolGachaButton: {fileID: 2090017866}
-  animalGachaX10Button: {fileID: 1755913890}
-  toolGachaX10Button: {fileID: 1141672984}
-  increaseTownLevelButton: {fileID: 1297082469}
-  addTestCoinButton: {fileID: 1824277786}
-  resultText: {fileID: 1636773804}
-  costText: {fileID: 319247125}
-  townLevelText: {fileID: 435813401}
---- !u!114 &2037981665
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2037981663}
+  m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2fd360a2e13206f45ba7efcc7d6b5275, type: 3}
   m_Name: 
   m_EditorClassIdentifier: TaskTown.Gacha.Demo::TaskTown.Gacha.Demo.DemoTownLevelProvider
-  townLevel: 1
---- !u!114 &2037981666
+--- !u!114 &2037981666 stripped
 MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 4278152603540216987, guid: d3f7e9478acde854393b750a23d842e2, type: 3}
+  m_PrefabInstance: {fileID: 2861862724570829225}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2037981663}
+  m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 76c23296fc47e0d48b20d3148825033d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: TaskTown.Gacha::TaskTown.Gacha.ToolGachaManager
-  pool: {fileID: 11400000, guid: 21b1defa25af76948a0cb1155911667a, type: 2}
-  costConfig:
-    levelCosts:
-    - townLevelThreshold: 1
-      cost: 1700
-    - townLevelThreshold: 2
-      cost: 2550
-    - townLevelThreshold: 3
-      cost: 3825
-    - townLevelThreshold: 4
-      cost: 5738
-    - townLevelThreshold: 5
-      cost: 8607
-    - townLevelThreshold: 6
-      cost: 12910
-    - townLevelThreshold: 7
-      cost: 19365
-    - townLevelThreshold: 8
-      cost: 29047
-    - townLevelThreshold: 9
-      cost: 43570
-  townLevelProviderSource: {fileID: 2037981665}
---- !u!114 &2037981667
+--- !u!114 &2037981667 stripped
 MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 5052898533250768301, guid: d3f7e9478acde854393b750a23d842e2, type: 3}
+  m_PrefabInstance: {fileID: 2861862724570829225}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2037981663}
+  m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8fc1b46d3ec7ebe4d80d76fb82dbfc34, type: 3}
   m_Name: 
   m_EditorClassIdentifier: TaskTown.Gacha::TaskTown.Gacha.AnimalGachaManager
-  pool: {fileID: 11400000, guid: 7bd9ade846da5e243be27a5fd87008e0, type: 2}
-  costConfig:
-    levelCosts:
-    - townLevelThreshold: 1
-      cost: 1700
-    - townLevelThreshold: 2
-      cost: 2550
-    - townLevelThreshold: 3
-      cost: 3825
-    - townLevelThreshold: 4
-      cost: 5738
-    - townLevelThreshold: 5
-      cost: 8607
-    - townLevelThreshold: 6
-      cost: 12910
-    - townLevelThreshold: 7
-      cost: 19365
-    - townLevelThreshold: 8
-      cost: 29047
-    - townLevelThreshold: 9
-      cost: 43570
-  townLevelProviderSource: {fileID: 2037981665}
---- !u!4 &2037981668
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2037981663}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2055271439
 GameObject:
   m_ObjectHideFlags: 0
@@ -3669,16 +3444,194 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2126870532}
   m_CullTransparentMesh: 1
+--- !u!1001 &2861862724570829225
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 1066419776458539979, guid: d3f7e9478acde854393b750a23d842e2, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1066419776458539979, guid: d3f7e9478acde854393b750a23d842e2, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1066419776458539979, guid: d3f7e9478acde854393b750a23d842e2, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1066419776458539979, guid: d3f7e9478acde854393b750a23d842e2, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1066419776458539979, guid: d3f7e9478acde854393b750a23d842e2, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1066419776458539979, guid: d3f7e9478acde854393b750a23d842e2, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1066419776458539979, guid: d3f7e9478acde854393b750a23d842e2, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1066419776458539979, guid: d3f7e9478acde854393b750a23d842e2, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1066419776458539979, guid: d3f7e9478acde854393b750a23d842e2, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1066419776458539979, guid: d3f7e9478acde854393b750a23d842e2, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7420439736619146514, guid: d3f7e9478acde854393b750a23d842e2, type: 3}
+      propertyPath: m_Name
+      value: GachaSystems
+      objectReference: {fileID: 0}
+    - target: {fileID: 8433689165559621666, guid: d3f7e9478acde854393b750a23d842e2, type: 3}
+      propertyPath: costText
+      value: 
+      objectReference: {fileID: 319247125}
+    - target: {fileID: 8433689165559621666, guid: d3f7e9478acde854393b750a23d842e2, type: 3}
+      propertyPath: resultText
+      value: 
+      objectReference: {fileID: 1636773804}
+    - target: {fileID: 8433689165559621666, guid: d3f7e9478acde854393b750a23d842e2, type: 3}
+      propertyPath: townLevelText
+      value: 
+      objectReference: {fileID: 435813401}
+    - target: {fileID: 8433689165559621666, guid: d3f7e9478acde854393b750a23d842e2, type: 3}
+      propertyPath: toolGachaButton
+      value: 
+      objectReference: {fileID: 2090017866}
+    - target: {fileID: 8433689165559621666, guid: d3f7e9478acde854393b750a23d842e2, type: 3}
+      propertyPath: coinWalletSource
+      value: 
+      objectReference: {fileID: 900000003}
+    - target: {fileID: 8433689165559621666, guid: d3f7e9478acde854393b750a23d842e2, type: 3}
+      propertyPath: addTestCoinButton
+      value: 
+      objectReference: {fileID: 1824277786}
+    - target: {fileID: 8433689165559621666, guid: d3f7e9478acde854393b750a23d842e2, type: 3}
+      propertyPath: animalGachaButton
+      value: 
+      objectReference: {fileID: 1350688762}
+    - target: {fileID: 8433689165559621666, guid: d3f7e9478acde854393b750a23d842e2, type: 3}
+      propertyPath: toolGachaX10Button
+      value: 
+      objectReference: {fileID: 1141672984}
+    - target: {fileID: 8433689165559621666, guid: d3f7e9478acde854393b750a23d842e2, type: 3}
+      propertyPath: animalGachaX10Button
+      value: 
+      objectReference: {fileID: 1755913890}
+    - target: {fileID: 8433689165559621666, guid: d3f7e9478acde854393b750a23d842e2, type: 3}
+      propertyPath: increaseTownLevelButton
+      value: 
+      objectReference: {fileID: 1297082469}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: d3f7e9478acde854393b750a23d842e2, type: 3}
+--- !u!1001 &9210304893922961058
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 619346637666187708, guid: 0c3bc518a8c206045b4251e435e075a6, type: 3}
+      propertyPath: coinWalletSource
+      value: 
+      objectReference: {fileID: 900000003}
+    - target: {fileID: 619346637666187708, guid: 0c3bc518a8c206045b4251e435e075a6, type: 3}
+      propertyPath: townLevelProviderSource
+      value: 
+      objectReference: {fileID: 2037981665}
+    - target: {fileID: 1522706846613846961, guid: 0c3bc518a8c206045b4251e435e075a6, type: 3}
+      propertyPath: m_Name
+      value: RealInventorySystems
+      objectReference: {fileID: 0}
+    - target: {fileID: 4776036126695586193, guid: 0c3bc518a8c206045b4251e435e075a6, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4776036126695586193, guid: 0c3bc518a8c206045b4251e435e075a6, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4776036126695586193, guid: 0c3bc518a8c206045b4251e435e075a6, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4776036126695586193, guid: 0c3bc518a8c206045b4251e435e075a6, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4776036126695586193, guid: 0c3bc518a8c206045b4251e435e075a6, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4776036126695586193, guid: 0c3bc518a8c206045b4251e435e075a6, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4776036126695586193, guid: 0c3bc518a8c206045b4251e435e075a6, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4776036126695586193, guid: 0c3bc518a8c206045b4251e435e075a6, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4776036126695586193, guid: 0c3bc518a8c206045b4251e435e075a6, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4776036126695586193, guid: 0c3bc518a8c206045b4251e435e075a6, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4894005941881462776, guid: 0c3bc518a8c206045b4251e435e075a6, type: 3}
+      propertyPath: toolGachaManager
+      value: 
+      objectReference: {fileID: 2037981666}
+    - target: {fileID: 4894005941881462776, guid: 0c3bc518a8c206045b4251e435e075a6, type: 3}
+      propertyPath: animalGachaManager
+      value: 
+      objectReference: {fileID: 2037981667}
+    - target: {fileID: 7183985050904730177, guid: 0c3bc518a8c206045b4251e435e075a6, type: 3}
+      propertyPath: coinWalletSource
+      value: 
+      objectReference: {fileID: 900000003}
+    - target: {fileID: 7406306307270272899, guid: 0c3bc518a8c206045b4251e435e075a6, type: 3}
+      propertyPath: coinWalletSource
+      value: 
+      objectReference: {fileID: 900000003}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 0c3bc518a8c206045b4251e435e075a6, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 133231037}
   - {fileID: 481164255}
-  - {fileID: 2037981668}
+  - {fileID: 2861862724570829225}
   - {fileID: 2075142319}
   - {fileID: 295468240}
   - {fileID: 900000002}
   - {fileID: 1452163459}
   - {fileID: 1949157377}
-  - {fileID: 1048365035}
+  - {fileID: 9210304893922961058}
