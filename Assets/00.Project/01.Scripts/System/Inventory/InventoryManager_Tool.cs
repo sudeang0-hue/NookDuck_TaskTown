@@ -10,22 +10,26 @@ namespace TaskTown.KDH
     {
         public static InventoryManager_Tool Instance { get; private set; }
 
-        [Header("µµ±¸ ·±Å¸ÀÓ ½½·Ô")]
-        [Tooltip("ÇöÀç ÇÃ·¹ÀÌ¾î°¡ º¸À¯ÇÑ µµ±¸ ½½·Ô ¸ñ·Ï")]
+        [Tooltip("ICoinWalletì„ êµ¬í˜„í•œ ì»´í¬ë„ŒíŠ¸(CoinManager)ë¥¼ ì—°ê²°í•©ë‹ˆë‹¤. ë¹„ì›Œë‘ë©´ ì½”ì¸ ë¹„ìš© ì²´í¬ ì—†ì´ ì¤‘ë³µ ê°œìˆ˜ë§Œìœ¼ë¡œ ë ˆë²¨ì—…í•©ë‹ˆë‹¤.")]
+        [SerializeField] private MonoBehaviour coinWalletSource;
+        private ICoinWallet CoinWallet => coinWalletSource as ICoinWallet;
+
+        [Header("ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å¸ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½")]
+        [Tooltip("ï¿½ï¿½ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾î°¡ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½")]
         [SerializeField] private List<SlotData_Tool> toolSlotsList = new List<SlotData_Tool>();
 
-        [Header("µµ±¸ µ¥ÀÌÅÍ º£ÀÌ½º")]
+        [Header("ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ì½ï¿½")]
         [SerializeField] private ToolDatabase toolDatabase;
 
-        // ID ±â¹İ ºü¸¥ Á¶È¸¸¦ À§ÇÑ ·±Å¸ÀÓ Dictionary
+        // ID ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¸ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å¸ï¿½ï¿½ Dictionary
         private Dictionary<string, SlotData_Tool> toolSlotsDic = new Dictionary<string, SlotData_Tool>();
 
-        // ¿ÜºÎ¿¡¼­ ÀÎº¥Åä¸® µµ±¸ ¸ñ·ÏÀ» ÀĞÀ» ¼ö ÀÖµµ·Ï Á¦°øÇÏ´Â ÇÁ·ÎÆÛÆ¼
+        // ï¿½ÜºÎ¿ï¿½ï¿½ï¿½ ï¿½Îºï¿½ï¿½ä¸® ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Öµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¼
         public IReadOnlyList<SlotData_Tool> ToolSlotsList => toolSlotsList;
 
-        // µµ±¸ ÀÎº¥Åä¸® µ¥ÀÌÅÍ°¡ º¯°æµÇ¾úÀ» ¶§ È£Ãâ
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½Îºï¿½ï¿½ä¸® ï¿½ï¿½ï¿½ï¿½ï¿½Í°ï¿½ ï¿½ï¿½ï¿½ï¿½Ç¾ï¿½ï¿½ï¿½ ï¿½ï¿½ È£ï¿½ï¿½
         public event Action OnToolInventoryChanged;
-        // Æ¯Á¤ µµ±¸ ½½·ÔÀÇ µ¥ÀÌÅÍ°¡ º¯°æµÇ¾úÀ» ¶§ È£Ãâ
+        // Æ¯ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Í°ï¿½ ï¿½ï¿½ï¿½ï¿½Ç¾ï¿½ï¿½ï¿½ ï¿½ï¿½ È£ï¿½ï¿½
         public event Action<SlotData_Tool> OnToolSlotChanged;
 
         private void Awake()
@@ -44,7 +48,7 @@ namespace TaskTown.KDH
         }
 
         /// <summary>
-        /// ·±Å¸ÀÓ ¸®½ºÆ® ±â¹İÀ¸·Î Dictionary ¸¦ ´Ù½Ã »ı¼º
+        /// ï¿½ï¿½Å¸ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Dictionary ï¿½ï¿½ ï¿½Ù½ï¿½ ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         private void InitializeDictionary()
         {
@@ -62,7 +66,7 @@ namespace TaskTown.KDH
 
                 if (string.IsNullOrWhiteSpace(slot.ToolId))
                 {
-                    Debug.LogWarning("[InventoryManager_Tool] ToolId°¡ ºñ¾î ÀÖ´Â ½½·ÔÀ» Á¦°ÅÇÕ´Ï´Ù.");
+                    Debug.LogWarning("[InventoryManager_Tool] ToolIdï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½Ö´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.");
 
                     toolSlotsList.RemoveAt(i);
                     continue;
@@ -70,7 +74,7 @@ namespace TaskTown.KDH
 
                 if (toolSlotsDic.ContainsKey(slot.ToolId))
                 {
-                    Debug.LogWarning($"[InventoryManager_Tool] Áßº¹ ToolId ½½·ÔÀ» Á¦°ÅÇÕ´Ï´Ù: {slot.ToolId}");
+                    Debug.LogWarning($"[InventoryManager_Tool] ï¿½ßºï¿½ ToolId ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½: {slot.ToolId}");
 
                     toolSlotsList.RemoveAt(i);
                     continue;
@@ -78,13 +82,13 @@ namespace TaskTown.KDH
 
                 toolSlotsDic.Add(slot.ToolId, slot);
 
-                // ¼ºÀå ¼öÄ¡ °è»ê ½Ã½ºÅÛ ¿¬°á
+                // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ ï¿½ï¿½ï¿½ ï¿½Ã½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
                 RefreshSlotGrowthData(slot);
             }
         }
 
         /// <summary>
-        /// µµ±¸ ID¿¡ ÇØ´çÇÏ´Â °íÁ¤ µ¥ÀÌÅÍ ¹İÈ¯
+        /// ï¿½ï¿½ï¿½ï¿½ IDï¿½ï¿½ ï¿½Ø´ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¯
         /// </summary>
         public ToolDataSO GetToolData(string toolId)
         {
@@ -92,7 +96,7 @@ namespace TaskTown.KDH
 
             if (toolDatabase == null)
             {
-                Debug.LogWarning("[InventoryManager_Tool] ToolDatabase°¡ ¿¬°áµÇÁö ¾Ê¾Ò½À´Ï´Ù.");
+                Debug.LogWarning("[InventoryManager_Tool] ToolDatabaseï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ê¾Ò½ï¿½ï¿½Ï´ï¿½.");
                 return null;
             }
 
@@ -100,19 +104,19 @@ namespace TaskTown.KDH
         }
 
         /// <summary>
-        /// µµ±¸ ½½·Ô Ãß°¡. ÃÖÃÊ È¹µæÀÌ¸é ½½·ÔÀ» ¸¸µé°í, Áßº¹ È¹µæÀÌ¸é ±âÁ¸ ½½·Ô ¼ö·® Áõ°¡
+        /// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ß°ï¿½. ï¿½ï¿½ï¿½ï¿½ È¹ï¿½ï¿½ï¿½Ì¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ßºï¿½ È¹ï¿½ï¿½ï¿½Ì¸ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public bool AddToolSlot(ToolDataSO toolData)
         {
             if (toolData == null)
             {
-                Debug.LogWarning("[InventoryManager_Tool] Ãß°¡ÇÒ ToolDataSO°¡ ¾ø½À´Ï´Ù.");
+                Debug.LogWarning("[InventoryManager_Tool] ï¿½ß°ï¿½ï¿½ï¿½ ToolDataSOï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.");
                 return false;
             }
 
             if (string.IsNullOrWhiteSpace(toolData.Id))
             {
-                Debug.LogWarning($"[InventoryManager_Tool] {toolData.DisplayName} ÀÇ Id °¡ ºñ¾îÀÖ½À´Ï´Ù.");
+                Debug.LogWarning($"[InventoryManager_Tool] {toolData.DisplayName} ï¿½ï¿½ Id ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ö½ï¿½ï¿½Ï´ï¿½.");
                 return false;
             }
 
@@ -120,11 +124,11 @@ namespace TaskTown.KDH
             {
                 existingSlot.AddCount();
 
-                // ¼ºÀå ¼öÄ¡ °è»ê ½Ã½ºÅÛ ¿¬°á
+                // ì„±ì¥ ìˆ˜ì¹˜ ê°±ì‹  ì‹œìŠ¤í…œ ì—°ë™
                 NotifySlotChanged(existingSlot);
 
-                Debug.Log($"[InventoryManager_Tool] Áßº¹ µµ±¸ È¹µæ:" +
-                    $"{toolData.DisplayName} + 1 / ÇöÀç ¼ö·®: {existingSlot.CurrentCount}");
+                Debug.Log($"[InventoryManager_Tool] ì¤‘ë³µ ë„êµ¬ íšë“: " +
+                    $"{toolData.DisplayName} + 1 / í˜„ì¬ ê°œìˆ˜: {existingSlot.CurrentCount}");
 
                 return true;
             }
@@ -144,13 +148,13 @@ namespace TaskTown.KDH
 
             NotifySlotChanged(newSlot);
 
-            Debug.Log($"[InventoryManager_Tool] »õ·Î¿î µµ±¸ È¹µæ: {toolData.DisplayName}");
+            Debug.Log($"[InventoryManager_Tool] ï¿½ï¿½ï¿½Î¿ï¿½ ï¿½ï¿½ï¿½ï¿½ È¹ï¿½ï¿½: {toolData.DisplayName}");
 
             return true;
         }
 
         /// <summary>
-        /// µµ±¸ ID·Î ·±Å¸ÀÓ ½½·Ô Á¶È¸
+        /// ï¿½ï¿½ï¿½ï¿½ IDï¿½ï¿½ ï¿½ï¿½Å¸ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¸
         /// </summary>
         public bool TryGetToolSlot(string toolId, out SlotData_Tool slot)
         {
@@ -162,8 +166,8 @@ namespace TaskTown.KDH
         }
 
         /// <summary>
-        /// ÇöÀç º¸À¯ ÁßÀÎ µµ±¸ÀÇ ÃÑ ¼ö·® ¹İÈ¯.
-        /// º¸À¯ÇÏÁö ¾ÊÀº µµ±¸´Â 0 ¹İÈ¯
+        /// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¯.
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ 0 ï¿½ï¿½È¯
         /// </summary>
         public int GetToolCount(string toolId)
         {
@@ -171,8 +175,8 @@ namespace TaskTown.KDH
         }
 
         /// <summary>
-        /// ÇØ´ç µµ±¸¸¦ ÇÑ ¹ø ÀÌ»ó È¹µæÇß´ÂÁö È®ÀÎ.
-        /// µµ°¨¿¡¼­´Â ÀÌ °ªÀ» ÇØ±İ ¿©ºÎ·Î »ç¿ë.
+        /// ï¿½Ø´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ ï¿½Ì»ï¿½ È¹ï¿½ï¿½ï¿½ß´ï¿½ï¿½ï¿½ È®ï¿½ï¿½.
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ø±ï¿½ ï¿½ï¿½ï¿½Î·ï¿½ ï¿½ï¿½ï¿½.
         /// </summary>
         public bool IsToolUnlocked(string toolId)
         {
@@ -180,60 +184,79 @@ namespace TaskTown.KDH
         }
 
         /// <summary>
-        /// µµ±¸°¡ ÇöÀç ·¹º§¾÷ °¡´ÉÇÑÁö È®ÀÎ
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ È®ï¿½ï¿½
         /// </summary>
         public bool CanLevelUpTool(string toolId)
         {
-            if (!TryGetToolSlot(toolId, out SlotData_Tool slot))
-                return false;
+            if (!TryGetToolSlot(toolId, out SlotData_Tool slot)) return false;
 
-            return slot.CanLevelUp();
-        }
+            if (!slot.CanLevelUp()) return false;
 
-        /// <summary>
-        /// µµ±¸ ·¹º§¾÷ ½Ãµµ
-        /// </summary>
-        public bool TryLevelUpTool(string toolId)
-        {
-            if (!TryGetToolSlot(toolId, out SlotData_Tool slot))
+            long coinCost = slot.GetLevelUpCoinCost();
+
+            if (CoinWallet != null && CoinWallet.Balance < coinCost)
             {
-                Debug.LogWarning($"[InventoryManager_Tool] º¸À¯ÇÏÁö ¾ÊÀº µµ±¸ÀÔ´Ï´Ù: {toolId}");
+                Debug.Log($"[InventoryManager_Tool] not enough coin. needed: {coinCost}, balance: {CoinWallet.Balance}");
                 return false;
             }
-
-            if (slot.IsMaxLevel)
-            {
-                Debug.Log($"[InventoryManager_Tool] ÀÌ¹Ì ÃÖ´ë ·¹º§ÀÎ µµ±¸ÀÔ´Ï´Ù: {toolId}");
-                return false;
-            }
-
-            // Àç·á ¼Ò¸ğ ÈÄ ·¹º§¾÷ (º»Ã¼ 1°³´Â À¯Áö)
-            if (!slot.TryConsumeForLevelUp())
-            {
-                Debug.Log($"[InventoryManager_Tool] ·¹º§¾÷ Àç·á°¡ ºÎÁ·ÇÕ´Ï´Ù: {toolId}");
-                return false;
-            }
-
-            slot.ToolLevelUp();
-
-            // ¼ºÀå ¼öÄ¡ °è»ê ½Ã½ºÅÛ ¿¬°á
-            RefreshSlotGrowthData(slot);
-
-            NotifySlotChanged(slot);
-
-            Debug.Log($"[InventoryManager_Tool] µµ±¸ ·¹º§¾÷ ¼º°ø: {toolId} / ÇöÀç ·¹º§ {slot.Level}");
 
             return true;
         }
 
         /// <summary>
-        /// µµ±¸¸¦ ¹èÄ¡ »óÅÂ·Î ¼³Á¤ÇÕ´Ï´Ù.
+        /// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ãµï¿½
+        /// </summary>
+        public bool TryLevelUpTool(string toolId)
+        {
+            if (!TryGetToolSlot(toolId, out SlotData_Tool slot))
+            {
+                Debug.LogWarning($"[InventoryManager_Tool] ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ô´Ï´ï¿½: {toolId}");
+                return false;
+            }
+
+            if (slot.IsMaxLevel)
+            {
+                Debug.Log($"[InventoryManager_Tool] ï¿½Ì¹ï¿½ ï¿½Ö´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ô´Ï´ï¿½: {toolId}");
+                return false;
+            }
+
+            if (!CanLevelUpTool(toolId)) return false;
+
+            long coinCost = slot.GetLevelUpCoinCost();
+
+            if (CoinWallet != null && !CoinWallet.TrySpend(coinCost))
+            {
+                Debug.Log($"[InventoryManager_Tool] failed to spend coin for level up: {toolId}, cost: {coinCost}");
+                return false;
+            }
+
+            // ì¬ë£Œ ì†Œëª¨ í›„ ë ˆë²¨ì—… (ë³¸ì²´ 1ê°œëŠ” ìœ ì§€)
+            if (!slot.TryConsumeForLevelUp())
+            {
+                Debug.Log($"[InventoryManager_Tool] ì¬ë£Œ ì†Œëª¨ ì‹¤íŒ¨: {toolId}");
+                return false;
+            }
+
+            slot.ToolLevelUp();
+
+            // ë‹¤ìŒ ë ˆë²¨ ìš”êµ¬ì¹˜ ê°±ì‹ 
+            RefreshSlotGrowthData(slot);
+
+            NotifySlotChanged(slot);
+
+            Debug.Log($"[InventoryManager_Tool] ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½: {toolId} / ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ {slot.Level}");
+
+            return true;
+        }
+
+        /// <summary>
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ ï¿½ï¿½ï¿½Â·ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.
         /// </summary>
         public bool TrySetTool(string toolId)
         {
             if (!TryGetToolSlot(toolId, out SlotData_Tool slot))
             {
-                Debug.LogWarning($"[InventoryManager_Tool] º¸À¯ÇÏÁö ¾ÊÀº µµ±¸ÀÔ´Ï´Ù: {toolId}");
+                Debug.LogWarning($"[InventoryManager_Tool] ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ô´Ï´ï¿½: {toolId}");
                 return false;
             }
 
@@ -244,13 +267,13 @@ namespace TaskTown.KDH
         }
 
         /// <summary>
-        /// µµ±¸ ¹èÄ¡¸¦ ÇØÁ¦ÇÕ´Ï´Ù.
+        /// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.
         /// </summary>
         public bool TryUnsetTool(string toolId)
         {
             if (!TryGetToolSlot(toolId, out SlotData_Tool slot))
             {
-                Debug.LogWarning($"[InventoryManager_Tool] º¸À¯ÇÏÁö ¾ÊÀº µµ±¸ÀÔ´Ï´Ù: {toolId}");
+                Debug.LogWarning($"[InventoryManager_Tool] ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ô´Ï´ï¿½: {toolId}");
                 return false;
             }
 
@@ -262,19 +285,19 @@ namespace TaskTown.KDH
         }
 
         /// <summary>
-        /// µµ±¸¿¡ µ¿¹°À» ¹èÄ¡ÇÕ´Ï´Ù.
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½Õ´Ï´ï¿½.
         /// </summary>
         public bool TryAssignAnimalToTool(string toolId, string animalId)
         {
             if (!TryGetToolSlot(toolId, out SlotData_Tool slot))
             {
-                Debug.LogWarning($"[InventoryManager_Tool] º¸À¯ÇÏÁö ¾ÊÀº µµ±¸ÀÔ´Ï´Ù: {toolId}");
+                Debug.LogWarning($"[InventoryManager_Tool] ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ô´Ï´ï¿½: {toolId}");
                 return false;
             }
 
             if (string.IsNullOrWhiteSpace(animalId))
             {
-                Debug.LogWarning("[InventoryManager_Tool] ¹èÄ¡ÇÒ AnimalId°¡ ºñ¾î ÀÖ½À´Ï´Ù.");
+                Debug.LogWarning("[InventoryManager_Tool] ï¿½ï¿½Ä¡ï¿½ï¿½ AnimalIdï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½Ö½ï¿½ï¿½Ï´ï¿½.");
                 return false;
             }
 
@@ -285,13 +308,13 @@ namespace TaskTown.KDH
         }
 
         /// <summary>
-        /// µµ±¸¿¡ ¹èÄ¡µÈ µ¿¹°À» Á¦°ÅÇÕ´Ï´Ù.
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.
         /// </summary>
         public bool TryRemoveAnimalFromTool(string toolId)
         {
             if (!TryGetToolSlot(toolId, out SlotData_Tool slot))
             {
-                Debug.LogWarning($"[InventoryManager_Tool] º¸À¯ÇÏÁö ¾ÊÀº µµ±¸ÀÔ´Ï´Ù: {toolId}");
+                Debug.LogWarning($"[InventoryManager_Tool] ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ô´Ï´ï¿½: {toolId}");
                 return false;
             }
 
@@ -302,7 +325,7 @@ namespace TaskTown.KDH
         }
 
         /// <summary>
-        /// ÇöÀç ·±Å¸ÀÓ µµ±¸ µ¥ÀÌÅÍ¸¦ ÀúÀå¿ë ½½·Ô ¸ñ·ÏÀ¸·Î º¯È¯ÇÕ´Ï´Ù.
+        /// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å¸ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Í¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¯ï¿½Õ´Ï´ï¿½.
         /// </summary>
         public List<SlotSaveData_Tool> CreateSaveData()
         {
@@ -331,7 +354,7 @@ namespace TaskTown.KDH
         }
 
         /// <summary>
-        /// ÀúÀå µ¥ÀÌÅÍ¸¦ ±â¹İÀ¸·Î ·±Å¸ÀÓ µµ±¸ ÀÎº¥Åä¸®¸¦ º¹¿øÇÕ´Ï´Ù.
+        /// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Í¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å¸ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Îºï¿½ï¿½ä¸®ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.
         /// </summary>
         public void LoadSaveData(List<SlotSaveData_Tool> saveDataList)
         {
@@ -357,7 +380,7 @@ namespace TaskTown.KDH
 
                 if (toolSlotsDic.ContainsKey(saveData.tooldata.Id))
                 {
-                    Debug.LogWarning($"[InventoryManager_Tool] ÀúÀå µ¥ÀÌÅÍ¿¡ Áßº¹ ID°¡ ÀÖ½À´Ï´Ù: {saveData.tooldata.Id}");
+                    Debug.LogWarning($"[InventoryManager_Tool] ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Í¿ï¿½ ï¿½ßºï¿½ IDï¿½ï¿½ ï¿½Ö½ï¿½ï¿½Ï´ï¿½: {saveData.tooldata.Id}");
                     continue;
                 }
 
@@ -369,7 +392,7 @@ namespace TaskTown.KDH
                     saveData.currentAnimalSet,
                     saveData.currentAnimalId);
 
-                // ¼ºÀå ¼öÄ¡ °è»ê ½Ã½ºÅÛ ¿¬°á
+                // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ ï¿½ï¿½ï¿½ ï¿½Ã½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
                 RefreshSlotGrowthData(runtimeSlot);
 
                 toolSlotsList.Add(runtimeSlot);
@@ -380,8 +403,8 @@ namespace TaskTown.KDH
         }
 
         /// <summary>
-        /// ÇöÀç ·¹º§À» ±â¹İÀ¸·Î ·¹º§¾÷ ¿ä±¸ ¼ö·®°ú ºñ¿ë °»½Å.
-        /// ¼ºÀå ¼öÄ¡ °è»ê ½Ã½ºÅÛÀÌ ±¸ÇöµÇ¸é ¿¬°áÇÕ´Ï´Ù.
+        /// í˜„ì¬ ë ˆë²¨ì„ ê¸°ì¤€ìœ¼ë¡œ ë‹¤ìŒ ë ˆë²¨ì˜ ìš”êµ¬ ê°œìˆ˜ì™€ ë¹„ìš©ì„ ê°±ì‹ í•©ë‹ˆë‹¤.
+        /// ìš”êµ¬ì¹˜ ê³„ì‚° ì‹œìŠ¤í…œì€ LevelUpRequirementCalculator ì— ìœ„ì„í•©ë‹ˆë‹¤.
         /// </summary>
         private void RefreshSlotGrowthData(SlotData_Tool slot)
         {
@@ -394,8 +417,8 @@ namespace TaskTown.KDH
         }
 
         /// <summary>
-        /// ¸ğµç µµ±¸ ·±Å¸ÀÓ µ¥ÀÌÅÍ¸¦ Á¦°ÅÇÕ´Ï´Ù.
-        /// »õ °ÔÀÓ ¶Ç´Â ÀúÀå µ¥ÀÌÅÍ ·Îµå Àü¿¡ »ç¿ëÇÒ ¼ö ÀÖ½À´Ï´Ù.
+        /// ëª¨ë“  ë„êµ¬ ëŸ°íƒ€ì„ ë°ì´í„°ë¥¼ ì‚­ì œí•©ë‹ˆë‹¤.
+        /// ìƒˆ ê²Œì„ ë˜ëŠ” ì €ì¥ ë°ì´í„° ë¡œë“œ ì „ì— ì‚¬ìš©ë  ìˆ˜ ìˆìŠµë‹ˆë‹¤.
         /// </summary>
         public void ClearToolInventory()
         {
@@ -412,7 +435,7 @@ namespace TaskTown.KDH
         }
 
         /// <summary>
-        /// µµ±¸ ÀÎº¥Åä¸® º¯°æ È£Ãâ
+        /// ï¿½ï¿½ï¿½ï¿½ ï¿½Îºï¿½ï¿½ä¸® ï¿½ï¿½ï¿½ï¿½ È£ï¿½ï¿½
         /// </summary>
         private void NotifyInventoryChanged()
         {

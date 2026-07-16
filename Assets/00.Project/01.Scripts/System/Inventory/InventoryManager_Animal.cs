@@ -10,26 +10,30 @@ namespace TaskTown.KDH
     {
         public static InventoryManager_Animal Instance { get; private set; }
 
-        //ÀÎº¥Åä¸® ÃÖ´ë °ø°£ Ä­ ¼ö
+        [Tooltip("ICoinWalletì„ êµ¬í˜„í•œ ì»´í¬ë„ŒíŠ¸(CoinManager)ë¥¼ ì—°ê²°í•©ë‹ˆë‹¤. ë¹„ì›Œë‘ë©´ ì½”ì¸ ë¹„ìš© ì²´í¬ ì—†ì´ ì¤‘ë³µ ê°œìˆ˜ë§Œìœ¼ë¡œ ë ˆë²¨ì—…í•©ë‹ˆë‹¤.")]
+        [SerializeField] private MonoBehaviour coinWalletSource;
+        private ICoinWallet CoinWallet => coinWalletSource as ICoinWallet;
+
+        //ì¸ë²¤í† ë¦¬ ìµœëŒ€ ìŠ¬ë¡¯ ìˆ˜
         // public int maxSlots = 999;
 
 
-        [Header("µ¿¹° ·±Å¸ÀÓ ½½·Ô")]
-        [Tooltip("ÇöÀç ÇÃ·¹ÀÌ¾î°¡ º¸À¯ÇÑ µ¿¹° ½½·Ô ¸ñ·Ï")]
+        [Header("ë™ë¬¼ ëŸ°íƒ€ì„ ìŠ¬ë¡¯")]
+        [Tooltip("í˜„ì¬ í”Œë ˆì´ì–´ê°€ ë³´ìœ í•œ ë™ë¬¼ ìŠ¬ë¡¯ ëª©ë¡")]
         [SerializeField] private List<SlotData_Animal> animalSlotsList = new List<SlotData_Animal>();
 
-        [Header("µ¿¹° µ¥ÀÌÅÍ º£ÀÌ½º")]
+        [Header("ë™ë¬¼ ë°ì´í„° ë² ì´ìŠ¤")]
         [SerializeField] private AnimalDatabase animalDatabase;
 
-        // ID ±â¹İ ºü¸¥ Á¶È¸¸¦ À§ÇÑ ·±Å¸ÀÓ Dictionary
+        // ID ê¸°ë°˜ ìŠ¬ë¡¯ ì¡°íšŒë¥¼ ìœ„í•œ ëŸ°íƒ€ì„ Dictionary
         private Dictionary<string, SlotData_Animal> animalSlotsDic = new Dictionary<string, SlotData_Animal>();
 
-        // ¿ÜºÎ¿¡¼­ ÀÎº¥Åä¸® µ¿¹° ¸ñ·ÏÀ» ÀĞÀ» ¼ö ÀÖµµ·Ï Á¦°øÇÏ´Â ÇÁ·ÎÆÛÆ¼
+        // ì™¸ë¶€ì—ì„œ ì¸ë²¤í† ë¦¬ ìŠ¬ë¡¯ ëª©ë¡ì„ ì½ì„ ìˆ˜ ìˆë„ë¡ ë…¸ì¶œí•˜ëŠ” í”„ë¡œí¼í‹°
         public IReadOnlyList<SlotData_Animal> AnimalSlotsList => animalSlotsList;
 
-        // µ¿¹° ÀÎº¥Åä¸® µ¥ÀÌÅÍ°¡ º¯°æµÇ¾úÀ»¶§ È£Ãâ
+        // ë™ë¬¼ ì¸ë²¤í† ë¦¬ ë°ì´í„°ê°€ ë³€ê²½ë˜ì—ˆì„ ë•Œ í˜¸ì¶œ
         public event Action OnAnimalInventoryChanged;
-        // Æ¯Á¤ µ¿¹° ½½·ÔÀÇ µ¥ÀÌÅÍ°¡ º¯°æµÇ¾úÀ»¶§ È£Ãâ
+        // íŠ¹ì • ë™ë¬¼ ìŠ¬ë¡¯ì˜ ë°ì´í„°ê°€ ë³€ê²½ë˜ì—ˆì„ ë•Œ í˜¸ì¶œ
         public event Action<SlotData_Animal> OnAnimalSlotChanged;
 
         private void Awake()
@@ -48,7 +52,7 @@ namespace TaskTown.KDH
         }
 
         /// <summary>
-        /// ·±Å¸ÀÓ ¸®½ºÆ® ±â¹İÀ¸·Î Dictionary ¸¦ ´Ù½Ã »ı¼º
+        /// ìŠ¬ë¡¯ ë¦¬ìŠ¤íŠ¸ ê¸°ë°˜ìœ¼ë¡œ Dictionary ë¥¼ ë‹¤ì‹œ êµ¬ì„±
         /// </summary>
         private void InitializeDictionary()
         {
@@ -66,7 +70,7 @@ namespace TaskTown.KDH
 
                 if (string.IsNullOrWhiteSpace(slot.AnimalId))
                 {
-                    Debug.LogWarning("[InventoryManager_Animal] AnimalId°¡ ºñ¾î ÀÖ´Â ½½·ÔÀ» Á¦°ÅÇÕ´Ï´Ù.");
+                    Debug.LogWarning("[InventoryManager_Animal] AnimalIdê°€ ë¹„ì–´ ìˆëŠ” ìŠ¬ë¡¯ì„ ì œê±°í•©ë‹ˆë‹¤.");
 
                     animalSlotsList.RemoveAt(i);
                     continue;
@@ -74,7 +78,7 @@ namespace TaskTown.KDH
 
                 if (animalSlotsDic.ContainsKey(slot.AnimalId))
                 {
-                    Debug.LogWarning($"[InventoryManager_Animal] Áßº¹ AnimalId ½½·ÔÀ» Á¦°ÅÇÕ´Ï´Ù: {slot.AnimalId}");
+                    Debug.LogWarning($"[InventoryManager_Animal] ì¤‘ë³µ AnimalId ìŠ¬ë¡¯ì„ ì œê±°í•©ë‹ˆë‹¤: {slot.AnimalId}");
 
                     animalSlotsList.RemoveAt(i);
                     continue;
@@ -82,13 +86,13 @@ namespace TaskTown.KDH
 
                 animalSlotsDic.Add(slot.AnimalId, slot);
 
-                // ¼ºÀå ¼öÄ¡ °è»ê ½Ã½ºÅÛ ¿¬°á
+                // ë ˆë²¨ì—… ìš”êµ¬ì¹˜ ê°±ì‹ 
                 RefreshSlotGrowthData(slot);
             }
         }
 
         /// <summary>
-        /// µ¿¹° ID ¿¡ ÇØ´çÇÏ´Â °íÁ¤ µ¥ÀÌÅÍ ¹İÈ¯
+        /// ë™ë¬¼ ID ë¡œ í•´ë‹¹í•˜ëŠ” ë™ë¬¼ ë°ì´í„°ë¥¼ ë°˜í™˜
         /// </summary>
         public AnimalDataSO GetAnimalData(string animalId)
         {
@@ -96,7 +100,7 @@ namespace TaskTown.KDH
 
             if (animalDatabase == null)
             {
-                Debug.LogWarning("[InventoryManager_Animal] AnimalDatabase°¡ ¿¬°áµÇÁö ¾Ê¾Ò½À´Ï´Ù.");
+                Debug.LogWarning("[InventoryManager_Animal] AnimalDatabaseê°€ ì—°ê²°ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.");
                 return null;
             }
 
@@ -104,37 +108,30 @@ namespace TaskTown.KDH
         }
 
         /// <summary>
-        /// µ¿¹° ½½·Ô Ãß°¡. ÃÖÃÊ È¹µæÀÌ¸é ½½·ÔÀ» ¸¸µé°í, Áßº¹ È¹µæÀÌ¸é ±âÁ¸ ½½·Ô ¼ö·® Áõ°¡
+        /// ë™ë¬¼ ìŠ¬ë¡¯ ì¶”ê°€. ìµœì´ˆ íšë“ì´ë©´ ìŠ¬ë¡¯ì„ ìƒì„±í•˜ê³ , ì¤‘ë³µ íšë“ì´ë©´ ê¸°ì¡´ ìŠ¬ë¡¯ì˜ ê°œìˆ˜ë¥¼ ì¦ê°€
         /// </summary>
-        public bool AddAnimalSlot(AnimalDataSO animalData)   // °¡Ã­·Î ³ª¿Â °á°ú¸¦ ÇÏ³ª¾¿ ³Ö´Â´Ù¸é ±»ÀÌ amount¸¦ »ı°¢ÇÒ ÇÊ¿ä°¡ ¾øÀ»°Í °°¾Æ ¼öÁ¤ÇÔ
+        public bool AddAnimalSlot(AnimalDataSO animalData)
         {
             if (animalData == null)
             {
-                Debug.LogWarning("[InventroyManager_Animal] Ãß°¡ÇÒ AnimalDataSO°¡ ¾ø½À´Ï´Ù.");
+                Debug.LogWarning("[InventoryManager_Animal] ì¶”ê°€í•  AnimalDataSOê°€ ì—†ìŠµë‹ˆë‹¤.");
                 return false;
             }
 
             if (string.IsNullOrWhiteSpace(animalData.Id))
             {
-                Debug.LogWarning($"[InventroyManager_Animal] {animalData.DisplayName} ÀÇ Id °¡ ºñ¾îÀÖ½À´Ï´Ù.");
+                Debug.LogWarning($"[InventoryManager_Animal] {animalData.DisplayName} ì˜ Id ê°€ ë¹„ì–´ìˆìŠµë‹ˆë‹¤.");
                 return false;
             }
-
-            //if (!CanReceiveAnimal(AnimalDataSO))
-            //{
-            //    Debug.Log("ÀÎº¥Åä¸®°¡ °¡µæ Â÷¼­ µ¿¹°ÀÌ µé¾î¿Ã ¼ö ¾ø½À´Ï´Ù.");
-            //    return false;
-            //}
 
             if (animalSlotsDic.TryGetValue(animalData.Id, out SlotData_Animal existingSlot))
             {
                 existingSlot.AddCount();
 
-                // ¼ºÃ¢ ¼öÄ¡ °è»ê ½Ã½ºÅÛ ¿¬°á
                 NotifySlotChanged(existingSlot);
 
-                Debug.Log($"[InventoryManager_Animal] Áßº¹ µ¿¹° È¹µæ:" +
-                    $"{animalData.DisplayName} + 1 / ÇöÀç ¼ö·®: {existingSlot.CurrentCount}");
+                Debug.Log($"[InventoryManager_Animal] ì¤‘ë³µ ë™ë¬¼ íšë“: " +
+                    $"{animalData.DisplayName} + 1 / í˜„ì¬ ê°œìˆ˜: {existingSlot.CurrentCount}");
 
                 return true;
             }
@@ -148,41 +145,13 @@ namespace TaskTown.KDH
 
             NotifySlotChanged(newSlot);
 
-            Debug.Log($"[InventoryManager_Animal] »õ·Î¿î µ¿¹° È¹µæ: {animalData.DisplayName}");
+            Debug.Log($"[InventoryManager_Animal] ì‹ ê·œ ë™ë¬¼ íšë“: {animalData.DisplayName}");
 
             return true;
-
-            /*
-            // ±âÁ¸ ½½·Ô Áß ¶È°°Àº ¾ÆÀÌÅÛÀÌ ÀÖ´ÂÁö Ã£¾Æ¼­ Ã¤¿ó´Ï´Ù.
-            //AnimalInventorySlot existingSlot = animalList.Find(slot => slot.gachaData == animalData);
-            //
-            //if (existingSlot != null)
-            //{
-            //    existingSlot.currentCount += amount;
-            //}
-            //else // ±âÁ¸ ½½·ÔÀÌ ¾ø´Ù¸é »õ ½½·ÔÀ» ¸¸µì´Ï´Ù.
-            //{
-            //    animalList.Add(new AnimalInventorySlot(animalData, amount));
-            //}
-
-            // ¾ÆÀÌÅÛÀÌ Ãß°¡µÇ¾úÀ½À» UI µî¿¡ ¾Ë¸®´Â ÀÌº¥Æ®¸¦ ¿©±â¿¡ ³ÖÀ» ¼ö ÀÖ½À´Ï´Ù.
-            //Debug.Log($"{animalData.DisplayName}ÀÌ(°¡) ÃÑ {amount}°¡ ÀÎº¥Åä¸®¿¡ Ãß°¡µÇ¾ú½À´Ï´Ù.");
-            //return true;
-            */
         }
 
-        /*
-        //À§¿¡ maxSlots ÁÖ¼® ÂüÁ¶ 
-        //public bool CanReceiveItem(AnimalData targetData)
-        //{
-        //    if (animalList.Count < maxSlots) return true;
-        //
-        //    return false;
-        //}
-        */
-
         /// <summary>
-        /// µ¿¹° ID·Î ·±Å¸ÀÓ ½½·Ô Á¶È­
+        /// ë™ë¬¼ IDë¡œ ëŸ°íƒ€ì„ ìŠ¬ë¡¯ ì¡°íšŒ
         /// </summary>
         public bool TryGetAnimalSlot(string animalId, out SlotData_Animal slot)
         {
@@ -194,8 +163,7 @@ namespace TaskTown.KDH
         }
 
         /// <summary>
-        /// ÇöÁ¦ º¸À¯ÁßÀÎ µ¿¹°ÀÇ ÃÑ ¼ö·® ¹İÈ¯
-        /// º¸À¯ÇÏÁö ¾ÊÀº µ¿¹°Àº 0 ¹İÈ¯ 
+        /// ë™ë¬¼ ë³´ìœ ìˆ˜ëŸ‰ ë°˜í™˜. ë¯¸ë³´ìœ  ì‹œ 0 ë°˜í™˜
         /// </summary>
         public int GetAnimalCount(string animalId)
         {
@@ -203,8 +171,7 @@ namespace TaskTown.KDH
         }
 
         /// <summary>
-        /// ÇØ´ç µ¿¹°À» ÇÑ ¹ø ÀÌ»ó È¹µæÇß´ÂÁö È®ÀÎ.
-        /// µµ°¨¿¡¼­´Â ÀÌ °ªÀ» ÇØ±İ ¿©ºÎ·Î »ç¿ë.
+        /// í•´ë‹¹ ë™ë¬¼ì„ í•œ ë²ˆ ì´ìƒ íšë“í–ˆëŠ”ì§€ í™•ì¸. ë„ê° í•´ê¸ˆ ì—¬ë¶€ë¡œ ì‚¬ìš©.
         /// </summary>
         private bool IsAnimalUnlocked(string animalId)
         {
@@ -212,78 +179,70 @@ namespace TaskTown.KDH
         }
 
         /// <summary>
-        /// µ¿¹°ÀÌ ÇöÀç ·¹º§¾÷ °¡´ÉÇÑÁö È®ÀÎ
+        /// ë™ë¬¼ ë ˆë²¨ì—… ê°€ëŠ¥ ì—¬ë¶€ í™•ì¸ (ì¤‘ë³µ ê°œìˆ˜ + ì½”ì¸ ì”ì•¡)
         /// </summary>
         public bool CanLevelUpAnimal(string animalId)
         {
-            if (!TryGetAnimalSlot(animalId, out SlotData_Animal slot))
-                return false;
+            if (!TryGetAnimalSlot(animalId, out SlotData_Animal slot)) return false;
 
-            return slot.CanLevelUp();
+            if (!slot.CanLevelUp()) return false;
+
+            long coinCost = slot.GetLevelUpCoinCost();
+
+            if (CoinWallet != null && CoinWallet.Balance < coinCost)
+            {
+                Debug.Log($"[InventoryManager_Animal] not enough coin. needed: {coinCost}, balance: {CoinWallet.Balance}");
+                return false;
+            }
+
+            return true;
         }
 
         public bool TryLevelUpAnimal(string animalId)
         {
             if (!TryGetAnimalSlot(animalId, out SlotData_Animal slot))
             {
-                Debug.LogWarning($"[InventoryManager_Animal] º¸À¯ÇÏÁö ¾ÊÀº µ¿¹°ÀÔ´Ï´Ù: {animalId}");
+                Debug.LogWarning($"[InventoryManager_Animal] ì¡´ì¬í•˜ì§€ ì•ŠëŠ” ìŠ¬ë¡¯ì…ë‹ˆë‹¤: {animalId}");
                 return false;
             }
 
             if (slot.IsMaxLevel)
             {
-                Debug.Log($"[InventoryManager_Animal] ÀÌ¹Ì ÃÖ´ë ·¹º§ÀÎ µ¿¹°ÀÔ´Ï´Ù: {animalId}");
+                Debug.Log($"[InventoryManager_Animal] ì´ë¯¸ ìµœëŒ€ ë ˆë²¨ì¸ ë™ë¬¼ì…ë‹ˆë‹¤: {animalId}");
                 return false;
             }
 
-            // Àç·á ¼Ò¸ğ ÈÄ ·¹º§¾÷ (º»Ã¼ 1¸¶¸®´Â À¯Áö)
+            if (!CanLevelUpAnimal(animalId)) return false;
+
+            long coinCost = slot.GetLevelUpCoinCost();
+
+            if (CoinWallet != null && !CoinWallet.TrySpend(coinCost))
+            {
+                Debug.Log($"[InventoryManager_Animal] failed to spend coin for level up: {animalId}, cost: {coinCost}");
+                return false;
+            }
+
+            // ì¬ë£Œ ì†Œëª¨ í›„ ë ˆë²¨ì—… (ë³¸ì²´ 1ê°œëŠ” ìœ ì§€)
             if (!slot.TryConsumeForLevelUp())
             {
-                Debug.Log($"[InventoryManager_Animal] ·¹º§¾÷ Àç·á°¡ ºÎÁ·ÇÕ´Ï´Ù: {animalId}");
+                Debug.Log($"[InventoryManager_Animal] ì¬ë£Œ ì†Œëª¨ ì‹¤íŒ¨: {animalId}");
                 return false;
             }
 
             slot.AnimalLevelUp();
 
-            // ¼ºÀå ¼öÄ¡ °è»ê ½Ã½ºÅÛ ¿¬°á
+            // ë‹¤ìŒ ë ˆë²¨ ìš”êµ¬ì¹˜ ê°±ì‹ 
             RefreshSlotGrowthData(slot);
 
             NotifySlotChanged(slot);
 
-            Debug.Log($"[InventoryManager_Animal] µ¿¹° ·¹º§¾÷ ¼º°ø: {animalId} / ÇöÀç ·¹º§ {slot.Level}");
+            Debug.Log($"[InventoryManager_Animal] ë™ë¬¼ ë ˆë²¨ì—… ì„±ê³µ: {animalId} / í˜„ì¬ ë ˆë²¨ {slot.Level}");
 
             return true;
         }
 
-        /*
-// µ¿¹°À» ÇÕ¼ºÇÒ ¶§ »ç¿ëÇÒ ÇÔ¼ö
-//public void RemoveAnimal(AnimalData animalData, int amount)
-//{
-//    if (animalData == null || amount <= 0) return;
-//
-//    AnimalInventorySlot targetSlot = animalList.Find(slot => slot.gachaData == animalData);
-//
-//    if (targetSlot != null)
-//    {
-//        //¼Ò¸ğµÉ µ¿¹°À» Á¦¿ÜÇÑ ÇÏ³ª´Â ³²¾ÆÀÖ¾î¾ß ÇØ¼­ -1À» ÇÔ
-//        if (targetSlot.currentCount - 1 < amount)
-//        {
-//            Debug.Log($"ÀÎº¥Åä¸®¿¡¼­ ÇÕ¼ºÇÏ·Á´Â {animalData.DisplayName}ÀÇ °¹¼ö°¡ {amount - (targetSlot.currentCount - 1)}¸¸Å­ ºÎÁ·ÇÕ´Ï´Ù.");
-//            return;
-//        }
-//
-//        targetSlot.currentCount -= amount;
-//    }
-//    else
-//    {
-//        Debug.LogWarning($"ÀÎº¥Åä¸®¿¡ ÇÕ¼ºÇÏ·Á´Â {animalData.DisplayName}ÀÌ(°¡) Á¸ÀçÇÏÁö ¾Ê½À´Ï´Ù.");
-//    }
-//}
-*/
-
-
         /// <summary>
-        /// ÇöÀç ·±Å¸ÀÓ µ¿¹° µ¥ÀÌÅÍ¸¦ ÀúÀå¿ë ½½·Ô ¸ñ·ÏÀ¸·Î º¯È¯ÇÕ´Ï´Ù.
+        /// í˜„ì¬ ë™ë¬¼ ìŠ¬ë¡¯ ë°ì´í„°ë¥¼ ì €ì¥ìš© ë¦¬ìŠ¤íŠ¸ í˜•ì‹ìœ¼ë¡œ ë³€í™˜í•©ë‹ˆë‹¤.
         /// </summary>
         public List<SlotSaveData_Animal> CreateSaveData()
         {
@@ -307,7 +266,7 @@ namespace TaskTown.KDH
         }
 
         /// <summary>
-        /// ÀúÀå µ¥ÀÌÅÍ¸¦ ±â¹İÀ¸·Î ·±Å¸ÀÓ µ¿¹° ÀÎº¥Åä¸®¸¦ º¹¿øÇÕ´Ï´Ù.
+        /// ì €ì¥ ë°ì´í„°ë¥¼ ê¸°ë°˜ìœ¼ë¡œ ëŸ°íƒ€ì„ ë™ë¬¼ ì¸ë²¤í† ë¦¬ë¥¼ ë³µì›í•©ë‹ˆë‹¤.
         /// </summary>
         public void LoadSaveData(List<SlotSaveData_Animal> saveDataList)
         {
@@ -333,15 +292,14 @@ namespace TaskTown.KDH
 
                 if (animalSlotsDic.ContainsKey(saveData.animaldata.Id))
                 {
-                    Debug.LogWarning($"[InventoryManager_Animal] ÀúÀå µ¥ÀÌÅÍ¿¡ Áßº¹ ID°¡ ÀÖ½À´Ï´Ù: {saveData.animaldata.Id}");
+                    Debug.LogWarning($"[InventoryManager_Animal] ì €ì¥ ë°ì´í„°ì— ì¤‘ë³µ IDê°€ ìˆìŠµë‹ˆë‹¤: {saveData.animaldata.Id}");
                     continue;
                 }
 
                 SlotData_Animal runtimeSlot =
                     new SlotData_Animal(saveData.animaldata, saveData.level, saveData.currentCount);
 
-                // ¼ºÀå ¼öÄ¡ °è»ê ½Ã½ºÅÛ ¿¬°á
-                // RefreshSlotGrowthData(runtimeSlot);
+                RefreshSlotGrowthData(runtimeSlot);
 
                 animalSlotsList.Add(runtimeSlot);
                 animalSlotsDic.Add(runtimeSlot.AnimalId, runtimeSlot);
@@ -351,25 +309,22 @@ namespace TaskTown.KDH
         }
 
         /// <summary>
-        /// ÇöÀç ·¹º§À» ±â¹İÀ¸·Î ·¹º§¾÷ ¿ä±¸ ¼ö·®°ú ºñ¿ë °»½Å.
-        /// ¼ºÀå ¼öÄ¡ °è»ê ½Ã½ºÅÛÀÎ LevelUpRequirementCalculator ¸¦ ¿¬°áÇÕ´Ï´Ù.
+        /// í˜„ì¬ ë ˆë²¨ì„ ê¸°ì¤€ìœ¼ë¡œ ë‹¤ìŒ ë ˆë²¨ì˜ ìš”êµ¬ ê°œìˆ˜ì™€ ë¹„ìš©ì„ ê°±ì‹ í•©ë‹ˆë‹¤.
+        /// ìš”êµ¬ì¹˜ ê³„ì‚° ì‹œìŠ¤í…œì€ LevelUpRequirementCalculator ì— ìœ„ì„í•©ë‹ˆë‹¤.
         /// </summary>
         private void RefreshSlotGrowthData(SlotData_Animal slot)
         {
             if (slot == null)
                 return;
-            
+
             int requiredCount = LevelUpRequirementCalculator.GetRequiredDuplicateCount(slot.Level);
 
             slot.ApplyGrowthData(requiredCount, slot.LevelUpCost, false);
-
-            Debug.Log("ÇöÀç ·¹º§À» ±â¹İÀ¸·Î ·¹º§¾÷ ¿ä±¸ ¼ö·®°ú ºñ¿ëÀ» °»½Å");
         }
 
-
         /// <summary>
-        /// ¸ğµç µ¿¹° ·±Å¸ÀÓ µ¥ÀÌÅÍ¸¦ Á¦°ÅÇÕ´Ï´Ù.
-        /// »õ °ÔÀÓ ¶Ç´Â ÀúÀå µ¥ÀÌÅÍ ·Îµå Àü¿¡ »ç¿ëÇÒ ¼ö ÀÖ½À´Ï´Ù.
+        /// ëª¨ë“  ë™ë¬¼ ëŸ°íƒ€ì„ ë°ì´í„°ë¥¼ ì‚­ì œí•©ë‹ˆë‹¤.
+        /// ìƒˆ ê²Œì„ ë˜ëŠ” ì €ì¥ ë°ì´í„° ë¡œë“œ ì „ì— ì‚¬ìš©ë  ìˆ˜ ìˆìŠµë‹ˆë‹¤.
         /// </summary>
         public void ClearAnimalInventory()
         {
@@ -386,7 +341,7 @@ namespace TaskTown.KDH
         }
 
         /// <summary>
-        /// µ¿¹° ÀÎº¥Åä¸® º¯°æ È£Ãâ
+        /// ë™ë¬¼ ì¸ë²¤í† ë¦¬ ë³€ê²½ í˜¸ì¶œ
         /// </summary>
         private void NotifyInventoryChanged()
         {

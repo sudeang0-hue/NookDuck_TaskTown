@@ -1661,6 +1661,103 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 08e3df8db85d0cc41872f3f55fb8ab69, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1 &1048365030
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1048365035}
+  - component: {fileID: 1048365034}
+  - component: {fileID: 1048365033}
+  - component: {fileID: 1048365032}
+  - component: {fileID: 1048365031}
+  m_Layer: 0
+  m_Name: RealInventorySystems
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1048365031
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1048365030}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f2f69539d68e6f41bab0f17d77436e8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TaskTown.KDH.RealProductionTicker
+  difficultyTable: {fileID: 11400000, guid: 4da124aa23c3e5b4a9ca72f49b8448c2, type: 2}
+  difficulty: 1
+  townLevelProviderSource: {fileID: 2037981665}
+  townUpgradeEffectConfig:
+    efficiencyBuffPerLevel: 0.1
+  coinWalletSource: {fileID: 900000003}
+--- !u!114 &1048365032
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1048365030}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7df4da81a66972049a16a85845b3957c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TaskTown.KDH.GachaInventoryBridge
+  animalGachaManager: {fileID: 2037981667}
+  toolGachaManager: {fileID: 2037981666}
+--- !u!114 &1048365033
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1048365030}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e541b9d195927554c92178abefb2284a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TaskTown.KDH.InventoryManager_Tool
+  coinWalletSource: {fileID: 900000003}
+  toolSlotsList: []
+  toolDatabase: {fileID: 11400000, guid: 5a440435476be43438c1ba6774400fc0, type: 2}
+--- !u!114 &1048365034
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1048365030}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 30aa4bcf80c05934fa9f5d31793da672, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TaskTown.KDH.InventoryManager_Animal
+  coinWalletSource: {fileID: 900000003}
+  animalSlotsList: []
+  animalDatabase: {fileID: 11400000, guid: 3201111431adf4f4e82092ababad0f60, type: 2}
+--- !u!4 &1048365035
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1048365030}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1141672982
 GameObject:
   m_ObjectHideFlags: 0
@@ -3584,3 +3681,4 @@ SceneRoots:
   - {fileID: 900000002}
   - {fileID: 1452163459}
   - {fileID: 1949157377}
+  - {fileID: 1048365035}

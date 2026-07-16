@@ -1,5 +1,6 @@
 using Animal.Data;
 using System;
+using TaskTown.Gacha;
 using UnityEngine;
 
 namespace TaskTown.KDH
@@ -7,15 +8,15 @@ namespace TaskTown.KDH
     [System.Serializable]
     public class SlotData_Animal
     {
-        [Header("ÀúÀå µ¥ÀÌÅÍ")]
+        [Header("ë™ë¬¼ ìŠ¬ë¡¯ ì •ë³´")]
         [SerializeField] private AnimalDataSO animalData;
         [SerializeField] private int level = 1;
         [SerializeField] private int currentCount = 0;
 
-        [Header("·¹º§¾÷ °è»ê µ¥ÀÌÅÍ")]
+        [Header("ë ˆë²¨ì—… ìš”êµ¬ ë°ì´í„°")]
         [SerializeField] private bool isMaxLevel;
         [SerializeField] private int levelUpCost;
-        [SerializeField] private int requiredUpgradeCount; 
+        [SerializeField] private int requiredUpgradeCount;
         //[SerializeField] private long levelUpCost;
 
 
@@ -36,7 +37,7 @@ namespace TaskTown.KDH
         }
 
         /// <summary>
-        /// µ¿ÀÏÇÑ µ¿¹°À» È¹µæÇßÀ» ¶§ º¸À¯ ¼ö·®À» Áõ°¡.
+        /// ë™ë¬¼ ìŠ¬ë¡¯ì„ íšë“í–ˆì„ ë•Œ ê°œìˆ˜ë¥¼ ëŠ˜ë¦½ë‹ˆë‹¤.
         /// </summary>
         public void AddCount()
         {
@@ -44,7 +45,7 @@ namespace TaskTown.KDH
         }
 
         /// <summary>
-        /// µ¿¹° ·¹º§À» 1 Áõ°¡½ÃÅµ´Ï´Ù.
+        /// ë™ë¬¼ ë ˆë²¨ì„ 1 ì¦ê°€ì‹œí‚µë‹ˆë‹¤.
         /// </summary>
         public void AnimalLevelUp()
         {
@@ -55,29 +56,19 @@ namespace TaskTown.KDH
             if (level == 5) isMaxLevel = true;
         }
 
-        // ÀÓ½Ã ±â´É(´ëÃ¼ °¡´É)
         /// <summary>
-        /// ·¹º§¾÷¿¡ ÇÊ¿äÇÑ ÄÚ½ºÆ®¸¦ ±¸ÇÕ´Ï´Ù.
+        /// ë‹¤ìŒ ë ˆë²¨ë¡œ ê°€ê¸° ìœ„í•´ ì´ë²ˆ ë‹¨ê³„ì—ì„œ í•„ìš”í•œ ì¤‘ë³µ ê°œìˆ˜ì…ë‹ˆë‹¤ (í‘œì‹œìš©).
+        /// LevelUpRequirementCalculator(TaskTown.Gacha) ê¸°ì¤€ê°’ì„ ê·¸ëŒ€ë¡œ ì”ë‹ˆë‹¤.
         /// </summary>
         public int GetLevelUpCost()
         {
-            if (level <= 0) return 99999;
-
-            int neededCost;
-
-            if (level == 1) neededCost = 4;
-            else if (level == 2) neededCost = 16;
-            else if (level == 3) neededCost = 64;
-            else if (level == 4) neededCost = 256;
-            else neededCost = 99999;
-
+            int neededCost = LevelUpRequirementCalculator.GetRequiredDuplicateCount(level);
             levelUpCost = neededCost;
-
             return levelUpCost;
         }
 
         /// <summary>
-        /// ¿ä±¸ ¼ö·®, ·¹º§¾÷ ºñ¿ë, ÃÖ´ë ·¹º§ ¿©ºÎ ¼³Á¤
+        /// ìš”êµ¬ ê°œìˆ˜, ë ˆë²¨ì—… ë¹„ìš©, ìµœëŒ€ ë ˆë²¨ ì—¬ë¶€ë¥¼ ì„¤ì •í•©ë‹ˆë‹¤.
         /// </summary>
         public void ApplyGrowthData(int requiredCount, int cost, bool maxLevel)
         {
@@ -87,8 +78,8 @@ namespace TaskTown.KDH
         }
 
         /// <summary>
-        /// ·¹º§¾÷ °¡´É ¿©ºÎ.
-        /// º»Ã¼ 1¸¶¸®¸¦ Á¦¿ÜÇÑ Àç·á ¼ö·®ÀÌ ¿ä±¸ ¼ö·® ÀÌ»óÀÎÁö È®ÀÎÇÕ´Ï´Ù.
+        /// ë ˆë²¨ì—… ê°€ëŠ¥ ì—¬ë¶€.
+        /// ë³¸ì²´ 1ê°œë¥¼ ì œì™¸í•œ ë‚˜ë¨¸ì§€ ê°œìˆ˜ê°€ ìš”êµ¬ ê°œìˆ˜ ì´ìƒì¸ì§€ í™•ì¸í•©ë‹ˆë‹¤.
         /// </summary>
         public bool CanLevelUp()
         {
@@ -98,13 +89,13 @@ namespace TaskTown.KDH
             if (requiredUpgradeCount <= 0)
                 return false;
 
-            // UI Ç¥½Ã ¼ö·®(CurrentCount - 1)ÀÌ ¿ä±¸ ¼ö·®¿¡ µµ´ŞÇß´ÂÁö ÆÇÁ¤
+            // UI í‘œì‹œ ê°œìˆ˜(CurrentCount - 1)ê°€ ìš”êµ¬ ê°œìˆ˜ë¥¼ ì¶©ì¡±í–ˆëŠ”ì§€ íŒì •
             return (currentCount - 1) >= requiredUpgradeCount;
         }
 
         /// <summary>
-        /// ·¹º§¾÷ Àç·á ¼ö·®À» ¼ÒºñÇÕ´Ï´Ù.
-        /// º»Ã¼ 1¸¶¸®´Â ³²±â°í, ¿ä±¸ ¼ö·®¸¸Å­¸¸ Â÷°¨ÇÕ´Ï´Ù.
+        /// ë ˆë²¨ì—…ì— í•„ìš”í•œ ê°œìˆ˜ë¥¼ ì†Œë¹„í•©ë‹ˆë‹¤.
+        /// ë³¸ì²´ 1ê°œëŠ” ë‚¨ê¸°ê³ , ìš”êµ¬ ê°œìˆ˜ë§Œí¼ë§Œ ì†Œëª¨í•©ë‹ˆë‹¤.
         /// </summary>
         public bool TryConsumeForLevelUp()
         {
@@ -113,11 +104,19 @@ namespace TaskTown.KDH
 
             currentCount -= requiredUpgradeCount;
 
-            // º»Ã¼ 1¸¶¸®´Â Ç×»ó À¯Áö
+            // ë³¸ì²´ 1ê°œëŠ” í•­ìƒ ìœ ì§€
             if (currentCount < 1)
                 currentCount = 1;
 
             return true;
+        }
+
+        /// <summary>
+        /// ë‹¤ìŒ ë ˆë²¨ë¡œ ì˜¬ë¦¬ëŠ” ë° í•„ìš”í•œ ì½”ì¸ ë¹„ìš©ì…ë‹ˆë‹¤ (GachaEntryData ê³µí†µ ê³„ì‚°ì‹ ê¸°ì¤€).
+        /// </summary>
+        public long GetLevelUpCoinCost()
+        {
+            return animalData != null ? animalData.CalculateLevelUpCoinCost(level) : 0L;
         }
     }
 }
