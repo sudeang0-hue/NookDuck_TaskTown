@@ -7461,7 +7461,7 @@ MonoBehaviour:
   priority: 0
   blendDistance: 0
   weight: 1
-  sharedProfile: {fileID: 11400000, guid: a9647f85c48cd084993868bdec032f1d, type: 2}
+  sharedProfile: {fileID: 0}
 --- !u!4 &832575519
 Transform:
   m_ObjectHideFlags: 0
@@ -8257,6 +8257,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3084e8c92ac212249b175fe5466b5b36, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ObjectDragger
+  smoothTime: 0
 --- !u!65 &948813293
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -8306,7 +8307,7 @@ MonoBehaviour:
   m_OverrideTileSize: 0
   m_TileSize: 256
   m_OverrideVoxelSize: 0
-  m_VoxelSize: 0.16666667
+  m_VoxelSize: 0.016666668
   m_MinRegionArea: 2
   m_NavMeshData: {fileID: 23800000, guid: aa1465f4f4ee5a048be971828b91beee, type: 2}
   m_BuildHeightMesh: 0
@@ -9883,7 +9884,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameMasterManager
   villageOrigin: {fileID: 948813290}
   miniVillagePos: {fileID: 4514271}
-  navMeshSurface: {fileID: 948813294}
   expandedPanel: {fileID: 218928617}
   minimizedPanel: {fileID: 478528514}
   menuPanel: {fileID: 993595719}
@@ -9891,6 +9891,8 @@ MonoBehaviour:
   panelDex: {fileID: 2040580426}
   panelGacha: {fileID: 2248036}
   panelManage: {fileID: 1433524718}
+  panelOption: {fileID: 0}
+  panelToolInv: {fileID: 0}
   btnMinimize: {fileID: 756114922}
   btnMaximize: {fileID: 158737759}
   btnQuit: {fileID: 1186074967}
