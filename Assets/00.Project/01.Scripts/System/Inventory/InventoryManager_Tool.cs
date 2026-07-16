@@ -14,22 +14,22 @@ namespace TaskTown.KDH
         [SerializeField] private MonoBehaviour coinWalletSource;
         private ICoinWallet CoinWallet => coinWalletSource as ICoinWallet;
 
-        [Header("���� ��Ÿ�� ����")]
-        [Tooltip("���� �÷��̾ ������ ���� ���� ���")]
+        [Header("도구 런타임 슬롯")]
+        [Tooltip("현재 플레이어가 보유한 도구 슬롯 목록")]
         [SerializeField] private List<SlotData_Tool> toolSlotsList = new List<SlotData_Tool>();
 
-        [Header("���� ������ ���̽�")]
+        [Header("도구 데이터 베이스")]
         [SerializeField] private ToolDatabase toolDatabase;
 
-        // ID ��� ���� ��ȸ�� ���� ��Ÿ�� Dictionary
+        // ID 기반 슬롯 조회를 위한 런타임 Dictionary
         private Dictionary<string, SlotData_Tool> toolSlotsDic = new Dictionary<string, SlotData_Tool>();
 
-        // �ܺο��� �κ��丮 ���� ����� ���� �� �ֵ��� �����ϴ� ������Ƽ
+        // 외부에서 인벤토리 슬롯 목록을 읽을 수 있도록 노출하는 프로퍼티
         public IReadOnlyList<SlotData_Tool> ToolSlotsList => toolSlotsList;
 
-        // ���� �κ��丮 �����Ͱ� ����Ǿ��� �� ȣ��
+        // 도구 인벤토리 데이터가 변경되었을 때 호출
         public event Action OnToolInventoryChanged;
-        // Ư�� ���� ������ �����Ͱ� ����Ǿ��� �� ȣ��
+        // 특정 도구 슬롯의 데이터가 변경되었을 때 호출
         public event Action<SlotData_Tool> OnToolSlotChanged;
 
         private void Awake()
@@ -48,7 +48,7 @@ namespace TaskTown.KDH
         }
 
         /// <summary>
-        /// ��Ÿ�� ����Ʈ ������� Dictionary �� �ٽ� ����
+        /// 슬롯 리스트 기반으로 Dictionary 를 다시 구성
         /// </summary>
         private void InitializeDictionary()
         {
@@ -88,7 +88,7 @@ namespace TaskTown.KDH
         }
 
         /// <summary>
-        /// ���� ID�� �ش��ϴ� ���� ������ ��ȯ
+        /// 도구 ID 로 해당하는 동물 데이터를 반환
         /// </summary>
         public ToolDataSO GetToolData(string toolId)
         {
@@ -104,7 +104,7 @@ namespace TaskTown.KDH
         }
 
         /// <summary>
-        /// ���� ���� �߰�. ���� ȹ���̸� ������ �����, �ߺ� ȹ���̸� ���� ���� ���� ����
+        /// 도구 슬롯 추가. 최초 획득이면 슬롯을 생성하고, 중복 획득이면 기존 슬롯의 개수를 증가
         /// </summary>
         public bool AddToolSlot(ToolDataSO toolData)
         {
@@ -154,7 +154,7 @@ namespace TaskTown.KDH
         }
 
         /// <summary>
-        /// ���� ID�� ��Ÿ�� ���� ��ȸ
+        /// 도구 ID로 런타임 슬롯 조회
         /// </summary>
         public bool TryGetToolSlot(string toolId, out SlotData_Tool slot)
         {
@@ -166,8 +166,7 @@ namespace TaskTown.KDH
         }
 
         /// <summary>
-        /// ���� ���� ���� ������ �� ���� ��ȯ.
-        /// �������� ���� ������ 0 ��ȯ
+        /// 도구 보유수량 반환. 미보유 시 0 반환
         /// </summary>
         public int GetToolCount(string toolId)
         {
@@ -175,8 +174,7 @@ namespace TaskTown.KDH
         }
 
         /// <summary>
-        /// �ش� ������ �� �� �̻� ȹ���ߴ��� Ȯ��.
-        /// ���������� �� ���� �ر� ���η� ���.
+        /// 해당 도구를 한 번 이상 획득했는지 확인. 도감 해금 여부로 사용.
         /// </summary>
         public bool IsToolUnlocked(string toolId)
         {
@@ -184,7 +182,7 @@ namespace TaskTown.KDH
         }
 
         /// <summary>
-        /// ������ ���� ������ �������� Ȯ��
+        /// 도구 레벨업 가능 여부 확인 (중복 개수 + 코인 잔액)
         /// </summary>
         public bool CanLevelUpTool(string toolId)
         {
@@ -204,7 +202,7 @@ namespace TaskTown.KDH
         }
 
         /// <summary>
-        /// ���� ������ �õ�
+        /// 도구 레벨업 시도
         /// </summary>
         public bool TryLevelUpTool(string toolId)
         {
@@ -325,7 +323,7 @@ namespace TaskTown.KDH
         }
 
         /// <summary>
-        /// ���� ��Ÿ�� ���� �����͸� ����� ���� ������� ��ȯ�մϴ�.
+        /// 현재 도구 슬롯 데이터를 저장용 리스트 형식으로 변환합니다.
         /// </summary>
         public List<SlotSaveData_Tool> CreateSaveData()
         {
@@ -354,7 +352,7 @@ namespace TaskTown.KDH
         }
 
         /// <summary>
-        /// ���� �����͸� ������� ��Ÿ�� ���� �κ��丮�� �����մϴ�.
+        /// 저장 데이터를 기반으로 런타임 도구 인벤토리를 복원합니다.
         /// </summary>
         public void LoadSaveData(List<SlotSaveData_Tool> saveDataList)
         {
@@ -435,7 +433,7 @@ namespace TaskTown.KDH
         }
 
         /// <summary>
-        /// ���� �κ��丮 ���� ȣ��
+        /// 도구 인벤토리 변경 호출
         /// </summary>
         private void NotifyInventoryChanged()
         {

@@ -9295,6 +9295,7 @@ Transform:
   - {fileID: 1217147866}
   - {fileID: 1969904959}
   - {fileID: 660132375}
+  - {fileID: 1656165589}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &861881402
@@ -11207,11 +11208,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: afd018cc164161e42b0ea4b9c6f50dda, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIController_Gacha
-  gachaSystem: {fileID: 0}
-  animalOnePickButton: {fileID: 1654174008}
-  animalTenPickButton: {fileID: 894207687}
-  toolOnePickButton: {fileID: 1077273637}
-  toolTenPickButton: {fileID: 1823474465}
+  animalGachaManager: {fileID: 0}
+  toolGachaManager: {fileID: 0}
+  animalOnePickButton: {fileID: 0}
+  animalTenPickButton: {fileID: 0}
+  toolOnePickButton: {fileID: 0}
+  toolTenPickButton: {fileID: 0}
 --- !u!114 &1011179301
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -14692,7 +14694,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1343008558
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -17752,12 +17754,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1656165586}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 216.5, y: 326.5, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalRotation: {x: 0.22501671, y: -0.35907257, z: 0.08863643, w: 0.9014311}
+  m_LocalPosition: {x: 26.247864, y: 143.73825, z: 130.14388}
+  m_LocalScale: {x: 0.49999994, y: 0.5, z: 0.49999988}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 858772991}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &1669816371 stripped
 Transform:
@@ -18011,6 +18013,28 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1729375217}
   m_CullTransparentMesh: 1
+--- !u!114 &1738955338 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7183985050904730177, guid: 0c3bc518a8c206045b4251e435e075a6, type: 3}
+  m_PrefabInstance: {fileID: 555801519}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e541b9d195927554c92178abefb2284a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TaskTown.KDH.InventoryManager_Tool
+--- !u!114 &1738955339 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7406306307270272899, guid: 0c3bc518a8c206045b4251e435e075a6, type: 3}
+  m_PrefabInstance: {fileID: 555801519}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 30aa4bcf80c05934fa9f5d31793da672, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TaskTown.KDH.InventoryManager_Animal
 --- !u!1 &1756116845
 GameObject:
   m_ObjectHideFlags: 0
@@ -19393,8 +19417,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: db7cda429458a0b4bb1bdca91fe75b8c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIController_AnimalDex
-  animalInventory: {fileID: 1656165588}
-  animalDatabase: {fileID: 11400000, guid: 967ae621352559040b37076da918a5fc, type: 2}
+  animalInventory: {fileID: 1738955339}
+  animalDatabase: {fileID: 11400000, guid: 3201111431adf4f4e82092ababad0f60, type: 2}
   animalSlotPrefab: {fileID: 601950324912327570, guid: f418f7d0fc1b7d64f85534657012ef5d, type: 3}
   animalSlotContentRoot: {fileID: 1931441695}
   animalPageController: {fileID: 1427867711}
@@ -19411,7 +19435,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: afd018cc164161e42b0ea4b9c6f50dda, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIController_Gacha
-  gachaSystem: {fileID: 0}
+  animalGachaManager: {fileID: 1168367923}
+  toolGachaManager: {fileID: 1168367922}
   animalOnePickButton: {fileID: 1654174008}
   animalTenPickButton: {fileID: 894207687}
   toolOnePickButton: {fileID: 1077273637}
@@ -19428,7 +19453,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2a8c8c71d02660248b8c0ef947d538ec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UI.UIController_ToolInv
-  toolInventory: {fileID: 0}
+  toolInventory: {fileID: 1738955338}
   toolSlotPrefab: {fileID: 6944075603417595130, guid: b8ceee9b095d2484e9576662e259b160, type: 3}
   toolSlotContentRoot: {fileID: 1770666024}
   slotMaplist: []
@@ -19444,7 +19469,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: af7d1774daf5e32439aa84d1aaf963be, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIController_AnimalInv
-  animalInventory: {fileID: 0}
+  animalInventory: {fileID: 1738955339}
   animalSlotPrefab: {fileID: 8343252600400613896, guid: 75ab4ae4a54f6894bb0e78bee98af71b, type: 3}
   animalSlotContentRoot: {fileID: 1117617983}
   slotMaplist: []
@@ -21127,7 +21152,6 @@ SceneRoots:
   - {fileID: 2099262682}
   - {fileID: 405926516}
   - {fileID: 858772991}
-  - {fileID: 1656165589}
   - {fileID: 577138793}
   - {fileID: 1466800560}
   - {fileID: 555801519}

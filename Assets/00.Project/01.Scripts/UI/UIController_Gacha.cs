@@ -6,7 +6,8 @@ using UnityEngine.UI;
 public class UIController_Gacha : MonoBehaviour
 {
     [Header("뽑기 시스템")]
-    [SerializeField] private GameObject gachaSystem;
+    [SerializeField] private GachaManagerBase animalGachaManager;
+    [SerializeField] private GachaManagerBase toolGachaManager;
 
     [Header("동물 뽑기 버튼")]
     [SerializeField] private Button animalOnePickButton;  // 동물 1회 뽑기 버튼
@@ -17,6 +18,18 @@ public class UIController_Gacha : MonoBehaviour
     [SerializeField] private Button toolTenPickButton;    // 도구 10회 뽑기 버튼
 
 
+    private void Awake()
+    {
+        if(animalGachaManager == null)
+        {
+
+        }
+
+        if(toolGachaManager == null)
+        {
+
+        }
+    }
     private void Start()
     {
         Subscribe();
@@ -68,6 +81,7 @@ public class UIController_Gacha : MonoBehaviour
     {
         Debug.Log("[UIController_Gacha] 동물 1회 뽑기 로직 실행 요청");
         // 가챠 시스템의 동물 1회 뽑기와 연결
+        animalGachaManager.Roll();
     }
 
 
@@ -75,18 +89,21 @@ public class UIController_Gacha : MonoBehaviour
     {
         Debug.Log("[UIController_Gacha] 동물 10회 뽑기 로직 실행 요청");
         // 가챠 시스템의 동물 10회 뽑기와 연결
+        animalGachaManager.RollMulti(10);
     }
 
     private void OnClickPickUpToolOneTime()
     {
         Debug.Log("[UIController_Gacha] 도구 1회 뽑기 로직 실행 요청");
         // 가챠 시스템의 도구 1회 뽑기와 연결
+        toolGachaManager.Roll();
     }
 
     private void OnClickPickUpToolTenTime()
     {
         Debug.Log("[UIController_Gacha] 도구 10회 뽑기 로직 실행 요청");
         // 가챠 시스템의 도구 10회 뽑기와 연결
+        toolGachaManager.RollMulti(10);
     }
 
 
