@@ -1,0 +1,42 @@
+using UnityEngine;
+
+namespace TaskTown.Gacha
+{
+    // 뽑기로 나올 수 있는 모든 대상(동물, 도구, 추후 치장 아이템 등)의 공통 베이스입니다.
+    // 새 뽑기 대상을 추가하려면 이 클래스만 상속받으면 GachaSystem/GachaPoolData를 그대로 재사용할 수 있습니다.
+    // 생산량/레벨업 관련 필드와 계산 로직도 여기 공통으로 둬서, AnimalDataSO/ToolDataSO 등
+    // 어떤 구체 타입을 쓰든 FinalProductionCalculator가 동일하게 재사용할 수 있게 합니다.
+    public abstract class GachaEntryData : ScriptableObject
+    {
+        [SerializeField] private string id;
+        [SerializeField] private string displayName;
+        [SerializeField] private ItemGrade grade;
+        [SerializeField] private Sprite icon;
+
+        [Tooltip("이 종류가 뽑기에 등장하기 시작하는 마을 레벨입니다. 그 전까지는 잠겨 있어서 뽑히지 않습니다.")]
+        [SerializeField, Min(1)] private int unlockTownLevel = 1;
+
+        [SerializeField] private float baseCoinPerSecond;
+        [SerializeField, Min(0f)] private float levelBonusRatePerLevel = 0.2f;   // 레벨당 +20% 기본값
+        [SerializeField, Min(0)] private long levelUpBaseCost = 100;             // Lv1->2 코인 비용
+        [SerializeField, Min(1f)] private float levelUpCostIncreaseRate = 1.5f;  // 레벨당 x1.5
+
+        public string Id => id;
+        public string DisplayName => displayName;
+        public ItemGrade Grade => grade;
+        public Sprite Icon => icon;
+        public int UnlockTownLevel => unlockTownLevel;
+        public float BaseCoinPerSecond => baseCoinPerSecond;
+
+        public float CalculateLevelMultiplier(int level)
+        {
+            return 1f + Mathf.Max(0, level - 1) * levelBonusRatePerLevel;
+        }
+
+        public long CalculateLevelUpCoinCost(int currentLevel)
+        {
+            double cost = levelUpBaseCost * System.Math.Pow(levelUpCostIncreaseRate, Mathf.Max(0, currentLevel - 1));
+            return (long)System.Math.Ceiling(cost);
+        }
+    }
+}
