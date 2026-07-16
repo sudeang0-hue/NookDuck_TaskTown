@@ -1,0 +1,163 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &7420439736619146514
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1066419776458539979}
+  - component: {fileID: 5052898533250768301}
+  - component: {fileID: 4278152603540216987}
+  - component: {fileID: 7983547880734414462}
+  - component: {fileID: 8433689165559621666}
+  m_Layer: 0
+  m_Name: GachaSystems
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1066419776458539979
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7420439736619146514}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5052898533250768301
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7420439736619146514}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8fc1b46d3ec7ebe4d80d76fb82dbfc34, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TaskTown.Gacha::TaskTown.Gacha.AnimalGachaManager
+  pool: {fileID: 11400000, guid: 7bd9ade846da5e243be27a5fd87008e0, type: 2}
+  costConfig:
+    levelCosts:
+    - townLevelThreshold: 1
+      cost: 1700
+    - townLevelThreshold: 2
+      cost: 2550
+    - townLevelThreshold: 3
+      cost: 3825
+    - townLevelThreshold: 4
+      cost: 5738
+    - townLevelThreshold: 5
+      cost: 8607
+    - townLevelThreshold: 6
+      cost: 12910
+    - townLevelThreshold: 7
+      cost: 19365
+    - townLevelThreshold: 8
+      cost: 29047
+    - townLevelThreshold: 9
+      cost: 43570
+  townLevelProviderSource: {fileID: 7983547880734414462}
+--- !u!114 &4278152603540216987
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7420439736619146514}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76c23296fc47e0d48b20d3148825033d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TaskTown.Gacha::TaskTown.Gacha.ToolGachaManager
+  pool: {fileID: 11400000, guid: 21b1defa25af76948a0cb1155911667a, type: 2}
+  costConfig:
+    levelCosts:
+    - townLevelThreshold: 1
+      cost: 1700
+    - townLevelThreshold: 2
+      cost: 2550
+    - townLevelThreshold: 3
+      cost: 3825
+    - townLevelThreshold: 4
+      cost: 5738
+    - townLevelThreshold: 5
+      cost: 8607
+    - townLevelThreshold: 6
+      cost: 12910
+    - townLevelThreshold: 7
+      cost: 19365
+    - townLevelThreshold: 8
+      cost: 29047
+    - townLevelThreshold: 9
+      cost: 43570
+  townLevelProviderSource: {fileID: 7983547880734414462}
+--- !u!114 &7983547880734414462
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7420439736619146514}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2fd360a2e13206f45ba7efcc7d6b5275, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TaskTown.Gacha.Demo::TaskTown.Gacha.Demo.DemoTownLevelProvider
+  townLevel: 1
+--- !u!114 &8433689165559621666
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7420439736619146514}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 88b7fd53951b8c847851f6400b5305e2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TaskTown.Gacha.Demo::TaskTown.Gacha.Demo.GachaDemoUI
+  animalGachaManager: {fileID: 5052898533250768301}
+  toolGachaManager: {fileID: 4278152603540216987}
+  townLevelProvider: {fileID: 7983547880734414462}
+  townUpgradeCostConfig:
+    levelCosts:
+    - townLevelThreshold: 1
+      cost: 220000
+    - townLevelThreshold: 2
+      cost: 1000000
+    - townLevelThreshold: 3
+      cost: 1750000
+    - townLevelThreshold: 4
+      cost: 2200000
+    - townLevelThreshold: 5
+      cost: 2900000
+    - townLevelThreshold: 6
+      cost: 4350000
+    - townLevelThreshold: 7
+      cost: 5800000
+    - townLevelThreshold: 8
+      cost: 6000000
+    - townLevelThreshold: 9
+      cost: 15500000
+  coinWalletSource: {fileID: 0}
+  animalGachaButton: {fileID: 0}
+  toolGachaButton: {fileID: 0}
+  animalGachaX10Button: {fileID: 0}
+  toolGachaX10Button: {fileID: 0}
+  increaseTownLevelButton: {fileID: 0}
+  addTestCoinButton: {fileID: 0}
+  resultText: {fileID: 0}
+  costText: {fileID: 0}
+  townLevelText: {fileID: 0}

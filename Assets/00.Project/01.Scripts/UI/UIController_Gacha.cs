@@ -5,18 +5,37 @@ using UnityEngine.UI;
 
 public class UIController_Gacha : MonoBehaviour
 {
-    [Header("»Ì±â ½Ã½ºÅÛ")]
-    [SerializeField] private GameObject gachaSystem;
+    [Header("ï¿½Ì±ï¿½ ï¿½Ã½ï¿½ï¿½ï¿½")]
+    [SerializeField] private GachaManagerBase animalGachaManager;
+    [SerializeField] private GachaManagerBase toolGachaManager;
 
-    [Header("µ¿¹° »Ì±â ¹öÆ°")]
-    [SerializeField] private Button animalOnePickButton;  // µ¿¹° 1È¸ »Ì±â ¹öÆ°
-    [SerializeField] private Button animalTenPickButton;  // µ¿¹° 10È¸ »Ì±â ¹öÆ°
+    [Tooltip("ICoinWalletì„ êµ¬í˜„í•œ ì»´í¬ë„ŒíŠ¸(CoinManager)ë¥¼ ì—°ê²°í•©ë‹ˆë‹¤. ë¹„ì›Œë‘ë©´ ì½”ì¸ í™•ì¸ ì—†ì´ ë½‘ê¸°ë¥¼ ì§„í–‰í•©ë‹ˆë‹¤.")]
+    [SerializeField] private MonoBehaviour coinWalletSource;
+    private ICoinWallet CoinWallet => coinWalletSource as ICoinWallet;
+
+    private const int MultiRollCount = 10;
+
+    [Header("ï¿½ï¿½ï¿½ï¿½ ï¿½Ì±ï¿½ ï¿½ï¿½Æ°")]
+    [SerializeField] private Button animalOnePickButton;  // ï¿½ï¿½ï¿½ï¿½ 1È¸ ï¿½Ì±ï¿½ ï¿½ï¿½Æ°
+    [SerializeField] private Button animalTenPickButton;  // ï¿½ï¿½ï¿½ï¿½ 10È¸ ï¿½Ì±ï¿½ ï¿½ï¿½Æ°
                                                           
-    [Header("µµ±¸ »Ì±â ¹öÆ°")]
-    [SerializeField] private Button toolOnePickButton;    // µµ±¸ 1È¸ »Ì±â ¹öÆ°
-    [SerializeField] private Button toolTenPickButton;    // µµ±¸ 10È¸ »Ì±â ¹öÆ°
+    [Header("ï¿½ï¿½ï¿½ï¿½ ï¿½Ì±ï¿½ ï¿½ï¿½Æ°")]
+    [SerializeField] private Button toolOnePickButton;    // ï¿½ï¿½ï¿½ï¿½ 1È¸ ï¿½Ì±ï¿½ ï¿½ï¿½Æ°
+    [SerializeField] private Button toolTenPickButton;    // ï¿½ï¿½ï¿½ï¿½ 10È¸ ï¿½Ì±ï¿½ ï¿½ï¿½Æ°
 
 
+    private void Awake()
+    {
+        if(animalGachaManager == null)
+        {
+
+        }
+
+        if(toolGachaManager == null)
+        {
+
+        }
+    }
     private void Start()
     {
         Subscribe();
@@ -28,7 +47,7 @@ public class UIController_Gacha : MonoBehaviour
     }
     
     /// <summary>
-    /// Å¬¸¯ ÀÌº¥Æ® ±¸µ¶
+    /// Å¬ï¿½ï¿½ ï¿½Ìºï¿½Æ® ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     private void Subscribe()
     {
@@ -47,7 +66,7 @@ public class UIController_Gacha : MonoBehaviour
     }
 
     /// <summary>
-    /// Å¬¸¯ ÀÌº¥Æ® ±¸µ¶ ÇØÁ¦
+    /// Å¬ï¿½ï¿½ ï¿½Ìºï¿½Æ® ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     private void Unsubscribe()
     {
@@ -66,29 +85,52 @@ public class UIController_Gacha : MonoBehaviour
 
     private void OnClickPickUpAnimalOneTime()
     {
-        Debug.Log("[UIController_Gacha] µ¿¹° 1È¸ »Ì±â ·ÎÁ÷ ½ÇÇà ¿äÃ»");
-        // °¡Ã­ ½Ã½ºÅÛÀÇ µ¿¹° 1È¸ »Ì±â¿Í ¿¬°á
+        if (animalGachaManager == null) return;
+        if (!TrySpendCost(animalGachaManager.GetCost(1))) return;
+
+        animalGachaManager.Roll();
     }
 
 
     private void OnClickPickUpAnimalTenTime()
     {
-        Debug.Log("[UIController_Gacha] µ¿¹° 10È¸ »Ì±â ·ÎÁ÷ ½ÇÇà ¿äÃ»");
-        // °¡Ã­ ½Ã½ºÅÛÀÇ µ¿¹° 10È¸ »Ì±â¿Í ¿¬°á
+        if (animalGachaManager == null) return;
+        if (!TrySpendCost(animalGachaManager.GetCost(MultiRollCount))) return;
+
+        animalGachaManager.RollMulti(MultiRollCount);
     }
 
     private void OnClickPickUpToolOneTime()
     {
-        Debug.Log("[UIController_Gacha] µµ±¸ 1È¸ »Ì±â ·ÎÁ÷ ½ÇÇà ¿äÃ»");
-        // °¡Ã­ ½Ã½ºÅÛÀÇ µµ±¸ 1È¸ »Ì±â¿Í ¿¬°á
+        if (toolGachaManager == null) return;
+        if (!TrySpendCost(toolGachaManager.GetCost(1))) return;
+
+        toolGachaManager.Roll();
     }
 
     private void OnClickPickUpToolTenTime()
     {
-        Debug.Log("[UIController_Gacha] µµ±¸ 10È¸ »Ì±â ·ÎÁ÷ ½ÇÇà ¿äÃ»");
-        // °¡Ã­ ½Ã½ºÅÛÀÇ µµ±¸ 10È¸ »Ì±â¿Í ¿¬°á
+        if (toolGachaManager == null) return;
+        if (!TrySpendCost(toolGachaManager.GetCost(MultiRollCount))) return;
+
+        toolGachaManager.RollMulti(MultiRollCount);
     }
 
+    // ì½”ì¸ì´ ë¶€ì¡±í•˜ë©´ ë½‘ê¸°ë¥¼ ì§„í–‰í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤. coinWalletSourceê°€ ë¹„ì–´ìˆìœ¼ë©´ ì½”ì¸ í™•ì¸ ì—†ì´ ì§„í–‰í•©ë‹ˆë‹¤.
+    private bool TrySpendCost(long cost)
+    {
+        if (CoinWallet == null)
+        {
+            Debug.LogWarning("[UIController_Gacha] ICoinWalletì´ ì—°ê²°ë˜ì§€ ì•Šì•„ ì½”ì¸ í™•ì¸ ì—†ì´ ë½‘ê¸°ë¥¼ ì§„í–‰í•©ë‹ˆë‹¤.");
+            return true;
+        }
 
+        if (!CoinWallet.TrySpend(cost))
+        {
+            Debug.Log($"[UIController_Gacha] ì½”ì¸ì´ ë¶€ì¡±í•©ë‹ˆë‹¤. (í•„ìš”: {cost}, ë³´ìœ : {CoinWallet.Balance})");
+            return false;
+        }
 
+        return true;
+    }
 }
