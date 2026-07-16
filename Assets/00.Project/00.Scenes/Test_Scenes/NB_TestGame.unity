@@ -488,13 +488,16 @@ MonoBehaviour:
   animalGachaManager: {fileID: 1989302546}
   toolGachaManager: {fileID: 1989302544}
   difficultyTable: {fileID: 11400000, guid: 4da124aa23c3e5b4a9ca72f49b8448c2, type: 2}
+  townLevelProvider: {fileID: 0}
+  townUpgradeEffectConfig:
+    efficiencyBuffPerLevel: 0.1
   coinWalletSource: {fileID: 1223565541}
   resetOwnedButton: {fileID: 135270951}
   nextDifficultyButton: {fileID: 1997289754}
   animalLevelUpButton: {fileID: 174899755}
   toolLevelUpButton: {fileID: 149784190}
-  townUpgradeUpButton: {fileID: 1631790695}
   statusText: {fileID: 1085845594}
+  ownedItemsText: {fileID: 0}
 --- !u!4 &41164613
 Transform:
   m_ObjectHideFlags: 0
@@ -2763,6 +2766,75 @@ Transform:
   m_Children: []
   m_Father: {fileID: 405926516}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &208455986 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 69ca4ac12210b3543ad19854b5a9e1cf, type: 3}
+  m_PrefabInstance: {fileID: 1178904513}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &208455987 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 69ca4ac12210b3543ad19854b5a9e1cf, type: 3}
+  m_PrefabInstance: {fileID: 1178904513}
+  m_PrefabAsset: {fileID: 0}
+--- !u!95 &208455988
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 208455986}
+  m_Enabled: 1
+  m_Avatar: {fileID: 9000000, guid: 2949db91039f17846895f58690477861, type: 3}
+  m_Controller: {fileID: 9100000, guid: 846aa0d19a12d634d8aa42fa26d9c718, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 1
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 1
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
+--- !u!195 &208455989
+NavMeshAgent:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 208455986}
+  m_Enabled: 1
+  m_AgentTypeID: 0
+  m_Radius: 0.5
+  m_Speed: 1.5
+  m_Acceleration: 8
+  avoidancePriority: 50
+  m_AngularSpeed: 120
+  m_StoppingDistance: 0
+  m_AutoTraverseOffMeshLink: 1
+  m_AutoBraking: 1
+  m_AutoRepath: 1
+  m_Height: 2
+  m_BaseOffset: 0
+  m_WalkableMask: 4294967295
+  m_ObstacleAvoidanceType: 4
+--- !u!114 &208455990
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 208455986}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4417aa1e311815d4986d2c4dffceddc8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::VillagerAI
+  wanderRadius: 8
+  minWanderInterval: 4
+  maxWanderInterval: 8
 --- !u!1 &218928617
 GameObject:
   m_ObjectHideFlags: 0
@@ -10522,6 +10594,7 @@ Transform:
   - {fileID: 958551041}
   - {fileID: 702812853}
   - {fileID: 1136692266}
+  - {fileID: 208455987}
   m_Father: {fileID: 1343008559}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &993595719
@@ -10850,6 +10923,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: afd018cc164161e42b0ea4b9c6f50dda, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIController_Gacha
+  gachaSystem: {fileID: 0}
   animalOnePickButton: {fileID: 1654174008}
   animalTenPickButton: {fileID: 894207687}
   toolOnePickButton: {fileID: 1077273637}
@@ -12411,6 +12485,84 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
+--- !u!1001 &1178904513
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 972403756}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: 69ca4ac12210b3543ad19854b5a9e1cf, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1.4285713
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 69ca4ac12210b3543ad19854b5a9e1cf, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1.4285713
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 69ca4ac12210b3543ad19854b5a9e1cf, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 1.4285713
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 69ca4ac12210b3543ad19854b5a9e1cf, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 13
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 69ca4ac12210b3543ad19854b5a9e1cf, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -3
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 69ca4ac12210b3543ad19854b5a9e1cf, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 21
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 69ca4ac12210b3543ad19854b5a9e1cf, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 69ca4ac12210b3543ad19854b5a9e1cf, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 69ca4ac12210b3543ad19854b5a9e1cf, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -1
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 69ca4ac12210b3543ad19854b5a9e1cf, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 69ca4ac12210b3543ad19854b5a9e1cf, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 69ca4ac12210b3543ad19854b5a9e1cf, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 69ca4ac12210b3543ad19854b5a9e1cf, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 69ca4ac12210b3543ad19854b5a9e1cf, type: 3}
+      propertyPath: m_Name
+      value: wolf
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 69ca4ac12210b3543ad19854b5a9e1cf, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 208455989}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 69ca4ac12210b3543ad19854b5a9e1cf, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 208455988}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 69ca4ac12210b3543ad19854b5a9e1cf, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 208455990}
+  m_SourcePrefab: {fileID: 100100000, guid: 69ca4ac12210b3543ad19854b5a9e1cf, type: 3}
 --- !u!1 &1182694229
 GameObject:
   m_ObjectHideFlags: 0
@@ -13830,6 +13982,7 @@ GameObject:
   - component: {fileID: 1343008559}
   - component: {fileID: 1343008560}
   - component: {fileID: 1343008558}
+  - component: {fileID: 1343008561}
   m_Layer: 0
   m_Name: VillageOrigin
   m_TagString: Untagged
@@ -13901,6 +14054,27 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ObjectDragger
   smoothTime: 0.4
+--- !u!65 &1343008561
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1343008557}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 19.654669, y: 6.5296755, z: 19.74614}
+  m_Center: {x: -5.4469233, y: 2.7648377, z: -5.87028}
 --- !u!1 &1354557935
 GameObject:
   m_ObjectHideFlags: 0
@@ -18192,7 +18366,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: db7cda429458a0b4bb1bdca91fe75b8c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIController_AnimalDex
-  animalInventory: {fileID: 660132376}
+  animalInventory: {fileID: 0}
   animalDatabase: {fileID: 11400000, guid: 967ae621352559040b37076da918a5fc, type: 2}
   animalSlotPrefab: {fileID: 601950324912327570, guid: f418f7d0fc1b7d64f85534657012ef5d, type: 3}
   animalSlotContentRoot: {fileID: 1931441695}
@@ -18210,6 +18384,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: afd018cc164161e42b0ea4b9c6f50dda, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIController_Gacha
+  gachaSystem: {fileID: 0}
   animalOnePickButton: {fileID: 1654174008}
   animalTenPickButton: {fileID: 894207687}
   toolOnePickButton: {fileID: 1077273637}
@@ -18226,7 +18401,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2a8c8c71d02660248b8c0ef947d538ec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UI.UIController_ToolInv
-  toolInventory: {fileID: 1969904960}
+  toolInventory: {fileID: 0}
   toolSlotPrefab: {fileID: 6944075603417595130, guid: b8ceee9b095d2484e9576662e259b160, type: 3}
   toolSlotContentRoot: {fileID: 1770666024}
   slotMaplist: []
@@ -18242,7 +18417,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: af7d1774daf5e32439aa84d1aaf963be, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIController_AnimalInv
-  animalInventory: {fileID: 660132376}
+  animalInventory: {fileID: 0}
   animalSlotPrefab: {fileID: 8343252600400613896, guid: 75ab4ae4a54f6894bb0e78bee98af71b, type: 3}
   animalSlotContentRoot: {fileID: 1117617983}
   slotMaplist: []
@@ -18279,12 +18454,6 @@ MonoBehaviour:
   gachaButton: {fileID: 1953481507}
   animalDexButton: {fileID: 897409179}
   optionButton: {fileID: 423873394}
-  animalInventoryPanel: {fileID: 1417717255}
-  toolInventoryPanel: {fileID: 465124154}
-  gachaPanel: {fileID: 1011179299}
-  animalDexPanel: {fileID: 74686285}
-  optionPanel: {fileID: 1069558102}
-  usePanelOpenDefaultPosition: 0
 --- !u!1 &1931302389
 GameObject:
   m_ObjectHideFlags: 0
