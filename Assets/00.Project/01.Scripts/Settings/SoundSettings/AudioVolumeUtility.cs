@@ -1,6 +1,6 @@
 /*
  * 역할:
- * - UI 슬라이더 퍼센트 값을 AudioMixer dB 값으로 변환/적용하는 유틸리티입니다.
+ * - UIController_AnimalInvPage 슬라이더 퍼센트 값을 AudioMixer dB 값으로 변환/적용하는 유틸리티입니다.
  *
  * 주요 기능:
  * - 0~100 percent와 0~1 slider value 변환

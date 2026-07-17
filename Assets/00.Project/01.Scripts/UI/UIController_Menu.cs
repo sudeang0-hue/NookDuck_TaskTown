@@ -18,7 +18,7 @@ public class UIController_Menu : MonoBehaviour
     [Tooltip("화면 축소 버튼")]
     [SerializeField] private Button minimizeButton;
 
-    [Header("오픈할 UI 창")]
+    [Header("오픈할 UIController_AnimalInvPage 창")]
     [SerializeField] private UIPanelWindow animalInventoryPanel;
     [SerializeField] private UIPanelWindow toolInventoryPanel;
     [SerializeField] private UIPanelWindow gachaPanel;

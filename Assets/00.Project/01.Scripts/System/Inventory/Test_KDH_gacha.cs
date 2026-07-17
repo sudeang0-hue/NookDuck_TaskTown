@@ -27,7 +27,7 @@ namespace TaskTown.KDH
                 Debug.LogError("[Test_KDH_gacha] InventoryManager_Animal.Instance가 없습니다. 씬에 매니저를 배치하세요.");
                 return;
             }
-            // 인벤토리 변경 이벤트 구독 (UI 연동 전 로그 확인용)
+            // 인벤토리 변경 이벤트 구독 (UIController_AnimalInvPage 연동 전 로그 확인용)
             inventory.OnAnimalInventoryChanged += HandleInventoryChanged;
             inventory.OnAnimalSlotChanged += HandleSlotChanged;
             if (animalGachaManager != null)

@@ -30,6 +30,11 @@ namespace UI
 
         private void Awake()
         {
+            if (animalInventory == null)
+            {
+                animalInventory = InventoryManager_Animal.Instance;
+            }
+
             InitializeAnimalDex();
         }
         private void Start()

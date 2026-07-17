@@ -15,7 +15,7 @@ namespace Test
 {
 
     /// <summary>
-    /// 실제 동물 인벤토리가 완성되기 전, UI 갱신을 확인하기 위한 임시 테스트 클래스
+    /// 실제 동물 인벤토리가 완성되기 전, UIController_AnimalInvPage 갱신을 확인하기 위한 임시 테스트 클래스
     /// </summary>
     public class TestInventory_Animal : MonoBehaviour
     {
@@ -285,7 +285,7 @@ namespace Test
 
 #endregion
 
-            // 데이터 변경 완료 후 UI 갱신 요청
+            // 데이터 변경 완료 후 UIController_AnimalInvPage 갱신 요청
             OnAnimalChanged?.Invoke(animalId);
             return true;
         }

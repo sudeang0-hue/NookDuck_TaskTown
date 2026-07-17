@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public class UIController_Gacha : MonoBehaviour
 {
-    [Header("�̱� �ý���")]
+    [Header("동물/도구 뽑기 가챠 매니저")]
     [SerializeField] private GachaManagerBase animalGachaManager;
     [SerializeField] private GachaManagerBase toolGachaManager;
 
@@ -15,25 +15,25 @@ public class UIController_Gacha : MonoBehaviour
 
     private const int MultiRollCount = 10;
 
-    [Header("���� �̱� ��ư")]
-    [SerializeField] private Button animalOnePickButton;  // ���� 1ȸ �̱� ��ư
-    [SerializeField] private Button animalTenPickButton;  // ���� 10ȸ �̱� ��ư
+    [Header("동물 뽑기 버튼")]
+    [SerializeField] private Button animalOnePickButton;  // 동불 1회 뽑기
+    [SerializeField] private Button animalTenPickButton;  // 동물 10회 뽑기
                                                           
-    [Header("���� �̱� ��ư")]
-    [SerializeField] private Button toolOnePickButton;    // ���� 1ȸ �̱� ��ư
-    [SerializeField] private Button toolTenPickButton;    // ���� 10ȸ �̱� ��ư
+    [Header("도구 뽑기 버튼")]
+    [SerializeField] private Button toolOnePickButton;    // 도구 1회 뽑기
+    [SerializeField] private Button toolTenPickButton;    // 도구 10회 뽑기
 
 
     private void Awake()
     {
         if(animalGachaManager == null)
         {
-
+            animalGachaManager = FindAnyObjectByType<AnimalGachaManager>();
         }
 
         if(toolGachaManager == null)
         {
-
+            toolGachaManager = FindAnyObjectByType<ToolGachaManager>();
         }
     }
     private void Start()
@@ -47,7 +47,7 @@ public class UIController_Gacha : MonoBehaviour
     }
     
     /// <summary>
-    /// Ŭ�� �̺�Ʈ ����
+    /// 이벤트 구독
     /// </summary>
     private void Subscribe()
     {
@@ -66,7 +66,7 @@ public class UIController_Gacha : MonoBehaviour
     }
 
     /// <summary>
-    /// Ŭ�� �̺�Ʈ ���� ����
+    /// 이벤트 구독 해제
     /// </summary>
     private void Unsubscribe()
     {
@@ -89,6 +89,7 @@ public class UIController_Gacha : MonoBehaviour
         if (!TrySpendCost(animalGachaManager.GetCost(1))) return;
 
         animalGachaManager.Roll();
+
     }
 
 

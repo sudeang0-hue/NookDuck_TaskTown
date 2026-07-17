@@ -5,7 +5,7 @@ using DG.Tweening;
 
 public class AnimalDetailPanel : MonoBehaviour
 {
-    [Header("상세 정보 UI 요소들")]
+    [Header("상세 정보 UIController_AnimalInvPage 요소들")]
     public Image profileFrameImage;  //동물 이미지 전용
     public Text nameText;            // 이름 텍스트
     public Text descriptionText;     // 설명란 텍스트
@@ -34,7 +34,7 @@ public class AnimalDetailPanel : MonoBehaviour
         if (descriptionText != null) descriptionText.text = data.description;
         if (speedText != null) speedText.text = $"초당 생산량: {data.goldPerSecond} Gold";
 
-        // 별 개수 UI 처리
+        // 별 개수 UIController_AnimalInvPage 처리
         for (int i = 0; i < starImages.Length; i++)
         {
             if (i < data.rarityStars)

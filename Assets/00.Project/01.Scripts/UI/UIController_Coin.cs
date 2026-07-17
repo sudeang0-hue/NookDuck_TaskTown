@@ -1,4 +1,3 @@
-using System;
 using TMPro;
 using UnityEngine;
 
@@ -62,7 +61,7 @@ public class UIController_Coin : MonoBehaviour
 
 
     /// <summary>
-    /// 현재 보유 코인 UI
+    /// 현재 보유 코인 UIController_AnimalInvPage
     /// </summary>
     private void UpdateAllCoinText(long coinAmount)
     {
@@ -77,7 +76,7 @@ public class UIController_Coin : MonoBehaviour
 
 
     /// <summary>
-    /// 시간당 생산량 UI
+    /// 시간당 생산량 UIController_AnimalInvPage
     /// </summary>
     private void UpdateAutoCoinText(long coinPerHour)
     {

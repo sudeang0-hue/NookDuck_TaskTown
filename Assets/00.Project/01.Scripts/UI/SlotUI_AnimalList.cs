@@ -10,11 +10,11 @@ namespace UI
     public class SlotUI_AnimalList : SlotUIBase
     {
 
-        [Header("미해금 상태 도감 슬롯 UI")]
+        [Header("미해금 상태 도감 슬롯 UIController_AnimalInvPage")]
         [SerializeField] private Sprite unknownAnimalIcon;
         [SerializeField] private string unknownAnimalName = "???";
 
-        [Header("해금 상태 동물 정보 UI")]
+        [Header("해금 상태 동물 정보 UIController_AnimalInvPage")]
         [SerializeField] private Image animalIconImage;
         [SerializeField] private TMP_Text animalNameText;
 
@@ -110,7 +110,7 @@ namespace UI
         }
 
         /// <summary>
-        /// 해금되면 보여주는 UI
+        /// 해금되면 보여주는 UIController_AnimalInvPage
         /// </summary>
         private void ShowUnlockedView()
         {
@@ -127,7 +127,7 @@ namespace UI
         }
 
         /// <summary>
-        /// 미해금 상태에서 보여주는 UI
+        /// 미해금 상태에서 보여주는 UIController_AnimalInvPage
         /// </summary>
         private void ShowLockedView()
         {

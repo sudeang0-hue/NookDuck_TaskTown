@@ -23,7 +23,7 @@ public class SlotUI_ToolInv : SlotUIBase
     [SerializeField] private TMP_Text currentCountText;
     [SerializeField] private TMP_Text requireCountText;
 
-    [Header("도구 인벤토리 슬롯 UI")]
+    [Header("도구 인벤토리 슬롯 UIController_AnimalInvPage")]
     [Tooltip("현재 레벨의 별 모양 이미지")]
     [SerializeField] private Image levelImage;
 

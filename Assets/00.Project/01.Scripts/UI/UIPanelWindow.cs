@@ -25,7 +25,7 @@ namespace UI
         [SerializeField] private RectTransform panelRect;
 
         private Canvas rootCanvas;
-        private Vector2 defaultUIPanelPosition; // UI 패널의 초기 위치
+        private Vector2 defaultUIPanelPosition; // UIController_AnimalInvPage 패널의 초기 위치
         private Vector2 dragOffset;
 
         private bool isInitialized;

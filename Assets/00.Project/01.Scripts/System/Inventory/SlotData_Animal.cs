@@ -89,7 +89,7 @@ namespace TaskTown.KDH
             if (requiredUpgradeCount <= 0)
                 return false;
 
-            // UI 표시 개수(CurrentCount - 1)가 요구 개수를 충족했는지 판정
+            // UIController_AnimalInvPage 표시 개수(CurrentCount - 1)가 요구 개수를 충족했는지 판정
             return (currentCount - 1) >= requiredUpgradeCount;
         }
 

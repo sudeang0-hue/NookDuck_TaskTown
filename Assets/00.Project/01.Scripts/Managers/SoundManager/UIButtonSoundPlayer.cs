@@ -1,6 +1,6 @@
 /*
  * 역할:
- * - Unity UI Button 클릭에 UI 사운드를 연결하는 브릿지 컴포넌트입니다.
+ * - Unity UIController_AnimalInvPage Button 클릭에 UIController_AnimalInvPage 사운드를 연결하는 브릿지 컴포넌트입니다.
  *
  * 주요 기능:
  * - Button.onClick에 Play()를 등록/해제합니다.
@@ -46,7 +46,7 @@ public class UIButtonSoundPlayer : MonoBehaviour
 
         if (manager == null)
         {
-            Debug.LogWarning("SoundManager is not available. UI sound cannot be played.");
+            Debug.LogWarning("SoundManager is not available. UIController_AnimalInvPage sound cannot be played.");
             return;
         }
 

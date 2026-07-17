@@ -13,7 +13,7 @@ public class GlobalInputManager : MonoBehaviour
             // 버튼을 누르는 클릭은 '빈 곳 클릭'에서 제외하고 싶다면 아래 조건문을 사용합니다.
             if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
             {
-                // UI 요소를 클릭한 경우이므로 빈 곳 클릭 처리 안 함
+                // UIController_AnimalInvPage 요소를 클릭한 경우이므로 빈 곳 클릭 처리 안 함
                 return;
             }
 

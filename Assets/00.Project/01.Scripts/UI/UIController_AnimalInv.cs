@@ -1,28 +1,24 @@
-/* ÀüÃ¼ ÀÎº¥Åä¸® UI ¿Í °¢ ½½·Ô UI ÀÇ ¿¬°áÀ» ´ã´ç
- * µ¿¹° ÃÖÃÊ È¹µæ -> UI ½½·Ô °»½Å
- * Áßº¹ È¹µæ -> ±âÁ¸ UI ½½·Ô °»½Å
+ï»¿/* ì „ì²´ ì¸ë²¤í† ë¦¬ UIController_AnimalInvPage ì™€ ê° ìŠ¬ë¡¯ UIController_AnimalInvPage ì˜ ì—°ê²°ì„ ë‹´ë‹¹
+ * ë™ë¬¼ ìµœì´ˆ íšë“ -> UIController_AnimalInvPage ìŠ¬ë¡¯ ê°±ì‹ 
+ * ì¤‘ë³µ íšë“ -> ê¸°ì¡´ UIController_AnimalInvPage ìŠ¬ë¡¯ ê°±ì‹ 
  */
 
-using DG.Tweening;
 using System.Collections.Generic;
 using TaskTown.KDH;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace UI
 {
 
-
-
     public class UIController_AnimalInv : MonoBehaviour
     {
-        [Header("µ¿¹° ÀÎº¥Åä¸®")]
+        [Header("ë™ë¬¼ ì¸ë²¤í† ë¦¬")]
         [SerializeField] private InventoryManager_Animal animalInventory;
 
         [SerializeField] private SlotUI_AnimalInv animalSlotPrefab;
         [SerializeField] private Transform animalSlotContentRoot;
 
-        [Header("ÀÎ½ºÆåÅÍ È®ÀÎ¿ë ÀÎº¥Åä¸® ¸®½ºÆ®")]
+        [Header("ì¸ìŠ¤í™í„° í™•ì¸ìš© ì¸ë²¤í† ë¦¬ ë¦¬ìŠ¤íŠ¸")]
         [SerializeField] private List<SlotUI_AnimalInv> slotMaplist = new List<SlotUI_AnimalInv>();
         private readonly Dictionary<string, SlotUI_AnimalInv> slotMap = new Dictionary<string, SlotUI_AnimalInv>();
 
@@ -40,6 +36,7 @@ namespace UI
             animalInventory.OnAnimalInventoryChanged += SyncAllSlots;
             animalInventory.OnAnimalSlotChanged += RefreshSlot;
 
+            // ì»¨íŠ¸ë¡¤ëŸ¬ëŠ” ìƒì‹œ í™œì„± ë§¤ë‹ˆì €ì— ìˆìœ¼ë¯€ë¡œ, Contentê°€ ì¼œì ¸ ìˆì„ ë•Œë§Œ ì¦‰ì‹œ ë™ê¸°í™”
             SyncAllSlots();
         }
 
@@ -59,19 +56,19 @@ namespace UI
 
             if (animalInventory == null)
             {
-                Debug.LogWarning("[UIController_AnimalInv] animalInventory °¡ ¿¬°áµÇÁö ¾Ê¾Ò½À´Ï´Ù.");
+                Debug.LogWarning("[UIController_AnimalInv] animalInventory ê°€ ì—°ê²°ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.");
                 return false;
             }
 
             if (animalSlotPrefab == null)
             {
-                Debug.LogWarning("[UIController_AnimalInv] animalSlotPrefab ÀÌ ¾ø½À´Ï´Ù.");
+                Debug.LogWarning("[UIController_AnimalInv] animalSlotPrefab ì´ ì—†ìŠµë‹ˆë‹¤.");
                 return false;
             }
 
             if (animalSlotContentRoot == null)
             {
-                Debug.LogWarning("[UIController_AnimalInv] animalSlotContentRoot ÀÌ ¾ø½À´Ï´Ù.");
+                Debug.LogWarning("[UIController_AnimalInv] animalSlotContentRoot ì´ ì—†ìŠµë‹ˆë‹¤.");
                 return false;
             }
 
@@ -79,11 +76,25 @@ namespace UI
         }
 
         /// <summary>
-        /// ÀÎº¥Åä¸® ÀüÃ¼¿Í UI ½½·ÔÀ» µ¿±âÈ­ÇÕ´Ï´Ù.
+        /// Inv íŒ¨ë„ Contentê°€ ê³„ì¸µìƒ í™œì„±ì¸ì§€ í™•ì¸í•©ë‹ˆë‹¤.
+        /// íŒ¨ë„ì´ êº¼ì§„ ìƒíƒœì—ì„œ ìŠ¬ë¡¯ì„ ë§Œë“¤ë©´ ì˜¤í”ˆ ì‹œ ë°˜ì˜ì´ ëˆ„ë½ë  ìˆ˜ ìˆìŠµë‹ˆë‹¤.
         /// </summary>
-        private void SyncAllSlots()
+        private bool CanUpdateView()
         {
-            if (animalInventory == null)
+            return animalSlotContentRoot != null &&
+                   animalSlotContentRoot.gameObject.activeInHierarchy;
+        }
+
+        /// <summary>
+        /// ì¸ë²¤í† ë¦¬ ì „ì²´ì™€ ìŠ¬ë¡¯ UIë¥¼ ë™ê¸°í™”í•©ë‹ˆë‹¤.
+        /// Inv íŒ¨ë„ì„ ì˜¤í”ˆí•  ë•Œë§ˆë‹¤ í˜¸ì¶œí•´ í˜„ì¬ ë³´ìœ  ë°ì´í„°ë¥¼ ë°˜ì˜í•©ë‹ˆë‹¤.
+        /// </summary>
+        public void SyncAllSlots()
+        {
+            if (!TryResolveInventory())
+                return;
+
+            if (!CanUpdateView())
                 return;
 
             IReadOnlyList<SlotData_Animal> animalSlots = animalInventory.AnimalSlotsList;
@@ -106,7 +117,7 @@ namespace UI
             RemoveStaleSlots(activeIds);
         }
 
-        private void RemoveStaleSlots(HashSet<string> activeIds)
+        public void RemoveStaleSlots(HashSet<string> activeIds)
         {
             var staleIds = new List<string>();
 
@@ -150,11 +161,14 @@ namespace UI
         }
 
         /// <summary>
-        /// ½½·Ô °»½Å. ÃÖÃÊ È¹µæ ½Ã »ı¼º, Áßº¹ È¹µæ ½Ã ¼ö·® °»½Å
+        /// ìŠ¬ë¡¯ ê°±ì‹ . ìµœì´ˆ íšë“ ì‹œ ìƒì„±, ì¤‘ë³µ íšë“ ì‹œ ìˆ˜ëŸ‰ ê°±ì‹ 
         /// </summary>
-        private void RefreshSlot(SlotData_Animal slotData)
+        public void RefreshSlot(SlotData_Animal slotData)
         {
             if (slotData == null)
+                return;
+
+            if (!CanUpdateView())
                 return;
 
             string animalId = slotData.AnimalId;

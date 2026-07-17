@@ -1,10 +1,10 @@
 /*
  * 역할:
- * - BGM, UI, Environment 사운드 재생을 담당하는 전역 사운드 매니저입니다.
+ * - BGM, UIController_AnimalInvPage, Environment 사운드 재생을 담당하는 전역 사운드 매니저입니다.
  *
  * 주요 기능:
  * - SoundLibrary에서 SoundClipData를 찾아 AudioSource로 재생합니다.
- * - CompanionAudioMixer의 BGM/UI/Environment MixerGroup으로 라우팅합니다.
+ * - CompanionAudioMixer의 BGM/UIController_AnimalInvPage/Environment MixerGroup으로 라우팅합니다.
  * - 저장된 SoundSettings 값을 재생 전 적용하여 씬 시작 직후에도 사용자 볼륨을 유지합니다.
  *
  * 배치:

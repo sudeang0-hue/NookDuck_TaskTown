@@ -3,7 +3,7 @@
  * - 저장/로드되는 사운드 설정 값의 데이터 모델입니다.
  *
  * 주요 기능:
- * - Master, BGM, UI, Environment 볼륨 percent를 보관합니다.
+ * - Master, BGM, UIController_AnimalInvPage, Environment 볼륨 percent를 보관합니다.
  * - 채널별 Get/Set, Clamp, Clone을 제공합니다.
  */
 using System;
