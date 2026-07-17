@@ -1,18 +1,18 @@
-
-using Animal.Data;
+ï»¿using Animal.Data;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
-
 
 namespace UI
 {
-    public class UIController_AnimalPage : MonoBehaviour
+    public class UIController_AnimalDexPage : MonoBehaviour
     {
-        [Header("µ¿¹° »ó¼¼ ÆäÀÌÁö ÆĞ³Î")]
-        [SerializeField] private GameObject animalListPagePanel;
+        [Header("ë™ë¬¼ ìƒì„¸ í˜ì´ì§€ íŒ¨ë„")]
+        [FormerlySerializedAs("animalListPagePanel")]
+        [SerializeField] private GameObject animalDexPagePanel;
 
-        [Header("µ¿¹° »ó¼¼ Á¤º¸")]
+        [Header("ë™ë¬¼ ìƒì„¸ ì •ë³´")]
         [SerializeField] private Image animalIconImage;
         [SerializeField] private TMP_Text animalNameText;
         [SerializeField] private TMP_Text animalDescriptionText;
@@ -21,40 +21,40 @@ namespace UI
 
         private void Awake()
         {
-            if (animalListPagePanel != null)
+            if (animalDexPagePanel != null)
             {
-                animalListPagePanel.SetActive(false);
+                animalDexPagePanel.SetActive(false);
             }
         }
 
         /// <summary>
-        /// µµ°¨ ½½·Ô Å¬¸¯ ½Ã ¼±ÅÃÇÑ µ¿¹°ÀÇ Á¤º¸·Î »ó¼¼ ÆäÀÌÁö¸¦ °»½ÅÇÏ°í ÆĞ³Î ¿­±â.
+        /// ë„ê° ìŠ¬ë¡¯ í´ë¦­ ì‹œ ì„ íƒí•œ ë™ë¬¼ì˜ ì •ë³´ë¡œ ìƒì„¸ í˜ì´ì§€ë¥¼ ê°±ì‹ í•˜ê³  íŒ¨ë„ì„ ì—½ë‹ˆë‹¤.
         /// </summary>
-        public void OpenAnimalPage(AnimalDataSO animalData)
+        public void OpenAnimalDexPage(AnimalDataSO animalData)
         {
             if (animalData == null)
             {
-                Debug.LogWarning("[UIController_AnimalPage] Ç¥½ÃÇÒ µ¿¹° µ¥ÀÌÅÍ°¡ ¾ø½À´Ï´Ù.");
+                Debug.LogWarning("[UIController_AnimalDexPage] í‘œì‹œí•  ë™ë¬¼ ë°ì´í„°ê°€ ì—†ìŠµë‹ˆë‹¤.");
                 return;
             }
 
-            if (animalListPagePanel == null)
+            if (animalDexPagePanel == null)
             {
-                Debug.LogWarning("[UIController_AnimalPage] animalListPagePanelÀÌ ¿¬°áµÇÁö ¾Ê¾Ò½À´Ï´Ù.");
+                Debug.LogWarning("[UIController_AnimalDexPage] animalDexPagePanelì´ ì—°ê²°ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.");
                 return;
             }
 
             currentAnimalData = animalData;
 
-            RefreshAnimalPage();
+            RefreshAnimalDexPage();
 
-            animalListPagePanel.SetActive(true);
+            animalDexPagePanel.SetActive(true);
         }
 
         /// <summary>
-        /// ÇöÀç ¼±ÅÃµÈ µ¿¹° µ¥ÀÌÅÍ·Î »ó¼¼ ÆäÀÌÁö¸¦ °»½Å.
+        /// í˜„ì¬ ì„ íƒëœ ë™ë¬¼ ë°ì´í„°ë¡œ ìƒì„¸ í˜ì´ì§€ë¥¼ ê°±ì‹ í•©ë‹ˆë‹¤.
         /// </summary>
-        private void RefreshAnimalPage()
+        private void RefreshAnimalDexPage()
         {
             if (currentAnimalData == null)
                 return;
@@ -74,19 +74,17 @@ namespace UI
             {
                 animalDescriptionText.text = currentAnimalData.AnimalDescription;
             }
-
         }
 
-
         /// <summary>
-        /// »ó¼¼ ÆäÀÌÁö ´İ±â ¹öÆ°¿ë
+        /// ìƒì„¸ í˜ì´ì§€ ë‹«ê¸° ë²„íŠ¼ìš©
         /// </summary>
-        public void CloseAnimalPage()
+        public void CloseAnimalDexPage()
         {
-            if (animalListPagePanel == null)
+            if (animalDexPagePanel == null)
                 return;
 
-            animalListPagePanel.SetActive(false);
+            animalDexPagePanel.SetActive(false);
         }
     }
 }

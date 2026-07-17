@@ -1,6 +1,7 @@
-﻿/* 전체 인벤토리 UIController_AnimalInvPage 와 각 슬롯 UIController_AnimalInvPage 의 연결을 담당
- * 동물 최초 획득 -> UIController_AnimalInvPage 슬롯 갱신
- * 중복 획득 -> 기존 UIController_AnimalInvPage 슬롯 갱신
+﻿/* 전체 인벤토리와 각 슬롯 UI의 연결을 담당
+ * 동물 최초 획득 -> 슬롯 생성/갱신
+ * 중복 획득 -> 기존 슬롯 갱신
+ * 슬롯 생성 시 Animal_Inv_Page Controller 참조를 주입
  */
 
 using System.Collections.Generic;
@@ -9,7 +10,6 @@ using UnityEngine;
 
 namespace UI
 {
-
     public class UIController_AnimalInv : MonoBehaviour
     {
         [Header("동물 인벤토리")]
@@ -17,6 +17,9 @@ namespace UI
 
         [SerializeField] private SlotUI_AnimalInv animalSlotPrefab;
         [SerializeField] private Transform animalSlotContentRoot;
+
+        [Header("동물 상세 페이지 (씬의 Animal_Inv_Page)")]
+        [SerializeField] private UIController_AnimalInvPage animalInvPageController;
 
         [Header("인스펙터 확인용 인벤토리 리스트")]
         [SerializeField] private List<SlotUI_AnimalInv> slotMaplist = new List<SlotUI_AnimalInv>();
@@ -72,12 +75,16 @@ namespace UI
                 return false;
             }
 
+            if (animalInvPageController == null)
+            {
+                Debug.LogWarning("[UIController_AnimalInv] animalInvPageController 가 연결되지 않았습니다. 슬롯 클릭 시 상세 페이지가 열리지 않습니다.");
+            }
+
             return true;
         }
 
         /// <summary>
         /// Inv 패널 Content가 계층상 활성인지 확인합니다.
-        /// 패널이 꺼진 상태에서 슬롯을 만들면 오픈 시 반영이 누락될 수 있습니다.
         /// </summary>
         private bool CanUpdateView()
         {
@@ -87,7 +94,6 @@ namespace UI
 
         /// <summary>
         /// 인벤토리 전체와 슬롯 UI를 동기화합니다.
-        /// Inv 패널을 오픈할 때마다 호출해 현재 보유 데이터를 반영합니다.
         /// </summary>
         public void SyncAllSlots()
         {
@@ -154,7 +160,7 @@ namespace UI
                 return;
 
             SlotUI_AnimalInv createdSlot = Instantiate(animalSlotPrefab, animalSlotContentRoot);
-            createdSlot.Initialize(slotData, animalInventory);
+            createdSlot.Initialize(slotData, animalInventory, animalInvPageController);
 
             slotMap.Add(animalId, createdSlot);
             slotMaplist.Add(createdSlot);
@@ -185,6 +191,4 @@ namespace UI
             slotView.Refresh(slotData);
         }
     }
-
-
 }

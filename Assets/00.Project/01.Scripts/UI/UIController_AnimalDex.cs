@@ -15,16 +15,16 @@ namespace UI
         [SerializeField] private AnimalDatabase animalDatabase;
 
         [Header("도감 슬롯")]
-        [SerializeField] private SlotUI_AnimalList animalSlotPrefab;
+        [SerializeField] private SlotUI_AnimalDex animalSlotPrefab;
         [SerializeField] private Transform animalSlotContentRoot;
 
         [Header("동물 상세 페이지")]
-        [SerializeField] private UIController_AnimalPage animalPageController;
+        [SerializeField] private UIController_AnimalDexPage animalPageController;
 
         [Header("Runtime 확인용")]
         [SerializeField]
-        private List<SlotUI_AnimalList> createdSlots = new List<SlotUI_AnimalList>();
-        private readonly Dictionary<string, SlotUI_AnimalList> slotMap = new Dictionary<string, SlotUI_AnimalList>();
+        private List<SlotUI_AnimalDex> createdSlots = new List<SlotUI_AnimalDex>();
+        private readonly Dictionary<string, SlotUI_AnimalDex> slotMap = new Dictionary<string, SlotUI_AnimalDex>();
 
         private bool isInitialized;
 
@@ -109,7 +109,7 @@ namespace UI
                     continue;
                 }
 
-                SlotUI_AnimalList slot = Instantiate(animalSlotPrefab, animalSlotContentRoot);
+                SlotUI_AnimalDex slot = Instantiate(animalSlotPrefab, animalSlotContentRoot);
 
                 // slot.Initialize(toolData, animalPageController);
                 slot.Initialize(animalData, animalPageController, false);
@@ -133,7 +133,7 @@ namespace UI
                 return;
             }
 
-            foreach (KeyValuePair<string, SlotUI_AnimalList> pair in slotMap)
+            foreach (KeyValuePair<string, SlotUI_AnimalDex> pair in slotMap)
             {
                 bool isUnlocked = animalInventory.TryGetAnimalSlot(pair.Key, out _);
 
@@ -150,7 +150,7 @@ namespace UI
             if (string.IsNullOrEmpty(slotData.AnimalId))
                 return;
 
-            if (!slotMap.TryGetValue(slotData.AnimalId, out SlotUI_AnimalList slot))
+            if (!slotMap.TryGetValue(slotData.AnimalId, out SlotUI_AnimalDex slot))
             {
                 Debug.LogWarning($"[UIController_AnimalDex] 도감 슬롯을 찾지 못했습니다: {slotData.AnimalId}");
                 return;
@@ -217,7 +217,7 @@ namespace UI
             
             if (animalPageController == null)
             {
-                Debug.LogWarning("[UIController_AnimalDex] 동물 상세 페이지 UIController_AnimalPage가 연결되지 않았습니다.");
+                Debug.LogWarning("[UIController_AnimalDex] 동물 상세 페이지 UIController_AnimalDexPage가 연결되지 않았습니다.");
 
                 return false;
             }

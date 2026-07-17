@@ -1,5 +1,4 @@
 using Animal.Data;
-using UI;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -7,14 +6,14 @@ using UnityEngine.UI;
 namespace UI
 {
 
-    public class SlotUI_AnimalList : SlotUIBase
+    public class SlotUI_AnimalDex : SlotUIBase
     {
 
-        [Header("미해금 상태 도감 슬롯 UIController_AnimalInvPage")]
+        [Header("미해금 상태 도감 슬롯")]
         [SerializeField] private Sprite unknownAnimalIcon;
         [SerializeField] private string unknownAnimalName = "???";
 
-        [Header("해금 상태 동물 정보 UIController_AnimalInvPage")]
+        [Header("해금 상태 동물 정보")]
         [SerializeField] private Image animalIconImage;
         [SerializeField] private TMP_Text animalNameText;
 
@@ -22,7 +21,7 @@ namespace UI
         [SerializeField] private Button coverButton;
 
         private AnimalDataSO animalData;
-        private UIController_AnimalPage animalPageController;
+        private UIController_AnimalDexPage animalPageController;
         private bool isUnlocked;
 
         public AnimalDataSO AnimalData => animalData;
@@ -55,17 +54,17 @@ namespace UI
         /// <summary>
         /// 도감 슬롯에 동물 데이터와 상세 페이지 Controller를 연결
         /// </summary>
-        public void Initialize(AnimalDataSO data, UIController_AnimalPage pageController, bool unlocked)
+        public void Initialize(AnimalDataSO data, UIController_AnimalDexPage pageController, bool unlocked)
         {
             if (data == null)
             {
-                Debug.LogWarning("[SlotUI_AnimalList] 연결할 AnimalDataSO가 없습니다.");
+                Debug.LogWarning("[SlotUI_AnimalDex] 연결할 AnimalDataSO가 없습니다.");
                 return;
             }
 
             if (coverButton == null)
             {
-                Debug.LogWarning("[SlotUI_AnimalList] coverButton이 연결되지 않았습니다.");
+                Debug.LogWarning("[SlotUI_AnimalDex] coverButton이 연결되지 않았습니다.");
                 return;
             }
 
@@ -157,11 +156,11 @@ namespace UI
 
             if (animalPageController == null)
             {
-                Debug.LogWarning("[SlotUI_AnimalList] UIController_AnimalPage 가 연결되지 않았습니다.");
+                Debug.LogWarning("[SlotUI_AnimalDex] UIController_AnimalDexPage 가 연결되지 않았습니다.");
                 return;
             }
 
-            animalPageController.OpenAnimalPage(animalData);
+            animalPageController.OpenAnimalDexPage(animalData);
         }
 
     }

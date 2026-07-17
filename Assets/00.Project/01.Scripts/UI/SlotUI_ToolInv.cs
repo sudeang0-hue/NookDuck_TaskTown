@@ -52,6 +52,11 @@ public class SlotUI_ToolInv : SlotUIBase
             levelupButton.onClick.AddListener(OnClickLevelUp);
             levelupButton.gameObject.SetActive(false);
         }
+
+        if (toolInventory == null)
+        {
+            toolInventory = InventoryManager_Tool.Instance;
+        }
     }
 
     public void Initialize(SlotData_Tool slotData, InventoryManager_Tool inventory = null)

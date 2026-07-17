@@ -1,8 +1,9 @@
-/* °³º° µ¿¹° ½½·ÔÀÇ È­¸é Ç¥½Ã¸¦ ´ã´çÇÔ
- * ÇöÀç ¼ö·® Ç¥½Ã
- * ÇÊ¿ä ¼ö·® Ç¥½Ã
- * ·¹º§¾÷ °¡´É½Ã ¹öÆ° È°¼ºÈ­
- * ºÒ°¡´ÉÇÏ¸é ¹öÆ° ºñÈ°¼ºÈ­
+ï»¿/* ê°œë³„ ë™ë¬¼ ìŠ¬ë¡¯ì˜ í™”ë©´ í‘œì‹œë¥¼ ë‹´ë‹¹í•¨
+ * í˜„ì¬ ìˆ˜ëŸ‰ í‘œì‹œ
+ * í•„ìš” ìˆ˜ëŸ‰ í‘œì‹œ
+ * ë ˆë²¨ì—… ê°€ëŠ¥ì‹œ ë²„íŠ¼ í™œì„±í™”
+ * ë¶ˆê°€ëŠ¥í•˜ë©´ ë²„íŠ¼ ë¹„í™œì„±í™”
+ * ìŠ¬ë¡¯ í´ë¦­ ì‹œ Animal_Inv_Page ì˜¤í”ˆ
  */
 
 using Animal.Data;
@@ -17,48 +18,82 @@ public class SlotUI_AnimalInv : SlotUIBase
     [Header("References")]
     [SerializeField] private InventoryManager_Animal animalInventory;
 
-    [Header("ÇØ´ç µ¿¹°ÀÇ µ¥ÀÌÅÍ")]
+    [Header("í•´ë‹¹ ë™ë¬¼ì˜ ë°ì´í„°")]
     [SerializeField] private Image animalIconImage;
     [SerializeField] private TMP_Text animalNameText;
     [SerializeField] private TMP_Text currentCountText;
     [SerializeField] private TMP_Text requireCountText;
 
-    [Header("µ¿¹° ÀÎº¥Åä¸® ½½·Ô UIController_AnimalInvPage")]
-    [Tooltip("ÇöÀç ·¹º§ÀÇ º° ¸ğ¾ç ÀÌ¹ÌÁö")]
+    [Header("ë™ë¬¼ ì¸ë²¤í† ë¦¬ ìŠ¬ë¡¯")]
+    [Tooltip("í˜„ì¬ ë ˆë²¨ì˜ ë³„ ëª¨ì–‘ ì´ë¯¸ì§€")]
     [SerializeField] private Image levelImage;
 
-    [Header("·¹º§¾÷ ¹öÆ°")]
+    [Header("ë ˆë²¨ì—… ë²„íŠ¼")]
     [SerializeField] private Button levelupButton;
 
-    [Header("·¹º§¾÷ ÀÌ¹ÌÁö")]
-    [Tooltip("1¼º ~ 5¼º ÀÌ¹ÌÁö. ´ÜÀÏ ÄÃ·¯")]
+    [Header("ë ˆë²¨ì—… ì´ë¯¸ì§€")]
+    [Tooltip("1ì„± ~ 5ì„± ì´ë¯¸ì§€. ë‹¨ì¼ ì»¬ëŸ¬")]
     [SerializeField] private Sprite[] levelSprites;
 
+    [Header("í´ë¦­ ë²”ìœ„ ë²„íŠ¼")]
+    [SerializeField] private Button coverButton;
+
     private SlotData_Animal currentSlotData;
+    private UIController_AnimalInvPage animalInvPageController;
 
     private void Awake()
     {
         ResolveInventoryReference();
+
+        if (coverButton == null)
+            coverButton = GetComponentInChildren<Button>(true);
 
         if (levelupButton != null)
         {
             levelupButton.onClick.AddListener(OnClickLevelUp);
             levelupButton.gameObject.SetActive(false);
         }
+
+        if (animalInventory == null)
+            animalInventory = InventoryManager_Animal.Instance;
     }
 
-    public void Initialize(SlotData_Animal slotData, InventoryManager_Animal inventory = null)
+    private void OnEnable()
+    {
+        if (coverButton != null)
+            coverButton.onClick.AddListener(HandleSlotClicked);
+    }
+
+    private void OnDisable()
+    {
+        if (coverButton != null)
+            coverButton.onClick.RemoveListener(HandleSlotClicked);
+    }
+
+    /// <summary>
+    /// ìŠ¬ë¡¯ ë°ì´í„°ì™€ ìƒì„¸ í˜ì´ì§€ Controllerë¥¼ ì—°ê²°í•©ë‹ˆë‹¤.
+    /// </summary>
+    public void Initialize(
+        SlotData_Animal slotData,
+        InventoryManager_Animal inventory = null,
+        UIController_AnimalInvPage pageController = null)
     {
         if (inventory != null)
             animalInventory = inventory;
+
+        if (pageController != null)
+            animalInvPageController = pageController;
 
         ResolveInventoryReference();
 
         if (slotData == null)
         {
-            Debug.LogWarning("[SlotUI_AnimalInv] ÃÊ±âÈ­ÇÒ ½½·Ô µ¥ÀÌÅÍ°¡ ¾ø½À´Ï´Ù.", this);
+            Debug.LogWarning("[SlotUI_AnimalInv] ì´ˆê¸°í™”í•  ìŠ¬ë¡¯ ë°ì´í„°ê°€ ì—†ìŠµë‹ˆë‹¤.", this);
             return;
         }
+
+        if (coverButton == null)
+            Debug.LogWarning("[SlotUI_AnimalInv] coverButtonì´ ì—°ê²°ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.", this);
 
         currentSlotData = slotData;
         RefreshView();
@@ -68,7 +103,7 @@ public class SlotUI_AnimalInv : SlotUIBase
     {
         if (slotData == null)
         {
-            Debug.LogWarning("[SlotUI_AnimalInv] °»½ÅÇÒ ½½·Ô µ¥ÀÌÅÍ°¡ ¾ø½À´Ï´Ù.", this);
+            Debug.LogWarning("[SlotUI_AnimalInv] ê°±ì‹ í•  ìŠ¬ë¡¯ ë°ì´í„°ê°€ ì—†ìŠµë‹ˆë‹¤.", this);
             return;
         }
 
@@ -95,7 +130,7 @@ public class SlotUI_AnimalInv : SlotUIBase
         SetBaseInfo(data.Id, data.DisplayName, data.Icon);
         ApplyIconAndName(data);
 
-        // º»Ã¼ 1¸¶¸®¸¦ Á¦¿ÜÇÑ Àç·á ¼ö·®À» UI¿¡ Ç¥½Ã (¿¹: ³»ºÎ 1 ¡æ 0/4)
+        // ë³¸ì²´ 1ë§ˆë¦¬ë¥¼ ì œì™¸í•œ ì¬ë£Œ ìˆ˜ëŸ‰ì„ UIì— í‘œì‹œ (ì˜ˆ: ë‚´ë¶€ 1 â†’ 0/4)
         if (currentCountText != null)
             currentCountText.text = Mathf.Max(0, currentSlotData.CurrentCount - 1).ToString();
 
@@ -135,11 +170,31 @@ public class SlotUI_AnimalInv : SlotUIBase
         levelupButton.gameObject.SetActive(canLevelUp);
     }
 
+    /// <summary>
+    /// ìŠ¬ë¡¯ í´ë¦­ ì‹œ ë™ë¬¼ ìƒì„¸ í˜ì´ì§€(Animal_Inv_Page)ë¥¼ ì—½ë‹ˆë‹¤.
+    /// </summary>
+    private void HandleSlotClicked()
+    {
+        if (currentSlotData == null)
+        {
+            Debug.LogWarning("[SlotUI_AnimalInv] í˜„ì¬ ìŠ¬ë¡¯ì— ë™ë¬¼ ë°ì´í„°ê°€ ì—†ìŠµë‹ˆë‹¤.", this);
+            return;
+        }
+
+        if (animalInvPageController == null)
+        {
+            Debug.LogWarning("[SlotUI_AnimalInv] UIController_AnimalInvPageê°€ ì—°ê²°ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.", this);
+            return;
+        }
+
+        animalInvPageController.OpenAnimalInvPage(currentSlotData);
+    }
+
     private void OnClickLevelUp()
     {
         if (currentSlotData == null)
         {
-            Debug.LogWarning("[SlotUI_AnimalInv] ·¹º§¾÷ÇÒ ½½·Ô µ¥ÀÌÅÍ°¡ ¾ø½À´Ï´Ù.", this);
+            Debug.LogWarning("[SlotUI_AnimalInv] ë ˆë²¨ì—…í•  ìŠ¬ë¡¯ ë°ì´í„°ê°€ ì—†ìŠµë‹ˆë‹¤.", this);
             return;
         }
 
@@ -147,7 +202,7 @@ public class SlotUI_AnimalInv : SlotUIBase
 
         if (animalInventory == null)
         {
-            Debug.LogWarning("[SlotUI_AnimalInv] InventoryManager_AnimalÀÌ ¿¬°áµÇÁö ¾Ê¾Ò½À´Ï´Ù.", this);
+            Debug.LogWarning("[SlotUI_AnimalInv] InventoryManager_Animalì´ ì—°ê²°ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.", this);
             return;
         }
 
@@ -158,6 +213,9 @@ public class SlotUI_AnimalInv : SlotUIBase
     {
         if (levelupButton != null)
             levelupButton.onClick.RemoveListener(OnClickLevelUp);
+
+        if (coverButton != null)
+            coverButton.onClick.RemoveListener(HandleSlotClicked);
     }
 
     public override void Clear()
