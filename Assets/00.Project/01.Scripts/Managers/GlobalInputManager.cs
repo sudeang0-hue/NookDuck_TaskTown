@@ -21,9 +21,14 @@ public class GlobalInputManager : MonoBehaviour
         }
 
         // 2. 키보드 타이핑 감지 (빈 상태에서 키보드를 쳐도 실시간 입력 문자열을 가져옴)
-        if (Keyboard.current != null && Keyboard.current.anyKey.wasPressedThisFrame)
+        if (Keyboard.current == null) return;
+        foreach (var key in Keyboard.current.allKeys)
         {
-            EarnProcessor.Instance.ProcessGlobalTyping();
+            if (key != null && key.wasPressedThisFrame)
+            {
+                EarnProcessor.Instance.ProcessGlobalTyping();
+                break; // 같은 프레임에 여러 키가 눌려도 한 번만 처리
+            }
         }
     }
 }
