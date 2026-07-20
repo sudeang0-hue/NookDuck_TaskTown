@@ -52,6 +52,15 @@ public class GameMasterManager : MonoBehaviour
     private float ticketTimer = 0f;
     private const float TICKET_COOLDOWN = 1800f;
 
+    [Header("팔로우 카메라 설정")]
+    public float zoomInSize = 2.5f;          // 줌인되었을 때 카메라 Ortho Size
+    public float followSpeed = 5f;            // 동물을 따라가는 카메라 이동 속도
+    public Vector3 followOffset = new Vector3(0, 0, 0); // 줌인 시 카메라 위치 오프셋
+    public Button btnUnfocus;                // 동물 감상 모드 해제 버튼 (UI)
+
+    private Transform targetAnimal = null;   // 현재 추적 중인 동물
+    private bool isFollowing = false;        // 팔로우 상태 여부
+
     private bool isExpanded = true;
     private bool isMenuOpen = false;
     private bool isMenuAnimating = false;
@@ -89,6 +98,12 @@ public class GameMasterManager : MonoBehaviour
         if (btnQuit) btnQuit.onClick.AddListener(QuitGame);
         if (btnCloseMenu) btnCloseMenu.onClick.AddListener(ToggleMenu);
 
+        if (btnUnfocus != null)
+        {
+            btnUnfocus.onClick.AddListener(UnfocusAnimal);
+            btnUnfocus.gameObject.SetActive(false); // 시작할 때는 끄기
+        }
+
         expandedPanel.SetActive(true);
         minimizedPanel.SetActive(false);
         menuPanel.SetActive(false);
@@ -97,6 +112,69 @@ public class GameMasterManager : MonoBehaviour
         AnimateIcons();
     }
 
+    void LateUpdate()
+    {
+        // 동물을 추적 중이고 타겟이 존재할 때
+        if (isFollowing && targetAnimal != null)
+        {
+            // 동물의 위치에 offset을 더하되, 카메라의 원래 Z값은 유지
+            Vector3 targetPos = new Vector3(targetAnimal.position.x, targetAnimal.position.y, camOriginalPos.z) + followOffset;
+
+            // Vector3.Lerp를 이용해 부드럽게 동물을 따라감
+            mainCamera.transform.position = Vector3.Lerp(mainCamera.transform.position, targetPos, Time.deltaTime * followSpeed);
+        }
+    }
+    /// <summary>
+    /// 동물을 클릭했을 때 호출되는 카메라 줌인 및 팔로우 시작 메서드
+    /// </summary>
+    public void FocusOnAnimal(Transform animalTransform)
+    {
+        if (!isExpanded || mainCamera == null) return; // 화면이 꽉 찬 상태(Expanded)일 때만 작동
+
+        targetAnimal = animalTransform;
+
+        // 기존 카메라 연출(Tweener) 중단
+        mainCamera.DOKill();
+
+        // 1. 카메라 줌인 (OrthoSize 감소)
+        mainCamera.DOOrthoSize(zoomInSize, 0.6f).SetEase(Ease.OutCubic);
+
+        // 2. 동물의 위치로 카메라 이동 후 팔로우 활성화
+        Vector3 targetPos = new Vector3(targetAnimal.position.x, targetAnimal.position.y, camOriginalPos.z) + followOffset;
+        mainCamera.transform.DOMove(targetPos, 0.6f).SetEase(Ease.OutCubic).OnComplete(() =>
+        {
+            isFollowing = true; // 이동 연출이 끝난 후 LateUpdate에서 실시간 추적 시작
+        });
+
+        // 감상 모드 종료 버튼 활성화
+        if (btnUnfocus != null)
+        {
+            btnUnfocus.gameObject.SetActive(true);
+        }
+    }
+
+    /// <summary>
+    /// 팔로우 모드를 종료하고 원래 화면 구도로 복귀
+    /// </summary>
+    public void UnfocusAnimal()
+    {
+        isFollowing = false;
+        targetAnimal = null;
+
+        if (mainCamera == null) return;
+
+        mainCamera.DOKill();
+
+        // 원래 카메라 위치와 크기로 복원 연출
+        mainCamera.DOOrthoSize(camOriginalSize, 0.5f).SetEase(Ease.InOutQuad);
+        mainCamera.transform.DOMove(camOriginalPos, 0.5f).SetEase(Ease.InOutQuad);
+
+        // 해제 버튼 비활성화
+        if (btnUnfocus != null)
+        {
+            btnUnfocus.gameObject.SetActive(false);
+        }
+    }
     // 패널들의 원래 위치를 저장하고, 시작하자마자 구석으로 치운 뒤 비활성화
     private void CacheAndHidePanels()
     {
@@ -151,6 +229,7 @@ public class GameMasterManager : MonoBehaviour
 
     public void SetMinimizedScreen()
     {
+        UnfocusAnimal();
         isExpanded = false;
         CloseAllPopups(); // 축소 상태가 될 때는 예외적으로 모든 팝업 닫기
 
