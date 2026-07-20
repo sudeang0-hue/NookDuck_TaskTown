@@ -19,6 +19,15 @@ namespace UI
 
         private AnimalDataSO currentAnimalData;
 
+        public AnimalDataSO CurrentAnimalData => currentAnimalData;
+
+        public string CurrentAnimalId => currentAnimalData != null ? currentAnimalData.Id : string.Empty;
+
+        /// <summary>
+        /// 상세 페이지 패널이 현재 열려 있는지 여부
+        /// </summary>
+        public bool IsOpen => animalDexPagePanel != null && animalDexPagePanel.activeSelf;
+
         private void Awake()
         {
             if (animalDexPagePanel != null)

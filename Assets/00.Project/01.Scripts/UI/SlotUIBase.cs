@@ -2,13 +2,13 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-// UIController_AnimalInvPage 갱신을 위한 동물, 도구, 도감에 출력되는 슬롯 1 칸의 정보 베이스.
+// UIController 갱신을 위한 동물, 도구, 도감에 출력되는 슬롯 1 칸의 정보 베이스.
 
 namespace UI
 {
     public class SlotUIBase : MonoBehaviour
     {
-        [Header("공통으로 표시되는 슬롯 UIController_AnimalInvPage")]
+        [Header("공통으로 표시되는 슬롯 UI")]
         [SerializeField] protected Image iconImage;
         [SerializeField] protected TMP_Text displayNameText;
 

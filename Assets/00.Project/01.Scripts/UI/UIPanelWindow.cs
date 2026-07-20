@@ -33,6 +33,7 @@ namespace UI
 
         [Header("Panel")]
         [SerializeField] private RectTransform panelRect;
+        [SerializeField] private GameMenuType gameMenuType;
 
         private Canvas rootCanvas;
         private Vector2 defaultUIPanelPosition; // UIController_AnimalInvPage �г��� �ʱ� ��ġ

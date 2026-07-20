@@ -4,40 +4,40 @@ using UnityEngine.UI;
 
 public class UIController_Menu : MonoBehaviour
 {
-    [Header("??? ??? ???")]
-    [Tooltip("???? ?????? ????")]
+    [Header("메뉴 목록 버튼")]
+    [Tooltip("동물 인벤토리 오픈")]
     [SerializeField] private Button animalInventoryButton;
-    [Tooltip("???? ?????? ????")]
+    [Tooltip("도구 인벤토리 오픈")]
     [SerializeField] private Button toolInventoryButton;
-    [Tooltip("??? ???? ????")]
+    [Tooltip("뽑기 패널 오픈")]
     [SerializeField] private Button gachaButton;
-    [Tooltip("???? ???? ????")]
+    [Tooltip("동물 도감 오픈")]
     [SerializeField] private Button animalDexButton;
-    [Tooltip("??? ???? ????")]
+    [Tooltip("옵션 패널 오픈")]
     [SerializeField] private Button optionButton;
-    [Tooltip("??? ??? ???")]
+    [Tooltip("화면 축소 버튼")]
     [SerializeField] private Button minimizeButton;
 
-    [Header("?????? UI ????")]
+    [Header("오픈할 UI 패널")]
     [SerializeField] private UIPanelWindow animalInventoryPanel;
     [SerializeField] private UIPanelWindow toolInventoryPanel;
     [SerializeField] private UIPanelWindow gachaPanel;
     [SerializeField] private UIPanelWindow animalDexPanel;
     [SerializeField] private UIPanelWindow optionPanel;
 
-    [Header("Inventory UI Sync")]
-    [Tooltip("???? Inv ???? ???? ?? ?? ??? + SyncAllSlots ??? ???")]
+    [Header("인벤토리 UI 동기화")]
+    [Tooltip("동물 Inv 패널 오픈 시 상세 닫기 + SyncAllSlots 호출 대상")]
     [SerializeField] private UIController_AnimalInv animalInvUI;
-    [Tooltip("???? Inv ???? ???? ?? SyncAllSlots ??? ???")]
+    [Tooltip("도구 Inv 패널 오픈 시 SyncAllSlots 호출 대상")]
     [SerializeField] private UIController_ToolInv toolInvUI;
-    [Tooltip("???? ???? ???? ?? ?? ??? ??? ???")]
+    [Tooltip("동물 도감 패널 오픈 시 상세 닫기 등 오픈 처리 호출 대상")]
     [SerializeField] private UIController_AnimalDex animalDexUI;
 
-    [Header("???? ?????? ??? ??? ????")]
+    [Header("패널 오픈시 초기 위치 고정")]
     [SerializeField] private bool usePanelOpenDefaultPosition;
 
-    [Header("???? ??? ????")]
-    [Tooltip("true?? ?? ???? ????? ????? ????, false?? ??????? ???? ???")]
+    [Header("패널 배타 오픈")]
+    [Tooltip("true면 한 번에 하나의 패널만 열고, false면 기존처럼 독립 토글")]
     [SerializeField] private bool useTradeOffSetting;
 
     private void Awake()
@@ -62,11 +62,11 @@ public class UIController_Menu : MonoBehaviour
     {
         if (panel == null)
         {
-            Debug.LogWarning("[UIController_Menu] ??????? ???? ?????? ??????.");
+            Debug.LogWarning("[UIController_Menu] 연결되지 않은 패널이 있습니다.");
             return;
         }
 
-        // ??? ???: ???? ?????? ?? ???? ??? ?????? ???? (???? ??? ??????? ??? ????)
+        // 배타 모드: 닫힌 패널을 열 때만 다른 패널을 닫음 (같은 버튼 재클릭은 토글 유지)
         if (useTradeOffSetting && !panel.gameObject.activeSelf)
             CloseAllExcept(panel);
 
@@ -75,9 +75,12 @@ public class UIController_Menu : MonoBehaviour
         else
             panel.TogglePanelSetPosition();
 
-        // Inv ?????? ???? ????, ????? ?? ?????? ???? ??????? UI?? ???
+        // Inv 패널이 열린 직후, 비활성 중 누적된 인벤 데이터를 UI에 반영
+        // 닫힌 경우(동물 Inv)에는 상세 페이지도 함께 닫음
         if (panel.gameObject.activeSelf)
             SyncInventoryIfNeeded(panel);
+        else
+            NotifyPanelClosedIfNeeded(panel);
     }
 
     private void SyncInventoryIfNeeded(UIPanelWindow panel)
@@ -88,6 +91,15 @@ public class UIController_Menu : MonoBehaviour
             toolInvUI?.SyncAllSlots();
         else if (panel == animalDexPanel)
             animalDexUI?.NotifyPanelOpened();
+    }
+
+    /// <summary>
+    /// 패널이 닫힌 뒤 필요한 UI 정리. Dex는 현재 유지(호출하지 않음).
+    /// </summary>
+    private void NotifyPanelClosedIfNeeded(UIPanelWindow panel)
+    {
+        if (panel == animalInventoryPanel)
+            animalInvUI?.NotifyPanelClosed();
     }
 
     private void CloseAllExcept(UIPanelWindow keepOpen)
@@ -104,7 +116,10 @@ public class UIController_Menu : MonoBehaviour
         if (panel == null || panel == keepOpen)
             return;
 
-        if (panel.gameObject.activeSelf)
-            panel.ClosePanel();
+        if (!panel.gameObject.activeSelf)
+            return;
+
+        panel.ClosePanel();
+        NotifyPanelClosedIfNeeded(panel);
     }
 }

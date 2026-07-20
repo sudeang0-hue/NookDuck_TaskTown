@@ -171,7 +171,8 @@ public class SlotUI_AnimalInv : SlotUIBase
     }
 
     /// <summary>
-    /// 슬롯 클릭 시 동물 상세 페이지(Animal_Inv_Page)를 엽니다.
+    /// 슬롯 클릭 시 동물 상세 페이지를 토글합니다.
+    /// 같은 동물이 이미 열려 있으면 Close, 아니면 Open합니다.
     /// </summary>
     private void HandleSlotClicked()
     {
@@ -184,6 +185,13 @@ public class SlotUI_AnimalInv : SlotUIBase
         if (animalInvPageController == null)
         {
             Debug.LogWarning("[SlotUI_AnimalInv] UIController_AnimalInvPage가 연결되지 않았습니다.", this);
+            return;
+        }
+
+        if (animalInvPageController.IsOpen &&
+            animalInvPageController.CurrentAnimalId == currentSlotData.AnimalId)
+        {
+            animalInvPageController.CloseAnimalInvPage();
             return;
         }
 

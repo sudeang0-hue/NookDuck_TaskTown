@@ -54,6 +54,11 @@ namespace UI
 
         public string CurrentAnimalId => currentAnimalId;
 
+        /// <summary>
+        /// 상세 페이지 패널이 현재 열려 있는지 여부
+        /// </summary>
+        public bool IsOpen => animalInvPagePanel != null && animalInvPagePanel.activeSelf;
+
         private void Awake()
         {
             ResolveInventoryReference();
