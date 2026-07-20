@@ -19,6 +19,17 @@ public class EarnProcessor : MonoBehaviour
     public int ClickMultiplier { get; set; } = 1;
     public int TypingMultiplier { get; set; } = 1;
 
+
+    // ---- Debug API (DebugTool에서만 사용) ----
+    public int BaseCoinPerClick => baseCoinPerClick;
+    public int BaseCoinPerTyping => baseCoinPerTyping;
+    public int MaxCoinPerHour => maxCoinPerHour;
+    public float LimitPeriodSeconds => limitPeriodSeconds;
+    public float LimitTimer => limitTimer;
+    public int CurrentPeriodEarnedCoin => currentPeriodEarnedCoin;
+    //---------------------------------------------------------------
+
+
     private void Awake()
     {
         if (Instance == null) Instance = this;
@@ -77,5 +88,28 @@ public class EarnProcessor : MonoBehaviour
         int earnedCoin = baseCoinPerTyping * TypingMultiplier;
 
         CheckLimitAndAddCoin(earnedCoin);
+    }
+
+    // 클릭/타이핑 1회 획득량 수정
+    public void SetBaseCoinPerClick(int value)
+    {
+        baseCoinPerClick = Mathf.Max(0, value);
+    }
+    public void SetBaseCoinPerTyping(int value)
+    {
+        baseCoinPerTyping = Mathf.Max(0, value);
+    }
+    // 주기(시간)당 최대 획득 가능 코인 수정
+    public void SetMaxCoinPerHour(int value)
+    {
+        maxCoinPerHour = Mathf.Max(0, value);
+    }
+    // limitPeriodSeconds 타이머 + 이번 주기 누적 획득량 리셋
+    // Update 폴링 없이 버튼 한 번으로 주기를 처음부터 다시 시작하게 합니다.
+    public void ResetLimitPeriod()
+    {
+        limitTimer = 0f;
+        currentPeriodEarnedCoin = 0;
+        Debug.Log("[EarnProcessor] 획득 제한 주기가 수동 리셋되었습니다.");
     }
 }

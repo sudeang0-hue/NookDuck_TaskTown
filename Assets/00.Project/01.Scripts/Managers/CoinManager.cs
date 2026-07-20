@@ -45,7 +45,7 @@ public class CoinManager : MonoBehaviour, ICoinWallet
 
         OnCoinChanged?.Invoke(totalCoin);
 
-        Debug.Log($"���� ��ȭ: {totalCoin}");
+        Debug.Log($"Current Coin: {totalCoin}");
     }
 
     public void RemoveCoin(int amount)
@@ -57,6 +57,15 @@ public class CoinManager : MonoBehaviour, ICoinWallet
 
         OnCoinChanged?.Invoke(totalCoin);
 
-        Debug.Log($"���� ��ȭ: {totalCoin}");
+        Debug.Log($"Current Coin: {totalCoin}");
+    }
+
+    // 디버그/치트용: 보유 코인을 원하는 값으로 덮어씁니다.
+    // Add/Remove와 달리 증감이 아니라 절대값 설정이라 Update에서 쓰지 말고 버튼/이벤트에서만 호출하세요.
+    public void SetCoin(long value)
+    {
+        // 음수 코인은 허용하지 않음
+        totalCoin = value < 0 ? 0 : value;
+        OnCoinChanged?.Invoke(totalCoin);
     }
 }
