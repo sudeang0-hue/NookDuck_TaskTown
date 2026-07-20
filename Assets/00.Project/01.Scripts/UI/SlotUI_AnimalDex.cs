@@ -144,19 +144,27 @@ namespace UI
 
 
         /// <summary>
-        /// 슬롯 클릭 시 자신의 동물 데이터를 상세 페이지에 전달
+        /// 슬롯 클릭 시 도감 상세 페이지를 토글합니다.
+        /// 같은 동물이 이미 열려 있으면 Close, 아니면 Open합니다.
         /// </summary>
         private void HandleSlotClicked()
         {
             if (animalData == null)
             {
-                Debug.LogWarning("[SlotUI_Animalist] 현재 슬롯에 동물 데이터가 없습니다.");
+                Debug.LogWarning("[SlotUI_AnimalDex] 현재 슬롯에 동물 데이터가 없습니다.", this);
                 return;
             }
 
             if (animalPageController == null)
             {
-                Debug.LogWarning("[SlotUI_AnimalDex] UIController_AnimalDexPage 가 연결되지 않았습니다.");
+                Debug.LogWarning("[SlotUI_AnimalDex] UIController_AnimalDexPage 가 연결되지 않았습니다.", this);
+                return;
+            }
+
+            if (animalPageController.IsOpen &&
+                animalPageController.CurrentAnimalId == animalData.Id)
+            {
+                animalPageController.CloseAnimalDexPage();
                 return;
             }
 
