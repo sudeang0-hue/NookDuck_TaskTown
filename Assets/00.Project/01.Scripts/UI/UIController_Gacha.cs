@@ -6,8 +6,8 @@ using UnityEngine.UI;
 public class UIController_Gacha : MonoBehaviour
 {
     [Header("동물/도구 뽑기 가챠 매니저")]
-    [SerializeField] private GachaManagerBase animalGachaManager;
-    [SerializeField] private GachaManagerBase toolGachaManager;
+    [SerializeField] private AnimalGachaManager animalGachaManager;
+    [SerializeField] private ToolGachaManager toolGachaManager;
 
     [Tooltip("ICoinWallet을 구현한 컴포넌트(CoinManager)를 연결합니다. 비워두면 코인 확인 없이 뽑기를 진행합니다.")]
     [SerializeField] private MonoBehaviour coinWalletSource;

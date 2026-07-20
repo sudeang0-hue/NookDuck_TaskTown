@@ -77,10 +77,13 @@ namespace UI
         }
 
         /// <summary>
-        /// 상세 페이지 닫기 버튼용
+        /// 상세 페이지 닫기 버튼용.
+        /// 선택 데이터도 함께 초기화합니다.
         /// </summary>
         public void CloseAnimalDexPage()
         {
+            currentAnimalData = null;
+
             if (animalDexPagePanel == null)
                 return;
 

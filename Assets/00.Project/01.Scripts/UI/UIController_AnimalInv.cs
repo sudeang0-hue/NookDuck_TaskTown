@@ -33,6 +33,9 @@ namespace UI
 
         private void OnEnable()
         {
+            // Inv 패널/컨트롤러 활성화 시 상세 페이지는 항상 닫힌 상태로 시작
+            animalInvPageController?.CloseAnimalInvPage();
+
             if (!TryResolveInventory())
                 return;
 
@@ -40,6 +43,16 @@ namespace UI
             animalInventory.OnAnimalSlotChanged += RefreshSlot;
 
             // 컨트롤러는 상시 활성 매니저에 있으므로, Content가 켜져 있을 때만 즉시 동기화
+            SyncAllSlots();
+        }
+
+        /// <summary>
+        /// 동물 Inv 패널이 열릴 때 호출합니다.
+        /// 상세 페이지를 닫은 뒤 슬롯 UI를 동기화합니다.
+        /// </summary>
+        public void NotifyPanelOpened()
+        {
+            animalInvPageController?.CloseAnimalInvPage();
             SyncAllSlots();
         }
 

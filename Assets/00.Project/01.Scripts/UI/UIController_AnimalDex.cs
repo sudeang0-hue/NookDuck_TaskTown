@@ -1,5 +1,4 @@
 using Animal.Data;
-using System;
 using System.Collections.Generic;
 using TaskTown.KDH;
 using UnityEngine;
@@ -45,7 +44,19 @@ namespace UI
 
         private void OnEnable()
         {
+            // 도감 패널이 열릴 때마다 상세 페이지는 항상 닫힌 상태로 시작
+            animalPageController?.CloseAnimalDexPage();
+
             SubscribeEvents();
+        }
+
+        /// <summary>
+        /// 도감 패널이 열릴 때 호출합니다.
+        /// 상세 페이지를 닫힌 상태로 맞춥니다.
+        /// </summary>
+        public void NotifyPanelOpened()
+        {
+            animalPageController?.CloseAnimalDexPage();
         }
 
         private void OnDisable()
@@ -164,7 +175,6 @@ namespace UI
         /// </summary>
         private void SubscribeEvents()
         {
-            //InventoryManager_Animal manager = InventoryManager_Animal.Instance;
 
             if (animalInventory == null)
                 return;
@@ -177,7 +187,6 @@ namespace UI
         /// </summary>
         private void UnsubscribeEvents()
         {
-            //InventoryManager_Animal manager = InventoryManager_Animal.Instance;
 
             if (animalInventory == null)
                 return;

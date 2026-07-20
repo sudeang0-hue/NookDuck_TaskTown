@@ -11,7 +11,7 @@ namespace UI
     /* 동물 인벤토리 슬롯의 상세 페이지 (씬에 1개만 존재)
      * - 슬롯 클릭 시 SlotData_Animal 기반으로 UI를 갱신하고 패널을 오픈
      * - 오픈할 때마다 InventoryManager_Animal에서 최신 런타임 데이터를 재조회
-     * - InventoryManager 이벤트 구독은 다음 단계에서 추가 예정
+     * - 패널이 열린 동안 OnAnimalSlotChanged로 동일 동물 슬롯 변경을 반영
      */
     public class UIController_AnimalInvPage : MonoBehaviour
     {
@@ -68,11 +68,24 @@ namespace UI
             {
                 animalInvPagePanel.SetActive(false);
             }
+        }
+
+        private void OnEnable()
+        {
+            ResolveInventoryReference();
 
             if (animalInventory == null)
-            {
-                animalInventory = InventoryManager_Animal.Instance;
-            }
+                return;
+
+            animalInventory.OnAnimalSlotChanged += HandleAnimalSlotChanged;
+        }
+
+        private void OnDisable()
+        {
+            if (animalInventory == null)
+                return;
+
+            animalInventory.OnAnimalSlotChanged -= HandleAnimalSlotChanged;
         }
 
         private void OnDestroy()
@@ -85,6 +98,27 @@ namespace UI
         {
             if (animalInventory == null)
                 animalInventory = InventoryManager_Animal.Instance;
+        }
+
+        /// <summary>
+        /// 인벤토리 슬롯 데이터가 변경되었을 때,
+        /// 현재 열려 있는 상세 페이지와 같은 동물이면 UI를 재갱신합니다.
+        /// </summary>
+        private void HandleAnimalSlotChanged(SlotData_Animal slotData)
+        {
+            if (slotData == null)
+                return;
+
+            if (animalInvPagePanel == null || !animalInvPagePanel.activeSelf)
+                return;
+
+            if (string.IsNullOrEmpty(currentAnimalId))
+                return;
+
+            if (slotData.AnimalId != currentAnimalId)
+                return;
+
+            RefreshAnimalInvPage();
         }
 
         /// <summary>
