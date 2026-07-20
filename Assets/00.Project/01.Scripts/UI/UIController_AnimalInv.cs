@@ -56,6 +56,15 @@ namespace UI
             SyncAllSlots();
         }
 
+        /// <summary>
+        /// 동물 Inv 패널이 닫힐 때 호출합니다.
+        /// 열려 있는 Animal_Inv_Page(상세)도 함께 닫습니다.
+        /// </summary>
+        public void NotifyPanelClosed()
+        {
+            animalInvPageController?.CloseAnimalInvPage();
+        }
+
         private void OnDisable()
         {
             if (animalInventory == null)

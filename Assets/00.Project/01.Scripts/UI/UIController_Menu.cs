@@ -76,8 +76,11 @@ public class UIController_Menu : MonoBehaviour
             panel.TogglePanelSetPosition();
 
         // Inv 패널이 열린 직후, 비활성 중 누적된 인벤 데이터를 UI에 반영
+        // 닫힌 경우(동물 Inv)에는 상세 페이지도 함께 닫음
         if (panel.gameObject.activeSelf)
             SyncInventoryIfNeeded(panel);
+        else
+            NotifyPanelClosedIfNeeded(panel);
     }
 
     private void SyncInventoryIfNeeded(UIPanelWindow panel)
@@ -88,6 +91,15 @@ public class UIController_Menu : MonoBehaviour
             toolInvUI?.SyncAllSlots();
         else if (panel == animalDexPanel)
             animalDexUI?.NotifyPanelOpened();
+    }
+
+    /// <summary>
+    /// 패널이 닫힌 뒤 필요한 UI 정리. Dex는 현재 유지(호출하지 않음).
+    /// </summary>
+    private void NotifyPanelClosedIfNeeded(UIPanelWindow panel)
+    {
+        if (panel == animalInventoryPanel)
+            animalInvUI?.NotifyPanelClosed();
     }
 
     private void CloseAllExcept(UIPanelWindow keepOpen)
@@ -104,7 +116,10 @@ public class UIController_Menu : MonoBehaviour
         if (panel == null || panel == keepOpen)
             return;
 
-        if (panel.gameObject.activeSelf)
-            panel.ClosePanel();
+        if (!panel.gameObject.activeSelf)
+            return;
+
+        panel.ClosePanel();
+        NotifyPanelClosedIfNeeded(panel);
     }
 }
