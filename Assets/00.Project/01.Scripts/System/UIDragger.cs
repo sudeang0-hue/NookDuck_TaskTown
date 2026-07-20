@@ -3,7 +3,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems; // IDragHandler, IPointerDownHandler를 쓰기 위해 필수!
 
-// UI 패널 드래그 이동 컴포넌트
+// UIController_AnimalInvPage 패널 드래그 이동 컴포넌트
 public class UIDragger : MonoBehaviour, IDragHandler, IPointerDownHandler
 {
     private RectTransform rectTransform;
@@ -17,7 +17,7 @@ public class UIDragger : MonoBehaviour, IDragHandler, IPointerDownHandler
     }
     public void OnPointerDown(PointerEventData eventData)
     {
-        // 클릭하는 순간, 해당 UI 패널을 화면 맨 앞으로 가져옴
+        // 클릭하는 순간, 해당 UIController_AnimalInvPage 패널을 화면 맨 앞으로 가져옴
         if (rectTransform != null)
         {
             rectTransform.SetAsLastSibling();

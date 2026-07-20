@@ -40,7 +40,7 @@ public class SoundSettingsPanel : MonoBehaviour
     [SerializeField] private Slider bgmSlider;
     [SerializeField] private TextMeshProUGUI bgmPercentText;
 
-    [Header("UI")]
+    [Header("UIController_AnimalInvPage")]
     [SerializeField] private Image uiIconImage;
     [SerializeField] private Slider uiSlider;
     [SerializeField] private TextMeshProUGUI uiPercentText;

@@ -37,7 +37,7 @@ namespace TaskTown.KDH
 
         // 배치 변경 시 즉시 재계산 (폴링 Update 불필요)
         private void HandleToolSlotChanged(SlotData_Tool slot) => RefreshProduction();
-        private void RefreshProduction() { /* UI 갱신용으로 coin/s 표시 가능 */ }
+        private void RefreshProduction() { /* UIController_AnimalInvPage 갱신용으로 coin/s 표시 가능 */ }
 
         private IEnumerator ProduceCoinEverySecond()
         {

@@ -3,7 +3,7 @@
  * - 저장된 사운드 설정 JSON 값을 AudioMixer에 적용하는 컴포넌트입니다.
  *
  * 주요 기능:
- * - SoundSettingsStore에서 Master/BGM/UI/Environment 볼륨을 읽습니다.
+ * - SoundSettingsStore에서 Master/BGM/UIController_AnimalInvPage/Environment 볼륨을 읽습니다.
  * - 각 값을 CompanionAudioMixer의 exposed parameter에 적용합니다.
  * - SoundManager가 재생 직전 저장 볼륨을 보장할 때 호출합니다.
  */

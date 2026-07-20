@@ -7,7 +7,7 @@ using DG.Tweening;
 
 public class GachaDirector : MonoBehaviour
 {
-    [Header("가챠 연출 UI 요소들")]
+    [Header("가챠 연출 UIController_AnimalInvPage 요소들")]
     public GameObject gachaPanel;       // 가챠 전체 패널
     public RectTransform imageBox;      // 상자 이미지
     public RectTransform imageItem;     // 도구 이미지
@@ -105,10 +105,10 @@ public class GachaDirector : MonoBehaviour
             }
         }
 
-        // 2. ESC를 누르면 가챠 UI 즉시 종료
+        // 2. ESC를 누르면 가챠 UIController_AnimalInvPage 즉시 종료
         if (Input.GetKeyDown(KeyCode.Escape))
         {
-            // UI 패널이 켜져 있을 때만 작동하도록 방어 코드를 넣어두면 좋음
+            // UIController_AnimalInvPage 패널이 켜져 있을 때만 작동하도록 방어 코드를 넣어두면 좋음
             if (gachaPanel.activeSelf)
             {
                 CloseGachaUI();

@@ -7,10 +7,10 @@ public class AnimalCard : MonoBehaviour
     [Header("이 카드에 할당할 동물 데이터")]
     public AnimalData myAnimalData;
 
-    [Header("상세창 UI 직접 연결 (에러 방지용)")]
+    [Header("상세창 UIController_AnimalInvPage 직접 연결 (에러 방지용)")]
     public AnimalDetailPanel detailPanel;
 
-    [Header("카드 자체 UI 요소")]
+    [Header("카드 자체 UIController_AnimalInvPage 요소")]
     public Image cardIconImage;  // 책장에 보일 동물 얼굴 이미지
 
     void Start()

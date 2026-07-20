@@ -12,6 +12,16 @@ public enum GameMenuState
     VillageUpgrade,
     MiniGame
 }
+public enum GameMenuType
+{
+    None,
+    AnimalInv,
+    ToolInv,
+    Gacha,
+    AnimalDex,
+    Villiage,
+    Option,
+}
 
 namespace UI
 {
@@ -25,7 +35,7 @@ namespace UI
         [SerializeField] private RectTransform panelRect;
 
         private Canvas rootCanvas;
-        private Vector2 defaultUIPanelPosition; // UI ÆÐ³ÎÀÇ ÃÊ±â À§Ä¡
+        private Vector2 defaultUIPanelPosition; // UIController_AnimalInvPage ï¿½Ð³ï¿½ï¿½ï¿½ ï¿½Ê±ï¿½ ï¿½ï¿½Ä¡
         private Vector2 dragOffset;
 
         private bool isInitialized;
@@ -58,7 +68,7 @@ namespace UI
 
             if (panelRect == null)
             {
-                Debug.LogWarning($"[UIPanelWindow] {gameObject.name}¿¡ RectTransformÀÌ ¾ø½À´Ï´Ù.");
+                Debug.LogWarning($"[UIPanelWindow] {gameObject.name}ï¿½ï¿½ RectTransformï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.");
 
                 return;
             }
@@ -69,7 +79,7 @@ namespace UI
 
 
         /// <summary>
-        /// ÃÊ±â À§Ä¡¿¡¼­ ÆÐ³Î È°¼ºÈ­
+        /// ï¿½Ê±ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ï¿½ï¿½ ï¿½Ð³ï¿½ È°ï¿½ï¿½È­
         /// </summary>
         public void OpenPanelDefaultPosition()
         {
@@ -81,25 +91,40 @@ namespace UI
             gameObject.SetActive(true);
             
             BringToFront();
+            PlayOpenScaleTween();
         }
 
         /// <summary>
-        /// ÀÌµ¿ÇÑ À§Ä¡¿¡¼­ ÆÐ³Î È°¼ºÈ­
+        /// ï¿½Ìµï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ï¿½ï¿½ ï¿½Ð³ï¿½ È°ï¿½ï¿½È­
         /// </summary>
         public void OpenPanelSetPosition()
         {
             gameObject.SetActive(true);
             ResetPosition();
             BringToFront();
+            PlayOpenScaleTween();
         }
 
         /// <summary>
-        /// ÆÐ³Î ´Ý±â
+        /// ï¿½Ð³ï¿½ ï¿½Ý±ï¿½
         /// </summary>
         public void ClosePanel()
         {
+            StopOpenScaleTween();
             ResetPosition();
             gameObject.SetActive(false);
+        }
+
+        private void PlayOpenScaleTween()
+        {
+            if (UITweenManager.Instance != null)
+                UITweenManager.Instance.PlayOpenScale(panelRect);
+        }
+
+        private void StopOpenScaleTween()
+        {
+            if (UITweenManager.Instance != null)
+                UITweenManager.Instance.StopAndReset(panelRect);
         }
 
         private void ResetPosition()
@@ -163,7 +188,7 @@ namespace UI
         }
 
         /// <summary>
-        /// ÆÐ³ÎÀ» Å¬¸¯ÇßÀ» ¶§ ÇØ´ç Canvas¸¦ °¡Àå ¾ÕÀ¸·Î ÀÌµ¿ÇÕ´Ï´Ù.
+        /// ï¿½Ð³ï¿½ï¿½ï¿½ Å¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ø´ï¿½ Canvasï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ìµï¿½ï¿½Õ´Ï´ï¿½.
         /// </summary>
         public void OnPointerDown(PointerEventData eventData)
         {
@@ -174,7 +199,7 @@ namespace UI
         {
             if (UIWindowLayerManager.Instance == null)
             {
-                Debug.LogWarning("[UIPanelWindow] UIWindowLayerManager.Instance°¡ ¾ø½À´Ï´Ù.");
+                Debug.LogWarning("[UIPanelWindow] UIWindowLayerManager.Instanceï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.");
 
                 return;
             }

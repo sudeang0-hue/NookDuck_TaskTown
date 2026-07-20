@@ -47,7 +47,7 @@ public class TransparentWindow : MonoBehaviour
 
     private void HandleClickThrough()
     {
-        // 1. UI 또는 3D 오브젝트 위에 마우스가 있는지 확인
+        // 1. UIController_AnimalInvPage 또는 3D 오브젝트 위에 마우스가 있는지 확인
         bool isOverUI = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
         bool isOver3D = false;
 

@@ -1,7 +1,7 @@
 using UnityEngine;
 
 /// <summary>
-/// 서로 다른 Canvas에 배치된 UI 창의 표시 순서를 관리합니다.
+/// 서로 다른 Canvas에 배치된 UIController_AnimalInvPage 창의 표시 순서를 관리합니다.
 /// </summary>
 public class UIWindowLayerManager : MonoBehaviour
 {
@@ -27,7 +27,7 @@ public class UIWindowLayerManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 전달받은 Canvas를 현재 UI 창 중 가장 앞으로 이동합니다.
+    /// 전달받은 Canvas를 현재 UIController_AnimalInvPage 창 중 가장 앞으로 이동합니다.
     /// </summary>
     public void BringToFront(Canvas targetCanvas)
     {

@@ -1,33 +1,41 @@
-//NB - ¾Æ¿µ´ÔÀÇ UIController_Menu ¿¡ ±â´É Ãß°¡ ¹× Ãæµ¹ ÇØ°á ÅëÇÕº»
+ï»¿//NB - ì•„ì˜ë‹˜ì˜ UIController_Menu ì— ê¸°ëŠ¥ ì¶”ê°€ ë° ì¶©ëŒ í•´ê²° í†µí•©ë³¸
+using UI;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class UIController_Menu_Test : MonoBehaviour
 {
-    [Header("GameMasterManager Á÷Á¢ ÂüÁ¶")]
-    [SerializeField] private GameMasterManager gameMaster; // ½ÇÁ¦ SetActive ¹× DOTween ¿¬ÃâÀ» Àü´ãÇÏ´Â ¸Å´ÏÀú
+    [Header("GameMasterManager ì§ì ‘ ì°¸ì¡°")]
+    [SerializeField] private GameMasterManager gameMaster; // ì‹¤ì œ SetActive ë° DOTween ì—°ì¶œì„ ì „ë‹´í•˜ëŠ” ë§¤ë‹ˆì €
 
-    [Header("¸Ş´º ¸ñ·Ï ¹öÆ°")]
+    [Header("ë©”ë‰´ ëª©ë¡ ë²„íŠ¼")]
     [SerializeField] private Button animalInventoryButton;
     [SerializeField] private Button toolInventoryButton;
     [SerializeField] private Button gachaButton;
     [SerializeField] private Button animalDexButton;
     [SerializeField] private Button optionButton;
 
-    // °¢ Ã¢µéÀÌ ÇöÀç ¿­·È´ÂÁö ´İÇû´ÂÁö µ¶¸³ÀûÀ¸·Î ±â¾ïÇÏ´Â ½ºÀ§Ä¡ ÇÃ·¡±×µé
+    // ê° ì°½ë“¤ì´ í˜„ì¬ ì—´ë ¸ëŠ”ì§€ ë‹«í˜”ëŠ”ì§€ ë…ë¦½ì ìœ¼ë¡œ ê¸°ì–µí•˜ëŠ” ìŠ¤ìœ„ì¹˜ í”Œë˜ê·¸ë“¤
     private bool isAnimalInvOpen = false;
     private bool isToolInvOpen = false;
     private bool isGachaOpen = false;
     private bool isDexOpen = false;
     private bool isOptionOpen = false;
 
+    private UIController_AnimalInv animalInvUI;
+    private UIController_ToolInv toolInvUI;
+
     private void Awake()
     {
         if (gameMaster == null)
         {
-            // ¾À¿¡ Á¸ÀçÇÏ´Â GameMasterManager¸¦ ÀÚµ¿À¸·Î Ã£¾Æ ¾ÈÀüÀåÄ¡ ¼³Á¤
+            // ì”¬ì— ì¡´ì¬í•˜ëŠ” GameMasterManagerë¥¼ ìë™ìœ¼ë¡œ ì°¾ì•„ ì•ˆì „ì¥ì¹˜ ì„¤ì •
             gameMaster = FindFirstObjectByType<GameMasterManager>();
         }
+
+        // ë™ì¼ GameObject(ALL_UI_Controller_Manager)ì— ë¶™ì–´ ìˆëŠ” Inv UI ì»¨íŠ¸ë¡¤ëŸ¬
+        animalInvUI = GetComponent<UIController_AnimalInv>();
+        toolInvUI = GetComponent<UIController_ToolInv>();
 
         animalInventoryButton.onClick.AddListener(ToggleAnimalInventory);
         toolInventoryButton.onClick.AddListener(ToggleToolInventory);
@@ -36,31 +44,43 @@ public class UIController_Menu_Test : MonoBehaviour
         optionButton.onClick.AddListener(ToggleOption);
     }
 
-    // 1. µ¿¹° °ü¸® ÀÎº¥Åä¸® Åä±Û (µ¶¸³ ÀÛµ¿)
+    // 1. ë™ë¬¼ ê´€ë¦¬ ì¸ë²¤í† ë¦¬ í† ê¸€ (ë…ë¦½ ì‘ë™)
     private void ToggleAnimalInventory()
     {
         if (gameMaster == null) return;
 
         isAnimalInvOpen = !isAnimalInvOpen;
         if (isAnimalInvOpen)
+        {
             gameMaster.OpenManage();
+            // íŒ¨ë„ SetActive(true) ì§í›„, í˜„ì¬ ë³´ìœ  ì¸ë²¤ ë°ì´í„°ë¥¼ UIì— ë°˜ì˜
+            animalInvUI?.SyncAllSlots();
+        }
         else
+        {
             gameMaster.CloseManage();
+        }
     }
 
-    // 2. µµ±¸ ÀÎº¥Åä¸® Åä±Û (µ¶¸³ ÀÛµ¿)
+    // 2. ë„êµ¬ ì¸ë²¤í† ë¦¬ í† ê¸€ (ë…ë¦½ ì‘ë™)
     private void ToggleToolInventory()
     {
         if (gameMaster == null) return;
 
         isToolInvOpen = !isToolInvOpen;
         if (isToolInvOpen)
+        {
             gameMaster.OpenToolInv();
+            // íŒ¨ë„ SetActive(true) ì§í›„, í˜„ì¬ ë³´ìœ  ì¸ë²¤ ë°ì´í„°ë¥¼ UIì— ë°˜ì˜
+            toolInvUI?.SyncAllSlots();
+        }
         else
+        {
             gameMaster.CloseToolInv();
+        }
     }
 
-    // 3. °¡Ã­ Åä±Û (µ¶¸³ ÀÛµ¿)
+    // 3. ê°€ì±  í† ê¸€ (ë…ë¦½ ì‘ë™)
     private void ToggleGacha()
     {
         if (gameMaster == null) return;
@@ -72,7 +92,7 @@ public class UIController_Menu_Test : MonoBehaviour
             gameMaster.CloseGacha();
     }
 
-    // 4. µµ°¨ Åä±Û (µ¶¸³ ÀÛµ¿)
+    // 4. ë„ê° í† ê¸€ (ë…ë¦½ ì‘ë™)
     private void ToggleDex()
     {
         if (gameMaster == null) return;
@@ -84,7 +104,7 @@ public class UIController_Menu_Test : MonoBehaviour
             gameMaster.CloseDex();
     }
 
-    // 5. ¿É¼Ç Åä±Û (µ¶¸³ ÀÛµ¿)
+    // 5. ì˜µì…˜ í† ê¸€ (ë…ë¦½ ì‘ë™)
     private void ToggleOption()
     {
         if (gameMaster == null) return;
