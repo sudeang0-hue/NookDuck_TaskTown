@@ -5,6 +5,7 @@
  * 주요 기능:
  * - JSON에 저장된 볼륨을 로드해 UI에 반영합니다.
  * - 슬라이더 변경 시 AudioMixer에 즉시 적용하고 SoundSettingsStore에 저장합니다.
+ * - 볼륨 아이콘 클릭 시 해당 채널을 음소거하거나 마지막 볼륨으로 복원합니다.
  * - 볼륨이 0이면 mute icon, 0보다 크면 playing icon으로 갱신합니다.
  */
 using TMPro;
@@ -32,22 +33,26 @@ public class SoundSettingsPanel : MonoBehaviour
 
     [Header("Master")]
     [SerializeField] private Image masterIconImage;
+    [SerializeField] private Button masterMuteButton;
     [SerializeField] private Slider masterSlider;
     [SerializeField] private TextMeshProUGUI masterPercentText;
 
     [Header("BGM")]
     [SerializeField] private Image bgmIconImage;
+    [SerializeField] private Button bgmMuteButton;
     [SerializeField] private Slider bgmSlider;
     [SerializeField] private TextMeshProUGUI bgmPercentText;
 
     [Header("UIController_AnimalInvPage")]
     [SerializeField] private Image uiIconImage;
+    [SerializeField] private Button uiMuteButton;
     [SerializeField] private Slider uiSlider;
     [SerializeField] private TextMeshProUGUI uiPercentText;
 
     [Header("Environment")]
     [FormerlySerializedAs("toolIconImage")]
     [SerializeField] private Image environmentIconImage;
+    [SerializeField] private Button environmentMuteButton;
     [FormerlySerializedAs("animalSlider")]
     [SerializeField] private Slider environmentSlider;
     [FormerlySerializedAs("animalPercentText")]
@@ -118,6 +123,26 @@ public class SoundSettingsPanel : MonoBehaviour
             environmentSlider.onValueChanged.AddListener(OnEnvironmentSliderChanged);
         }
 
+        if (masterMuteButton != null)
+        {
+            masterMuteButton.onClick.AddListener(OnMasterMuteButtonClicked);
+        }
+
+        if (bgmMuteButton != null)
+        {
+            bgmMuteButton.onClick.AddListener(OnBGMMuteButtonClicked);
+        }
+
+        if (uiMuteButton != null)
+        {
+            uiMuteButton.onClick.AddListener(OnUIMuteButtonClicked);
+        }
+
+        if (environmentMuteButton != null)
+        {
+            environmentMuteButton.onClick.AddListener(OnEnvironmentMuteButtonClicked);
+        }
+
         listenersRegistered = true;
     }
 
@@ -146,6 +171,26 @@ public class SoundSettingsPanel : MonoBehaviour
         if (environmentSlider != null)
         {
             environmentSlider.onValueChanged.RemoveListener(OnEnvironmentSliderChanged);
+        }
+
+        if (masterMuteButton != null)
+        {
+            masterMuteButton.onClick.RemoveListener(OnMasterMuteButtonClicked);
+        }
+
+        if (bgmMuteButton != null)
+        {
+            bgmMuteButton.onClick.RemoveListener(OnBGMMuteButtonClicked);
+        }
+
+        if (uiMuteButton != null)
+        {
+            uiMuteButton.onClick.RemoveListener(OnUIMuteButtonClicked);
+        }
+
+        if (environmentMuteButton != null)
+        {
+            environmentMuteButton.onClick.RemoveListener(OnEnvironmentMuteButtonClicked);
         }
 
         listenersRegistered = false;
@@ -199,6 +244,43 @@ public class SoundSettingsPanel : MonoBehaviour
     private void OnEnvironmentSliderChanged(float sliderValue)
     {
         HandleSliderChanged(SoundVolumeChannel.Environment, sliderValue, environmentPercentText);
+    }
+
+    private void OnMasterMuteButtonClicked()
+    {
+        ToggleMute(SoundVolumeChannel.Master);
+    }
+
+    private void OnBGMMuteButtonClicked()
+    {
+        ToggleMute(SoundVolumeChannel.BGM);
+    }
+
+    private void OnUIMuteButtonClicked()
+    {
+        ToggleMute(SoundVolumeChannel.UI);
+    }
+
+    private void OnEnvironmentMuteButtonClicked()
+    {
+        ToggleMute(SoundVolumeChannel.Environment);
+    }
+
+    private void ToggleMute(SoundVolumeChannel channel)
+    {
+        Slider slider = GetSlider(channel);
+
+        if (slider == null)
+        {
+            return;
+        }
+
+        float currentPercent = Mathf.Round(AudioVolumeUtility.SliderValueToPercent(slider.value));
+        float targetPercent = currentPercent > 0f
+            ? 0f
+            : SoundSettingsStore.GetLastNonZeroVolume(channel);
+
+        slider.value = AudioVolumeUtility.PercentToSliderValue(targetPercent);
     }
 
     private void HandleSliderChanged(SoundVolumeChannel channel, float sliderValue, TextMeshProUGUI percentText)
@@ -257,6 +339,18 @@ public class SoundSettingsPanel : MonoBehaviour
             SoundVolumeChannel.BGM => bgmIconImage,
             SoundVolumeChannel.UI => uiIconImage,
             SoundVolumeChannel.Environment => environmentIconImage,
+            _ => null
+        };
+    }
+
+    private Slider GetSlider(SoundVolumeChannel channel)
+    {
+        return channel switch
+        {
+            SoundVolumeChannel.Master => masterSlider,
+            SoundVolumeChannel.BGM => bgmSlider,
+            SoundVolumeChannel.UI => uiSlider,
+            SoundVolumeChannel.Environment => environmentSlider,
             _ => null
         };
     }
