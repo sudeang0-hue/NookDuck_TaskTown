@@ -1,0 +1,107 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &3709761523516988655
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6358032278415877349}
+  - component: {fileID: 3397020993281574583}
+  - component: {fileID: 7292674570500283821}
+  - component: {fileID: 4556516888078230745}
+  m_Layer: 0
+  m_Name: _GameManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6358032278415877349
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3709761523516988655}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3397020993281574583
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3709761523516988655}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 20d6c0b78d3f27045962820166247383, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameMasterManager
+  villageOrigin: {fileID: 0}
+  expandedPanel: {fileID: 0}
+  minimizedPanel: {fileID: 0}
+  menuPanel: {fileID: 0}
+  menuCanvasGroup: {fileID: 0}
+  panelDex: {fileID: 0}
+  panelGacha: {fileID: 0}
+  panelManage: {fileID: 0}
+  panelOption: {fileID: 0}
+  panelToolInv: {fileID: 0}
+  btnMinimize: {fileID: 0}
+  btnMaximize: {fileID: 0}
+  btnQuit: {fileID: 0}
+  btnCloseMenu: {fileID: 0}
+  bottomIcons:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  ticketNotification: {fileID: 0}
+--- !u!114 &7292674570500283821
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3709761523516988655}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 540a82514dce35b42ab81d9f3101a02f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GachaDirector
+  gachaPanel: {fileID: 0}
+  imageBox: {fileID: 0}
+  imageItem: {fileID: 0}
+  effectGlow: {fileID: 0}
+  testItemSprite: {fileID: 1918528007, guid: 0e6a98fe8a0f8ad4b9ef51b51fffad10, type: 3}
+--- !u!114 &4556516888078230745
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3709761523516988655}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dedcd3e360ac0b942a9b51899ab70a6d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BusGachaDirector
+  busObject: {fileID: 0}
+  dropPoint: {fileID: 0}
+  animalPrefab: {fileID: 919132149155446097, guid: 379612d7b5ec4054189335cfb8f5f5aa, type: 3}
+  pathPoints:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
