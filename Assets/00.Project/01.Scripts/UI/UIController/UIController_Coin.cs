@@ -61,7 +61,7 @@ public class UIController_Coin : MonoBehaviour
 
 
     /// <summary>
-    /// 현재 보유 코인 UIController_AnimalInvPage
+    /// 현재 보유 코인
     /// </summary>
     private void UpdateAllCoinText(long coinAmount)
     {
@@ -76,7 +76,7 @@ public class UIController_Coin : MonoBehaviour
 
 
     /// <summary>
-    /// 시간당 생산량 UIController_AnimalInvPage
+    /// 시간당 생산량
     /// </summary>
     private void UpdateAutoCoinText(long coinPerHour)
     {
