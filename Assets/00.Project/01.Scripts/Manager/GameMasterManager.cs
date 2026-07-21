@@ -7,15 +7,8 @@ public class GameMasterManager : MonoBehaviour
 {
     [Header("3D 오브젝트 및 카메라 설정")]
     public Transform villageOrigin;
-    private Camera mainCamera;
-
-    private Vector3 camOriginalPos;
-    private float camOriginalSize;
     private Vector3 originalVillagePos;
     private Vector3 savedDraggedPosition;
-
-    [Header("축소 화면용 카메라 타겟 셋팅")]
-    public Transform miniVillagePos;
 
     [Header("메인 패널 참조")]
     public GameObject expandedPanel;
@@ -64,17 +57,16 @@ public class GameMasterManager : MonoBehaviour
 
     void Start()
     {
-        mainCamera = Camera.main;
-        if (mainCamera != null)
-        {
-            camOriginalPos = mainCamera.transform.position;
-            camOriginalSize = mainCamera.orthographicSize;
-        }
-
         if (villageOrigin != null)
         {
             originalVillagePos = villageOrigin.position;
             savedDraggedPosition = originalVillagePos;
+
+            // [ECHO 분리] 카메라 디렉터에게 원본 위치만 전달!
+            if (CameraDirector.Instance != null)
+            {
+                CameraDirector.Instance.SetupVillageOrigin(originalVillagePos);
+            }
         }
 
         iconOriginalPositions = new Vector2[bottomIcons.Length];
@@ -95,6 +87,20 @@ public class GameMasterManager : MonoBehaviour
         menuCanvasGroup.alpha = 0f;
 
         AnimateIcons();
+    }
+
+    void Update()
+    {
+        if (!isExpanded)
+        {
+            ticketTimer += Time.deltaTime;
+            if (ticketTimer >= TICKET_COOLDOWN && ticketNotification != null)
+            {
+                ticketNotification.SetActive(true);
+            }
+        }
+
+        if (Input.GetKeyDown(KeyCode.Escape)) ToggleMenu();
     }
 
     // 패널들의 원래 위치를 저장하고, 시작하자마자 구석으로 치운 뒤 비활성화
@@ -132,27 +138,11 @@ public class GameMasterManager : MonoBehaviour
         }
     }
 
-    void Update()
-    {
-        if (!isExpanded)
-        {
-            ticketTimer += Time.deltaTime;
-            if (ticketTimer >= TICKET_COOLDOWN && ticketNotification != null)
-            {
-                ticketNotification.SetActive(true);
-            }
-        }
-
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            ToggleMenu();
-        }
-    }
 
     public void SetMinimizedScreen()
     {
         isExpanded = false;
-        CloseAllPopups(); // 축소 상태가 될 때는 예외적으로 모든 팝업 닫기
+        CloseAllPopups();
 
         expandedPanel.SetActive(false);
         minimizedPanel.SetActive(true);
@@ -163,14 +153,9 @@ public class GameMasterManager : MonoBehaviour
             villageOrigin.DOMove(originalVillagePos, 0.5f).SetEase(Ease.InOutQuad);
         }
 
-        if (mainCamera != null && miniVillagePos != null)
-        {
-            float targetSize = camOriginalSize / 0.3f;
-            mainCamera.DOOrthoSize(targetSize, 0.5f).SetEase(Ease.InOutQuad);
-
-            Vector3 targetCamPos = miniVillagePos.position + (camOriginalPos - originalVillagePos);
-            mainCamera.transform.DOMove(targetCamPos, 0.5f).SetEase(Ease.InOutQuad);
-        }
+        // [ECHO 분리] 카메라 축소 연출은 디렉터가 알아서!
+        if (CameraDirector.Instance != null)
+            CameraDirector.Instance.SetMinimizedView();
 
         for (int i = 0; i < bottomIcons.Length; i++)
         {
@@ -179,17 +164,12 @@ public class GameMasterManager : MonoBehaviour
         }
     }
 
-    public bool GetIsExpanded()
-    {
-        return isExpanded;
-    }
-
     public void SetExpandedScreen()
     {
         isExpanded = true;
-
         expandedPanel.SetActive(true);
         minimizedPanel.SetActive(false);
+
         if (ticketNotification) ticketNotification.SetActive(false);
         ticketTimer = 0f;
 
@@ -198,15 +178,17 @@ public class GameMasterManager : MonoBehaviour
             villageOrigin.DOMove(savedDraggedPosition, 0.5f).SetEase(Ease.InOutQuad);
         }
 
-        if (mainCamera != null)
-        {
-            mainCamera.DOOrthoSize(camOriginalSize, 0.5f).SetEase(Ease.InOutQuad);
-            mainCamera.transform.DOMove(camOriginalPos, 0.5f).SetEase(Ease.InOutQuad);
-        }
+        // [ECHO 분리] 카메라 복귀 연출도 디렉터가 알아서!
+        if (CameraDirector.Instance != null)
+            CameraDirector.Instance.SetExpandedView();
 
         AnimateIcons();
     }
 
+    public bool GetIsExpanded()
+    {
+        return isExpanded;
+    }
 
     #region UI 개별 제어 세트 (독립 제어 및 SetActive 통합 설계)
 

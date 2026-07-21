@@ -37,6 +37,12 @@ public static class SoundSettingsStore
         return cachedData.GetVolume(channel);
     }
 
+    public static float GetLastNonZeroVolume(SoundVolumeChannel channel)
+    {
+        EnsureLoaded();
+        return cachedData.GetLastNonZeroVolume(channel);
+    }
+
     public static void SetVolume(SoundVolumeChannel channel, float percent)
     {
         EnsureLoaded();
