@@ -10685,7 +10685,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 61bad1cd03bdaa443a987e623aad5cde, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EarnProcessor
-  baseCoinPerClick: 100000
+  baseCoinPerClick: 1000
   baseCoinPerTyping: 1000
   maxCoinPerHour: 10000000
   limitPeriodSeconds: 10
@@ -12057,15 +12057,15 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 30
+  m_fontSizeBase: 30
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
   m_HorizontalAlignment: 1
-  m_VerticalAlignment: 256
+  m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_characterHorizontalScale: 1
@@ -12689,6 +12689,7 @@ GameObject:
   - component: {fileID: 1924184448}
   - component: {fileID: 1924184447}
   - component: {fileID: 1924184454}
+  - component: {fileID: 1924184455}
   m_Layer: 0
   m_Name: ALL_UI_Controller_Manager
   m_TagString: Untagged
@@ -12824,6 +12825,20 @@ MonoBehaviour:
   animalDexUI: {fileID: 1924184447}
   usePanelOpenDefaultPosition: 1
   useTradeOffSetting: 1
+--- !u!114 &1924184455
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1924184445}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8987a77bf4dfedc45a7b76a56e7b6a22, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIController_Coin_mini
+  coinManager: {fileID: 1566871428}
+  allCoinText: {fileID: 1799870522}
 --- !u!1 &1930343228
 GameObject:
   m_ObjectHideFlags: 0
@@ -13300,6 +13315,52 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1945149028}
   m_CullTransparentMesh: 1
+--- !u!1 &1946033992
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1946033994}
+  - component: {fileID: 1946033993}
+  m_Layer: 0
+  m_Name: DebugTool
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1946033993
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1946033992}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76ce9576ac7afae48bf18158491888e5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DebugTool
+  toggleKey: 96
+  showOnStart: 1
+--- !u!4 &1946033994
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1946033992}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1637.0692, y: 431.44937, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1953481505
 GameObject:
   m_ObjectHideFlags: 0
@@ -18361,3 +18422,4 @@ SceneRoots:
   - {fileID: 1386169352}
   - {fileID: 1466800560}
   - {fileID: 555801519}
+  - {fileID: 1946033994}
