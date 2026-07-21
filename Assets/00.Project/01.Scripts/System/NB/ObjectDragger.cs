@@ -7,7 +7,7 @@ public class ObjectDragger : MonoBehaviour
     private bool isDragging = false;
     private GameMasterManager gameManager;
 
-    [Header("✨ 관성(부드러움) 설정")]
+    [Header("관성(부드러움) 설정")]
     [Range(0.01f, 0.5f)]
     public float smoothTime = 0f; // 수치가 작을수록 마우스에 딱 붙고, 클수록 묵직하게 늦게 따라옴 (기본값 0.1 추천)
     private Vector3 dragVelocity = Vector3.zero; // SmoothDamp 내부 물리 계산용 속도 변수

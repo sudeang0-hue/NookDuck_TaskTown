@@ -44,9 +44,7 @@ public class VillagerAI : MonoBehaviour
 
     void Update()
     {
-        // ---------------------------------------------------------
-        // [기존 NavMesh AI 배회 로직]
-        // ---------------------------------------------------------
+        // NavMesh AI 배회 로직
         if (agent == null || !agent.isActiveAndEnabled || !agent.isOnNavMesh)
         {
             if (animator != null) animator.SetBool("isWalking", false);
