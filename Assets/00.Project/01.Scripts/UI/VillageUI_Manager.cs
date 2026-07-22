@@ -34,6 +34,8 @@ namespace UI
 
         [Header("자동 닫힘")]
         [SerializeField] private float autoCloseSeconds = 3f;
+        [Tooltip("true면 Village 패널 바깥을 클릭했을 때 패널을 닫습니다. (패널 위·VillageHouse 클릭은 제외)")]
+        [SerializeField] private bool closeOnOutsideClick = false;
 
         [Header("테스트용 마을 정보 (VillageSystem 연동 전)")]
         [SerializeField] private int townLevel = 1;
@@ -130,17 +132,17 @@ namespace UI
         /// </summary>
         private void OnClickPressed()
         {
-            if (blockWhenOverSelectableUI && IsPointerOverSelectableUI())
-            {
-                // 마을 패널 위 Selectable(레벨업 버튼 등)이면 타이머만 갱신
-                if (isPanelOpen && IsPointerOverVillagePanel())
-                    RestartAutoCloseTimer();
-                return;
-            }
-
+            // 패널 위 클릭: 닫지 않고 타이머만 갱신
             if (isPanelOpen && IsPointerOverVillagePanel())
             {
                 RestartAutoCloseTimer();
+                return;
+            }
+
+            if (blockWhenOverSelectableUI && IsPointerOverSelectableUI())
+            {
+                // 다른 UI 위 클릭은 집 Raycast를 막되, 옵션이면 패널은 외부 클릭으로 닫음
+                TryCloseOnOutsideClick();
                 return;
             }
 
@@ -160,6 +162,20 @@ namespace UI
                 TogglePanel();
                 return;
             }
+
+            // 월드/빈 공간 클릭
+            TryCloseOnOutsideClick();
+        }
+
+        /// <summary>
+        /// closeOnOutsideClick이 켜져 있고 패널이 열려 있으면 닫습니다.
+        /// </summary>
+        private void TryCloseOnOutsideClick()
+        {
+            if (!closeOnOutsideClick || !isPanelOpen)
+                return;
+
+            ClosePanel();
         }
 
         private void EnsureClickLayerMask()
