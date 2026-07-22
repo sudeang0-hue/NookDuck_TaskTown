@@ -132,25 +132,23 @@ namespace UI
         }
 
         /// <summary>
-        /// 현재 동물 인벤토리에 존재하는 동물의
-        /// 도감 슬롯을 해금 상태로 갱신합니다.
+        /// 도감 슬롯의 해금 상태를 갱신합니다. "이미 본 적 있음" 기록은 DexRecordManager가
+        /// 인벤토리와 별개로 영구 저장하므로(난이도 리셋 이후에도 유지), 현재 인벤토리 보유
+        /// 여부가 아니라 그 기록을 기준으로 판단합니다.
         /// </summary>
         private void RefreshInventory()
         {
-
-            if (animalInventory == null)
+            if (DexRecordManager.Instance == null)
             {
-                Debug.LogWarning("[UIController_AnimalDex] InventoryManager_Animal.Instance가 없습니다.");
+                Debug.LogWarning("[UIController_AnimalDex] DexRecordManager.Instance가 없습니다.");
                 return;
             }
 
             foreach (KeyValuePair<string, SlotUI_AnimalDex> pair in slotMap)
             {
-                bool isUnlocked = animalInventory.TryGetAnimalSlot(pair.Key, out _);
-
+                bool isUnlocked = DexRecordManager.Instance.IsDiscovered(pair.Key);
                 pair.Value.SetUnlocked(isUnlocked);
             }
-
         }
 
         /// <summary>

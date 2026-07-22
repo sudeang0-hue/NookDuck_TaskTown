@@ -68,7 +68,8 @@ namespace TaskTown.KDH
             CoinWallet?.Add(wholeCoins);
         }
 
-        private float CalculateTotalCoinPerSecond()
+        // 프레임을 기다리지 않고 즉시 현재 생산량을 계산합니다(오프라인 보상 등 앱 시작 직후에 필요).
+        public float CalculateTotalCoinPerSecond()
         {
             if (InventoryManager_Tool.Instance == null) return 0f;
 

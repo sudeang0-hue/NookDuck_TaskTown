@@ -14,5 +14,11 @@ namespace TaskTown.Gacha.Demo
         {
             townLevel++;
         }
+
+        // 세이브 로드 시 저장된 마을 레벨로 복원하기 위한 세터입니다.
+        public void SetLevel(int level)
+        {
+            townLevel = Mathf.Max(1, level);
+        }
     }
 }
