@@ -23,6 +23,7 @@ public class UIController_Coin : MonoBehaviour
     private void OnEnable()
     {
         TrySubscribeCoinEvent();
+    }
 
     private void Update()
     {
@@ -80,8 +81,9 @@ public class UIController_Coin : MonoBehaviour
 
         if (CoinManager.Instance == null)
         {
-            Debug.LogWarning("[UIController_Coin] CoinManager.Instance�� �����ϴ�.");
+            Debug.LogWarning("[UIController_Coin] CoinManager.Instance가 없습니다.");
             return;
+        }
 
         CoinManager.Instance.OnCoinChanged += UpdateAllCoinText;
         isSubscribed = true;
