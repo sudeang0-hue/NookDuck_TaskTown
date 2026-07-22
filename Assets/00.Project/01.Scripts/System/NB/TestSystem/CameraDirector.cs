@@ -4,12 +4,17 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using DG.Tweening;
 using UnityEngine.UI;
+using System;
 
 // 카메라의 모든 이동, 줌, 추적 연출을 전담하는 싱글톤 디렉터
 public class CameraDirector : MonoBehaviour
 {
     // 싱글톤
     public static CameraDirector Instance { get; private set; }
+
+    //카메라가 팔로우 모드에 진입할 때 발생하는 이벤트
+    public static event Action OnCameraFocusStarted;
+
 
     [Header("카메라 기본 설정")]
     private Camera _mainCamera;
@@ -127,6 +132,9 @@ public class CameraDirector : MonoBehaviour
     {
         if (!_isExpanded || _mainCamera == null) return;
 
+        //동물을 쫒기 시작하면 열려있는 모든 UI를 닫도록 이벤트 알림
+        OnCameraFocusStarted?.Invoke();
+
         _targetAnimal = animalTransform;
 
         // [디버깅용] 콘솔창에 찍히는 좌표를 꼭 확인, 만약 (0,0,0) 이라면 TargetSelector가 부모의 Transform을 넘기고 있는 것
@@ -144,9 +152,8 @@ public class CameraDirector : MonoBehaviour
         Vector3 targetPos = targetWorldPos + (_camOriginalPos - _originalVillagePos) + followOffset;
 
         _mainCamera.transform.DOMove(targetPos, 0.5f).SetEase(Ease.OutCubic).OnComplete(() =>
-        {
-            //DOTween 연출 완료 후 추적을 활성화
-            _isFollowing = true;
+        {            
+            _isFollowing = true;    //DOTween 연출 완료 후 추적을 활성화
         });
 
         if (btnUnfocus != null) btnUnfocus.gameObject.SetActive(true);
