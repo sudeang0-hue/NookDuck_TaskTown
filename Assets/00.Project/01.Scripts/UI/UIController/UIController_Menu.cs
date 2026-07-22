@@ -56,6 +56,18 @@ public class UIController_Menu : MonoBehaviour
         gachaButton.onClick.AddListener(() => TogglePanel(gachaPanel));
         animalDexButton.onClick.AddListener(() => TogglePanel(animalDexPanel));
         optionButton.onClick.AddListener(() => TogglePanel(optionPanel));
+
+        // GameMasterManager의 축소와 별개로, 같은 Minimize 버튼에 메뉴 패널 닫기를 추가 연결
+        if (minimizeButton != null)
+            minimizeButton.onClick.AddListener(CloseAllPanels);
+    }
+
+    /// <summary>
+    /// 화면 축소 등에서 열린 메뉴 패널(UIPanelWindow)을 모두 닫습니다.
+    /// </summary>
+    public void CloseAllPanels()
+    {
+        CloseAllExcept(null);
     }
 
     private void TogglePanel(UIPanelWindow panel)
