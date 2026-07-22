@@ -44,7 +44,13 @@ namespace TaskTown.KDH
 
         private void Start()
         {
-            LoadGame();
+            float loadedProductionRate = LoadGame();
+
+            // 오프라인 보상은 "저장 시점에 기록해 둔 생산량"으로 계산합니다. 실시간 생산량에
+            // 의존하면 로드 타이밍(인벤토리 복원 완료 시점)에 따라 0으로 잡힐 수 있어서입니다.
+            if (OfflineRewardManager.Instance != null)
+                OfflineRewardManager.Instance.CheckOfflineReward(loadedProductionRate);
+
             InvokeRepeating(nameof(SaveGame), AutoSaveIntervalSeconds, AutoSaveIntervalSeconds);
         }
 
@@ -78,6 +84,9 @@ namespace TaskTown.KDH
 
             if (TownLevelProvider != null)
                 data.townLevel = TownLevelProvider.CurrentTownLevel;
+
+            if (RealProductionTicker.Instance != null)
+                data.productionRatePerSecond = RealProductionTicker.Instance.CalculateTotalCoinPerSecond();
 
             if (InventoryManager_Animal.Instance != null)
             {
@@ -124,10 +133,11 @@ namespace TaskTown.KDH
             }
         }
 
-        public void LoadGame()
+        // 저장돼 있던 초당 생산량을 반환합니다(오프라인 보상 계산용). 세이브가 없으면 0.
+        public float LoadGame()
         {
             if (!File.Exists(SavePath))
-                return;
+                return 0f;
 
             GameSaveData data;
             try
@@ -137,11 +147,11 @@ namespace TaskTown.KDH
             catch (System.Exception e)
             {
                 Debug.LogError($"[SaveManager] 로드 실패: {e.Message}");
-                return;
+                return 0f;
             }
 
             if (data == null)
-                return;
+                return 0f;
 
             // 코인
             if (coinManager != null)
@@ -186,6 +196,8 @@ namespace TaskTown.KDH
 
                 toolManager.LoadSaveData(toolSaves);
             }
+
+            return data.productionRatePerSecond;
         }
 
         // 엔딩 후 난이도 리셋 등에서 진행 데이터를 완전히 초기화할 때 사용합니다.
