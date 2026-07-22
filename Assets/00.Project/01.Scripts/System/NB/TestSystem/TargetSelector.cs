@@ -22,7 +22,11 @@ public class TargetSelector : MonoBehaviour
         // 마우스 왼쪽 버튼 클릭 감지
         if (Input.GetMouseButtonDown(0))
         {
-         
+            // 커서가 UI 위에 있다면 3D 동물 선택 로직을 즉시 중단
+            if (InputGuard.IsPointerOverUI())
+            {
+                return;
+            }
             SelectTarget();
         }
     }
