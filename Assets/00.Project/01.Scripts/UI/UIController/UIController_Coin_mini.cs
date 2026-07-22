@@ -1,3 +1,4 @@
+using System.Collections;
 using TMPro;
 using UnityEngine;
 
@@ -6,77 +7,98 @@ public class UIController_Coin_mini : MonoBehaviour
     [SerializeField] private CoinManager coinManager;
 
     [Header("획득 코인 텍스트")]
-    [SerializeField] private TMP_Text allCoinText;   // 현재 보유 코인
+    [SerializeField] private TMP_Text allCoinText;
 
     private bool isSubscribed;
+    private Coroutine subscribeRoutine;
 
     private void Start()
     {
-        SubscribeCoinEvent();
+        TrySubscribeCoinEvent();
     }
-
 
     private void OnEnable()
     {
-        SubscribeCoinEvent();
-    }
+        TrySubscribeCoinEvent();
 
+        if (!isSubscribed && subscribeRoutine == null)
+            subscribeRoutine = StartCoroutine(SubscribeWhenCoinManagerReady());
+    }
 
     private void OnDisable()
     {
+        if (subscribeRoutine != null)
+        {
+            StopCoroutine(subscribeRoutine);
+            subscribeRoutine = null;
+        }
+
         if (!isSubscribed)
             return;
 
-        if (coinManager != null)
-        {
-            coinManager.OnCoinChanged -= UpdateAllCoinText;
-        }
+        CoinManager source = GetCoinManager();
+        if (source != null)
+            source.OnCoinChanged -= UpdateAllCoinText;
 
         isSubscribed = false;
     }
 
-    private void SubscribeCoinEvent()
+    private IEnumerator SubscribeWhenCoinManagerReady()
+    {
+        const float timeoutSeconds = 3f;
+        float elapsed = 0f;
+
+        while (GetCoinManager() == null && elapsed < timeoutSeconds)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            yield return null;
+        }
+
+        subscribeRoutine = null;
+        TrySubscribeCoinEvent();
+
+        if (!isSubscribed && GetCoinManager() == null)
+        {
+            Debug.LogWarning(
+                "[UIController_Coin_mini] CoinManager가 없습니다. " +
+                "Inspector 참조 또는 씬의 활성 CoinManager를 확인하세요.");
+        }
+    }
+
+    private CoinManager GetCoinManager()
+    {
+        if (coinManager != null)
+            return coinManager;
+
+        return CoinManager.Instance;
+    }
+
+    private void TrySubscribeCoinEvent()
     {
         if (isSubscribed)
             return;
 
-        if (coinManager == null)
-        {
-            Debug.LogWarning("[UIController_Coin_mini] CoinManager.Instance가 없습니다.");
+        CoinManager source = GetCoinManager();
+        if (source == null)
             return;
-        }
 
-        coinManager.OnCoinChanged += UpdateAllCoinText;
+        // Inspector 미연결 시 Instance로 보정
+        if (coinManager == null)
+            coinManager = source;
+
+        source.OnCoinChanged += UpdateAllCoinText;
         isSubscribed = true;
-
-        // 현재 값 즉시 반영
-        UpdateAllCoinText(coinManager.totalCoin);
-
-        // 자동 생산은 추후 구현 예정
-        //UpdateAutoCoinText(0);
+        UpdateAllCoinText(source.totalCoin);
     }
 
-
-    /// <summary>
-    /// 현재 보유 코인
-    /// </summary>
     private void UpdateAllCoinText(long coinAmount)
     {
         if (allCoinText == null)
         {
-            Debug.LogWarning("[UIController_Coin] allCoinText가 연결되지 않았습니다.");
+            Debug.LogWarning("[UIController_Coin_mini] allCoinText가 연결되지 않았습니다.");
             return;
         }
 
         allCoinText.text = coinAmount.ToString("N0");
-    }
-
-
-    /// <summary>
-    /// 시간당 생산량
-    /// </summary>
-    private void UpdateAutoCoinText(long coinPerHour)
-    {
-        
     }
 }
