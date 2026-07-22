@@ -1,10 +1,11 @@
-/* ToolSettingList_root ÆĞ³Î Á¦¾î
+/* ToolSettingList_root íŒ¨ë„ ì œì–´
  * - Open/Close
- * - Å×½ºÆ® ½½·Ô Å¬¸¯ ½Ã ÆĞ³Î ´İ±â
- * - ÆĞ³Î ¹Ù±ù Å¬¸¯ ½Ã ÆĞ³Î ´İ±â
- * (½ÇÁ¦ ÀåÂø/¸ñ·Ï µ¿±âÈ­´Â ÀÌÈÄ ´Ü°è)
+ * - ë³´ìœ  ë„êµ¬ ëª©ë¡ì„ ìŠ¬ë¡¯ìœ¼ë¡œ ì±„ì›Œì„œ í‘œì‹œ
+ * - ìŠ¬ë¡¯ í´ë¦­ ì‹œ í˜„ì¬ ë°°ì¹˜ ì¤‘ì¸ ë™ë¬¼ì„ ê·¸ ë„êµ¬ì— ì¥ì°©(TryAssignAnimalToTool)
+ * - íŒ¨ë„ ë°”ê¹¥ í´ë¦­ ì‹œ íŒ¨ë„ ë‹«ê¸°
  */
 
+using System;
 using System.Collections.Generic;
 using TaskTown.KDH;
 using TMPro;
@@ -22,10 +23,16 @@ public class UIController_ToolSetList : MonoBehaviour
     [SerializeField] private SlotUI_ToolSet toolSetPrefab;
     [SerializeField] private Transform toolSetSlotContentRoot;
 
-    [Tooltip("¹èÄ¡ÇÒ ¼ö ÀÖ´Â µµ±¸°¡ ¾øÀ» ¶§ Ãâ·ÂÇÒ ÅØ½ºÆ®")]
+    [Tooltip("ë³´ìœ í•œ ë„êµ¬ê°€ ì—†ì„ ë•Œ ëŒ€ì‹  í‘œì‹œí•  í…ìŠ¤íŠ¸")]
     [SerializeField] private TMP_Text noAvaliableToolText;
 
     private readonly List<RaycastResult> raycastResults = new List<RaycastResult>();
+    private readonly List<SlotUI_ToolSet> spawnedSlots = new List<SlotUI_ToolSet>();
+
+    // í˜„ì¬ ì´ íŒ¨ë„ì—ì„œ ë„êµ¬ë¥¼ ê³¨ë¼ ì¥ì°©ì‹œí‚¬ ëŒ€ìƒ ë™ë¬¼ ID
+    private string pendingAnimalId;
+    // ì¥ì°© ì„±ê³µ í›„(íŒ¨ë„ ë‹«ê¸° ì „) í˜¸ì¶œí•  ì½œë°± - í˜¸ì¶œí•œ ìª½(UIController_AnimalInvPage)ì˜ í™”ë©´ ê°±ì‹ ìš©
+    private Action onAssigned;
 
     public bool IsOpen => gameObject.activeSelf;
 
@@ -35,16 +42,15 @@ public class UIController_ToolSetList : MonoBehaviour
             toolInventory = InventoryManager_Tool.Instance;
 
         if (toolSetPrefab == null)
-            Debug.LogWarning("[UIController_ToolSetList] toolSetPrefab ÀÌ ÇÒ´çµÇÁö ¾Ê¾Ò½À´Ï´Ù.", this);
+            Debug.LogWarning("[UIController_ToolSetList] toolSetPrefabì´ í• ë‹¹ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.", this);
 
         if (toolSetSlotContentRoot == null)
-            Debug.LogWarning("[UIController_ToolSetList] toolSetSlotContentRoot ÀÌ ¿¬°áµÇÁö ¾Ê¾Ò½À´Ï´Ù.", this);
+            Debug.LogWarning("[UIController_ToolSetList] toolSetSlotContentRootì´ ì—°ê²°ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.", this);
     }
 
     private void OnEnable()
     {
-        // Content¿¡ ¹Ì¸® ¹èÄ¡µÈ Å×½ºÆ® ½½·Ô¿¡ Close Äİ¹éÀ» ¿¬°áÇÕ´Ï´Ù.
-        BindExistingSlots();
+        PopulateSlots();
     }
 
     private void Update()
@@ -58,18 +64,26 @@ public class UIController_ToolSetList : MonoBehaviour
         if (IsPointerInsidePanel())
             return;
 
-        // ¸ñ·Ï ¹üÀ§ ¹Û Å¬¸¯: µµ±¸ ¼±ÅÃ ÀÇ»ç°¡ ¾ø´Â °ÍÀ¸·Î ÆÇ´ÜÇÏ°í ´İ½À´Ï´Ù.
+        // íŒ¨ë„ ë°”ê¹¥ í´ë¦­: ë³„ë„ ë°°ì¹˜ ì˜ì‚¬ê°€ ì—†ëŠ” ê²ƒìœ¼ë¡œ íŒë‹¨í•˜ê³  ë‹«ìŠµë‹ˆë‹¤.
         Close();
     }
 
     /// <summary>
-    /// ToolSettingList_root ÆĞ³ÎÀ» ¿±´Ï´Ù.
+    /// ToolSettingList_root íŒ¨ë„ì„ ì—½ë‹ˆë‹¤.
     /// </summary>
-    public void Open()
+    /// <param name="animalId">ì´ íŒ¨ë„ì—ì„œ ë„êµ¬ë¥¼ ê³¨ë¼ ì¥ì°©ì‹œí‚¬ ë™ë¬¼ ID</param>
+    /// <param name="onAssignedCallback">ì¥ì°© ì„±ê³µ ì‹œ(íŒ¨ë„ ë‹«ê¸° ì „) í˜¸ì¶œí•  ì½œë°±</param>
+    public void Open(string animalId = null, Action onAssignedCallback = null)
     {
+        pendingAnimalId = animalId;
+        onAssigned = onAssignedCallback;
+
+        // ë‹¤ë¥¸ íŒ¨ë„(ë™ë¬¼ ìƒì„¸í˜ì´ì§€ ë“±) ìœ„ì— ê²¹ì³ ë³´ì´ë„ë¡ í•­ìƒ ë§¨ ì•ìœ¼ë¡œ ê°€ì ¸ì˜µë‹ˆë‹¤.
+        transform.SetAsLastSibling();
+
         if (gameObject.activeSelf)
         {
-            BindExistingSlots();
+            PopulateSlots();
             return;
         }
 
@@ -77,10 +91,13 @@ public class UIController_ToolSetList : MonoBehaviour
     }
 
     /// <summary>
-    /// ToolSettingList_root ÆĞ³ÎÀ» ´İ½À´Ï´Ù.
+    /// ToolSettingList_root íŒ¨ë„ì„ ë‹«ìŠµë‹ˆë‹¤.
     /// </summary>
     public void Close()
     {
+        pendingAnimalId = null;
+        onAssigned = null;
+
         if (!gameObject.activeSelf)
             return;
 
@@ -88,29 +105,61 @@ public class UIController_ToolSetList : MonoBehaviour
     }
 
     /// <summary>
-    /// Content¿¡ ÀÌ¹Ì ÀÖ´Â SlotUI_ToolSet¿¡ ¼±ÅÃ Äİ¹éÀ» ¿¬°áÇÕ´Ï´Ù.
+    /// ë³´ìœ  ë„êµ¬ ëª©ë¡ìœ¼ë¡œ ìŠ¬ë¡¯ì„ ì±„ì›ë‹ˆë‹¤. ì—´ ë•Œë§ˆë‹¤ ìµœì‹  ëª©ë¡ìœ¼ë¡œ ë‹¤ì‹œ ìƒì„±í•©ë‹ˆë‹¤.
     /// </summary>
-    private void BindExistingSlots()
+    private void PopulateSlots()
     {
-        if (toolSetSlotContentRoot == null)
+        if (toolInventory == null)
+            toolInventory = InventoryManager_Tool.Instance;
+
+        if (toolInventory == null || toolSetPrefab == null || toolSetSlotContentRoot == null)
             return;
 
-        SlotUI_ToolSet[] slots = toolSetSlotContentRoot.GetComponentsInChildren<SlotUI_ToolSet>(true);
+        ClearSlots();
 
-        for (int i = 0; i < slots.Length; i++)
+        IReadOnlyList<SlotData_Tool> toolSlots = toolInventory.ToolSlotsList;
+
+        if (toolSlots != null)
         {
-            if (slots[i] == null)
-                continue;
+            for (int i = 0; i < toolSlots.Count; i++)
+            {
+                SlotData_Tool slotData = toolSlots[i];
 
-            slots[i].SetSelectedCallback(HandleToolSlotSelected);
+                if (slotData == null || string.IsNullOrEmpty(slotData.ToolId))
+                    continue;
+
+                SlotUI_ToolSet createdSlot = Instantiate(toolSetPrefab, toolSetSlotContentRoot);
+                createdSlot.Initialize(slotData, HandleToolSlotSelected);
+                spawnedSlots.Add(createdSlot);
+            }
         }
+
+        if (noAvaliableToolText != null)
+            noAvaliableToolText.gameObject.SetActive(spawnedSlots.Count == 0);
+    }
+
+    private void ClearSlots()
+    {
+        for (int i = 0; i < spawnedSlots.Count; i++)
+        {
+            if (spawnedSlots[i] != null)
+                Destroy(spawnedSlots[i].gameObject);
+        }
+
+        spawnedSlots.Clear();
     }
 
     /// <summary>
-    /// Å×½ºÆ®/¼±ÅÃ: ½½·Ô Å¬¸¯ ½Ã ÀåÂø ¾øÀÌ ÆĞ³Î¸¸ ´İ½À´Ï´Ù.
+    /// ë„êµ¬ ìŠ¬ë¡¯ í´ë¦­ ì‹œ, ëŒ€ê¸° ì¤‘ì¸ ë™ë¬¼ì„ ê·¸ ë„êµ¬ì— ì¥ì°©í•˜ê³  íŒ¨ë„ì„ ë‹«ìŠµë‹ˆë‹¤.
     /// </summary>
     private void HandleToolSlotSelected(SlotData_Tool slotData)
     {
+        if (slotData != null && !string.IsNullOrEmpty(pendingAnimalId) && toolInventory != null)
+        {
+            toolInventory.TryAssignAnimalToTool(slotData.ToolId, pendingAnimalId);
+            onAssigned?.Invoke();
+        }
+
         Close();
     }
 
@@ -168,7 +217,4 @@ public class UIController_ToolSetList : MonoBehaviour
         return false;
 #endif
     }
-
-    // TODO: Tool ÀÎº¥Åä¸® ±â¹İÀ¸·Î, º¸À¯ µµ±¸ Áß µ¿¹°ÀÌ ¹èÄ¡µÇÁö ¾ÊÀº µµ±¸¸¸ Ãâ·Â
-    // TODO: ¹èÄ¡ °¡´ÉÇÑ µµ±¸°¡ ¾øÀ¸¸é noAvaliableToolText Ç¥½Ã
 }

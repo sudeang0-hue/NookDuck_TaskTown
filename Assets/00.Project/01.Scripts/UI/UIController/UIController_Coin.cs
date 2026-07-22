@@ -4,9 +4,10 @@ using UnityEngine;
 
 public class UIController_Coin : MonoBehaviour
 {
-    [Header("È¹µæ ÄÚÀÎ ÅØ½ºÆ®")]
-    [SerializeField] private TMP_Text allCoinText;   // ÇöÀç º¸À¯ ÄÚÀÎ
-    [SerializeField] private TMP_Text autoCoinText;  // ½Ã°£´ç È¹µæ·®
+
+    [Header("íšë“ ì½”ì¸ í…ìŠ¤íŠ¸")]
+    [SerializeField] private TMP_Text allCoinText;   // í˜„ì¬ ë³´ìœ  ì½”ì¸
+    [SerializeField] private TMP_Text autoCoinText;  // ì‹œê°„ë‹¹ íšë“ëŸ‰
 
     [Header("Text Format")]
     [SerializeField] private string prefix = " /h";
@@ -23,9 +24,15 @@ public class UIController_Coin : MonoBehaviour
     {
         TrySubscribeCoinEvent();
 
-        if (!isSubscribed && subscribeRoutine == null)
-            subscribeRoutine = StartCoroutine(SubscribeWhenCoinManagerReady());
+    private void Update()
+    {
+        long coinPerHour = TaskTown.KDH.RealProductionTicker.Instance != null
+            ? (long)(TaskTown.KDH.RealProductionTicker.Instance.CurrentCoinPerSecond * 3600f)
+            : 0;
+
+        UpdateAutoCoinText(coinPerHour);
     }
+
 
     private void OnDisable()
     {
@@ -61,8 +68,8 @@ public class UIController_Coin : MonoBehaviour
         if (!isSubscribed && CoinManager.Instance == null)
         {
             Debug.LogWarning(
-                "[UIController_Coin] CoinManager.Instance°¡ ¾ø½À´Ï´Ù. " +
-                "¾À¿¡ È°¼º CoinManager°¡ ÀÖ´ÂÁö È®ÀÎÇÏ¼¼¿ä.");
+                "[UIController_Coin] CoinManager.Instanceê°€ ì—†ìŠµë‹ˆë‹¤. " +
+                "ì”¬ì— í™œì„± CoinManagerê°€ ìˆëŠ”ì§€ í™•ì¸í•˜ì„¸ìš”.");
         }
     }
 
@@ -72,31 +79,44 @@ public class UIController_Coin : MonoBehaviour
             return;
 
         if (CoinManager.Instance == null)
+        {
+            Debug.LogWarning("[UIController_Coin] CoinManager.Instanceï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.");
             return;
 
         CoinManager.Instance.OnCoinChanged += UpdateAllCoinText;
         isSubscribed = true;
 
+        
         UpdateAllCoinText(CoinManager.Instance.totalCoin);
+
+        
         UpdateAutoCoinText(0);
     }
 
+
+    /// <summary>
+    /// ì „ì²´ ì½”ì¸ ê°±ì‹ 
+    /// </summary>
     private void UpdateAllCoinText(long coinAmount)
     {
         if (allCoinText == null)
         {
-            Debug.LogWarning("[UIController_Coin] allCoinText°¡ ¿¬°áµÇÁö ¾Ê¾Ò½À´Ï´Ù.");
+            Debug.LogWarning("[UIController_Coin] allCoinTextê°€ ì—°ê²°ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.");
             return;
         }
 
         allCoinText.text = coinAmount.ToString("N0");
     }
 
+
+    /// <summary>
+    /// ì‹œê°„ë‹¹ íšë“ëŸ‰ ê°±ì‹ 
+    /// </summary>
     private void UpdateAutoCoinText(long coinPerHour)
     {
         if (autoCoinText == null)
         {
-            Debug.LogWarning("[UIController_Coin] autoCoinText°¡ ¿¬°áµÇÁö ¾Ê¾Ò½À´Ï´Ù.");
+            Debug.LogWarning("[UIController_Coin] autoCoinTextê°€ ì—°ê²°ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.");
             return;
         }
 

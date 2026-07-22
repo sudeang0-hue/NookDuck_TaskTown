@@ -1,4 +1,5 @@
 ﻿using Animal.Data;
+using System.Collections.Generic;
 using TaskTown.Gacha;
 using TaskTown.KDH;
 using TMPro;
@@ -46,8 +47,12 @@ namespace UI
 
         [Header("해당 동물의 설정 상호작용 버튼")]
         [SerializeField] private Button levelupButton;         // 레벨업 버튼
-        [SerializeField] private Button settingToolButton;     // 도구 배치 버튼 (추후 구현)
+        [SerializeField] private Button settingToolButton;     // 도구 배치(장착) 버튼
         [SerializeField] private Button settingVilliageButton; // 마을 배치 버튼 (추후 구현)
+
+        [Header("도구 장착 목록 패널")]
+        [SerializeField]
+        private UIController_ToolSetList toolSetListPanel;
 
         // 현재 페이지에 표시 중인 동물 ID. 갱신 시 이 ID로 최신 데이터를 재조회한다.
         private string currentAnimalId;
@@ -68,6 +73,9 @@ namespace UI
                 levelupButton.onClick.AddListener(OnClickLevelUp);
                 levelupButton.gameObject.SetActive(false);
             }
+
+            if (settingToolButton != null)
+                settingToolButton.onClick.AddListener(OnClickSettingTool);
 
             if (animalInvPagePanel != null)
             {
@@ -97,6 +105,9 @@ namespace UI
         {
             if (levelupButton != null)
                 levelupButton.onClick.RemoveListener(OnClickLevelUp);
+
+            if (settingToolButton != null)
+                settingToolButton.onClick.RemoveListener(OnClickSettingTool);
         }
 
         private void ResolveInventoryReference()
@@ -270,7 +281,46 @@ namespace UI
                 currentProductCoin.text = $"{coinPerSecond:0.#}/s";
             }
 
-            // TODO: usingToolIcon 은 도구 장착 시스템 연동 단계에서 갱신
+            ApplyUsingToolIcon(slotData.AnimalId);
+        }
+
+        /// <summary>
+        /// 현재 동물이 장착되어 있는 도구가 있으면 그 아이콘을 표시하고, 없으면 숨깁니다.
+        /// </summary>
+        private void ApplyUsingToolIcon(string animalId)
+        {
+            if (usingToolIcon == null)
+                return;
+
+            SlotData_Tool equippedTool = FindToolEquippedWithAnimal(animalId);
+            Sprite toolIcon = equippedTool?.ToolData != null ? equippedTool.ToolData.Icon : null;
+
+            usingToolIcon.sprite = toolIcon;
+            usingToolIcon.enabled = toolIcon != null;
+        }
+
+        /// <summary>
+        /// 도구 슬롯 목록에서 이 동물이 장착된 슬롯을 찾습니다(없으면 null).
+        /// </summary>
+        private static SlotData_Tool FindToolEquippedWithAnimal(string animalId)
+        {
+            if (string.IsNullOrEmpty(animalId) || InventoryManager_Tool.Instance == null)
+                return null;
+
+            IReadOnlyList<SlotData_Tool> toolSlots = InventoryManager_Tool.Instance.ToolSlotsList;
+
+            if (toolSlots == null)
+                return null;
+
+            for (int i = 0; i < toolSlots.Count; i++)
+            {
+                SlotData_Tool toolSlot = toolSlots[i];
+
+                if (toolSlot != null && toolSlot.CurrentAnimalSet && toolSlot.CurrentAnimalId == animalId)
+                    return toolSlot;
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -327,6 +377,23 @@ namespace UI
             animalInventory.TryLevelUpAnimal(currentAnimalId);
 
             RefreshAnimalInvPage();
+        }
+
+        /// <summary>
+        /// "도구 배치" 버튼. 도구 장착 목록 패널을 열어, 선택한 도구에 현재 동물을 장착시킵니다.
+        /// </summary>
+        private void OnClickSettingTool()
+        {
+            if (string.IsNullOrEmpty(currentAnimalId))
+                return;
+
+            if (toolSetListPanel == null)
+            {
+                Debug.LogWarning("[UIController_AnimalInvPage] toolSetListPanel이 연결되지 않았습니다.");
+                return;
+            }
+
+            toolSetListPanel.Open(currentAnimalId, RefreshAnimalInvPage);
         }
 
         /// <summary>
