@@ -36,6 +36,8 @@ namespace UI
         [SerializeField] private RectTransform panelRect;
         [SerializeField] private GameMenuType gameMenuType;
 
+        public GameMenuType MenuType => gameMenuType;
+
         private Canvas rootCanvas;
         private Vector2 defaultUIPanelPosition; // UIController_AnimalInvPage 패널의 초기 위치
         // private Vector2 dragOffset; // 드래그 비활성 (복구 시 주석 해제)

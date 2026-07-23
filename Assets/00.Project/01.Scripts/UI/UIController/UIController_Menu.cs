@@ -60,6 +60,50 @@ public class UIController_Menu : MonoBehaviour
         // GameMasterManager의 축소와 별개로, 같은 Minimize 버튼에 메뉴 패널 닫기를 추가 연결
         if (minimizeButton != null)
             minimizeButton.onClick.AddListener(CloseAllPanels);
+
+        var windows = FindObjectsByType<UIPanelWindow>(
+    FindObjectsInactive.Include, FindObjectsSortMode.None);
+
+        foreach (var w in windows)
+        {
+            if (animalInventoryPanel == null && w.MenuType == GameMenuType.AnimalInv)
+                animalInventoryPanel = w;
+
+            if (toolInventoryPanel == null && w.MenuType == GameMenuType.ToolInv)
+                toolInventoryPanel = w;
+
+            if (gachaPanel == null && w.MenuType == GameMenuType.Gacha)
+                gachaPanel = w;
+
+            if (animalDexPanel == null && w.MenuType == GameMenuType.AnimalDex)
+                animalDexPanel = w;
+
+            if (optionPanel == null && w.MenuType == GameMenuType.Option)
+                optionPanel = w;
+        }
+    }
+
+
+    private void OnEnable()
+    {
+        TargetSelector.OnTargetSelected += OnCameraTargetSelected;
+    }
+
+    private void OnDisable()
+    {
+        TargetSelector.OnTargetSelected -= OnCameraTargetSelected;
+    }
+
+    /// <summary>
+    /// 카메라 타겟 선택(시점 전환) 시 열린 메뉴 패널을 닫습니다.
+    /// 빈 공간 클릭(null)은 무시합니다.
+    /// </summary>
+    private void OnCameraTargetSelected(Transform target)
+    {
+        if (target == null)
+            return;
+
+        CloseAllPanels();
     }
 
     /// <summary>

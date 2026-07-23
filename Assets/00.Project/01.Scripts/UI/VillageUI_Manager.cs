@@ -96,9 +96,27 @@ namespace UI
             isPanelOpen = false;
         }
 
+        private void OnEnable()
+        {
+            TargetSelector.OnTargetSelected += OnCameraTargetSelected;
+        }
+
         private void OnDisable()
         {
+            TargetSelector.OnTargetSelected -= OnCameraTargetSelected;
             StopAutoCloseTimer();
+        }
+
+        /// <summary>
+        /// 카메라 타겟 선택(시점 전환) 시 Village 패널을 닫습니다.
+        /// 빈 공간 클릭(null)은 무시합니다.
+        /// </summary>
+        private void OnCameraTargetSelected(Transform target)
+        {
+            if (target == null || !isPanelOpen)
+                return;
+
+            ClosePanel();
         }
 
         private void Update()
