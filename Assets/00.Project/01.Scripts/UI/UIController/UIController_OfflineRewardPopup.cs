@@ -18,15 +18,27 @@ namespace UI
         private float hideTimer;
         private bool isCountingDown;
 
-        private void Start()
+        private void OnEnable()
         {
-            // Awake() 실행 순서는 GameObject마다 달라질 수 있어서, 모든 Awake가 끝난 뒤 호출되는
-            // Start()에서 구독합니다(OfflineRewardManager.Instance가 확실히 준비된 시점).
+            // 플레이 중(디버그 시뮬레이션 등) 지급되는 보상을 받기 위해 구독합니다.
             if (OfflineRewardManager.Instance != null)
                 OfflineRewardManager.Instance.OnOfflineRewardGranted += HandleOfflineRewardGranted;
 
             if (panel != null)
                 panel.SetActive(false);
+        }
+
+        private void Start()
+        {
+            // 게임 시작 시 지급되는 오프라인 보상은 이 팝업이 이벤트를 구독하기 전에(SaveManager가
+            // 아주 이른 시점에) 지급될 수 있습니다. 그런 경우를 위해 대기 중인 보상이 있으면 표시합니다.
+            if (OfflineRewardManager.Instance != null && OfflineRewardManager.Instance.HasPendingReward)
+            {
+                HandleOfflineRewardGranted(
+                    OfflineRewardManager.Instance.PendingRewardCoins,
+                    OfflineRewardManager.Instance.PendingRewardDuration);
+                OfflineRewardManager.Instance.ConsumePendingReward();
+            }
         }
 
         private void OnDisable()
