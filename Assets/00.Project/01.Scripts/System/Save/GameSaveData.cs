@@ -13,6 +13,10 @@ namespace TaskTown.KDH
         // 저장 시점의 초당 생산량. 오프라인 보상은 로드 타이밍(인벤토리 복원 완료 여부)에
         // 의존하지 않도록, 실시간 생산량 대신 이 저장값으로 계산합니다.
         public float productionRatePerSecond;
+        // 클릭/타이핑/도구효율 업그레이드 레벨(TownUpgradeManager, 이슈 #72)
+        public int clickUpgradeLevel;
+        public int typingUpgradeLevel;
+        public int toolEfficiencyUpgradeLevel;
         public List<AnimalSaveEntry> animals = new List<AnimalSaveEntry>();
         public List<ToolSaveEntry> tools = new List<ToolSaveEntry>();
     }

@@ -26,8 +26,10 @@ public class DebugTool : MonoBehaviour
     private OfflineRewardManager offlineRewardManager;
     private InventoryManager_Animal animalInventory;
     private InventoryManager_Tool toolInventory;
+    private TownUpgradeManager townUpgradeManager;
     private string lastOfflineRewardText = "(아직 없음)";
     private string lastSaveActionText = "(없음)";
+    private string lastUpgradeActionText = "(없음)";
 
     private void Awake()
     {
@@ -184,6 +186,47 @@ public class DebugTool : MonoBehaviour
             GUILayout.Label("빌드에서 껐다 켜도 유지되는지 확인: 저장 -> 게임 종료 -> 재실행 시 코인/인벤토리 복원");
         }
 
+        GUILayout.Space(16f);
+        DrawSeparator();
+
+        // --- 8) 마을 업그레이드(클릭/타이핑/도구효율) 테스트 ---
+        GUILayout.Label("마을 업그레이드 테스트 (이슈 #72)", GUI.skin.box);
+        if (townUpgradeManager == null)
+        {
+            GUILayout.Label("TownUpgradeManager 없음");
+        }
+        else
+        {
+            GUILayout.Label(
+                $"클릭 배율: x{(earnProcessor != null ? earnProcessor.ClickMultiplier : 1)}" +
+                $"  타이핑 배율: x{(earnProcessor != null ? earnProcessor.TypingMultiplier : 1)}" +
+                $"  도구효율 배율: x{townUpgradeManager.ToolEfficiencyMultiplier:0.00}");
+            GUILayout.Label("(마을 레벨을 올려도 도구효율 배율이 바뀌지 않아야 정상 - 이제 구매로만 오릅니다)");
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label($"클릭 코인 Lv.{townUpgradeManager.ClickLevel}", GUILayout.Width(120f));
+            GUILayout.Label($"다음 비용 {townUpgradeManager.ClickUpgradeNextCost:N0}", GUILayout.Width(120f));
+            if (GUILayout.Button("구매", GUILayout.Width(60f)))
+                BuyUpgrade(townUpgradeManager.TryUpgradeClick, "클릭 코인");
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label($"타이핑 코인 Lv.{townUpgradeManager.TypingLevel}", GUILayout.Width(120f));
+            GUILayout.Label($"다음 비용 {townUpgradeManager.TypingUpgradeNextCost:N0}", GUILayout.Width(120f));
+            if (GUILayout.Button("구매", GUILayout.Width(60f)))
+                BuyUpgrade(townUpgradeManager.TryUpgradeTyping, "타이핑 코인");
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label($"도구 효율 Lv.{townUpgradeManager.ToolEfficiencyLevel}", GUILayout.Width(120f));
+            GUILayout.Label($"다음 비용 {townUpgradeManager.ToolEfficiencyUpgradeNextCost:N0}", GUILayout.Width(120f));
+            if (GUILayout.Button("구매", GUILayout.Width(60f)))
+                BuyUpgrade(townUpgradeManager.TryUpgradeToolEfficiency, "도구 효율");
+            GUILayout.EndHorizontal();
+
+            GUILayout.Label($"마지막 결과: {lastUpgradeActionText}");
+        }
+
         GUILayout.Space(8f);
         GUI.DragWindow();
         GUILayout.EndScrollView();
@@ -207,6 +250,8 @@ public class DebugTool : MonoBehaviour
             animalInventory = InventoryManager_Animal.Instance;
         if (toolInventory == null)
             toolInventory = InventoryManager_Tool.Instance;
+        if (townUpgradeManager == null)
+            townUpgradeManager = TownUpgradeManager.Instance;
     }
 
     private void SyncInputsFromManagers()
@@ -286,6 +331,12 @@ public class DebugTool : MonoBehaviour
     private void HandleOfflineRewardGranted(long reward, System.TimeSpan duration)
     {
         lastOfflineRewardText = $"{duration.TotalHours:0.#}시간 방치 -> {reward:N0}코인 지급";
+    }
+
+    private void BuyUpgrade(System.Func<bool> tryUpgrade, string label)
+    {
+        bool bought = tryUpgrade();
+        lastUpgradeActionText = bought ? $"{label} 구매 성공" : $"{label} 구매 실패(코인 부족 또는 최대 레벨)";
     }
 
     private void ResetInventoryForDexTest()
