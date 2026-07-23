@@ -26,7 +26,8 @@ public enum GameMenuType
 namespace UI
 {
 
-    public class UIPanelWindow : MonoBehaviour, IBeginDragHandler, IDragHandler, IPointerDownHandler
+    // 현재 단계: 패널 드래그 비활성 — IBeginDragHandler / IDragHandler 는 주석 처리
+    public class UIPanelWindow : MonoBehaviour, /* IBeginDragHandler, IDragHandler, */ IPointerDownHandler
     {
         [Header("Canvas Layer")]
         [SerializeField] private Canvas panelCanvas;
@@ -36,8 +37,8 @@ namespace UI
         [SerializeField] private GameMenuType gameMenuType;
 
         private Canvas rootCanvas;
-        private Vector2 defaultUIPanelPosition; // UIController_AnimalInvPage �г��� �ʱ� ��ġ
-        private Vector2 dragOffset;
+        private Vector2 defaultUIPanelPosition; // UIController_AnimalInvPage 패널의 초기 위치
+        // private Vector2 dragOffset; // 드래그 비활성 (복구 시 주석 해제)
 
         private bool isInitialized;
 
@@ -152,44 +153,45 @@ namespace UI
                 OpenPanelSetPosition();
         }
 
-        public void OnBeginDrag(PointerEventData eventData)
-        {
-            if (panelRect == null)
-                return;
-
-            BringToFront();
-
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                panelRect.parent as RectTransform,
-                eventData.position,
-                eventData.pressEventCamera,
-                out Vector2 localPointerPosition);
-
-            dragOffset = panelRect.anchoredPosition - localPointerPosition;
-        }
-
-        public void OnDrag(PointerEventData eventData)
-        {
-            if (panelRect == null)
-                return;
-
-            RectTransform parentRect = panelRect.parent as RectTransform;
-
-            if (parentRect == null)
-                return;
-
-            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                    parentRect,
-                    eventData.position,
-                    eventData.pressEventCamera,
-                    out Vector2 localPointerPosition))
-            {
-                panelRect.anchoredPosition = localPointerPosition + dragOffset;
-            }
-        }
+        // --- 패널 드래그 (현재 단계 비활성 / 복구 시 주석 해제 + 클래스 인터페이스도 복구) ---
+        // public void OnBeginDrag(PointerEventData eventData)
+        // {
+        //     if (panelRect == null)
+        //         return;
+        //
+        //     BringToFront();
+        //
+        //     RectTransformUtility.ScreenPointToLocalPointInRectangle(
+        //         panelRect.parent as RectTransform,
+        //         eventData.position,
+        //         eventData.pressEventCamera,
+        //         out Vector2 localPointerPosition);
+        //
+        //     dragOffset = panelRect.anchoredPosition - localPointerPosition;
+        // }
+        //
+        // public void OnDrag(PointerEventData eventData)
+        // {
+        //     if (panelRect == null)
+        //         return;
+        //
+        //     RectTransform parentRect = panelRect.parent as RectTransform;
+        //
+        //     if (parentRect == null)
+        //         return;
+        //
+        //     if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
+        //             parentRect,
+        //             eventData.position,
+        //             eventData.pressEventCamera,
+        //             out Vector2 localPointerPosition))
+        //     {
+        //         panelRect.anchoredPosition = localPointerPosition + dragOffset;
+        //     }
+        // }
 
         /// <summary>
-        /// �г��� Ŭ������ �� �ش� Canvas�� ���� ������ �̵��մϴ�.
+        /// 패널을 클릭했을 때 해당 Canvas를 맨 앞으로 이동합니다.
         /// </summary>
         public void OnPointerDown(PointerEventData eventData)
         {
