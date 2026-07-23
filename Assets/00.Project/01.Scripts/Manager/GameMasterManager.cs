@@ -43,7 +43,7 @@ public class GameMasterManager : MonoBehaviour
 
     [Header("티켓 알림 설정")]
     public GameObject ticketNotification;
-    private float ticketTimer = 0f;
+    private float ticketTimer = 30f;
     private const float TICKET_COOLDOWN = 1800f;
 
     //상태 관리 플래그
@@ -103,7 +103,7 @@ public class GameMasterManager : MonoBehaviour
             }
         }
 
-        //if (Input.GetKeyDown(KeyCode.Escape)) ToggleMenu();
+        if (Input.GetKeyDown(KeyCode.Escape)) ToggleMenu();
     }
     private void OnEnable()
     {
