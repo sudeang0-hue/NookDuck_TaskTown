@@ -195,6 +195,12 @@ public class SlotUI_AnimalInv : SlotUIBase
             return;
         }
 
+
+        // ------------------------------------26.07.22 KDH 추가------------------------------------
+        UIController_ToolPlacement placementUi = FindFirstObjectByType<UIController_ToolPlacement>();
+        if (placementUi != null) placementUi.SetSelectedAnimal(currentSlotData.AnimalId);
+        //------------------------------------------------------------------------------------------
+
         animalInvPageController.OpenAnimalInvPage(currentSlotData);
     }
 
