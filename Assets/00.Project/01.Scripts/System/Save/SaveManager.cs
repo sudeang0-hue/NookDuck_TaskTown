@@ -88,6 +88,13 @@ namespace TaskTown.KDH
             if (RealProductionTicker.Instance != null)
                 data.productionRatePerSecond = RealProductionTicker.Instance.CalculateTotalCoinPerSecond();
 
+            if (TownUpgradeManager.Instance != null)
+            {
+                data.clickUpgradeLevel = TownUpgradeManager.Instance.ClickLevel;
+                data.typingUpgradeLevel = TownUpgradeManager.Instance.TypingLevel;
+                data.toolEfficiencyUpgradeLevel = TownUpgradeManager.Instance.ToolEfficiencyLevel;
+            }
+
             if (InventoryManager_Animal.Instance != null)
             {
                 foreach (SlotData_Animal slot in InventoryManager_Animal.Instance.AnimalSlotsList)
@@ -160,6 +167,13 @@ namespace TaskTown.KDH
             // 마을 레벨 (현재는 임시 DemoTownLevelProvider만 세터를 가짐)
             if (townLevelProviderSource is DemoTownLevelProvider demoProvider)
                 demoProvider.SetLevel(data.townLevel);
+
+            // 클릭/타이핑/도구효율 업그레이드 레벨 복원 (TownUpgradeManager, 이슈 #72)
+            if (TownUpgradeManager.Instance != null)
+            {
+                TownUpgradeManager.Instance.LoadLevels(
+                    data.clickUpgradeLevel, data.typingUpgradeLevel, data.toolEfficiencyUpgradeLevel);
+            }
 
             // 동물 인벤토리: 저장된 ID로 SO를 다시 조회해서 복원
             InventoryManager_Animal animalManager = InventoryManager_Animal.Instance;

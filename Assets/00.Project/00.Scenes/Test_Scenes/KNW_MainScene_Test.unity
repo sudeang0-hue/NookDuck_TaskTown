@@ -14305,6 +14305,7 @@ GameObject:
   - component: {fileID: 1566871426}
   - component: {fileID: 1566871428}
   - component: {fileID: 1566871427}
+  - component: {fileID: 1566871429}
   m_Layer: 0
   m_Name: CoinManager
   m_TagString: Untagged
@@ -14355,6 +14356,33 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 08e3df8db85d0cc41872f3f55fb8ab69, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CoinManager
+--- !u!114 &1566871429
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1566871425}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 047d7fb4c92b65648ae3f00cf955f2a1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TownUpgradeManager
+  clickUpgrade:
+    baseCost: 5000
+    costGrowthRate: 1.4
+    maxLevel: 20
+  clickMultiplierPerLevel: 1
+  typingUpgrade:
+    baseCost: 5000
+    costGrowthRate: 1.4
+    maxLevel: 20
+  typingMultiplierPerLevel: 1
+  toolEfficiencyUpgrade:
+    baseCost: 5000
+    costGrowthRate: 1.4
+    maxLevel: 20
+  toolEfficiencyBonusPerLevel: 0.1
 --- !u!1 &1598747662
 GameObject:
   m_ObjectHideFlags: 0

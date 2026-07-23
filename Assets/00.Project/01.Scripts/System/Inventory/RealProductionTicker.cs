@@ -20,10 +20,6 @@ namespace TaskTown.KDH
         [SerializeField] private DifficultyProductionTable difficultyTable;
         [SerializeField] private DifficultyType difficulty = DifficultyType.Normal;
 
-        [Tooltip("ITownLevelProvider를 구현한 컴포넌트를 연결합니다. 비워두면 마을 레벨 1로 취급합니다.")]
-        [SerializeField] private MonoBehaviour townLevelProviderSource;
-        [SerializeField] private TownUpgradeEffectConfig townUpgradeEffectConfig;
-
         [Tooltip("ICoinWallet을 구현한 컴포넌트(CoinManager)를 연결합니다.")]
         [SerializeField] private MonoBehaviour coinWalletSource;
 
@@ -32,7 +28,6 @@ namespace TaskTown.KDH
         // 현재 초당 생산량. UIController_Coin 등 시간당 획득량 표시용 UI가 참조합니다.
         public float CurrentCoinPerSecond { get; private set; }
 
-        private ITownLevelProvider TownLevelProvider => townLevelProviderSource as ITownLevelProvider;
         private ICoinWallet CoinWallet => coinWalletSource as ICoinWallet;
 
         private void Awake()
@@ -40,16 +35,10 @@ namespace TaskTown.KDH
             Instance = this;
         }
 
-        private float TownUpgradeMultiplier
-        {
-            get
-            {
-                int townLevel = TownLevelProvider?.CurrentTownLevel ?? 1;
-                return townUpgradeEffectConfig != null
-                    ? townUpgradeEffectConfig.GetProductionMultiplier(townLevel)
-                    : 1f;
-            }
-        }
+        // 이슈 #72: 예전에는 마을 레벨이 오르면 자동으로 전체 생산량에 배율이 붙었지만(TownUpgradeEffectConfig),
+        // 이제는 플레이어가 직접 구매하는 도구 효율 업그레이드(TownUpgradeManager)만큼만 배율이 오릅니다.
+        private float ToolEfficiencyMultiplier =>
+            TownUpgradeManager.Instance != null ? TownUpgradeManager.Instance.ToolEfficiencyMultiplier : 1f;
 
         public void SetDifficulty(DifficultyType newDifficulty)
         {
@@ -74,7 +63,7 @@ namespace TaskTown.KDH
             if (InventoryManager_Tool.Instance == null) return 0f;
 
             float total = 0f;
-            float townUpgradeMultiplier = TownUpgradeMultiplier;
+            float townUpgradeMultiplier = ToolEfficiencyMultiplier;
 
             foreach (SlotData_Tool toolSlot in InventoryManager_Tool.Instance.ToolSlotsList)
             {
