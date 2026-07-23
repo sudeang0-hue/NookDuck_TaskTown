@@ -8,7 +8,6 @@ namespace UI
         [Header("해당 동물의 설정 상호작용 버튼")]
         [SerializeField] private Button levelupButton;         // 레벨업 버튼
         [SerializeField] private Button toolSetButton;         // 도구 배치 버튼
-        [SerializeField] private Button villageSetButton;      // 마을 배치 버튼
 
         [SerializeField] private GameObject toolSettingPage;
 
@@ -20,8 +19,6 @@ namespace UI
             if (toolSetButton != null)
                 toolSetButton.onClick.AddListener(OnClickToolSet);
 
-            if (villageSetButton != null)
-                villageSetButton.onClick.AddListener(OnClickVillageSet);
         }
 
         private void OnDisable()
@@ -38,8 +35,6 @@ namespace UI
             if (toolSetButton != null)
                 toolSetButton.onClick.RemoveListener(OnClickToolSet);
 
-            if (villageSetButton != null)
-                villageSetButton.onClick.RemoveListener(OnClickVillageSet);
         }
 
         private void OnClickLevelUp()
@@ -63,10 +58,6 @@ namespace UI
                 toolSettingPage.SetActive(true);
         }
 
-        private void OnClickVillageSet()
-        {
-            Debug.Log("[AnimalInvPage_Manager] 마을에 배치하기");
-        }
 
         /// <summary>
         /// ToolSettingList_root 패널을 닫습니다.
