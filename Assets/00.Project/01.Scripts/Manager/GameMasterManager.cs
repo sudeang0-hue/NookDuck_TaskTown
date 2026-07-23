@@ -103,7 +103,7 @@ public class GameMasterManager : MonoBehaviour
             }
         }
 
-        //if (Input.GetKeyDown(KeyCode.Escape)) ToggleMenu();
+        if (Input.GetKeyDown(KeyCode.Escape)) ToggleMenu();
     }
     private void OnEnable()
     {
