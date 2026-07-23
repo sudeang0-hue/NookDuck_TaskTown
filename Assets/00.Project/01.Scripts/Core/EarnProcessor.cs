@@ -1,3 +1,5 @@
+//나범 코드 및 추가 를 했습니다 :-)
+
 using UnityEngine;
 
 public class EarnProcessor : MonoBehaviour
@@ -35,6 +37,16 @@ public class EarnProcessor : MonoBehaviour
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
     }
+    //[추가] 필터에서 검증된 타이핑 이벤트 구독 및 해제
+    private void OnEnable()
+    {
+        TypingInputFilter.OnTypingValidated += ProcessValidatedTyping;
+    }
+
+    private void OnDisable()
+    {
+        TypingInputFilter.OnTypingValidated -= ProcessValidatedTyping;
+    }
 
     private void Update()
     {
@@ -48,37 +60,34 @@ public class EarnProcessor : MonoBehaviour
         }
     }
 
-    // 재화 지급 전 제한 수치를 확인하는 공통 메서드
     private bool CheckLimitAndAddCoin(int amount)
     {
-        // 이미 제한치에 도달한 경우
-        if (currentPeriodEarnedCoin >= maxCoinPerHour)
-        {
-            Debug.LogWarning("시간당 획득 제한(Limit)에 도달하여 재화를 획득할 수 없습니다.");
-            return false;
-        }
+        if (currentPeriodEarnedCoin >= maxCoinPerHour) return false;
 
-        // 이번 획득으로 제한치를 넘어가게 된다면, 제한치까지만 지급
+        int allowedAmount = amount;
         if (currentPeriodEarnedCoin + amount > maxCoinPerHour)
         {
-            int allowedAmount = maxCoinPerHour - currentPeriodEarnedCoin;
-            currentPeriodEarnedCoin = maxCoinPerHour;
-            CoinManager.Instance.AddCoin(allowedAmount);
-            return true;
+            allowedAmount = maxCoinPerHour - currentPeriodEarnedCoin;
         }
 
-        // 정상 지급
-        currentPeriodEarnedCoin += amount;
-        CoinManager.Instance.AddCoin(amount);
+        currentPeriodEarnedCoin += allowedAmount;
+
+        // [NB 수정}ICoinWallet 인터페이스를 통해 결합도를 낮추는 것이 좋음
+        // 현재 CoinManager가 Add(long)으로 구현되어 있으므로 이를 사용
+        // CoinManager에 최종 반영
+        if (CoinManager.Instance != null)
+        {
+            CoinManager.Instance.Add(allowedAmount);
+        }
         return true;
     }
+
 
     // 1. 어디서든 클릭 시 호출
     public void ProcessGlobalClick()
     {
 
         int earnedCoin = baseCoinPerClick * ClickMultiplier;
-
         CheckLimitAndAddCoin(earnedCoin);
     }
 
@@ -86,7 +95,14 @@ public class EarnProcessor : MonoBehaviour
     public void ProcessGlobalTyping()
     {
         int earnedCoin = baseCoinPerTyping * TypingMultiplier;
+        CheckLimitAndAddCoin(earnedCoin);
+    }
 
+    // [NB 핵심 추가] TypingGoldManager에서 호출할 메서드. 
+    // 기본값 연산을 여기서 수행하도록 하여 경제 밸런스 권한을 유지
+    public void ProcessValidatedTyping()
+    {
+        int earnedCoin = baseCoinPerTyping * TypingMultiplier;
         CheckLimitAndAddCoin(earnedCoin);
     }
 
@@ -105,7 +121,7 @@ public class EarnProcessor : MonoBehaviour
         maxCoinPerHour = Mathf.Max(0, value);
     }
     // limitPeriodSeconds 타이머 + 이번 주기 누적 획득량 리셋
-    // Update 폴링 없이 버튼 한 번으로 주기를 처음부터 다시 시작하게 합니다.
+    // Update 폴링 없이 버튼 한 번으로 주기를 처음부터 다시 시작
     public void ResetLimitPeriod()
     {
         limitTimer = 0f;

@@ -12,6 +12,8 @@ GameObject:
   - component: {fileID: 3397020993281574583}
   - component: {fileID: 7292674570500283821}
   - component: {fileID: 4556516888078230745}
+  - component: {fileID: 3817873676358197731}
+  - component: {fileID: 2549582319301401772}
   m_Layer: 0
   m_Name: _GameManager
   m_TagString: Untagged
@@ -97,7 +99,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BusGachaDirector
   busObject: {fileID: 0}
-  dropPoint: {fileID: 0}
+  trunkTransform: {fileID: 0}
   animalPrefab: {fileID: 919132149155446097, guid: 379612d7b5ec4054189335cfb8f5f5aa, type: 3}
   pathPoints:
   - {fileID: 0}
@@ -105,3 +107,35 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
+  busMoveDuration: 3
+  lookAheadValue: 0.05
+  exitJumpDistance: 1.8
+  exitJumpHeight: 1.2
+  exitJumpDuration: 0.6
+  exitAngleOffset: 0
+--- !u!114 &3817873676358197731
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3709761523516988655}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 86fc440b688e38b448ba198fc01d8585, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GlobalKeyboardHook
+--- !u!114 &2549582319301401772
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3709761523516988655}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bedcd504c59b0c04595d68785cff48c2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TypingInputFilter
+  maxAllowedCPS: 18
+  checkWindowDuration: 1
