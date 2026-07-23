@@ -24,15 +24,9 @@ public class UIController_Coin : MonoBehaviour
     {
         TrySubscribeCoinEvent();
 
-    private void Update()
-    {
-        long coinPerHour = TaskTown.KDH.RealProductionTicker.Instance != null
-            ? (long)(TaskTown.KDH.RealProductionTicker.Instance.CurrentCoinPerSecond * 3600f)
-            : 0;
-
-        UpdateAutoCoinText(coinPerHour);
+        if (!isSubscribed && subscribeRoutine == null)
+            subscribeRoutine = StartCoroutine(SubscribeWhenCoinManagerReady());
     }
-
 
     private void OnDisable()
     {
@@ -79,24 +73,15 @@ public class UIController_Coin : MonoBehaviour
             return;
 
         if (CoinManager.Instance == null)
-        {
-            Debug.LogWarning("[UIController_Coin] CoinManager.Instance�� �����ϴ�.");
             return;
 
         CoinManager.Instance.OnCoinChanged += UpdateAllCoinText;
         isSubscribed = true;
 
-        
         UpdateAllCoinText(CoinManager.Instance.totalCoin);
-
-        
         UpdateAutoCoinText(0);
     }
 
-
-    /// <summary>
-    /// 전체 코인 갱신
-    /// </summary>
     private void UpdateAllCoinText(long coinAmount)
     {
         if (allCoinText == null)
@@ -108,10 +93,6 @@ public class UIController_Coin : MonoBehaviour
         allCoinText.text = coinAmount.ToString("N0");
     }
 
-
-    /// <summary>
-    /// 시간당 획득량 갱신
-    /// </summary>
     private void UpdateAutoCoinText(long coinPerHour)
     {
         if (autoCoinText == null)
