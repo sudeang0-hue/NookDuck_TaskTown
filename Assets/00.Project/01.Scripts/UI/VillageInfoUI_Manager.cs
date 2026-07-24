@@ -11,7 +11,7 @@ namespace UI
     /// 마을 패널 출력/닫기 및 정보 연결을 담당합니다.
     /// Input System 클릭(wasPressedThisFrame) 시에만 VillageHouse LayerMask Raycast를 1회 수행합니다.
     /// </summary>
-    public class VillageUI_Manager : MonoBehaviour
+    public class VillageInfoUI_Manager : MonoBehaviour
     {
         private const string VillageClickLayerName = "VillageHouse";
 
@@ -20,8 +20,10 @@ namespace UI
         [SerializeField] private Transform targetObject;
         [SerializeField] private Transform villagePanelRoot;
         [SerializeField] private GameObject villagePanelContent; // VillageInfo_Root
-        [SerializeField] private UIController_Village uiController;
+        [SerializeField] private UIController_VillageInfo uiController;
         [SerializeField] private Canvas villageCanvas;
+        [Tooltip("VillageUpgrade_root의 필수 업그레이드/마을 레벨업 비용 소스")]
+        [SerializeField] private VillageUpgradeUI_Manager villageUpgradeUIManager;
 
         [Header("클릭 (Input System + Raycast)")]
         [Tooltip("VillageHouse 레이어만 체크하세요.")]
@@ -99,12 +101,20 @@ namespace UI
         private void OnEnable()
         {
             TargetSelector.OnTargetSelected += OnCameraTargetSelected;
+            TryResolveVillageUpgradeManager();
+            SubscribeVillageUpgradeState();
         }
 
         private void OnDisable()
         {
             TargetSelector.OnTargetSelected -= OnCameraTargetSelected;
+            UnsubscribeVillageUpgradeState();
             StopAutoCloseTimer();
+        }
+
+        private void OnDestroy()
+        {
+            UnsubscribeVillageUpgradeState();
         }
 
         /// <summary>
@@ -166,7 +176,7 @@ namespace UI
 
             if (_camera == null)
             {
-                Debug.LogWarning("[VillageUI_Manager] Camera가 연결되지 않았습니다.");
+                Debug.LogWarning("[VillageInfoUI_Manager] Camera가 연결되지 않았습니다.");
                 return;
             }
 
@@ -205,7 +215,7 @@ namespace UI
             if (mask == 0)
             {
                 Debug.LogWarning(
-                    "[VillageUI_Manager] Layer '" + VillageClickLayerName +
+                    "[VillageInfoUI_Manager] Layer '" + VillageClickLayerName +
                     "'을(를) 찾을 수 없습니다.");
                 return;
             }
@@ -293,7 +303,7 @@ namespace UI
         {
             if (PanelContent == null)
             {
-                Debug.LogWarning("[VillageUI_Manager] 표시할 패널 Content가 없습니다.");
+                Debug.LogWarning("[VillageInfoUI_Manager] 표시할 패널 Content가 없습니다.");
                 return;
             }
 
@@ -326,6 +336,23 @@ namespace UI
         }
 
         /// <summary>
+        /// VillageInfo의 Lv_Up_Button 클릭 시 호출합니다.
+        /// 필수 3종 완료 + 코인 충족일 때만 마을 레벨업을 수행합니다.
+        /// </summary>
+        public bool TryRequestVillageLevelUp()
+        {
+            TryResolveVillageUpgradeManager();
+            if (villageUpgradeUIManager == null)
+                return false;
+
+            bool leveledUp = villageUpgradeUIManager.TryVillageLevelUp();
+            if (leveledUp)
+                PushVillageDataToUI();
+
+            return leveledUp;
+        }
+
+        /// <summary>
         /// Coin_Slider Hover 시 다음 레벨 미리보기 수치를 LvUp 패널에 반영합니다.
         /// VillageSystem 연동 전까지는 Inspector 테스트 값을 사용합니다.
         /// </summary>
@@ -348,10 +375,46 @@ namespace UI
                 PanelContent.SetActive(false);
         }
 
+        private void TryResolveVillageUpgradeManager()
+        {
+            if (villageUpgradeUIManager != null)
+                return;
+
+           // villageUpgradeUIManager = FindObjectOfType<VillageUpgradeUI_Manager>();
+        }
+
+        private void SubscribeVillageUpgradeState()
+        {
+            TryResolveVillageUpgradeManager();
+            if (villageUpgradeUIManager == null)
+                return;
+
+            villageUpgradeUIManager.OnVillageUpgradeStateChanged -= OnVillageUpgradeStateChanged;
+            villageUpgradeUIManager.OnVillageUpgradeStateChanged += OnVillageUpgradeStateChanged;
+        }
+
+        private void UnsubscribeVillageUpgradeState()
+        {
+            if (villageUpgradeUIManager == null)
+                return;
+
+            villageUpgradeUIManager.OnVillageUpgradeStateChanged -= OnVillageUpgradeStateChanged;
+        }
+
+        private void OnVillageUpgradeStateChanged()
+        {
+            if (!isPanelOpen)
+                return;
+
+            PushVillageDataToUI();
+        }
+
         private void PushVillageDataToUI()
         {
             if (uiController == null)
                 return;
+
+            TryResolveVillageUpgradeManager();
 
             long currentCoin = 0;
             if (CoinManager.Instance != null)
@@ -365,17 +428,27 @@ namespace UI
                 displayTypingCoin = EarnProcessor.Instance.BaseCoinPerTyping * EarnProcessor.Instance.TypingMultiplier;
             }
 
-            bool canUpgrade = requireLevelupCoin > 0 && currentCoin >= requireLevelupCoin;
+            // RequireCoinText / Lv_Up_Button 게이트는 VillageUpgradeUI_Manager와 동기화
+            int displayTownLevel = townLevel;
+            long displayRequireCoin = requireLevelupCoin;
+            bool requiredUpgradesComplete = false;
+
+            if (villageUpgradeUIManager != null)
+            {
+                displayTownLevel = villageUpgradeUIManager.UiTownLevel;
+                displayRequireCoin = villageUpgradeUIManager.GetVillageLevelUpCost();
+                requiredUpgradesComplete = villageUpgradeUIManager.IsReadyForVillageLevelUp;
+            }
 
             uiController.Refresh(
-                townLevel,
+                displayTownLevel,
                 displayClickCoin,
                 displayTypingCoin,
                 toolCapacity,
                 autoProductBonus,
                 currentCoin,
-                requireLevelupCoin,
-                canUpgrade);
+                displayRequireCoin,
+                requiredUpgradesComplete);
         }
 
         private void FaceCamera()

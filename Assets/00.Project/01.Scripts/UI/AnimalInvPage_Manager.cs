@@ -3,27 +3,39 @@ using UnityEngine.UI;
 
 namespace UI
 {
+    /// <summary>
+    /// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È£ï¿½Û¿ï¿½ ï¿½ï¿½Æ° ï¿½ï¿½,
+    /// Set Tool ï¿½ï¿½Æ°ï¿½ï¿½ "ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½"ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.
+    /// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ tool_set_slotï¿½ï¿½ cover_btn Å¬ï¿½ï¿½ ï¿½ï¿½
+    /// UIController_ToolSetList ï¿½ï¿½ SlotUI_ToolSet ï¿½ï¿½Î¿ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½ï¿½Ë´Ï´ï¿½.
+    /// </summary>
     public class AnimalInvPage_Manager : MonoBehaviour
     {
-        [Header("ÇØ´ç µ¿¹°ÀÇ ¼³Á¤ »óÈ£ÀÛ¿ë ¹öÆ°")]
-        [SerializeField] private Button levelupButton;         // ·¹º§¾÷ ¹öÆ°
-        [SerializeField] private Button toolSetButton;         // µµ±¸ ¹èÄ¡ ¹öÆ°
+        [Header("ï¿½Ø´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È£ï¿½Û¿ï¿½ ï¿½ï¿½Æ°")]
+        [SerializeField] private Button levelupButton;         // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Æ°
+        [SerializeField] private Button toolSetButton;         // Set Tool - ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+        [SerializeField] private Button toolChangeButton;      // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Æ° (ï¿½ï¿½ï¿½ï¿½ Manager ï¿½Ì°ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½)
+        [SerializeField] private Button toolSetOffButton;      // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Æ° (ï¿½ï¿½ï¿½ï¿½ Manager ï¿½Ì°ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½)
 
+        [Header("ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ / ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½")]
         [SerializeField] private GameObject toolSettingPage;
+        [Tooltip("ï¿½ï¿½ï¿½ï¿½Î¸ï¿½ ï¿½ï¿½ï¿½ï¿½ GameObjectï¿½ï¿½ï¿½ï¿½ UIController_AnimalInvPageï¿½ï¿½ Ã£ï¿½ï¿½ï¿½Ï´ï¿½.")]
+        [SerializeField] private UIController_AnimalInvPage animalInvPage;
 
         private void Awake()
         {
+            ResolveAnimalInvPage();
+
             if (levelupButton != null)
                 levelupButton.onClick.AddListener(OnClickLevelUp);
 
             if (toolSetButton != null)
                 toolSetButton.onClick.AddListener(OnClickToolSet);
-
         }
 
         private void OnDisable()
         {
-            // »ó¼¼ ÆäÀÌÁö°¡ ´ÝÈú ¶§ ToolSetting ÆÐ³Îµµ ÇÔ²² ´Ý½À´Ï´Ù.
+            // ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ToolSetting ï¿½Ð³Îµï¿½ ï¿½Ô²ï¿½ ï¿½Ý½ï¿½ï¿½Ï´ï¿½.
             CloseToolSettingPage();
         }
 
@@ -34,33 +46,60 @@ namespace UI
 
             if (toolSetButton != null)
                 toolSetButton.onClick.RemoveListener(OnClickToolSet);
+        }
 
+        private void ResolveAnimalInvPage()
+        {
+            if (animalInvPage == null)
+                animalInvPage = GetComponent<UIController_AnimalInvPage>();
         }
 
         private void OnClickLevelUp()
         {
-            Debug.Log("[AnimalInvPage_Manager] ·¹º§¾÷ ½Ãµµ");
+            Debug.Log("[AnimalInvPage_Manager] ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ãµï¿½");
         }
 
+        /// <summary>
+        /// Set Tool: ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ï¸ï¿½ ï¿½ï¿½ï¿½Ï´ï¿½.
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ cover_btn ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ UIController_ToolSetListï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.
+        /// </summary>
         private void OnClickToolSet()
         {
-            Debug.Log("[AnimalInvPage_Manager] µµ±¸ ¼¼ÆÃÇÏ±â");
+            ResolveAnimalInvPage();
 
             if (toolSettingPage == null)
             {
-                Debug.LogWarning("[AnimalInvPage_Manager] toolSettingPage °¡ ¿¬°áµÇÁö ¾Ê¾Ò½À´Ï´Ù.", this);
+                Debug.LogWarning("[AnimalInvPage_Manager] toolSettingPage ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ê¾Ò½ï¿½ï¿½Ï´ï¿½.", this);
+                return;
+            }
+
+            if (animalInvPage == null)
+            {
+                Debug.LogWarning("[AnimalInvPage_Manager] UIController_AnimalInvPage ï¿½ï¿½ Ã£ï¿½ï¿½ ï¿½ï¿½ï¿½ß½ï¿½ï¿½Ï´ï¿½.", this);
+                return;
+            }
+
+            string animalId = animalInvPage.CurrentAnimalId;
+
+            if (string.IsNullOrEmpty(animalId))
+            {
+                Debug.LogWarning("[AnimalInvPage_Manager] ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ IDï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½Ö¾ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.", this);
                 return;
             }
 
             if (toolSettingPage.TryGetComponent(out UIController_ToolSetList toolSetList))
-                toolSetList.Open();
+            {
+                // ï¿½ï¿½Ï¸ï¿½ ï¿½ï¿½ï¿½ï¿½. pendingAnimalIdï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Î°ï¿½, cover_btn Å¬ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ñ´ï¿½.
+                toolSetList.Open(animalId, animalInvPage.RefreshAnimalInvPage);
+            }
             else
+            {
                 toolSettingPage.SetActive(true);
+            }
         }
 
-
         /// <summary>
-        /// ToolSettingList_root ÆÐ³ÎÀ» ´Ý½À´Ï´Ù.
+        /// ToolSettingList_root ï¿½Ð³ï¿½ï¿½ï¿½ ï¿½Ý½ï¿½ï¿½Ï´ï¿½.
         /// </summary>
         public void CloseToolSettingPage()
         {

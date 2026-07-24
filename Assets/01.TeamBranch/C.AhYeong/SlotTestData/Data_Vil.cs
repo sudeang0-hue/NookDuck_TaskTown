@@ -7,6 +7,7 @@ namespace Test
 {
 
     [System.Serializable]
+    
     public class Data_Vil
     {
         public int level;          // 현재 마을 레벨

@@ -5,7 +5,7 @@ using UnityEngine.UI;
 namespace UI
 {
     // 이슈 #72(클릭/타이핑/도구효율 업그레이드) 기능을 눈으로 확인하기 위한 테스트 전용 UI입니다.
-    // 기존 UIController_Village/VillageUI_Manager 등 팀원 작업 중인 UI 파일은 건드리지 않고,
+    // 기존 UIController_VillageInfo/VillageInfoUI_Manager 등 팀원 작업 중인 UI 파일은 건드리지 않고,
     // 별도 패널로 TownUpgradeManager를 직접 호출합니다. 실제 플레이어용 UI가 아닙니다.
     public class Test_TownUpgradeUI : MonoBehaviour
     {

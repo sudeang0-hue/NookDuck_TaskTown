@@ -81,7 +81,7 @@ namespace UI
 
             if (animalInventory == null)
             {
-                Debug.LogWarning("[UIController_AnimalInv] animalInventory 가 연결되지 않았습니다.");
+                Debug.LogWarning("[UIController_AnimalInv] toolInventory 가 연결되지 않았습니다.");
                 return false;
             }
 

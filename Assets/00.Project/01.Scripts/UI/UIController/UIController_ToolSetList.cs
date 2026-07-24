@@ -1,7 +1,8 @@
 /* ToolSettingList_root 패널 제어
- * - Open/Close
- * - 보유 도구 목록을 슬롯으로 채워서 표시
- * - 슬롯 클릭 시 현재 배치 중인 동물을 그 도구에 장착(TryAssignAnimalToTool)
+ * - Open/Close: Set Tool / Change Tool에서 "목록 표시"만 담당 (animalId를 pending으로 보관)
+ * - 목록 필터: CurrentAnimalSet인 도구 제외
+ *   (미장착 동물 Set Tool → 타인 장착 도구 숨김 / 장착 동물 Change Tool → 본인 도구 숨김)
+ * - 실제 장착: tool_set_slot의 cover_btn 클릭 → HandleToolSlotSelected → TryAssignAnimalToTool
  * - 패널 바깥 클릭 시 패널 닫기
  */
 
@@ -69,9 +70,9 @@ public class UIController_ToolSetList : MonoBehaviour
     }
 
     /// <summary>
-    /// ToolSettingList_root 패널을 엽니다.
+    /// 목록만 엽니다. 장착은 하지 않으며, animalId를 pending으로 보관합니다.
     /// </summary>
-    /// <param name="animalId">이 패널에서 도구를 골라 장착시킬 동물 ID</param>
+    /// <param name="animalId">cover_btn 선택 시 장착시킬 동물 ID</param>
     /// <param name="onAssignedCallback">장착 성공 시(패널 닫기 전) 호출할 콜백</param>
     public void Open(string animalId = null, Action onAssignedCallback = null)
     {
@@ -105,7 +106,10 @@ public class UIController_ToolSetList : MonoBehaviour
     }
 
     /// <summary>
-    /// 보유 도구 목록으로 슬롯을 채웁니다. 열 때마다 최신 목록으로 다시 생성합니다.
+    /// 장착 가능한 도구만 슬롯으로 채웁니다. 열 때마다 최신 목록으로 다시 생성합니다.
+    /// - Set Tool(미장착 동물): 다른 동물이 장착한 도구는 제외
+    /// - Change Tool(장착 동물): 자신이 장착 중인 도구도 제외
+    /// → CurrentAnimalSet == true 인 도구는 목록에 넣지 않습니다.
     /// </summary>
     private void PopulateSlots()
     {
@@ -118,26 +122,49 @@ public class UIController_ToolSetList : MonoBehaviour
         ClearSlots();
 
         IReadOnlyList<SlotData_Tool> toolSlots = toolInventory.ToolSlotsList;
+        int createdCount = 0;
 
-        if (toolSlots != null)
+        if (toolSlots != null && toolSlots.Count > 0)
         {
             for (int i = 0; i < toolSlots.Count; i++)
             {
                 SlotData_Tool slotData = toolSlots[i];
 
-                if (slotData == null || string.IsNullOrEmpty(slotData.ToolId))
+                if (slotData == null || string.IsNullOrEmpty(slotData.ToolId) || slotData.ToolData == null)
+                    continue;
+
+                // 이미 장착된 도구는 Set Tool / Change Tool 목록에서 제외
+                if (!IsToolAvailableForPendingAnimal(slotData))
                     continue;
 
                 SlotUI_ToolSet createdSlot = Instantiate(toolSetPrefab, toolSetSlotContentRoot);
                 createdSlot.Initialize(slotData, HandleToolSlotSelected);
                 spawnedSlots.Add(createdSlot);
+                createdCount++;
             }
         }
 
         if (noAvaliableToolText != null)
-            noAvaliableToolText.gameObject.SetActive(spawnedSlots.Count == 0);
+            noAvaliableToolText.gameObject.SetActive(createdCount == 0);
     }
 
+    /// <summary>
+    /// pending 동물 기준으로 목록에 넣을 수 있는 도구인지 판정합니다.
+    /// 미장착 도구만 true. (타인 장착·본인 장착 모두 false)
+    /// </summary>
+    private static bool IsToolAvailableForPendingAnimal(SlotData_Tool slotData)
+    {
+        if (slotData == null)
+            return false;
+
+        // CurrentAnimalSet이면 누구든(자신 포함) 이미 사용 중 → 목록에서 제외
+        return !slotData.CurrentAnimalSet;
+    }
+
+    /// <summary>
+    /// 이전에 생성한 SlotUI_ToolSet와 Content 하위의 잔여 ToolSet 슬롯을 제거합니다.
+    /// (에디터에 남아 있던 슬롯이 빈 인벤에서도 보이지 않도록)
+    /// </summary>
     private void ClearSlots()
     {
         for (int i = 0; i < spawnedSlots.Count; i++)
@@ -147,20 +174,66 @@ public class UIController_ToolSetList : MonoBehaviour
         }
 
         spawnedSlots.Clear();
+
+        if (toolSetSlotContentRoot == null)
+            return;
+
+        for (int i = toolSetSlotContentRoot.childCount - 1; i >= 0; i--)
+        {
+            Transform child = toolSetSlotContentRoot.GetChild(i);
+            if (child == null)
+                continue;
+
+            // Content에 다른 UI(안내 텍스트 등)가 있어도 ToolSet 슬롯만 제거
+            if (child.GetComponent<SlotUI_ToolSet>() != null)
+                Destroy(child.gameObject);
+        }
     }
 
     /// <summary>
     /// 도구 슬롯 클릭 시, 대기 중인 동물을 그 도구에 장착하고 패널을 닫습니다.
+    /// 같은 동물이 다른 도구에 이미 장착되어 있으면 먼저 해제합니다.
     /// </summary>
     private void HandleToolSlotSelected(SlotData_Tool slotData)
     {
         if (slotData != null && !string.IsNullOrEmpty(pendingAnimalId) && toolInventory != null)
         {
+            ClearAnimalFromOtherTools(pendingAnimalId, slotData.ToolId);
             toolInventory.TryAssignAnimalToTool(slotData.ToolId, pendingAnimalId);
             onAssigned?.Invoke();
         }
 
         Close();
+    }
+
+    /// <summary>
+    /// 동물이 다른 도구에 장착되어 있으면 해제합니다. (변경 장착 시 중복 장착 방지)
+    /// </summary>
+    private void ClearAnimalFromOtherTools(string animalId, string keepToolId)
+    {
+        if (toolInventory == null || string.IsNullOrEmpty(animalId))
+            return;
+
+        IReadOnlyList<SlotData_Tool> toolSlots = toolInventory.ToolSlotsList;
+
+        if (toolSlots == null)
+            return;
+
+        for (int i = 0; i < toolSlots.Count; i++)
+        {
+            SlotData_Tool toolSlot = toolSlots[i];
+
+            if (toolSlot == null)
+                continue;
+
+            if (!toolSlot.CurrentAnimalSet || toolSlot.CurrentAnimalId != animalId)
+                continue;
+
+            if (toolSlot.ToolId == keepToolId)
+                continue;
+
+            toolInventory.TryRemoveAnimalFromTool(toolSlot.ToolId);
+        }
     }
 
     private bool IsPointerInsidePanel()

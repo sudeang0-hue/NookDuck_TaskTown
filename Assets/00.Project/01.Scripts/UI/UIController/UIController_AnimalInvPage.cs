@@ -47,7 +47,9 @@ namespace UI
 
         [Header("해당 동물의 설정 상호작용 버튼")]
         [SerializeField] private Button levelupButton;         // 레벨업 버튼
-        [SerializeField] private Button settingToolButton;     // 도구 배치(장착) 버튼
+        [SerializeField] private Button settingToolButton;     // Set Tool - 도구 최초 장착
+        [SerializeField] private Button changeToolButton;      // changeTool_btn - 장착 도구 변경
+        [SerializeField] private Button setOffToolButton;      // setOffTool_btn - 장착 해제
         [SerializeField] private Button settingVilliageButton; // 마을 배치 버튼 (추후 구현)
 
         [Header("도구 장착 목록 패널")]
@@ -77,6 +79,18 @@ namespace UI
             if (settingToolButton != null)
                 settingToolButton.onClick.AddListener(OnClickSettingTool);
 
+            if (changeToolButton != null)
+            {
+                changeToolButton.onClick.AddListener(OnClickChangeTool);
+                changeToolButton.gameObject.SetActive(false);
+            }
+
+            if (setOffToolButton != null)
+            {
+                setOffToolButton.onClick.AddListener(OnClickSetOffTool);
+                setOffToolButton.gameObject.SetActive(false);
+            }
+
             if (animalInvPagePanel != null)
             {
                 animalInvPagePanel.SetActive(false);
@@ -87,18 +101,20 @@ namespace UI
         {
             ResolveInventoryReference();
 
-            if (animalInventory == null)
-                return;
+            if (animalInventory != null)
+                animalInventory.OnAnimalSlotChanged += HandleAnimalSlotChanged;
 
-            animalInventory.OnAnimalSlotChanged += HandleAnimalSlotChanged;
+            if (InventoryManager_Tool.Instance != null)
+                InventoryManager_Tool.Instance.OnToolSlotChanged += HandleToolSlotChanged;
         }
 
         private void OnDisable()
         {
-            if (animalInventory == null)
-                return;
+            if (animalInventory != null)
+                animalInventory.OnAnimalSlotChanged -= HandleAnimalSlotChanged;
 
-            animalInventory.OnAnimalSlotChanged -= HandleAnimalSlotChanged;
+            if (InventoryManager_Tool.Instance != null)
+                InventoryManager_Tool.Instance.OnToolSlotChanged -= HandleToolSlotChanged;
         }
 
         private void OnDestroy()
@@ -108,6 +124,12 @@ namespace UI
 
             if (settingToolButton != null)
                 settingToolButton.onClick.RemoveListener(OnClickSettingTool);
+
+            if (changeToolButton != null)
+                changeToolButton.onClick.RemoveListener(OnClickChangeTool);
+
+            if (setOffToolButton != null)
+                setOffToolButton.onClick.RemoveListener(OnClickSetOffTool);
         }
 
         private void ResolveInventoryReference()
@@ -134,6 +156,24 @@ namespace UI
             if (slotData.AnimalId != currentAnimalId)
                 return;
 
+            RefreshAnimalInvPage();
+        }
+
+        /// <summary>
+        /// 도구 슬롯(장착/해제)이 변경되면, 열려 있는 상세 페이지의 도구 UI를 갱신합니다.
+        /// </summary>
+        private void HandleToolSlotChanged(SlotData_Tool slotData)
+        {
+            if (slotData == null)
+                return;
+
+            if (animalInvPagePanel == null || !animalInvPagePanel.activeSelf)
+                return;
+
+            if (string.IsNullOrEmpty(currentAnimalId))
+                return;
+
+            // 현재 동물이 관련되었거나, 방금 장착/해제된 도구일 수 있으므로 페이지를 재조회
             RefreshAnimalInvPage();
         }
 
@@ -267,10 +307,10 @@ namespace UI
         {
             // 본체 1마리를 제외한 재료 수량 표시 (SlotUI_AnimalInv 와 동일 규칙)
             if (currentCountText != null)
-                currentCountText.text = Mathf.Max(0, slotData.CurrentCount - 1).ToString();
+                currentCountText.text = "currentCount :" + Mathf.Max(0, slotData.CurrentCount - 1).ToString();
 
             if (requireCountText != null)
-                requireCountText.text = $"/ {slotData.RequiredUpgradeCount}";
+                requireCountText.text = "requireCount :" + $" {slotData.RequiredUpgradeCount}";
 
             ApplyLevelImage(slotData.Level);
 
@@ -278,7 +318,7 @@ namespace UI
             if (currentProductCoin != null)
             {
                 float coinPerSecond = data.BaseCoinPerSecond * data.CalculateLevelMultiplier(slotData.Level);
-                currentProductCoin.text = $"{coinPerSecond:0.#}/s";
+                currentProductCoin.text = "ProductCoin :" + $"{coinPerSecond:0.#}/s";
             }
 
             ApplyUsingToolIcon(slotData.AnimalId);
@@ -286,17 +326,44 @@ namespace UI
 
         /// <summary>
         /// 현재 동물이 장착되어 있는 도구가 있으면 그 아이콘을 표시하고, 없으면 숨깁니다.
+        /// 장착 여부에 따라 Set Tool / Change / SetOff 버튼 상태도 갱신합니다.
         /// </summary>
         private void ApplyUsingToolIcon(string animalId)
         {
-            if (usingToolIcon == null)
-                return;
-
             SlotData_Tool equippedTool = FindToolEquippedWithAnimal(animalId);
-            Sprite toolIcon = equippedTool?.ToolData != null ? equippedTool.ToolData.Icon : null;
+            bool hasEquippedTool = equippedTool != null;
 
-            usingToolIcon.sprite = toolIcon;
-            usingToolIcon.enabled = toolIcon != null;
+            if (usingToolIcon != null)
+            {
+                Sprite toolIcon = hasEquippedTool && equippedTool.ToolData != null
+                    ? equippedTool.ToolData.Icon
+                    : null;
+
+                usingToolIcon.sprite = toolIcon;
+                usingToolIcon.enabled = toolIcon != null;
+            }
+
+            UpdateToolEquipButtons(hasEquippedTool);
+        }
+
+        /// <summary>
+        /// 도구 장착 여부에 따라 버튼 표시 상태를 갱신합니다.
+        /// - 미장착: Set Tool 표시, Change/SetOff 숨김
+        /// - 장착: Set Tool 숨김, Change/SetOff 표시
+        /// </summary>
+        private void UpdateToolEquipButtons(bool hasEquippedTool)
+        {
+            if (settingToolButton != null)
+            {
+                settingToolButton.gameObject.SetActive(!hasEquippedTool);
+                settingToolButton.interactable = !hasEquippedTool;
+            }
+
+            if (changeToolButton != null)
+                changeToolButton.gameObject.SetActive(hasEquippedTool);
+
+            if (setOffToolButton != null)
+                setOffToolButton.gameObject.SetActive(hasEquippedTool);
         }
 
         /// <summary>
@@ -380,9 +447,55 @@ namespace UI
         }
 
         /// <summary>
-        /// "도구 배치" 버튼. 도구 장착 목록 패널을 열어, 선택한 도구에 현재 동물을 장착시킵니다.
+        /// "Set Tool" 버튼. 장착 가능 도구 목록만 엽니다.
+        /// 실제 장착은 tool_set_slot의 cover_btn → UIController_ToolSetList에서 처리합니다.
         /// </summary>
         private void OnClickSettingTool()
+        {
+            OpenToolSetListPanel();
+        }
+
+        /// <summary>
+        /// "changeTool_btn" 버튼. 장착 가능 도구 목록만 다시 엽니다.
+        /// 실제 장착/변경은 cover_btn 선택 시 처리됩니다.
+        /// </summary>
+        private void OnClickChangeTool()
+        {
+            OpenToolSetListPanel();
+        }
+
+        /// <summary>
+        /// "setOffTool_btn" 버튼. 현재 동물의 도구 장착을 해제합니다.
+        /// </summary>
+        private void OnClickSetOffTool()
+        {
+            if (string.IsNullOrEmpty(currentAnimalId))
+                return;
+
+            SlotData_Tool equippedTool = FindToolEquippedWithAnimal(currentAnimalId);
+
+            if (equippedTool == null)
+            {
+                UpdateToolEquipButtons(false);
+                return;
+            }
+
+            InventoryManager_Tool toolInventory = InventoryManager_Tool.Instance;
+
+            if (toolInventory == null)
+            {
+                Debug.LogWarning("[UIController_AnimalInvPage] InventoryManager_Tool이 연결되지 않았습니다.");
+                return;
+            }
+
+            toolInventory.TryRemoveAnimalFromTool(equippedTool.ToolId);
+            RefreshAnimalInvPage();
+        }
+
+        /// <summary>
+        /// 현재 동물을 대상으로 도구 장착 목록 패널을 엽니다.
+        /// </summary>
+        private void OpenToolSetListPanel()
         {
             if (string.IsNullOrEmpty(currentAnimalId))
                 return;
@@ -402,6 +515,9 @@ namespace UI
         public void CloseAnimalInvPage()
         {
             currentAnimalId = string.Empty;
+
+            if (toolSetListPanel != null && toolSetListPanel.IsOpen)
+                toolSetListPanel.Close();
 
             if (animalInvPagePanel == null)
                 return;

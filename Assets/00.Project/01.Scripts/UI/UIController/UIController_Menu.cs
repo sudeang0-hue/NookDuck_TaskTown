@@ -105,27 +105,7 @@ public class UIController_Menu : MonoBehaviour
 
         CloseAllPanels();
     }
-    private void OnEnable()
-    {
-        TargetSelector.OnTargetSelected += OnCameraTargetSelected;
-    }
-
-    private void OnDisable()
-    {
-        TargetSelector.OnTargetSelected -= OnCameraTargetSelected;
-    }
-
-    /// <summary>
-    /// 카메라 타겟 선택(시점 전환) 시 열린 메뉴 패널을 닫습니다.
-    /// 빈 공간 클릭(null)은 무시합니다.
-    /// </summary>
-    private void OnCameraTargetSelected(Transform target)
-    {
-        if (target == null)
-            return;
-
-        CloseAllPanels();
-    }
+   
 
     /// <summary>
     /// 화면 축소 등에서 열린 메뉴 패널(UIPanelWindow)을 모두 닫습니다.

@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -6,13 +6,14 @@ using UnityEngine.UI;
 namespace UI
 {
     /// <summary>
-    /// ¿¬°áµÈ ¸¶À» Á¤º¸ÀÇ Ãâ·Â°ú °»½ÅÀ» ´ã´çÇÕ´Ï´Ù.
-    /// CurrentCoin / Slider / ·¹º§¾÷ ¹öÆ°Àº CoinManager¿Í ¿¬µ¿ÇÕ´Ï´Ù.
-    /// ¸Ş´º¡¤Ãà¼Ò µî ´İ±â Æ®¸®°Å ¹öÆ° Å¬¸¯ ½Ã Village ÆĞ³ÎÀ» ´İ½À´Ï´Ù.
+    /// ì—°ê²°ëœ ë§ˆì„ ì •ë³´ì˜ ì¶œë ¥ê³¼ ê°±ì‹ ì„ ë‹´ë‹¹í•©ë‹ˆë‹¤.
+    /// CurrentCoin / Slider / ë ˆë²¨ì—… ë²„íŠ¼ì€ CoinManagerì™€ ì—°ë™í•©ë‹ˆë‹¤.
+    /// RequireCoin / Lv_Up_Buttonì€ VillageUpgradeUI_Managerì˜ ë§ˆì„ ë ˆë²¨ì—… ê²Œì´íŠ¸ì™€ ì—°ë™í•©ë‹ˆë‹¤.
+    /// ë©”ë‰´Â·ì¶•ì†Œ ë“± ë‹«ê¸° íŠ¸ë¦¬ê±° ë²„íŠ¼ í´ë¦­ ì‹œ Village íŒ¨ë„ì„ ë‹«ìŠµë‹ˆë‹¤.
     /// </summary>
-    public class UIController_Village : MonoBehaviour
+    public class UIController_VillageInfo : MonoBehaviour
     {
-        [Header("°»½ÅÇÒ Á¤º¸")]
+        [Header("ê°±ì‹ í•  ì •ë³´")]
         [SerializeField] private TMP_Text townLevelText;
         [SerializeField] private TMP_Text clickCoinText;
         [SerializeField] private TMP_Text typingCoinText;
@@ -22,24 +23,25 @@ namespace UI
         [SerializeField] private TMP_Text requireLevelupCoinText;
         [SerializeField] private Slider coinSlider;
 
-        [Header("¼±ÅÃ ¿¬°á")]
+        [Header("ìƒí˜¸ì‘ìš© ë²„íŠ¼")]
         [SerializeField] private Button upgradeButton;
-        [SerializeField] private VillageUI_Manager villageUIManager;
+        [SerializeField] private VillageInfoUI_Manager villageUIManager;
 
-        [Header("ÆĞ³Î ´İ±â Æ®¸®°Å")]
-        [Tooltip("¸Ş´º ¸ñ·Ï ¹öÆ°, Minimize µî. Å¬¸¯ ½Ã VillageInfo_Root¸¦ ´İ½À´Ï´Ù.")]
+        [Header("íŒ¨ë„ ë‹«ê¸° íŠ¸ë¦¬ê±°")]
+        [Tooltip("ë‹«ê¸° ë²„íŠ¼, Minimize ë“±. í´ë¦­ ì‹œ VillageInfo íŒ¨ë„ì„ ë‹«ìŠµë‹ˆë‹¤.")]
         [SerializeField] private Button[] closePanelButtons;
 
         private const string CurrentCoinPrefix = "CurrentCoin: ";
 
-        private int requireLevelupCoin;
+        private long requireLevelupCoin;
+        private bool requiredUpgradesComplete;
         private bool isSubscribed;
         private Coroutine subscribeRoutine;
 
         private void Awake()
         {
             if (villageUIManager == null)
-                villageUIManager = GetComponentInParent<VillageUI_Manager>();
+                villageUIManager = GetComponentInParent<VillageInfoUI_Manager>();
 
             if (upgradeButton != null)
                 upgradeButton.onClick.AddListener(OnClickUpgrade);
@@ -118,16 +120,17 @@ namespace UI
             int toolCapacity,
             float autoProductBonus,
             long currentCoin,
-            int requireLevelupCoin,
-            bool canUpgrade)
+            long requireLevelupCoin,
+            bool requiredUpgradesComplete)
         {
-            this.requireLevelupCoin = Mathf.Max(0, requireLevelupCoin);
+            this.requireLevelupCoin = requireLevelupCoin < 0 ? 0 : requireLevelupCoin;
+            this.requiredUpgradesComplete = requiredUpgradesComplete;
 
             SetText(townLevelText, "TownLevel : " + townLevel);
             SetText(clickCoinText, "Click : " + clickCoin.ToString("N0"));
             SetText(typingCoinText, "Typing : " + typingCoin.ToString("N0"));
             SetText(toolCapacityText, "Tool : " + toolCapacity.ToString("N0"));
-            SetText(autoProductBonusText, "Bonus : " + autoProductBonus.ToString("N0")+" %");
+            SetText(autoProductBonusText, "Bonus : " + autoProductBonus.ToString("N0") + " %");
             SetText(requireLevelupCoinText, "Require : \n" + this.requireLevelupCoin.ToString("N0"));
 
             long displayCoin = currentCoin;
@@ -140,12 +143,13 @@ namespace UI
 
         private void OnClickUpgrade()
         {
-            Debug.Log("[UIController_Village] ¸¶À» ·¹º§¾÷ ÄÚµå ½ÇÇà");
-
             if (villageUIManager != null)
-                villageUIManager.RefreshVillageUI();
-            else
-                RefreshCoinView();
+            {
+                villageUIManager.TryRequestVillageLevelUp();
+                return;
+            }
+
+            RefreshCoinView();
         }
 
         private IEnumerator SubscribeWhenCoinManagerReady()
@@ -202,7 +206,7 @@ namespace UI
 
         private void ApplyCoinProgress(long currentCoin)
         {
-            SetText(currentCoinText, CurrentCoinPrefix + "\n" +currentCoin.ToString("N0"));
+            SetText(currentCoinText, CurrentCoinPrefix + "\n" + currentCoin.ToString("N0"));
 
             if (coinSlider != null)
             {
@@ -217,7 +221,10 @@ namespace UI
 
             if (upgradeButton != null)
             {
-                bool canUpgrade = requireLevelupCoin > 0 && currentCoin >= requireLevelupCoin;
+                // í•„ìˆ˜ ì—…ê·¸ë ˆì´ë“œ 3ì¢… ì™„ë£Œ && ë§ˆì„ ë ˆë²¨ì—… ë¹„ìš© ì¶©ì¡±ì¼ ë•Œë§Œ ë²„íŠ¼ í‘œì‹œ
+                bool canUpgrade = requiredUpgradesComplete
+                    && requireLevelupCoin > 0
+                    && currentCoin >= requireLevelupCoin;
                 upgradeButton.gameObject.SetActive(canUpgrade);
             }
         }
