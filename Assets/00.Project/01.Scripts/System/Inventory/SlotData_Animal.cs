@@ -118,5 +118,15 @@ namespace TaskTown.KDH
         {
             return animalData != null ? animalData.CalculateLevelUpCoinCost(level) : 0L;
         }
+
+
+        /// <summary>
+        /// 디버그 전용: 재료/코인 없이 레벨을 바로 설정합니다. (최대 5)  26.07.24 KDH 추가
+        /// </summary>
+        public void DebugSetLevel(int targetLevel)
+        {
+            level = Mathf.Clamp(targetLevel, 1, 5);
+            isMaxLevel = level >= 5;
+        }
     }
 }

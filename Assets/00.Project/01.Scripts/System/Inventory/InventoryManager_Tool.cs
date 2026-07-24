@@ -439,5 +439,40 @@ namespace TaskTown.KDH
         {
             OnToolInventoryChanged?.Invoke();
         }
+
+
+        /// <summary>
+        /// 디버그 전용: 지정 개수만큼 도구를 지급합니다.    26.07.24 KDH 추가
+        /// </summary>
+        public bool DebugAddTool(string toolId, int count)
+        {
+            ToolDataSO data = GetToolData(toolId);
+            if (data == null)
+            {
+                Debug.LogWarning($"[InventoryManager_Tool] 존재하지 않는 ToolId: {toolId}");
+                return false;
+            }
+            count = Mathf.Max(1, count);
+            for (int i = 0; i < count; i++)
+                AddToolSlot(data);
+            return true;
+        }
+        /// <summary>
+        /// 디버그 전용: 보유 도구의 레벨을 바로 설정합니다. 미보유면 1개 지급 후 설정.     26.07.24 KDH 추가
+        /// </summary>
+        public bool DebugSetToolLevel(string toolId, int targetLevel)
+        {
+            if (!TryGetToolSlot(toolId, out SlotData_Tool slot))
+            {
+                if (!DebugAddTool(toolId, 1))
+                    return false;
+                if (!TryGetToolSlot(toolId, out slot))
+                    return false;
+            }
+            slot.DebugSetLevel(targetLevel);
+            RefreshSlotGrowthData(slot);
+            NotifySlotChanged(slot);
+            return true;
+        }
     }
 }
