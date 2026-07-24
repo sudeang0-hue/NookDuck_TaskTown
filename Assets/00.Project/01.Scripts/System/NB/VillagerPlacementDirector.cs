@@ -4,7 +4,7 @@ using UnityEngine;
 using DG.Tweening;
 using System;
 
-public class BusGachaDirector : MonoBehaviour
+public class  VillagerPlacementDirector : MonoBehaviour
 {
     [Header("오브젝트 연결")]
     [Tooltip("버스 3D 모델 Transform")]
@@ -37,6 +37,8 @@ public class BusGachaDirector : MonoBehaviour
     private Vector3[] _waypointsCache;
     private Quaternion _initialBusRotation;
     private Sequence _busSequence;
+    // 외부에서 넘겨받은 프리팹을 임시로 저장할 변수
+    private GameObject _overrideAnimalPrefab;
 
     private void Awake()
     {
@@ -77,6 +79,13 @@ public class BusGachaDirector : MonoBehaviour
         {
             _waypointsCache[i] = pathPoints[i].position;
         }
+    }
+
+    //외부(마을 배치 UI 등)에서 프리팹을 전달받아 호출하는 메서드
+    public void StartBusSummon(GameObject customAnimalPrefab)
+    {
+        _overrideAnimalPrefab = customAnimalPrefab;
+        StartBusSummon(); // 기존 연출 로직 실행
     }
 
     // 버스 연출 시작 메인 로직
@@ -159,6 +168,9 @@ public class BusGachaDirector : MonoBehaviour
     // 동물 주민 스폰 및 방향 오프셋이 적용된 하차 연출
     private void SpawnAnimalFromTrunk()
     {
+        // 외부에서 넘겨받은 프리팹이 있으면 그것을 쓰고, 없으면 인스펙터의 기본 프리팹 사용
+        GameObject prefabToSpawn = (_overrideAnimalPrefab != null) ? _overrideAnimalPrefab : animalPrefab;
+
         if (animalPrefab == null) return;
 
         Transform spawnPoint = (trunkTransform != null) ? trunkTransform : busObject;
@@ -170,8 +182,8 @@ public class BusGachaDirector : MonoBehaviour
         Quaternion finalSpawnRotation = spawnPoint.rotation * angleRotation;
         Vector3 exitDirection = finalSpawnRotation * Vector3.forward;
 
-        // 동물 프리팹 생성 (오프셋 회전 적용)
-        GameObject newAnimal = Instantiate(animalPrefab, spawnPoint.position, finalSpawnRotation);
+        //결정된 프리팹으로 생성
+        GameObject newAnimal = Instantiate(prefabToSpawn, spawnPoint.position, finalSpawnRotation);
         newAnimal.transform.localScale = Vector3.zero;
 
         // 착지 위치 계산
@@ -182,6 +194,9 @@ public class BusGachaDirector : MonoBehaviour
         animalSeq.Join(newAnimal.transform.DOScale(Vector3.one, exitJumpDuration * 0.8f).SetEase(Ease.OutBack));
         animalSeq.Join(newAnimal.transform.DOJump(landingPosition, exitJumpHeight, 1, exitJumpDuration).SetEase(Ease.OutQuad));
         animalSeq.Append(newAnimal.transform.DOPunchScale(new Vector3(0.2f, -0.2f, 0.2f), 0.25f, 5, 0.5f));
+
+        // 사용이 끝난 임시 변수 초기화
+        _overrideAnimalPrefab = null;
     }
 
     private void OnDestroy()

@@ -1,18 +1,22 @@
 ﻿using UnityEngine;
 using UnityEngine.AI;
+using System.Collections.Generic;
 
 public class ObjectDragger : MonoBehaviour
 {
     private Vector3 offset;
     private bool isDragging = false;
     private GameMasterManager gameManager;
-    private Camera _mainCamera; // 메인 카메라 캐싱 변수 추가
+    private Camera _mainCamera; // 메인 카메라 캐싱 변수
 
     [Header("관성(부드러움) 설정")]
     [Range(0.01f, 0.5f)]
     public float smoothTime = 0f; // 수치가 작을수록 마우스에 딱 붙고, 클수록 묵직하게 늦게 따라옴 (기본값 0.1 추천)
     private Vector3 dragVelocity = Vector3.zero; // SmoothDamp 내부 물리 계산용 속도 변수
 
+    // VillageHouse 레이어 오브젝트의 Collider 제어용 변수
+    private List<Collider> _villageHouseColliders = new List<Collider>();
+    private bool _lastExpandedState = true;
 
     void Awake()
     {
@@ -22,15 +26,33 @@ public class ObjectDragger : MonoBehaviour
     void Start()
     {
         gameManager = Object.FindFirstObjectByType<GameMasterManager>();
+
+        //VillageHouse 레이어를 가진 모든 자식 Collider 수집
+        CacheVillageHouseColliders();
     }
+
     void Update()
     {
-        if (gameManager != null && !gameManager.GetIsExpanded())
+        bool isExpanded = gameManager == null || gameManager.GetIsExpanded();
+
+        // 확장/축소 상태가 변경될 때만 Collider 상태 업데이트 (성능 최적화)
+        if (_lastExpandedState != isExpanded)
         {
-            if (isDragging) ToggleChildAgents(true);
-            isDragging = false;
+            _lastExpandedState = isExpanded;
+            SetVillageHouseCollidersEnabled(isExpanded);
+        }
+
+        // 축소 모드일 때는 드래그 중단 및 처리 방지
+        if (!isExpanded)
+        {
+            if (isDragging)
+            {
+                ToggleChildAgents(true);
+                isDragging = false;
+            }
             return;
         }
+
         // 마우스 왼쪽 클릭 시 (드래그 시작)
         if (Input.GetMouseButtonDown(0))
         {
@@ -40,16 +62,17 @@ public class ObjectDragger : MonoBehaviour
                 return;
             }
 
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            Ray ray = _mainCamera.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit;
 
             if (Physics.Raycast(ray, out hit))
             {
-                if (hit.transform == this.transform)
+                // 본인 또는 자식을 클릭했는지 확인
+                if (hit.transform == this.transform || hit.transform.IsChildOf(this.transform))
                 {
                     isDragging = true;
 
-                    // $z = 10$ 깊이값을 기준으로 마우스 월드 좌표 오프셋 계산
+                    // z = 10 깊이값을 기준으로 마우스 월드 좌표 오프셋 계산
                     Vector3 mouseWorldPos = _mainCamera.ScreenToWorldPoint(
                         new Vector3(Input.mousePosition.x, Input.mousePosition.y, 10f));
 
@@ -61,12 +84,13 @@ public class ObjectDragger : MonoBehaviour
                 }
             }
         }
+
         // 드래그 중
         if (isDragging && Input.GetMouseButton(0))
         {
             // 마우스가 도달해야 할 최종 '목표 위치'를 먼저 계산
-            Vector3 targetPos = Camera.main.ScreenToWorldPoint(
-                new Vector3(Input.mousePosition.x, Input.mousePosition.y, 10)) + offset;
+            Vector3 targetPos = _mainCamera.ScreenToWorldPoint(
+                new Vector3(Input.mousePosition.x, Input.mousePosition.y, 10f)) + offset;
 
             // 바로 위치를 대입하지 않고, smoothTime초에 걸쳐 부드럽게 감속하며 추적
             transform.position = Vector3.SmoothDamp(transform.position, targetPos, ref dragVelocity, smoothTime);
@@ -80,6 +104,37 @@ public class ObjectDragger : MonoBehaviour
             }
         }
     }
+
+    // VillageHouse 레이어를 가진 모든 Collider 수집
+    private void CacheVillageHouseColliders()
+    {
+        _villageHouseColliders.Clear();
+        int villageLayer = LayerMask.NameToLayer("VillageHouse");
+
+        Collider[] allColliders = GetComponentsInChildren<Collider>(true);
+        foreach (var col in allColliders)
+        {
+            // 레이어가 VillageHouse인 Collider를 찾아 목록에 보관
+            if (villageLayer != -1 && col.gameObject.layer == villageLayer)
+            {
+                _villageHouseColliders.Add(col);
+            }
+        }
+    }
+
+    // 축소 모드일 때 VillageHouse Collider를 꺼서 클릭 Raycast 감지를 차단
+
+    private void SetVillageHouseCollidersEnabled(bool enable)
+    {
+        foreach (var col in _villageHouseColliders)
+        {
+            if (col != null)
+            {
+                col.enabled = enable;
+            }
+        }
+    }
+
     private void ToggleChildAgents(bool enable)
     {
         NavMeshAgent[] agents = GetComponentsInChildren<NavMeshAgent>(true);
