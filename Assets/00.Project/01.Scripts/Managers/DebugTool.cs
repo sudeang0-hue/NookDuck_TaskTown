@@ -31,6 +31,14 @@ public class DebugTool : MonoBehaviour
     private string lastSaveActionText = "(없음)";
     private string lastUpgradeActionText = "(없음)";
 
+    //------------------26.07.24 KDH 추가---------------------------------
+    private string grantIdInput = "";
+    private string grantCountInput = "1";
+    private string grantLevelInput = "1";
+    private bool grantAsAnimal = true; // true=동물, false=도구
+    private string lastGrantActionText = "(없음)";
+    //-------------------------------------------------------------------
+
     private void Awake()
     {
         coinManager = CoinManager.Instance;
@@ -152,6 +160,36 @@ public class DebugTool : MonoBehaviour
         GUILayout.Label("초기화 후에도 도감 패널에는 계속 '이미 본 적 있음'으로 표시돼야 정상입니다.");
         if (GUILayout.Button("보유 동물/도구 인벤토리 초기화"))
             ResetInventoryForDexTest();
+
+        //-------------------26.07.24 KDH 추가----------------------------------
+        GUILayout.Space(16f);
+        DrawSeparator();
+        // --- 동물/도구 ID 지급·레벨 ---
+        GUILayout.Label("동물/도구 디버그 지급", GUI.skin.box);
+        GUILayout.BeginHorizontal();
+        if (GUILayout.Button(grantAsAnimal ? "[동물]" : "동물", GUILayout.Width(70f)))
+            grantAsAnimal = true;
+        if (GUILayout.Button(!grantAsAnimal ? "[도구]" : "도구", GUILayout.Width(70f)))
+            grantAsAnimal = false;
+        GUILayout.EndHorizontal();
+        GUILayout.BeginHorizontal();
+        GUILayout.Label("ID", GUILayout.Width(40f));
+        grantIdInput = GUILayout.TextField(grantIdInput, GUILayout.Width(180f));
+        GUILayout.EndHorizontal();
+        GUILayout.BeginHorizontal();
+        GUILayout.Label("개수", GUILayout.Width(40f));
+        grantCountInput = GUILayout.TextField(grantCountInput, GUILayout.Width(60f));
+        if (GUILayout.Button("지급", GUILayout.Width(60f)))
+            GrantById();
+        GUILayout.EndHorizontal();
+        GUILayout.BeginHorizontal();
+        GUILayout.Label("레벨", GUILayout.Width(40f));
+        grantLevelInput = GUILayout.TextField(grantLevelInput, GUILayout.Width(60f));
+        if (GUILayout.Button("레벨 설정", GUILayout.Width(80f)))
+            SetLevelById();
+        GUILayout.EndHorizontal();
+        GUILayout.Label($"마지막 결과: {lastGrantActionText}");
+        //-----------------------------------------------------------------------
 
         GUILayout.Space(16f);
         DrawSeparator();
@@ -348,6 +386,81 @@ public class DebugTool : MonoBehaviour
             toolInventory.ClearToolInventory();
 
         Debug.Log("[DebugTool] 보유 동물/도구 인벤토리를 초기화했습니다. 도감 패널에서 유지 여부를 확인하세요.");
+    }
+
+
+    private void GrantById()    // 26.07.24 KDH 추가
+    {
+        CacheManagersIfNeeded();
+        string id = grantIdInput != null ? grantIdInput.Trim() : string.Empty;
+        if (string.IsNullOrEmpty(id))
+        {
+            lastGrantActionText = "ID가 비어 있음";
+            return;
+        }
+        if (!int.TryParse(grantCountInput, out int count) || count < 1)
+        {
+            lastGrantActionText = "개수가 잘못됨";
+            return;
+        }
+        bool ok;
+        if (grantAsAnimal)
+        {
+            if (animalInventory == null)
+            {
+                lastGrantActionText = "AnimalInventory 없음";
+                return;
+            }
+            ok = animalInventory.DebugAddAnimal(id, count);
+            lastGrantActionText = ok ? $"동물 지급 성공: {id} x{count}" : $"동물 지급 실패: {id}";
+        }
+        else
+        {
+            if (toolInventory == null)
+            {
+                lastGrantActionText = "ToolInventory 없음";
+                return;
+            }
+            ok = toolInventory.DebugAddTool(id, count);
+            lastGrantActionText = ok ? $"도구 지급 성공: {id} x{count}" : $"도구 지급 실패: {id}";
+        }
+    }
+
+    private void SetLevelById()     // 26.07.24 KDH 추가
+    {
+        CacheManagersIfNeeded();
+        string id = grantIdInput != null ? grantIdInput.Trim() : string.Empty;
+        if (string.IsNullOrEmpty(id))
+        {
+            lastGrantActionText = "ID가 비어 있음";
+            return;
+        }
+        if (!int.TryParse(grantLevelInput, out int level))
+        {
+            lastGrantActionText = "레벨이 잘못됨";
+            return;
+        }
+        bool ok;
+        if (grantAsAnimal)
+        {
+            if (animalInventory == null)
+            {
+                lastGrantActionText = "AnimalInventory 없음";
+                return;
+            }
+            ok = animalInventory.DebugSetAnimalLevel(id, level);
+            lastGrantActionText = ok ? $"동물 레벨 설정: {id} -> Lv.{Mathf.Clamp(level, 1, 5)}" : $"동물 레벨 실패: {id}";
+        }
+        else
+        {
+            if (toolInventory == null)
+            {
+                lastGrantActionText = "ToolInventory 없음";
+                return;
+            }
+            ok = toolInventory.DebugSetToolLevel(id, level);
+            lastGrantActionText = ok ? $"도구 레벨 설정: {id} -> Lv.{Mathf.Clamp(level, 1, 5)}" : $"도구 레벨 실패: {id}";
+        }
     }
 }
 #else

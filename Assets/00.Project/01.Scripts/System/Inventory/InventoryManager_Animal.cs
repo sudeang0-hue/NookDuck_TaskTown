@@ -347,5 +347,41 @@ namespace TaskTown.KDH
         {
             OnAnimalInventoryChanged?.Invoke();
         }
+
+
+
+        /// <summary>
+        /// 디버그 전용: 지정 개수만큼 동물을 지급합니다.        26.07.24 KDH 추가
+        /// </summary>
+        public bool DebugAddAnimal(string animalId, int count)
+        {
+            AnimalDataSO data = GetAnimalData(animalId);
+            if (data == null)
+            {
+                Debug.LogWarning($"[InventoryManager_Animal] 존재하지 않는 AnimalId: {animalId}");
+                return false;
+            }
+            count = Mathf.Max(1, count);
+            for (int i = 0; i < count; i++)
+                AddAnimalSlot(data);
+            return true;
+        }
+        /// <summary>
+        /// 디버그 전용: 보유 동물의 레벨을 바로 설정합니다. 미보유면 1개 지급 후 설정.      26.07.24 KDH 추가
+        /// </summary>
+        public bool DebugSetAnimalLevel(string animalId, int targetLevel)
+        {
+            if (!TryGetAnimalSlot(animalId, out SlotData_Animal slot))
+            {
+                if (!DebugAddAnimal(animalId, 1))
+                    return false;
+                if (!TryGetAnimalSlot(animalId, out slot))
+                    return false;
+            }
+            slot.DebugSetLevel(targetLevel);
+            RefreshSlotGrowthData(slot);
+            NotifySlotChanged(slot);
+            return true;
+        }
     }
 }
