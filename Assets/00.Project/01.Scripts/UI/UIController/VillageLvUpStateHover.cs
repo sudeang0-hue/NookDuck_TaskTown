@@ -32,7 +32,7 @@ namespace UI
         [SerializeField] private TMP_Text lvUpAutoProductBonusText;
 
         [Header("데이터 소스 (선택)")]
-        [SerializeField] private VillageUI_Manager villageUIManager;
+        [SerializeField] private VillageInfoUI_Manager villageUIManager;
 
         private bool isHovering;
         private RectTransform parentRect;
@@ -41,7 +41,7 @@ namespace UI
         private void Awake()
         {
             if (villageUIManager == null)
-                villageUIManager = GetComponentInParent<VillageUI_Manager>();
+                villageUIManager = GetComponentInParent<VillageInfoUI_Manager>();
 
             CachePanelRefs();
             HidePanel();

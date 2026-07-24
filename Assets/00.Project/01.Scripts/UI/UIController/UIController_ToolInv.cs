@@ -9,12 +9,16 @@ namespace UI
         [Header("도구 인벤토리")]
         [SerializeField] private InventoryManager_Tool toolInventory;
 
-        [SerializeField] private SlotUI_ToolInv toolSlotPrefab;
+        [SerializeField] private KAY.SlotUI_ToolInv toolSlotPrefab;
         [SerializeField] private Transform toolSlotContentRoot;
 
+
+        [Header("도구 상세 페이지 (씬의 Tool_Inv_Page)")]
+        [SerializeField] private UIController_ToolInvPage toolInvPageController;
+
         [Header("인스펙터 확인용 인벤토리 리스트")]
-        [SerializeField] private List<SlotUI_ToolInv> slotMaplist = new List<SlotUI_ToolInv>();
-        private readonly Dictionary<string, SlotUI_ToolInv> slotMap = new Dictionary<string, SlotUI_ToolInv>();
+        [SerializeField] private List<KAY.SlotUI_ToolInv> slotMaplist = new List<KAY.SlotUI_ToolInv>();
+        private readonly Dictionary<string, KAY.SlotUI_ToolInv> slotMap = new Dictionary<string, KAY.SlotUI_ToolInv>();
 
         private void Awake()
         {
@@ -24,6 +28,9 @@ namespace UI
 
         private void OnEnable()
         {
+            // Inv 패널/컨트롤러 활성화 시 상세 페이지는 항상 닫힌 상태로 시작 (Animal Inv와 동일)
+            toolInvPageController?.CloseToolInvPage();
+
             if (!TryResolveInventory())
                 return;
 
@@ -32,6 +39,26 @@ namespace UI
 
             // 컨트롤러는 상시 활성 매니저에 있으므로, Content가 켜져 있을 때만 즉시 동기화
             SyncAllSlots();
+        }
+
+
+        /// <summary>
+        /// 도구 Inv 패널이 열릴 때 호출합니다.
+        /// 상세 페이지를 닫은 뒤 슬롯 UI를 동기화합니다.
+        /// </summary>
+        public void NotifyPanelOpened()
+        {
+            toolInvPageController?.CloseToolInvPage();
+            SyncAllSlots();
+        }
+
+        /// <summary>
+        /// 도구 Inv 패널이 닫힐 때 호출합니다.
+        /// 열려 있는 Tool_Inv_Page(상세)도 함께 닫습니다.
+        /// </summary>
+        public void NotifyPanelClosed()
+        {
+            toolInvPageController?.CloseToolInvPage();
         }
 
         private void OnDisable()
@@ -64,6 +91,11 @@ namespace UI
             {
                 Debug.LogWarning("[UIController_ToolInv] toolSlotContentRoot 이 없습니다.");
                 return false;
+            }
+
+            if (toolInvPageController == null)
+            {
+                Debug.LogWarning("[UIController_ToolInv] toolInvPageController 가 연결되지 않았습니다. 슬롯 클릭 시 상세 페이지가 열리지 않습니다.");
             }
 
             return true;
@@ -119,7 +151,7 @@ namespace UI
         {
             var staleIds = new List<string>();
 
-            foreach (KeyValuePair<string, SlotUI_ToolInv> pair in slotMap)
+            foreach (KeyValuePair<string, KAY.SlotUI_ToolInv> pair in slotMap)
             {
                 if (!activeIds.Contains(pair.Key))
                     staleIds.Add(pair.Key);
@@ -127,7 +159,7 @@ namespace UI
 
             foreach (string staleId in staleIds)
             {
-                if (!slotMap.TryGetValue(staleId, out SlotUI_ToolInv staleSlot))
+                if (!slotMap.TryGetValue(staleId, out KAY.SlotUI_ToolInv staleSlot))
                     continue;
 
                 slotMaplist.Remove(staleSlot);
@@ -151,8 +183,8 @@ namespace UI
             if (slotMap.ContainsKey(toolId))
                 return;
 
-            SlotUI_ToolInv createdSlot = Instantiate(toolSlotPrefab, toolSlotContentRoot);
-            createdSlot.Initialize(slotData, toolInventory);
+            KAY.SlotUI_ToolInv createdSlot = Instantiate(toolSlotPrefab, toolSlotContentRoot);
+            createdSlot.Initialize(slotData, toolInventory, toolInvPageController);
 
             slotMap.Add(toolId, createdSlot);
             slotMaplist.Add(createdSlot);
@@ -174,7 +206,7 @@ namespace UI
             if (string.IsNullOrEmpty(toolId))
                 return;
 
-            if (!slotMap.TryGetValue(toolId, out SlotUI_ToolInv slotView))
+            if (!slotMap.TryGetValue(toolId, out KAY.SlotUI_ToolInv slotView))
             {
                 AddToolSlot(slotData);
                 return;
