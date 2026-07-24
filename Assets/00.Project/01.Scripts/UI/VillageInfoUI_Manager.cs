@@ -28,7 +28,7 @@ namespace UI
         [Header("클릭 (Input System + Raycast)")]
         [Tooltip("VillageHouse 레이어만 체크하세요.")]
         [SerializeField] private LayerMask clickLayerMask;
-        [Tooltip("true면 Button 등 Selectable UI 위 클릭 시 집 Raycast를 무시합니다.")]
+        [Tooltip("true면 Selectable·IPointerClickHandler(UIClickBlocker 등) UI 위 클릭 시 집 Raycast를 무시합니다.")]
         [SerializeField] private bool blockWhenOverSelectableUI = true;
 
         [Header("패널 배치 (WorldSpace 전용)")]
@@ -223,6 +223,10 @@ namespace UI
             clickLayerMask = mask;
         }
 
+        /// <summary>
+        /// 포인터 아래 UI가 실제 상호작용 가능한지 판별합니다.
+        /// Selectable뿐 아니라 UIClickBlocker(IPointerClickHandler)도 차단 대상으로 포함합니다.
+        /// </summary>
         private bool IsPointerOverSelectableUI()
         {
             if (EventSystem.current == null)
@@ -244,7 +248,12 @@ namespace UI
                 if (hitGo == null)
                     continue;
 
+                // Button 등
                 if (hitGo.GetComponentInParent<Selectable>() != null)
+                    return true;
+
+                // ClickBlockImage + UIClickBlocker 등 (IPointerClickHandler)
+                if (ExecuteEvents.GetEventHandler<IPointerClickHandler>(hitGo) != null)
                     return true;
             }
 

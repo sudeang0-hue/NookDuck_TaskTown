@@ -34,7 +34,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 76, y: -136}
+  m_AnchoredPosition: {x: 84.5, y: -136}
   m_SizeDelta: {x: 250, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2751961922778338253
@@ -396,9 +396,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: UI.UIController_AnimalInvPage, Assembly-CSharp
-        m_MethodName: CloseAnimalInvPage
+      - m_Target: {fileID: 5103066862320377216}
+        m_TargetAssemblyTypeName: UI.UIPanelWindow, Assembly-CSharp
+        m_MethodName: ClosePanel
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -457,7 +457,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 80, y: -97}
+  m_AnchoredPosition: {x: 84.5, y: -97}
   m_SizeDelta: {x: 250, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1777188875353137365
@@ -1203,6 +1203,7 @@ MonoBehaviour:
   requireCountText: {fileID: 973138355511068823}
   currentProductCoin: {fileID: 6958156751412420706}
   usingAnimalIcon: {fileID: 8674440237351081122}
+  equipAnimalText: {fileID: 4290243961687867767}
   levelupButton: {fileID: 1918287161558667142}
   specialAnimal: {fileID: 3896600407765006278}
   levelSprites:

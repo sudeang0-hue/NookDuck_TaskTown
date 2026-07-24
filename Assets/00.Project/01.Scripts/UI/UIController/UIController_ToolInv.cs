@@ -28,6 +28,9 @@ namespace UI
 
         private void OnEnable()
         {
+            // Inv 패널/컨트롤러 활성화 시 상세 페이지는 항상 닫힌 상태로 시작 (Animal Inv와 동일)
+            toolInvPageController?.CloseToolInvPage();
+
             if (!TryResolveInventory())
                 return;
 
@@ -50,8 +53,8 @@ namespace UI
         }
 
         /// <summary>
-        /// 동물 Inv 패널이 닫힐 때 호출합니다.
-        /// 열려 있는 Animal_Inv_Page(상세)도 함께 닫습니다.
+        /// 도구 Inv 패널이 닫힐 때 호출합니다.
+        /// 열려 있는 Tool_Inv_Page(상세)도 함께 닫습니다.
         /// </summary>
         public void NotifyPanelClosed()
         {

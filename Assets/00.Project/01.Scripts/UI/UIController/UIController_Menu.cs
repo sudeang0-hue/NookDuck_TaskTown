@@ -26,9 +26,9 @@ public class UIController_Menu : MonoBehaviour
     [SerializeField] private UIPanelWindow optionPanel;
 
     [Header("인벤토리 UI 동기화")]
-    [Tooltip("동물 Inv 패널 오픈 시 상세 닫기 + SyncAllSlots 호출 대상")]
+    [Tooltip("동물 Inv 패널 오픈/닫기 시 상세 닫기 + SyncAllSlots 호출 대상")]
     [SerializeField] private UIController_AnimalInv animalInvUI;
-    [Tooltip("도구 Inv 패널 오픈 시 SyncAllSlots 호출 대상")]
+    [Tooltip("도구 Inv 패널 오픈/닫기 시 상세 닫기 + SyncAllSlots 호출 대상")]
     [SerializeField] private UIController_ToolInv toolInvUI;
     [Tooltip("동물 도감 패널 오픈 시 상세 닫기 등 오픈 처리 호출 대상")]
     [SerializeField] private UIController_AnimalDex animalDexUI;
@@ -145,18 +145,21 @@ public class UIController_Menu : MonoBehaviour
         if (panel == animalInventoryPanel)
             animalInvUI?.NotifyPanelOpened();
         else if (panel == toolInventoryPanel)
-            toolInvUI?.SyncAllSlots();
+            toolInvUI?.NotifyPanelOpened();
         else if (panel == animalDexPanel)
             animalDexUI?.NotifyPanelOpened();
     }
 
     /// <summary>
     /// 패널이 닫힌 뒤 필요한 UI 정리. Dex는 현재 유지(호출하지 않음).
+    /// Animal / Tool Inv는 상세 페이지(Animal_Inv_Page / Tool_Inv_Page)도 함께 닫습니다.
     /// </summary>
     private void NotifyPanelClosedIfNeeded(UIPanelWindow panel)
     {
         if (panel == animalInventoryPanel)
             animalInvUI?.NotifyPanelClosed();
+        else if (panel == toolInventoryPanel)
+            toolInvUI?.NotifyPanelClosed();
     }
 
     private void CloseAllExcept(UIPanelWindow keepOpen)

@@ -39,6 +39,7 @@ namespace UI
         [Header(" ")]
         [Tooltip("이 도구에 장착된 동물 아이콘. SlotData_Tool.CurrentAnimalId 기준으로 표시됩니다.")]
         [SerializeField] private Image usingAnimalIcon;
+        [SerializeField] private TMP_Text equipAnimalText;
         [SerializeField] private Button levelupButton;
         [Tooltip("이 도구의 특화 동물 이름")]
         [SerializeField] private TMP_Text specialAnimal;
@@ -293,15 +294,13 @@ namespace UI
         }
 
         /// <summary>
-        /// 이 도구에 장착된 동물 아이콘을 표시합니다.
-        /// CurrentAnimalSet / CurrentAnimalId가 채워지면(동물 Inv에서 도구 장착 후) 아이콘이 출력됩니다.
+        /// 이 도구에 장착된 동물 아이콘·이름을 표시합니다.
+        /// CurrentAnimalSet / CurrentAnimalId가 채워지면(동물 Inv에서 도구 장착 후) 갱신됩니다.
         /// </summary>
         private void ApplyUsingAnimalIcon(SlotData_Tool slotData)
         {
-            if (usingAnimalIcon == null)
-                return;
-
             Sprite animalIcon = null;
+            string animalDisplayName = "equipAnimal";//string.Empty;
 
             if (slotData != null &&
                 slotData.CurrentAnimalSet &&
@@ -311,11 +310,25 @@ namespace UI
                 AnimalDataSO animalData =
                     InventoryManager_Animal.Instance.GetAnimalData(slotData.CurrentAnimalId);
                 if (animalData != null)
+                {
                     animalIcon = animalData.Icon;
+                    animalDisplayName = animalData.DisplayName;
+                }
+
+                // DisplayName이 비어 있으면 Id로 대체
+                if (string.IsNullOrEmpty(animalDisplayName))
+                    animalDisplayName = slotData.CurrentAnimalId;
             }
 
-            usingAnimalIcon.sprite = animalIcon;
-            usingAnimalIcon.enabled = animalIcon != null;
+            if (usingAnimalIcon != null)
+            {
+                usingAnimalIcon.sprite = animalIcon;
+                usingAnimalIcon.enabled = animalIcon != null;
+            }
+
+
+            if (equipAnimalText != null)
+                equipAnimalText.text = animalDisplayName;
         }
 
         private void ApplyLevelImage(int level)

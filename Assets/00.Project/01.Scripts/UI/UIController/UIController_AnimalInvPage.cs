@@ -34,7 +34,9 @@ namespace UI
         [Header(" ")]
         [SerializeField] private TMP_Text currentProductCoin;  // 현재 기본 생산량
         [Header(" ")]
-        [SerializeField] private Image usingToolIcon;  // 장착하고있는 도구 아이콘 (도구 연동 단계에서 갱신 예정)
+        [SerializeField] private Image usingToolIcon;  // 장착하고있는 도구 아이콘
+        [Tooltip("장착 도구 이름. 현재 한글 폰트 깨짐으로 ToolDataSO.Id를 표시합니다.")]
+        [SerializeField] private TMP_Text equipToolText;
 
         [Header("레벨 이미지")]
         [Tooltip("1성 ~ 5성 이미지. SlotUI_AnimalInv 와 동일한 배열 사용")]
@@ -325,7 +327,7 @@ namespace UI
         }
 
         /// <summary>
-        /// 현재 동물이 장착되어 있는 도구가 있으면 그 아이콘을 표시하고, 없으면 숨깁니다.
+        /// 현재 동물이 장착되어 있는 도구가 있으면 아이콘·이름을 표시하고, 없으면 숨깁니다.
         /// 장착 여부에 따라 Set Tool / Change / SetOff 버튼 상태도 갱신합니다.
         /// </summary>
         private void ApplyUsingToolIcon(string animalId)
@@ -341,6 +343,17 @@ namespace UI
 
                 usingToolIcon.sprite = toolIcon;
                 usingToolIcon.enabled = toolIcon != null;
+            }
+
+            // 현재 단계: 한글 폰트 깨짐 때문에 DisplayName 대신 ToolId 표시
+            if (equipToolText != null)
+            {
+                if (hasEquippedTool && equippedTool.ToolData != null)
+                    equipToolText.text = equippedTool.ToolData.Id;
+                else if (hasEquippedTool)
+                    equipToolText.text = equippedTool.ToolId;
+                else
+                    equipToolText.text = "equipTool";//string.Empty;
             }
 
             UpdateToolEquipButtons(hasEquippedTool);
