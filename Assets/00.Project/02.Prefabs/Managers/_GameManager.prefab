@@ -14,6 +14,8 @@ GameObject:
   - component: {fileID: 4556516888078230745}
   - component: {fileID: 3817873676358197731}
   - component: {fileID: 2549582319301401772}
+  - component: {fileID: 9177702154875922561}
+  - component: {fileID: 5701726494756243612}
   m_Layer: 0
   m_Name: _GameManager
   m_TagString: Untagged
@@ -139,3 +141,29 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TypingInputFilter
   maxAllowedCPS: 18
   checkWindowDuration: 1
+--- !u!114 &9177702154875922561
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3709761523516988655}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5380bb09b6f14a54fb6706e80a5b92d1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TaskTown.KDH.SaveManager
+  coinManager: {fileID: 0}
+  townLevelProviderSource: {fileID: 0}
+--- !u!114 &5701726494756243612
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3709761523516988655}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b476ab2062a6b3448abfd020671a74ae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TaskTown.KDH.DexRecordManager
