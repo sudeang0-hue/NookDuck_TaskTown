@@ -3,8 +3,10 @@
 using UnityEngine;
 using DG.Tweening;
 using System;
+using Animal.Data;     // AnimalDataSO 네임스페이스
+using TaskTown.Gacha;  // GachaEntryData 네임스페이스
 
-public class  VillagerPlacementDirector : MonoBehaviour
+public class VillagerPlacementDirector : MonoBehaviour
 {
     [Header("오브젝트 연결")]
     [Tooltip("버스 3D 모델 Transform")]
@@ -13,7 +15,11 @@ public class  VillagerPlacementDirector : MonoBehaviour
     [Tooltip("버스 모델 하위에 부착된 트렁크/하차 지점 Transform")]
     [SerializeField] private Transform trunkTransform;
 
-    [Tooltip("소환될 동물 주민 프리팹")]
+    [Header("데이터베이스 및 기본 프리팹")]
+    [Tooltip("마을 배치 DB 에셋 (AnimalDataSO로 프리팹을 찾을 때 사용)")]
+    [SerializeField] private VillagePlacementDatabaseSO placementDB;
+
+    [Tooltip("소환될 동물 주민 프리팹 (DB나 외부 전달값이 없을 때 사용할 기본값)")]
     [SerializeField] private GameObject animalPrefab;
 
     [Header("버스 이동 경로 (Waypoints)")]
@@ -37,6 +43,7 @@ public class  VillagerPlacementDirector : MonoBehaviour
     private Vector3[] _waypointsCache;
     private Quaternion _initialBusRotation;
     private Sequence _busSequence;
+
     // 외부에서 넘겨받은 프리팹을 임시로 저장할 변수
     private GameObject _overrideAnimalPrefab;
 
@@ -58,10 +65,23 @@ public class  VillagerPlacementDirector : MonoBehaviour
 
     private void Update()
     {
-        // 테스트용 단축키 (E)
+        // 테스트용 단축키 (E) - placementDB에서 랜덤으로 동물을 하나 뽑아 테스트
         if (Input.GetKeyDown(KeyCode.E))
         {
-            StartBusSummon();
+            if (placementDB != null && placementDB.entries.Count > 0)
+            {
+                // DB 항목 중 무작위 하나 선택
+                int randomIndex = UnityEngine.Random.Range(0, placementDB.entries.Count);
+                AnimalDataSO randomAnimalData = placementDB.entries[randomIndex].animalData;
+
+                // 해당 동물의 데이터로 버스 연출 시작!
+                StartBusSummon(randomAnimalData);
+            }
+            else
+            {
+                // DB가 없거나 비어있다면 기본 예비 프리팹으로 실행
+                StartBusSummon();
+            }
         }
     }
 
@@ -70,7 +90,7 @@ public class  VillagerPlacementDirector : MonoBehaviour
     {
         if (pathPoints == null || pathPoints.Length < 2)
         {
-            Debug.LogWarning("[BusGachaDirector] 경로 포인트(pathPoints)가 최소 2개 이상 설정되어야 합니다!");
+            Debug.LogWarning("[VillagerPlacementDirector] 경로 포인트(pathPoints)가 최소 2개 이상 설정되어야 합니다!");
             return;
         }
 
@@ -81,7 +101,37 @@ public class  VillagerPlacementDirector : MonoBehaviour
         }
     }
 
-    //외부(마을 배치 UI 등)에서 프리팹을 전달받아 호출하는 메서드
+    // AnimalDataSO 에셋을 직접 받아서 호출하는 방식
+    public void StartBusSummon(AnimalDataSO animalData)
+    {
+        if (placementDB != null && animalData != null)
+        {
+            GameObject targetPrefab = placementDB.GetVisualPrefab(animalData);
+            StartBusSummon(targetPrefab);
+        }
+        else
+        {
+            Debug.LogWarning("[VillagerPlacementDirector] placementDB가 없거나 animalData가 null입니다. 기본 연출을 실행합니다.");
+            StartBusSummon();
+        }
+    }
+
+    // 동물 ID(string)로 호출하는 방식
+    public void StartBusSummon(string animalID)
+    {
+        if (placementDB != null && !string.IsNullOrEmpty(animalID))
+        {
+            GameObject targetPrefab = placementDB.GetVisualPrefab(animalID);
+            StartBusSummon(targetPrefab);
+        }
+        else
+        {
+            Debug.LogWarning("[VillagerPlacementDirector] placementDB가 없거나 animalID가 유효하지 않습니다. 기본 연출을 실행합니다.");
+            StartBusSummon();
+        }
+    }
+
+    // GameObject 프리팹을 직접 받아서 호출하는 방식
     public void StartBusSummon(GameObject customAnimalPrefab)
     {
         _overrideAnimalPrefab = customAnimalPrefab;
@@ -93,7 +143,7 @@ public class  VillagerPlacementDirector : MonoBehaviour
     {
         if (busObject == null)
         {
-            Debug.LogError("[BusGachaDirector] busObject가 할당되지 않았습니다!");
+            Debug.LogError("[VillagerPlacementDirector] busObject가 할당되지 않았습니다!");
             return;
         }
 
@@ -116,7 +166,7 @@ public class  VillagerPlacementDirector : MonoBehaviour
 
         _busSequence = DOTween.Sequence();
 
-        //CatmullRom 경로 이동 + 프레임별 Y축 회전 강제 고정 (Yaw Locking)
+        // CatmullRom 경로 이동 + 프레임별 Y축 회전 강제 고정 (Yaw Locking)
         _busSequence.Append(
             busObject.DOPath(_waypointsCache, busMoveDuration, PathType.CatmullRom, PathMode.Full3D)
                      .SetLookAt(lookAheadValue, Vector3.forward, Vector3.up)
@@ -124,20 +174,20 @@ public class  VillagerPlacementDirector : MonoBehaviour
                      .OnUpdate(SanitizeBusRotation) // 매 프레임 X, Z 축 기울어짐 제거
         );
 
-        //경로 완료 후 미세 회전 오차 0°로 보정
+        // 경로 완료 후 미세 회전 오차 0°로 보정
         _busSequence.AppendCallback(SanitizeBusRotation);
 
-        //정차 브레이크 반동 (Punch 후 회전 비틀림 방지를 위해 완료 후 보정)
+        // 정차 브레이크 반동 (Punch 후 회전 비틀림 방지를 위해 완료 후 보정)
         _busSequence.Append(busObject.DOPunchPosition(busObject.forward * 0.4f, 0.35f, 8, 1f));
         _busSequence.AppendCallback(SanitizeBusRotation);
 
-        //트렁크 문 열림 대기
+        // 트렁크 문 열림 대기
         _busSequence.AppendInterval(0.2f);
 
-        //동물 주민 하차 스폰
+        // 동물 주민 하차 스폰
         _busSequence.AppendCallback(SpawnAnimalFromTrunk);
 
-        //대기 후 화면 밖으로 퇴장
+        // 대기 후 화면 밖으로 퇴장
         _busSequence.AppendInterval(1.5f);
         Vector3 exitTargetPosition = _waypointsCache[_waypointsCache.Length - 1] + busObject.forward * 20f;
         _busSequence.Append(
@@ -150,12 +200,11 @@ public class  VillagerPlacementDirector : MonoBehaviour
         _busSequence.OnComplete(() =>
         {
             busObject.gameObject.SetActive(false);
-            Debug.Log("[BusGachaDirector] 버스가 성공적으로 퇴장하여 비활성화되었습니다.");
+            Debug.Log("[VillagerPlacementDirector] 버스가 성공적으로 퇴장하여 비활성화되었습니다.");
         });
     }
 
-
-    // [핵심 모듈] 버스의 X(Pitch)축과 Z(Roll)축 회전 오차를 원천 차단하고 Y(Yaw)축만 남기는 보정 메서드
+    // 버스의 X(Pitch)축과 Z(Roll)축 회전 오차를 원천 차단하고 Y(Yaw)축만 남기는 보정 메서드
     private void SanitizeBusRotation()
     {
         if (busObject == null) return;
@@ -168,10 +217,15 @@ public class  VillagerPlacementDirector : MonoBehaviour
     // 동물 주민 스폰 및 방향 오프셋이 적용된 하차 연출
     private void SpawnAnimalFromTrunk()
     {
-        // 외부에서 넘겨받은 프리팹이 있으면 그것을 쓰고, 없으면 인스펙터의 기본 프리팹 사용
+        // 외부에서 넘겨받은 프리팹이 있으면 우선 사용하고, 없으면 기본 animalPrefab 사용
         GameObject prefabToSpawn = (_overrideAnimalPrefab != null) ? _overrideAnimalPrefab : animalPrefab;
 
-        if (animalPrefab == null) return;
+        if (prefabToSpawn == null)
+        {
+            Debug.LogWarning("[VillagerPlacementDirector] 소환할 동물 프리팹이 설정되지 않았습니다!");
+            _overrideAnimalPrefab = null;
+            return;
+        }
 
         Transform spawnPoint = (trunkTransform != null) ? trunkTransform : busObject;
 
@@ -182,7 +236,7 @@ public class  VillagerPlacementDirector : MonoBehaviour
         Quaternion finalSpawnRotation = spawnPoint.rotation * angleRotation;
         Vector3 exitDirection = finalSpawnRotation * Vector3.forward;
 
-        //결정된 프리팹으로 생성
+        // 결정된 프리팹으로 인스턴스화
         GameObject newAnimal = Instantiate(prefabToSpawn, spawnPoint.position, finalSpawnRotation);
         newAnimal.transform.localScale = Vector3.zero;
 
