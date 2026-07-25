@@ -22,14 +22,43 @@ ModelImporter:
     animationDoRetargetingWarnings: 0
     importAnimatedCustomProperties: 0
     importConstraints: 0
-    animationCompression: 1
+    animationCompression: 3
     animationRotationError: 0.5
     animationPositionError: 0.5
     animationScaleError: 0.5
     animationWrapMode: 0
     extraExposedTransformPaths: []
     extraUserProperties: []
-    clipAnimations: []
+    clipAnimations:
+    - serializedVersion: 16
+      name: NlaTrack
+      takeName: NlaTrack
+      internalID: -2030790844287404038
+      firstFrame: 0
+      lastFrame: 60
+      wrapMode: 0
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      hasAdditiveReferencePose: 0
+      loopTime: 1
+      loopBlend: 0
+      loopBlendOrientation: 0
+      loopBlendPositionY: 0
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events: []
+      transformMask: []
+      maskType: 3
+      maskSource: {instanceID: 0}
+      additiveReferencePoseFrame: 0
     isReadable: 0
   meshes:
     lODScreenPercentages: []
@@ -83,7 +112,122 @@ ModelImporter:
   humanDescription:
     serializedVersion: 3
     human: []
-    skeleton: []
+    skeleton:
+    - name: alpaca(Clone)
+      parentName: 
+      position: {x: 0, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: tripo_node_b467fc3b
+      parentName: alpaca(Clone)
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: tripo::Root
+      parentName: alpaca(Clone)
+      position: {x: -0.0060169636, y: 0.0037527857, z: 0}
+      rotation: {x: -0.5345469, y: -0.61375237, z: 0.38210544, w: 0.43767914}
+      scale: {x: 1, y: 0.99999994, z: 1}
+    - name: tripo::Spine_0
+      parentName: tripo::Root
+      position: {x: -0.16228743, y: 0.2886802, z: 0.006647587}
+      rotation: {x: -0.00000006407254, y: 0.000000027371117, z: -0.6238505, w: 0.7815437}
+      scale: {x: 1, y: 1, z: 1}
+    - name: tripo::Head_0
+      parentName: tripo::Spine_0
+      position: {x: 0.000000051754675, y: 0.17602488, z: 7.692887e-10}
+      rotation: {x: 0.0017471378, y: 0.02639946, z: 0.00048549153, w: 0.9996498}
+      scale: {x: 0.99999994, y: 0.99999994, z: 1}
+    - name: tripo::Head_1
+      parentName: tripo::Head_0
+      position: {x: 0.000000005184676, y: 0.1779168, z: 0.000000017115621}
+      rotation: {x: 0.14611459, y: -0.100125134, z: -0.55631745, w: 0.8118722}
+      scale: {x: 1.0000001, y: 0.9999999, z: 1}
+    - name: bone_10
+      parentName: tripo::Head_1
+      position: {x: 0.013888799, y: 0.042612817, z: -0.16569303}
+      rotation: {x: -0.62945884, y: 0.3643597, z: -0.55009854, w: 0.4103843}
+      scale: {x: 1, y: 1, z: 1}
+    - name: tripo::0_Right_Limb_0
+      parentName: bone_10
+      position: {x: -0.000000010715386, y: 0.14434022, z: -0.000000025380613}
+      rotation: {x: 0.024166405, y: 0.99236196, z: -0.09289676, w: -0.07748496}
+      scale: {x: 1, y: 1.0000001, z: 1}
+    - name: tripo::0_Right_Limb_1
+      parentName: tripo::0_Right_Limb_0
+      position: {x: 0.0000000058588454, y: 0.19618227, z: -0.000000021097255}
+      rotation: {x: 0.036404874, y: 0.008437663, z: -0.025176244, w: 0.9989844}
+      scale: {x: 1, y: 0.9999998, z: 1}
+    - name: tripo::0_Right_Limb_2
+      parentName: tripo::0_Right_Limb_1
+      position: {x: -0.000000028219551, y: 0.027584838, z: -0.000000033324525}
+      rotation: {x: 0.019088194, y: -0.050781462, z: 0.06158772, w: 0.9966262}
+      scale: {x: 0.99999994, y: 1, z: 1}
+    - name: tripo::0_Right_Limb_3
+      parentName: tripo::0_Right_Limb_2
+      position: {x: 0.000000020506144, y: 0.028400281, z: 0.00000005065499}
+      rotation: {x: 0.00000026155936, y: -0.000000027994519, z: 0.0000014158528, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: tripo::Head_2
+      parentName: tripo::Head_1
+      position: {x: -0.13468407, y: -0.00074212067, z: 0.00027610466}
+      rotation: {x: -0.12487936, y: 0.12561584, z: 0.69796836, w: 0.6938775}
+      scale: {x: 0.99999976, y: 0.9999999, z: 0.99999994}
+    - name: bone_5
+      parentName: tripo::Head_1
+      position: {x: 0.013888844, y: 0.13646145, z: 0.086591594}
+      rotation: {x: -0.13602932, y: -0.11344611, z: -0.63035244, w: 0.7558319}
+      scale: {x: 1.0000001, y: 0.99999994, z: 1.0000001}
+    - name: tripo::0_Left_Limb_0
+      parentName: bone_5
+      position: {x: -0.000000014011576, y: 0.14434011, z: -0.000000049537576}
+      rotation: {x: 0.04424743, y: 0.8708454, z: 0.48895296, w: 0.024404056}
+      scale: {x: 0.9999999, y: 0.99999994, z: 1}
+    - name: tripo::0_Left_Limb_1
+      parentName: tripo::0_Left_Limb_0
+      position: {x: -0.000000058829944, y: 0.18983494, z: -0.0000000050966746}
+      rotation: {x: -0.120769046, y: -0.05344346, z: -0.0502111, w: 0.9899685}
+      scale: {x: 1.0000001, y: 0.9999999, z: 1}
+    - name: tripo::0_Left_Limb_2
+      parentName: tripo::0_Left_Limb_1
+      position: {x: -0.000000034099685, y: 0.02758485, z: 0.000000018437905}
+      rotation: {x: -0.00055836426, y: 0.002287916, z: 0.0066088047, w: 0.9999754}
+      scale: {x: 1, y: 0.99999994, z: 1}
+    - name: tripo::0_Left_Limb_3
+      parentName: tripo::0_Left_Limb_2
+      position: {x: -0.00000003364694, y: 0.028400354, z: -0.0000000063926424}
+      rotation: {x: -0.00000026277638, y: 0.0000001523935, z: 0.00000050415457, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: tripo::1_Right_Limb_0
+      parentName: tripo::Root
+      position: {x: -0.2793199, y: 0.19895521, z: -0.10648383}
+      rotation: {x: 0.9383224, y: 0.32982674, z: -0.022107562, w: -0.1013733}
+      scale: {x: 1, y: 0.9999997, z: 0.9999891}
+    - name: tripo::1_Right_Limb_1
+      parentName: tripo::1_Right_Limb_0
+      position: {x: 0.00000006232722, y: 0.18537323, z: -0.0000005135803}
+      rotation: {x: -0.8215208, y: 0.5612645, z: -0.04527468, w: -0.0896435}
+      scale: {x: 1, y: 1.0000004, z: 0.9999993}
+    - name: tripo::1_Right_Limb_2
+      parentName: tripo::1_Right_Limb_1
+      position: {x: -0.000000051378514, y: 0.10172773, z: -0.00000019007169}
+      rotation: {x: -0.0016007338, y: 0.000001430731, z: 0.0149321705, w: 0.9998872}
+      scale: {x: 0.99999994, y: 1, z: 1}
+    - name: bone_18
+      parentName: tripo::Root
+      position: {x: -0.2793199, y: 0.19895525, z: 0.11197689}
+      rotation: {x: 0.00000007366914, y: 0.09445883, z: 0.9955288, w: -0.0000000069899535}
+      scale: {x: 1, y: 1.0000001, z: 1.0000023}
+    - name: tripo::1_Left_Limb_0
+      parentName: bone_18
+      position: {x: -0.000000030253563, y: 0.18668228, z: -0.00000008579837}
+      rotation: {x: -0.28927016, y: -0.3955491, z: -0.47929028, w: 0.7281103}
+      scale: {x: 1.0000002, y: 1.0000002, z: 1.0000001}
+    - name: tripo::1_Left_Limb_1
+      parentName: tripo::1_Left_Limb_0
+      position: {x: -0.00000003576838, y: 0.10180257, z: -0.00000013003972}
+      rotation: {x: 0.31077465, y: 0.024497284, z: 0.25613084, w: 0.91499513}
+      scale: {x: 0.9999998, y: 0.99999964, z: 1.0000006}
     armTwist: 0.5
     foreArmTwist: 0.5
     upperLegTwist: 0.5
@@ -94,13 +238,13 @@ ModelImporter:
     globalScale: 1
     rootMotionBoneName: 
     hasTranslationDoF: 0
-    hasExtraRoot: 0
+    hasExtraRoot: 1
     skeletonHasParents: 1
   lastHumanDescriptionAvatarSource: {instanceID: 0}
   autoGenerateAvatarMappingIfUnspecified: 1
   animationType: 2
   humanoidOversampling: 1
-  avatarSetup: 0
+  avatarSetup: 1
   addHumanoidExtraRootOnlyWhenUsingAvatar: 1
   importBlendShapeDeformPercent: 1
   remapMaterialsIfMaterialImportModeIsNone: 0
