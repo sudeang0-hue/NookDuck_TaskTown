@@ -146,5 +146,12 @@ namespace TaskTown.KDH
         {
             maxPlacedToolCount = Mathf.Max(1, count);
         }
+
+        //----------------------26.07.27 KDH-------------------------------
+        public void IncreaseMaxPlacedToolCount(int amount)
+        {
+            maxPlacedToolCount = Mathf.Max(1, maxPlacedToolCount + amount);
+        }
+        //------------------------------------------------------------------
     }
 }
