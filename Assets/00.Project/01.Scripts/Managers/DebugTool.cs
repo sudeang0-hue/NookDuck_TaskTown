@@ -1,4 +1,5 @@
 using TaskTown.KDH;
+using UI;
 using UnityEngine;
 /*#if UNITY_EDITOR || DEVELOPMENT_BUILD*/
 /// <summary>
@@ -37,7 +38,9 @@ public class DebugTool : MonoBehaviour
     private string grantLevelInput = "1";
     private bool grantAsAnimal = true; // true=동물, false=도구
     private string lastGrantActionText = "(없음)";
-    //-------------------------------------------------------------------
+    //-----------------26.07.27 KDH-----------------------------------------
+    private VillageUpgradeUI_Manager villageUpgradeUIManager;
+    //---------------------------------------------------------------------
 
     private void Awake()
     {
@@ -265,6 +268,21 @@ public class DebugTool : MonoBehaviour
             GUILayout.Label($"마지막 결과: {lastUpgradeActionText}");
         }
 
+        //--------------------------26.07.27 KDH--------------------------------------
+        GUILayout.Label($"마을 레벨: {(villageUpgradeUIManager != null ? villageUpgradeUIManager.UiTownLevel.ToString() : "-")}");
+        if (GUILayout.Button("마을 레벨 초기화 (Lv.1)"))
+        {
+            if (villageUpgradeUIManager == null)
+                lastUpgradeActionText = "VillageUpgradeUI_Manager 없음";
+            else
+            {
+                townUpgradeManager.LoadLevels(1, 1, 1);
+                villageUpgradeUIManager.DebugSetTownLevel(1);
+                lastUpgradeActionText = "마을 레벨 Lv.1 초기화";
+            }
+        }
+        //-----------------------------------------------------------------------------
+
         GUILayout.Space(8f);
         GUI.DragWindow();
         GUILayout.EndScrollView();
@@ -290,6 +308,10 @@ public class DebugTool : MonoBehaviour
             toolInventory = InventoryManager_Tool.Instance;
         if (townUpgradeManager == null)
             townUpgradeManager = TownUpgradeManager.Instance;
+        //-------------------------------26.07.27 KDH--------------------------------------
+        if (villageUpgradeUIManager == null)
+            villageUpgradeUIManager = FindAnyObjectByType<VillageUpgradeUI_Manager>();
+        //---------------------------------------------------------------------------------
     }
 
     private void SyncInputsFromManagers()

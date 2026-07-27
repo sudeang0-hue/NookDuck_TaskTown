@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using TaskTown.Gacha;
+using TaskTown.KDH;
 using UI;
 using UnityEngine;
 
@@ -173,6 +174,11 @@ namespace UI
             if (CoinManager.Instance == null || !CoinManager.Instance.TrySpend(cost))
                 return false;
 
+            //-----------------------26.07.27 KDH-------------------------------
+            // 마을 레벨 1 오를 때마다 도구 배치 한도 +1
+            ToolPlacementService.Instance?.IncreaseMaxPlacedToolCount(1);
+            //------------------------------------------------------------------
+
             uiTownLevel++;
             ResetCycleAndRefreshUI();
             return true;
@@ -315,5 +321,17 @@ namespace UI
         {
             RefreshInteractableStates();
         }
+
+        //-----------------------26.07.27 KDH-------------------------------
+        /// <summary>
+        /// 디버그/테스트용. 마을 레벨을 지정값으로 두고 사이클·UI를 갱신합니다.
+        /// </summary>
+        public void DebugSetTownLevel(int level)
+        {
+            uiTownLevel = Mathf.Max(1, level);
+            ToolPlacementService.Instance?.SetMaxPlacedToolCount(3);
+            ResetCycleAndRefreshUI(); // 내부에서 RefreshAllUI → UIController 갱신 + OnVillageUpgradeStateChanged
+        }
+        //-------------------------------------------------------------------
     }
 }
