@@ -1,3 +1,4 @@
+using System;
 using Animal.Data;
 using TaskTown.Gacha;
 using UnityEngine;
@@ -16,6 +17,11 @@ namespace TaskTown.KDH
     public class RealProductionTicker : MonoBehaviour
     {
         public static RealProductionTicker Instance { get; private set; }
+
+        /// <summary>
+        /// 자동 생산 코인이 지갑에 실제 지급된 경우에만 발생합니다.
+        /// </summary>
+        public event Action<int> ProductionCoinGranted;
 
         [SerializeField] private DifficultyProductionTable difficultyTable;
         [SerializeField] private DifficultyType difficulty = DifficultyType.Normal;
@@ -54,7 +60,13 @@ namespace TaskTown.KDH
 
             int wholeCoins = Mathf.FloorToInt(productionBuffer);
             productionBuffer -= wholeCoins;
-            CoinWallet?.Add(wholeCoins);
+
+            ICoinWallet coinWallet = CoinWallet;
+            if (coinWallet == null)
+                return;
+
+            coinWallet.Add(wholeCoins);
+            ProductionCoinGranted?.Invoke(wholeCoins);
         }
 
         // 프레임을 기다리지 않고 즉시 현재 생산량을 계산합니다(오프라인 보상 등 앱 시작 직후에 필요).

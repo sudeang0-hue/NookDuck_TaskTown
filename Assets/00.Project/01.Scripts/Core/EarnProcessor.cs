@@ -1,10 +1,16 @@
 //나범 코드 및 추가 를 했습니다 :-)
 
+using System;
 using UnityEngine;
 
 public class EarnProcessor : MonoBehaviour
 {
     public static EarnProcessor Instance { get; private set; }
+
+    /// <summary>
+    /// 클릭 또는 타이핑 보상이 CoinManager에 실제 지급됐을 때만 발생합니다.
+    /// </summary>
+    public event Action<int> ManualCoinGranted;
 
     [Header("Click & Typing Balance")]
     [SerializeField] private int baseCoinPerClick = 5; // 클릭당 기본 획득량
@@ -78,6 +84,7 @@ public class EarnProcessor : MonoBehaviour
         if (CoinManager.Instance != null)
         {
             CoinManager.Instance.Add(allowedAmount);
+            ManualCoinGranted?.Invoke(allowedAmount);
         }
         return true;
     }

@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 // 클릭 코인 / 타이핑 코인 / 도구 효율, 세 가지 개별 업그레이드를 관리합니다.
@@ -15,6 +16,11 @@ using UnityEngine;
 public class TownUpgradeManager : MonoBehaviour
 {
     public static TownUpgradeManager Instance { get; private set; }
+
+    /// <summary>
+    /// 클릭, 타이핑, 도구 효율 중 하나의 업그레이드 구매가 성공했을 때 발생합니다.
+    /// </summary>
+    public event Action UpgradePurchased;
 
     [System.Serializable]
     public class UpgradeTrack
@@ -131,6 +137,7 @@ public class TownUpgradeManager : MonoBehaviour
 
         track.TryLevelUp();
         onLeveledUp?.Invoke();
+        UpgradePurchased?.Invoke();
         return true;
     }
 

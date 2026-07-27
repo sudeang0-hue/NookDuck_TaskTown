@@ -3588,6 +3588,52 @@ MonoBehaviour:
   targetButton: {fileID: 756114922}
   uiSoundId: Test_UI_PopUp
   soundManager: {fileID: 0}
+--- !u!1 &756930585
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 756930587}
+  - component: {fileID: 756930586}
+  m_Layer: 0
+  m_Name: '[TutorialOverlayLoader]'
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &756930586
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 756930585}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 253ebc8491062994eb3d48f85feaa16d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TaskTown.Tutorial.TutorialOverlayLoader
+  tutorialSceneName: Choi_tutorial_Overlay_Test
+  loadOnStart: 1
+--- !u!4 &756930587
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 756930585}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!224 &760167936 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 1877331364401201959, guid: 6f7daaca604fb004d8ae0d8d874fba92, type: 3}
@@ -10714,3 +10760,4 @@ SceneRoots:
   - {fileID: 1677731454414999872}
   - {fileID: 257168340}
   - {fileID: 99533237}
+  - {fileID: 756930587}

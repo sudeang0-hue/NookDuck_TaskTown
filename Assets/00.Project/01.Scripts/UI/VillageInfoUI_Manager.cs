@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -14,6 +15,11 @@ namespace UI
     public class VillageInfoUI_Manager : MonoBehaviour
     {
         private const string VillageClickLayerName = "VillageHouse";
+
+        /// <summary>
+        /// 닫혀 있던 마을 정보 패널이 실제로 열렸을 때 발생합니다.
+        /// </summary>
+        public event Action PanelOpened;
 
         [Header("참조")]
         [SerializeField] private Camera _camera;
@@ -322,8 +328,12 @@ namespace UI
             if (IsWorldSpacePanel)
                 FaceCamera();
 
+            bool wasOpen = isPanelOpen;
             PanelContent.SetActive(true);
             isPanelOpen = true;
+
+            if (!wasOpen)
+                PanelOpened?.Invoke();
 
             PushVillageDataToUI();
             RestartAutoCloseTimer();
