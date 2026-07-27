@@ -16,6 +16,7 @@ namespace TaskTown.Tutorial
 
         public event Action<TutorialSaveData> ProgressChanged;
         public event Action<TutorialStep, TutorialStep> StepChanged;
+        public event Action<bool> PauseChanged;
         public event Action TutorialCompleted;
 
         public bool IsInitialized => stateMachine != null;
@@ -69,7 +70,11 @@ namespace TaskTown.Tutorial
             if (!TryGetStateMachine(out TutorialStateMachine machine))
                 return;
 
+            if (machine.IsPaused == isPaused)
+                return;
+
             machine.SetPaused(isPaused);
+            PauseChanged?.Invoke(isPaused);
         }
 
         public bool TrySetDialogueIndex(int dialogueIndex)

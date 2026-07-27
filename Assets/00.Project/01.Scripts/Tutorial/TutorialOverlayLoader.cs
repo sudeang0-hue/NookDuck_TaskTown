@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using TaskTown.KDH;
+using TaskTown.SceneFlow;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -24,6 +25,7 @@ namespace TaskTown.Tutorial
     public sealed class TutorialOverlayLoader : MonoBehaviour
     {
         private const float SceneReadyProgress = 0.9f;
+        private const string InputGateOwner = "TutorialOverlayLoader";
 
         [Header("튜토리얼 오버레이")]
         // TODO(PR 전): 테스트 Scene 직접 연결을 제거하고 정식 SceneFlow 로드 경로로 교체합니다.
@@ -33,12 +35,14 @@ namespace TaskTown.Tutorial
         private SaveManager saveManager;
         private TutorialManager activeTutorialManager;
         private AsyncOperation sceneOperation;
+        private bool inputGateHeld;
 
         public TutorialOverlayLoadState State { get; private set; } = TutorialOverlayLoadState.Idle;
         public float Progress { get; private set; }
         public string LastError { get; private set; } = string.Empty;
         public bool IsBusy => State == TutorialOverlayLoadState.Loading ||
                               State == TutorialOverlayLoadState.Unloading;
+        public bool IsStartupReady => IsStartupReadyState(State);
 
         public event Action<float> LoadProgressChanged;
         public event Action OverlayLoaded;
@@ -54,6 +58,7 @@ namespace TaskTown.Tutorial
         private void OnDestroy()
         {
             UnsubscribeTutorialManager();
+            ReleaseInputGate();
         }
 
         /// <summary>
@@ -65,10 +70,19 @@ namespace TaskTown.Tutorial
             return progress == null || !progress.IsCompleted;
         }
 
+        public static bool IsStartupReadyState(TutorialOverlayLoadState state)
+        {
+            return state == TutorialOverlayLoadState.Skipped ||
+                   state == TutorialOverlayLoadState.Active ||
+                   state == TutorialOverlayLoadState.Failed;
+        }
+
         public bool TryLoadIfRequired()
         {
             if (IsBusy || State == TutorialOverlayLoadState.Active)
                 return false;
+
+            AcquireInputGate();
 
             saveManager = SaveManager.Instance;
             if (saveManager == null)
@@ -81,6 +95,7 @@ namespace TaskTown.Tutorial
             {
                 State = TutorialOverlayLoadState.Skipped;
                 SetProgress(1f);
+                ReleaseInputGate();
                 return false;
             }
 
@@ -174,6 +189,7 @@ namespace TaskTown.Tutorial
             LastError = string.Empty;
             State = TutorialOverlayLoadState.Active;
             SetProgress(1f);
+            ReleaseInputGate();
             OverlayLoaded?.Invoke();
 
             if (activeTutorialManager.IsCompleted)
@@ -243,7 +259,26 @@ namespace TaskTown.Tutorial
             LastError = errorMessage;
             State = TutorialOverlayLoadState.Failed;
             Debug.LogError($"[TutorialOverlayLoader] {errorMessage}", this);
+            ReleaseInputGate();
             LoadFailed?.Invoke(errorMessage);
+        }
+
+        private void AcquireInputGate()
+        {
+            if (inputGateHeld)
+                return;
+
+            GameInputGate.Block(InputGateOwner);
+            inputGateHeld = true;
+        }
+
+        private void ReleaseInputGate()
+        {
+            if (!inputGateHeld)
+                return;
+
+            GameInputGate.Release(InputGateOwner);
+            inputGateHeld = false;
         }
     }
 }

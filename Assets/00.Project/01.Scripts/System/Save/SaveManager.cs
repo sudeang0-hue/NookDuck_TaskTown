@@ -26,6 +26,11 @@ namespace TaskTown.KDH
         [SerializeField] private MonoBehaviour townLevelProviderSource;
 
         private ITownLevelProvider TownLevelProvider => townLevelProviderSource as ITownLevelProvider;
+
+        // -----------------------------------------------------------------------------
+        // [ 2026.07.27 - Choi - 튜토리얼 기능 업데이트 ]
+        // 기능: TutorialManager가 전달한 진행 상태를 복사해 안전하게 보관합니다.
+        // -----------------------------------------------------------------------------
         private TutorialSaveData tutorialProgress = TutorialSaveData.CreateDefault();
 
         public TutorialSaveData TutorialProgress => tutorialProgress.Copy();
@@ -78,6 +83,11 @@ namespace TaskTown.KDH
         public void SaveGame()
         {
             GameSaveData data = new GameSaveData();
+
+            // -----------------------------------------------------------------------------
+            // [ 2026.07.27 - Choi - 튜토리얼 기능 업데이트 ]
+            // 기능: 현재 튜토리얼 진행 상태를 기존 게임 저장 JSON에 함께 포함합니다.
+            // -----------------------------------------------------------------------------
             data.tutorial = tutorialProgress.Copy();
 
             if (coinManager != null)
@@ -154,6 +164,10 @@ namespace TaskTown.KDH
             if (data == null)
                 return 0f;
 
+            // -----------------------------------------------------------------------------
+            // [ 2026.07.27 - Choi - 튜토리얼 기능 업데이트 ]
+            // 기능: 저장 파일에서 불러온 튜토리얼 진행 상태를 런타임 복사본으로 복원합니다.
+            // -----------------------------------------------------------------------------
             tutorialProgress = data.tutorial.Copy();
 
             // 코인
@@ -210,6 +224,10 @@ namespace TaskTown.KDH
             return data.productionRatePerSecond;
         }
 
+        // -----------------------------------------------------------------------------
+        // [ 2026.07.27 - Choi - 튜토리얼 기능 업데이트 ]
+        // 기능: TutorialManager와 SaveManager가 진행 상태를 복사본으로 교환합니다.
+        // -----------------------------------------------------------------------------
         /// <summary>
         /// TutorialManager가 갱신한 진행 상태를 다음 저장에 포함합니다.
         /// 외부에서 전달된 인스턴스는 복사하여 보관합니다.

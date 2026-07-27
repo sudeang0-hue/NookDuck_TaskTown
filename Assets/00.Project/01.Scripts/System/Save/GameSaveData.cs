@@ -21,6 +21,11 @@ namespace TaskTown.KDH
         public int toolEfficiencyUpgradeLevel;
         public List<AnimalSaveEntry> animals = new List<AnimalSaveEntry>();
         public List<ToolSaveEntry> tools = new List<ToolSaveEntry>();
+
+        // -----------------------------------------------------------------------------
+        // [ 2026.07.27 - Choi - 튜토리얼 기능 업데이트 ]
+        // 기능: 기존 게임 저장 데이터에 튜토리얼 진행 상태를 포함하고 누락 값을 보정합니다.
+        // -----------------------------------------------------------------------------
         public TutorialSaveData tutorial = TutorialSaveData.CreateDefault();
 
         /// <summary>
@@ -35,6 +40,10 @@ namespace TaskTown.KDH
         }
     }
 
+    // -----------------------------------------------------------------------------
+    // [ 2026.07.27 - Choi - 튜토리얼 기능 업데이트 ]
+    // 기능: 튜토리얼 단계, 대화 위치, 실제 수동 코인 획득량을 저장합니다.
+    // -----------------------------------------------------------------------------
     [Serializable]
     public class TutorialSaveData
     {

@@ -18,6 +18,10 @@ namespace TaskTown.KDH
     {
         public static RealProductionTicker Instance { get; private set; }
 
+        // -----------------------------------------------------------------------------
+        // [ 2026.07.27 - Choi - 튜토리얼 기능 업데이트 ]
+        // 기능: 자동 생산 코인이 실제 지급된 시점을 튜토리얼 진행 판정에 전달합니다.
+        // -----------------------------------------------------------------------------
         /// <summary>
         /// 자동 생산 코인이 지갑에 실제 지급된 경우에만 발생합니다.
         /// </summary>
@@ -61,6 +65,10 @@ namespace TaskTown.KDH
             int wholeCoins = Mathf.FloorToInt(productionBuffer);
             productionBuffer -= wholeCoins;
 
+            // -----------------------------------------------------------------------------
+            // [ 2026.07.27 - Choi - 튜토리얼 기능 업데이트 ]
+            // 기능: 유효한 지갑에 정수 코인이 지급된 경우에만 자동 생산 이벤트를 보냅니다.
+            // -----------------------------------------------------------------------------
             ICoinWallet coinWallet = CoinWallet;
             if (coinWallet == null)
                 return;
