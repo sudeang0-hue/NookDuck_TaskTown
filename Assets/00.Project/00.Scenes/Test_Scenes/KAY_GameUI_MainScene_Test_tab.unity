@@ -5655,11 +5655,59 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7604552312270693887, guid: 55e1e275548c8114288934700ec54fa9, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 55e1e275548c8114288934700ec54fa9, type: 3}
+--- !u!114 &971491191 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3740505232109413082, guid: 55e1e275548c8114288934700ec54fa9, type: 3}
+  m_PrefabInstance: {fileID: 971491190}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
+--- !u!114 &971491192 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6312777794982460921, guid: 55e1e275548c8114288934700ec54fa9, type: 3}
+  m_PrefabInstance: {fileID: 971491190}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
+--- !u!114 &971491193 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2570273621849735256, guid: 55e1e275548c8114288934700ec54fa9, type: 3}
+  m_PrefabInstance: {fileID: 971491190}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
+--- !u!114 &971491194 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3860883488701089464, guid: 55e1e275548c8114288934700ec54fa9, type: 3}
+  m_PrefabInstance: {fileID: 971491190}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
 --- !u!1 &972403755
 GameObject:
   m_ObjectHideFlags: 0
@@ -11106,6 +11154,14 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1566871428}
     - target: {fileID: 8478550235658878390, guid: b0ab10f74a427804cacc14f3f3f86129, type: 3}
+      propertyPath: toolOnePickCost
+      value: 
+      objectReference: {fileID: 971491192}
+    - target: {fileID: 8478550235658878390, guid: b0ab10f74a427804cacc14f3f3f86129, type: 3}
+      propertyPath: toolTenPickCost
+      value: 
+      objectReference: {fileID: 971491191}
+    - target: {fileID: 8478550235658878390, guid: b0ab10f74a427804cacc14f3f3f86129, type: 3}
       propertyPath: coinWalletSource
       value: 
       objectReference: {fileID: 1566871428}
@@ -11113,6 +11169,14 @@ PrefabInstance:
       propertyPath: toolGachaManager
       value: 
       objectReference: {fileID: 1168367922}
+    - target: {fileID: 8478550235658878390, guid: b0ab10f74a427804cacc14f3f3f86129, type: 3}
+      propertyPath: animalOnePickCost
+      value: 
+      objectReference: {fileID: 971491194}
+    - target: {fileID: 8478550235658878390, guid: b0ab10f74a427804cacc14f3f3f86129, type: 3}
+      propertyPath: animalTenPickCost
+      value: 
+      objectReference: {fileID: 971491193}
     - target: {fileID: 8478550235658878390, guid: b0ab10f74a427804cacc14f3f3f86129, type: 3}
       propertyPath: toolOnePickButton
       value: 
@@ -11493,15 +11557,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 503240989676646160, guid: 9d43c5162df0acc468713f7ebeca458c, type: 3}
       propertyPath: m_AnchorMax.x
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 503240989676646160, guid: 9d43c5162df0acc468713f7ebeca458c, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 503240989676646160, guid: 9d43c5162df0acc468713f7ebeca458c, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 0
+      value: -17
       objectReference: {fileID: 0}
     - target: {fileID: 976981767740584987, guid: 9d43c5162df0acc468713f7ebeca458c, type: 3}
       propertyPath: m_IsActive
@@ -11653,7 +11717,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2673047739574115298, guid: 9d43c5162df0acc468713f7ebeca458c, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2901363096509647736, guid: 9d43c5162df0acc468713f7ebeca458c, type: 3}
       propertyPath: m_AnchorMax.y
@@ -12397,15 +12461,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8840402434967579442, guid: 9d43c5162df0acc468713f7ebeca458c, type: 3}
       propertyPath: m_AnchorMax.x
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8840402434967579442, guid: 9d43c5162df0acc468713f7ebeca458c, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8840402434967579442, guid: 9d43c5162df0acc468713f7ebeca458c, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 0
+      value: -17
       objectReference: {fileID: 0}
     - target: {fileID: 8993707782407550924, guid: 9d43c5162df0acc468713f7ebeca458c, type: 3}
       propertyPath: m_AnchorMax.y

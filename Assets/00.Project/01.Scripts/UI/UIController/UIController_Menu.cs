@@ -32,6 +32,8 @@ public class UIController_Menu : MonoBehaviour
     [SerializeField] private UIController_ToolInv toolInvUI;
     [Tooltip("동물 도감 패널 오픈 시 상세 닫기 등 오픈 처리 호출 대상")]
     [SerializeField] private UIController_AnimalDex animalDexUI;
+    [Tooltip("뽑기 패널 오픈 시 가격 텍스트 갱신 호출 대상")]
+    [SerializeField] private UIController_Gacha gachaUI;
 
     [Header("패널 오픈시 초기 위치 고정")]
     [SerializeField] private bool usePanelOpenDefaultPosition;
@@ -50,6 +52,9 @@ public class UIController_Menu : MonoBehaviour
 
         if (animalDexUI == null)
             animalDexUI = GetComponent<UIController_AnimalDex>();
+
+        if (gachaUI == null)
+            gachaUI = GetComponent<UIController_Gacha>();
 
         animalInventoryButton.onClick.AddListener(() => TogglePanel(animalInventoryPanel));
         toolInventoryButton.onClick.AddListener(() => TogglePanel(toolInventoryPanel));
@@ -148,6 +153,8 @@ public class UIController_Menu : MonoBehaviour
             toolInvUI?.NotifyPanelOpened();
         else if (panel == animalDexPanel)
             animalDexUI?.NotifyPanelOpened();
+        else if (panel == gachaPanel)
+            gachaUI?.NotifyPanelOpened();
     }
 
     /// <summary>
