@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using TaskTown.Tutorial;
 
 namespace TaskTown.KDH
 {
@@ -19,6 +21,65 @@ namespace TaskTown.KDH
         public int toolEfficiencyUpgradeLevel;
         public List<AnimalSaveEntry> animals = new List<AnimalSaveEntry>();
         public List<ToolSaveEntry> tools = new List<ToolSaveEntry>();
+        public TutorialSaveData tutorial = TutorialSaveData.CreateDefault();
+
+        /// <summary>
+        /// 이전 버전 저장 데이터의 누락 컬렉션과 튜토리얼 값을 안전한 기본값으로 보정합니다.
+        /// </summary>
+        public void Normalize()
+        {
+            animals ??= new List<AnimalSaveEntry>();
+            tools ??= new List<ToolSaveEntry>();
+            tutorial ??= TutorialSaveData.CreateDefault();
+            tutorial.Normalize();
+        }
+    }
+
+    [Serializable]
+    public class TutorialSaveData
+    {
+        public const int CurrentVersion = 1;
+
+        public int version = CurrentVersion;
+        public TutorialStep currentStep = TutorialStep.IntroDialogue;
+        public int dialogueIndex;
+        public long manualEarnedCoin;
+        public int rewardFlags;
+
+        public bool IsCompleted => currentStep == TutorialStep.Completed;
+
+        public static TutorialSaveData CreateDefault()
+        {
+            return new TutorialSaveData();
+        }
+
+        public TutorialSaveData Copy()
+        {
+            TutorialSaveData copy = new TutorialSaveData
+            {
+                version = version,
+                currentStep = currentStep,
+                dialogueIndex = dialogueIndex,
+                manualEarnedCoin = manualEarnedCoin,
+                rewardFlags = rewardFlags
+            };
+
+            copy.Normalize();
+            return copy;
+        }
+
+        public void Normalize()
+        {
+            if (version <= 0)
+                version = CurrentVersion;
+
+            if (!Enum.IsDefined(typeof(TutorialStep), currentStep))
+                currentStep = TutorialStep.IntroDialogue;
+
+            dialogueIndex = Math.Max(0, dialogueIndex);
+            manualEarnedCoin = Math.Max(0L, manualEarnedCoin);
+            rewardFlags = Math.Max(0, rewardFlags);
+        }
     }
 
     [System.Serializable]
