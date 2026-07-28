@@ -2,7 +2,7 @@
 
 using UnityEngine;
 using System.Collections.Generic;
-using Animal.Data;     // 팀원분이 작성한 AnimalDataSO 네임스페이스
+using Animal.Data;     // AnimalDataSO 네임스페이스
 using TaskTown.Gacha;  // GachaEntryData 네임스페이스
 
 [System.Serializable]
@@ -40,7 +40,7 @@ public class VillagePlacementDatabaseSO : ScriptableObject
 
         foreach (var entry in entries)
         {
-            // AnimalDataSO가 GachaEntryData를 상속받았으므로 .Id 로 접근 가능합니다!
+            // AnimalDataSO가 GachaEntryData를 상속받았으므로 .Id 로 접근 가능
             if (entry.animalData != null && entry.animalData.Id == id)
                 return entry.visualPrefab;
         }

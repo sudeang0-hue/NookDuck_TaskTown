@@ -1,3 +1,5 @@
+//NB
+
 using UnityEngine;
 using UnityEngine.AI;
 using DG.Tweening;
@@ -41,13 +43,13 @@ public class VillagerPlacementDirector : MonoBehaviour
     [Tooltip("여러 주민이 내릴 때 퍼지는 부채꼴 총 각도")]
     [SerializeField, Range(30f, 180f)] private float spreadAngle = 120f;
 
-    // 외부 스크립트(ObjectDragger 등)에서 참조할 입력 잠금 상태
+    // 외부 UI 스크립트나 입력 관리자에서 참조할 버스 연출 실행 상태
     public bool IsBusSummoning { get; private set; } = false;
 
     private Vector3[] _waypointsCache;
     private Quaternion _initialBusRotation;
     private Sequence _busSequence;
-    private List<GameObject> _overrideAnimalPrefabList = new List<GameObject>();
+    private readonly List<GameObject> _overrideAnimalPrefabList = new List<GameObject>();
 
     private void Awake()
     {
@@ -67,31 +69,6 @@ public class VillagerPlacementDirector : MonoBehaviour
         InitializeWaypoints();
     }
 
-    private void Update()
-    {
-        // 테스트용 단축키 (E) - 무작위로 5~10마리를 한 번에 버스로 소환
-        if (Input.GetKeyDown(KeyCode.E))
-        {
-            if (placementDB != null && placementDB.entries.Count > 0)
-            {
-                int testCount = UnityEngine.Random.Range(5, 11); // 5 ~ 10마리 랜덤
-                List<AnimalDataSO> testList = new List<AnimalDataSO>();
-
-                for (int i = 0; i < testCount; i++)
-                {
-                    int randomIndex = UnityEngine.Random.Range(0, placementDB.entries.Count);
-                    testList.Add(placementDB.entries[randomIndex].animalData);
-                }
-
-                StartBatchBusSummon(testList);
-            }
-            else
-            {
-                StartBusSummon();
-            }
-        }
-    }
-
     private void InitializeWaypoints()
     {
         if (pathPoints == null || pathPoints.Length < 2) return;
@@ -104,27 +81,53 @@ public class VillagerPlacementDirector : MonoBehaviour
     }
 
     // =========================================================================
-    // [단일 소환 API]
+    // [외부 UI / 시스템 호출용 API]
     // =========================================================================
+
+    /// <summary>
+    /// 단일 동물 데이터(AnimalDataSO)를 인자로 받아 버스 소환을 시작합니다.
+    /// UI 버튼 클릭 시 개별 동물을 배치할 때 호출합니다.
+    /// </summary>
     public void StartBusSummon(AnimalDataSO animalData)
     {
+        if (IsBusSummoning)
+        {
+            Debug.LogWarning("[VillagerPlacementDirector] 이미 버스 연출이 진행 중입니다.");
+            return;
+        }
+
         List<AnimalDataSO> list = new List<AnimalDataSO>();
         if (animalData != null) list.Add(animalData);
         StartBatchBusSummon(list);
     }
 
+    /// <summary>
+    /// 단일 프리팹(GameObject)을 인자로 받아 버스 소환을 시작합니다.
+    /// </summary>
     public void StartBusSummon(GameObject customAnimalPrefab = null)
     {
+        if (IsBusSummoning)
+        {
+            Debug.LogWarning("[VillagerPlacementDirector] 이미 버스 연출이 진행 중입니다.");
+            return;
+        }
+
         List<GameObject> list = new List<GameObject>();
         if (customAnimalPrefab != null) list.Add(customAnimalPrefab);
         StartBatchBusSummon(list);
     }
 
-    // =========================================================================
-    // [다중/대량 소환 API] - 최대 10마리 배치
-    // =========================================================================
+    /// <summary>
+    /// 여러 동물 데이터 리스트를 받아 다중 소환 연출을 시작합니다. (최대 maxBatchCount마리)
+    /// </summary>
     public void StartBatchBusSummon(List<AnimalDataSO> animalDataList)
     {
+        if (IsBusSummoning)
+        {
+            Debug.LogWarning("[VillagerPlacementDirector] 이미 버스 연출이 진행 중입니다.");
+            return;
+        }
+
         List<GameObject> prefabList = new List<GameObject>();
         if (placementDB != null && animalDataList != null)
         {
@@ -137,13 +140,19 @@ public class VillagerPlacementDirector : MonoBehaviour
         StartBatchBusSummon(prefabList);
     }
 
+    /// <summary>
+    /// 프리팹 리스트를 직접 전달하여 다중 소환을 진행하는 최하단 메인 API입니다.
+    /// </summary>
     public void StartBatchBusSummon(List<GameObject> customAnimalPrefabList)
     {
+        // 중복 실행 방지 가드 클로즈
+        if (IsBusSummoning) return;
+
         _overrideAnimalPrefabList.Clear();
 
         if (customAnimalPrefabList != null && customAnimalPrefabList.Count > 0)
         {
-            // 최대 10마리로 안전하게 제한 (Clamping)
+            // 최대 허용 개수만큼 Clamping
             int count = Mathf.Min(customAnimalPrefabList.Count, maxBatchCount);
             for (int i = 0; i < count; i++)
             {
@@ -153,14 +162,37 @@ public class VillagerPlacementDirector : MonoBehaviour
         else
         {
             // 비어있다면 기본 예비 프리팹 1개 추가
-            _overrideAnimalPrefabList.Add(animalPrefab);
+            if (animalPrefab != null)
+                _overrideAnimalPrefabList.Add(animalPrefab);
         }
 
         ExecuteBusSequence(outgoingAnimal: null, isSwap: false);
     }
 
+    /// <summary>
+    /// DB에서 무작위 동물을 선택해 소환하는 UI 테스트/이벤트용 임시 버튼 연결 함수입니다.
+    /// </summary>
+    public void StartRandomBusSummonFromDB(int count = 1)
+    {
+        if (IsBusSummoning) return;
+
+        if (placementDB != null && placementDB.entries.Count > 0)
+        {
+            List<AnimalDataSO> randomList = new List<AnimalDataSO>();
+            int targetCount = Mathf.Clamp(count, 1, maxBatchCount);
+
+            for (int i = 0; i < targetCount; i++)
+            {
+                int randomIndex = Random.Range(0, placementDB.entries.Count);
+                randomList.Add(placementDB.entries[randomIndex].animalData);
+            }
+
+            StartBatchBusSummon(randomList);
+        }
+    }
+
     // =========================================================================
-    // 메인 오케스트레이터 시퀀스
+    // 메인 오케스트레이터 시퀀스 (DOTween)
     // =========================================================================
     private void ExecuteBusSequence(GameObject outgoingAnimal, bool isSwap)
     {
@@ -186,31 +218,31 @@ public class VillagerPlacementDirector : MonoBehaviour
                      .OnUpdate(SanitizeBusRotation)
         );
 
-        // 2. 정차 반동
+        // 2. 정차 반동 연출
         _busSequence.Append(busObject.DOPunchPosition(busObject.forward * 0.4f, 0.35f, 8, 1f));
         _busSequence.AppendCallback(SanitizeBusRotation);
         _busSequence.AppendInterval(0.2f);
 
-        // 3. 기존 주민 퇴장 (있을 경우)
+        // 3. 기존 주민 퇴장 (교체 모드일 경우)
         if (outgoingAnimal != null)
         {
             _busSequence.AppendCallback(() => DespawnAnimalToTrunk(outgoingAnimal));
             _busSequence.AppendInterval(exitJumpDuration + 0.1f);
         }
 
-        // 4. [다중 소환 연출] 리스트의 주민들을 연속으로 튀어나오게 처리!
+        // 4. [다중 소환 연출] 주민 연속 하차
         if (outgoingAnimal == null || isSwap)
         {
             int totalCount = _overrideAnimalPrefabList.Count;
 
             for (int i = 0; i < totalCount; i++)
             {
-                int index = i; // 클로저 이슈 방지를 위한 지역 변수 캡처
+                int index = i; // 클로저 이슈 방지용 로컬 변수 캡처
 
                 // 하차 콜백
                 _busSequence.AppendCallback(() => SpawnSingleAnimalFromBatch(index, totalCount));
 
-                // 다음 동물이 뛰어내릴 때까지의 통통 튀는 간격 대기 (마지막 동물이면 대기하지 않음)
+                // 튀어나오는 시간 간격 대기
                 if (i < totalCount - 1)
                 {
                     _busSequence.AppendInterval(batchSpawnInterval);
@@ -218,7 +250,7 @@ public class VillagerPlacementDirector : MonoBehaviour
             }
         }
 
-        // 5. 퇴장 대기 및 버스 이동
+        // 5. 버스 퇴장
         _busSequence.AppendInterval(1.2f);
         Vector3 exitTargetPosition = _waypointsCache[_waypointsCache.Length - 1] + busObject.forward * 20f;
         _busSequence.Append(
@@ -227,7 +259,7 @@ public class VillagerPlacementDirector : MonoBehaviour
                      .OnUpdate(SanitizeBusRotation)
         );
 
-        // 6. 상태 복원
+        // 6. 상태 복원 및 종료 처리
         _busSequence.OnComplete(() =>
         {
             busObject.gameObject.SetActive(false);
@@ -239,7 +271,7 @@ public class VillagerPlacementDirector : MonoBehaviour
     }
 
     // =========================================================================
-    // 다중 주민 하차 처리 (부채꼴 착지 오프셋 계산 적용)
+    // 다중 주민 하차 처리 (부채꼴 착지 오프셋 계산)
     // =========================================================================
     private void SpawnSingleAnimalFromBatch(int index, int totalCount)
     {
@@ -251,19 +283,16 @@ public class VillagerPlacementDirector : MonoBehaviour
 
         Transform spawnPoint = (trunkTransform != null) ? trunkTransform : busObject;
 
-        // ---------------------------------------------------------------------
-        // [부채꼴 산출 알고리즘] 1마리일 때는 정면, 여러 마리일 때는 부채꼴 방사형으로 분산
-        // ---------------------------------------------------------------------
+        // 부채꼴 각도 분할 계산
         float calculatedAngleOffset = exitAngleOffset;
 
         if (totalCount > 1)
         {
-            // -spreadAngle/2 부터 +spreadAngle/2 까지 균등하게 각도 분할
             float angleStep = spreadAngle / (totalCount - 1);
             calculatedAngleOffset += (-spreadAngle * 0.5f) + (index * angleStep);
         }
 
-        // 지그재그 거리를 주어 앞뒤 겹침 차단 (홀수/짝수 번호에 따라 0.3m 거리차 부여)
+        // 지그재그 거리를 주어 캐릭터 상호 겹침 방지
         float staggeredDistance = exitJumpDistance + ((index % 2 == 0) ? 0f : 0.4f);
 
         // 회전 및 착지 벡터 계산
@@ -273,17 +302,17 @@ public class VillagerPlacementDirector : MonoBehaviour
 
         Transform targetParent = (villagerParent != null) ? villagerParent : villageOrigin;
 
-        // 스폰
+        // 인스턴스화
         GameObject newAnimal = Instantiate(prefabToSpawn, spawnPoint.position, finalSpawnRotation, targetParent);
 
-        // 원본 스케일 보존
+        // 스케일 보존 및 초기화
         Vector3 targetScale = newAnimal.transform.localScale;
         newAnimal.transform.localScale = Vector3.zero;
 
-        // 최종 착지 위치 계산
+        // 착지 지점 계산
         Vector3 landingPosition = spawnPoint.position + (exitDirection * staggeredDistance);
 
-        // 점프 애니메이션 실행
+        // 점프 트윈 연출
         Sequence animalSeq = DOTween.Sequence();
         animalSeq.Join(newAnimal.transform.DOScale(targetScale, exitJumpDuration * 0.8f).SetEase(Ease.OutBack));
         animalSeq.Join(newAnimal.transform.DOJump(landingPosition, exitJumpHeight, 1, exitJumpDuration).SetEase(Ease.OutQuad));

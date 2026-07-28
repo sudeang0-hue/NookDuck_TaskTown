@@ -127,6 +127,15 @@ public class CameraDirector : MonoBehaviour
         return _targetAnimal.position;
     }
 
+    // 카메라 컴포넌트와 트랜스폼에 걸린 모든 DOTween 연출을 안전하게 제거하는 메서드
+    private void KillAllCameraTweens()
+    {
+        if (_mainCamera == null) return;
+
+        _mainCamera.DOKill();            // OrthoSize 등 Camera 컴포넌트 트윈 중단
+        _mainCamera.transform.DOKill();  // DOMove 등 Transform 컴포넌트 트윈 중단
+    }
+
 
     public void FocusOnAnimal(Transform animalTransform)
     {
@@ -140,7 +149,8 @@ public class CameraDirector : MonoBehaviour
         // [디버깅용] 콘솔창에 찍히는 좌표를 꼭 확인, 만약 (0,0,0) 이라면 TargetSelector가 부모의 Transform을 넘기고 있는 것
         Debug.Log($"[CameraDirector] 타겟 지정됨: {_targetAnimal.name} / 월드 좌표: {GetTargetPosition()}");
 
-        _mainCamera.DOKill();
+        // 이전 연출 트윈 완벽 제거 및 추적 속도 값 초기화
+        KillAllCameraTweens();
         _isFollowing = false;        //LateUpdate의 충돌을 막기 위해 추적을 잠시 끔
         _camVelocity = Vector3.zero; //이전 속도 누적값 초기화
 
@@ -165,11 +175,13 @@ public class CameraDirector : MonoBehaviour
         // 이미 축소 화면 상태면 Unfocus 연출을 실행하지 않기
         if (!_isExpanded) return;
 
+        // Unfocus 진입 시에도 실행 중인 모든 트윈 중단 및 타겟 해제
+        KillAllCameraTweens();
         _isFollowing = false;
         _targetAnimal = null;
         _camVelocity = Vector3.zero;
 
-        if (_mainCamera == null) return;
+        //if (_mainCamera == null) return;
 
         _mainCamera.DOKill();
         _mainCamera.DOOrthoSize(_camOriginalSize, 0.5f).SetEase(Ease.InOutQuad);
@@ -186,6 +198,7 @@ public class CameraDirector : MonoBehaviour
 
         if (_mainCamera != null && miniVillagePos != null)
         {
+            KillAllCameraTweens();
             float targetSize = _camOriginalSize / 0.3f;
             _mainCamera.DOOrthoSize(targetSize, 0.5f).SetEase(Ease.InOutQuad);
 
@@ -199,6 +212,7 @@ public class CameraDirector : MonoBehaviour
         _isExpanded = true;
         if (_mainCamera != null)
         {
+            KillAllCameraTweens();
             _mainCamera.DOOrthoSize(_camOriginalSize, 0.5f).SetEase(Ease.InOutQuad);
             _mainCamera.transform.DOMove(_camOriginalPos, 0.5f).SetEase(Ease.InOutQuad);
         }
