@@ -38,7 +38,7 @@ public class UIController_Menu : MonoBehaviour
     [Tooltip("뽑기 패널 오픈 시 가격 텍스트 갱신 호출 대상")]
     [SerializeField] private UIController_Gacha gachaUI;
     [Tooltip("마을 패널 오픈 시 텍스트 갱신 호출 대상")]
-    [SerializeField] private UIController_Gacha villageUI;
+    [SerializeField] private UIController_VillageUpgrade villageUI;
 
     [Header("패널 오픈시 초기 위치 고정")]
     [SerializeField] private bool usePanelOpenDefaultPosition;
@@ -163,8 +163,6 @@ public class UIController_Menu : MonoBehaviour
             toolInvUI?.NotifyPanelOpened();
         else if (panel == animalDexPanel)
             animalDexUI?.NotifyPanelOpened();
-        else if (panel == villagePanel)
-            villageUI?.NotifyPanelOpened();
         else if (panel == gachaPanel)
             gachaUI?.NotifyPanelOpened();
     }
