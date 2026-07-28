@@ -4,6 +4,7 @@ using NUnit.Framework;
 using TaskTown.Tutorial;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.TestTools;
 
 namespace TaskTown.EditorTests.Tutorial
 {
@@ -94,6 +95,7 @@ namespace TaskTown.EditorTests.Tutorial
         {
             GameObject controllerObject = new(
                 "TutorialController",
+                typeof(TutorialManager),
                 typeof(TutorialBubbleController));
             GameObject viewObject = new(
                 "TutorialView",
@@ -105,15 +107,28 @@ namespace TaskTown.EditorTests.Tutorial
 
             TutorialBubbleController controller =
                 controllerObject.GetComponent<TutorialBubbleController>();
+            TutorialManager manager =
+                controllerObject.GetComponent<TutorialManager>();
             TutorialBubbleView view = viewObject.GetComponent<TutorialBubbleView>();
             TutorialBubbleHoverTween hoverTween =
                 bubble.GetComponent<TutorialBubbleHoverTween>();
+            TutorialConfigSO config = AssetDatabase.LoadAssetAtPath<TutorialConfigSO>(
+                "Assets/00.Project/03.ScriptableObjects/Tutorial/TutorialConfig.asset");
+
+            Assert.IsNotNull(config);
+            LogAssert.Expect(
+                LogType.Warning,
+                "[TutorialManager] SaveManager가 없어 기본 진행 상태로 시작합니다. " +
+                "현재 진행은 디스크 저장에 포함되지 않습니다.");
+            manager.Initialize(null);
 
             SerializedObject viewSerialized = new(view);
             viewSerialized.FindProperty("hoverTween").objectReferenceValue = hoverTween;
             viewSerialized.ApplyModifiedPropertiesWithoutUndo();
 
             SerializedObject controllerSerialized = new(controller);
+            controllerSerialized.FindProperty("tutorialManager").objectReferenceValue = manager;
+            controllerSerialized.FindProperty("config").objectReferenceValue = config;
             controllerSerialized.FindProperty("view").objectReferenceValue = view;
             controllerSerialized.ApplyModifiedPropertiesWithoutUndo();
 

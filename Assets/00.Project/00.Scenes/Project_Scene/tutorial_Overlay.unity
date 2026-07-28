@@ -682,6 +682,7 @@ GameObject:
   - component: {fileID: 1038946185}
   - component: {fileID: 1038946184}
   - component: {fileID: 1038946187}
+  - component: {fileID: 1038946188}
   m_Layer: 0
   m_Name: '[TutorialOverlay]'
   m_TagString: Untagged
@@ -753,6 +754,25 @@ MonoBehaviour:
   tutorialManager: {fileID: 1038946185}
   config: {fileID: 11400000, guid: 6975aa9cdc7df7045998f21cfeca624b, type: 2}
   view: {fileID: 808744847}
+  sfxPlayer: {fileID: 1038946188}
+--- !u!114 &1038946188
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1038946183}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ba40610eac649e146905d53cbb5718f1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TaskTown.Tutorial.TutorialBubbleSfxPlayer
+  dialogueAdvanceSoundId: SFX_Pop_Bubble_Single_1
+  questClearSoundIds:
+  - SFX_Player_Collect_Pop_1
+  - SFX_Player_Collect_Pop_2
+  - SFX_Player_Collect_Pop_3
+  questClearPresentationDelay: 0.5
 --- !u!1 &1053466073
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Globalization;
 using TaskTown.KDH;
 using UnityEngine;
@@ -14,8 +15,12 @@ namespace TaskTown.Tutorial
         [SerializeField] private TutorialManager tutorialManager;
         [SerializeField] private TutorialConfigSO config;
         [SerializeField] private TutorialBubbleView view;
+        [SerializeField] private TutorialBubbleSfxPlayer sfxPlayer;
 
         private bool isSubscribed;
+        private Coroutine pendingStepPresentation;
+        private TutorialStep presentedStep;
+        private bool hasPresentedStep;
 
         private void Awake()
         {
@@ -42,6 +47,7 @@ namespace TaskTown.Tutorial
 
         private void OnDisable()
         {
+            StopPendingStepPresentation();
             Unsubscribe();
         }
 
@@ -52,6 +58,9 @@ namespace TaskTown.Tutorial
 
             if (view == null)
                 view = GetComponentInChildren<TutorialBubbleView>(true);
+
+            if (sfxPlayer == null)
+                TryGetComponent(out sfxPlayer);
         }
 
         private void Subscribe()
@@ -86,11 +95,18 @@ namespace TaskTown.Tutorial
 
         private void HandleProgressChanged(TutorialSaveData progress)
         {
+            // 단계 전환 시에는 StepChanged에서 완료음을 재생한 뒤 다음 문구를 표시합니다.
+            if (hasPresentedStep && tutorialManager.CurrentStep != presentedStep)
+                return;
+
             RefreshView();
         }
 
         private void HandlePauseChanged(bool isPaused)
         {
+            if (isPaused)
+                StopPendingStepPresentation();
+
             RefreshView();
         }
 
@@ -98,9 +114,25 @@ namespace TaskTown.Tutorial
             TutorialStep previousStep,
             TutorialStep nextStep)
         {
-            // 대화 단계 전환은 버튼 클릭 시 이미 Punch를 실행하므로 중복 재생하지 않습니다.
-            if (!IsDialogueStep(previousStep) && nextStep != TutorialStep.Completed)
+            StopPendingStepPresentation();
+
+            if (IsQuestStep(previousStep) && nextStep != TutorialStep.Completed)
+            {
                 view?.PlayPunch();
+
+                float presentationDelay = sfxPlayer != null
+                    ? sfxPlayer.PlayQuestClear(previousStep)
+                    : 0f;
+
+                if (presentationDelay > 0f && isActiveAndEnabled)
+                {
+                    pendingStepPresentation = StartCoroutine(
+                        PresentStepAfterDelay(presentationDelay));
+                    return;
+                }
+            }
+
+            RefreshView();
         }
 
         private void HandleAdvanceRequested()
@@ -122,6 +154,8 @@ namespace TaskTown.Tutorial
             int dialogueIndex = config.ClampDialogueIndex(
                 step,
                 tutorialManager.DialogueIndex);
+
+            sfxPlayer?.PlayDialogueAdvance();
 
             if (dialogueIndex < messageCount - 1)
             {
@@ -171,6 +205,24 @@ namespace TaskTown.Tutorial
                 progress,
                 content.AllowClickAdvance);
             view.SetVisible(true);
+            presentedStep = step;
+            hasPresentedStep = true;
+        }
+
+        private IEnumerator PresentStepAfterDelay(float delay)
+        {
+            yield return new WaitForSecondsRealtime(delay);
+            pendingStepPresentation = null;
+            RefreshView();
+        }
+
+        private void StopPendingStepPresentation()
+        {
+            if (pendingStepPresentation == null)
+                return;
+
+            StopCoroutine(pendingStepPresentation);
+            pendingStepPresentation = null;
         }
 
         private bool CanDisplayTutorial()
@@ -213,6 +265,12 @@ namespace TaskTown.Tutorial
         {
             return step == TutorialStep.IntroDialogue ||
                    step == TutorialStep.CompletionDialogue;
+        }
+
+        private static bool IsQuestStep(TutorialStep step)
+        {
+            return step >= TutorialStep.EarnManualCoin &&
+                   step <= TutorialStep.UpgradeVillage;
         }
     }
 }
