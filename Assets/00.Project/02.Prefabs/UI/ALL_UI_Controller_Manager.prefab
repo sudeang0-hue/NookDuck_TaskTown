@@ -35,7 +35,8 @@ Transform:
   m_LocalPosition: {x: 1301.5924, y: 578.4269, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1010955534753668426}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &6442045360655717704
@@ -50,21 +51,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1c18a7b56c4daf64287853aff90c3ff2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIController_Menu
-  animalInventoryButton: {fileID: 0}
-  toolInventoryButton: {fileID: 0}
+  inventoryButton: {fileID: 0}
   gachaButton: {fileID: 0}
   animalDexButton: {fileID: 0}
+  villageButton: {fileID: 0}
   optionButton: {fileID: 0}
   minimizeButton: {fileID: 0}
-  animalInventoryPanel: {fileID: 0}
-  toolInventoryPanel: {fileID: 0}
-  gachaPanel: {fileID: 0}
-  animalDexPanel: {fileID: 0}
-  optionPanel: {fileID: 0}
   animalInvUI: {fileID: 5297253450871963050}
   toolInvUI: {fileID: 4693624468742908777}
   animalDexUI: {fileID: 5183136650075570981}
   gachaUI: {fileID: 8478550235658878390}
+  inventoryTabManager: {fileID: 0}
+  townTabManager: {fileID: 0}
   usePanelOpenDefaultPosition: 1
   useTradeOffSetting: 1
 --- !u!114 &3179436167034268464
@@ -171,3 +169,49 @@ MonoBehaviour:
   animalSlotContentRoot: {fileID: 0}
   animalPageController: {fileID: 0}
   createdSlots: []
+--- !u!1 &9144371131107695330
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1010955534753668426}
+  - component: {fileID: 1747075947170480254}
+  m_Layer: 0
+  m_Name: UITweenManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1010955534753668426
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9144371131107695330}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 224.30078, y: -1353.8347, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 968221804118175414}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1747075947170480254
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9144371131107695330}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8fd7191ba649c1b4a80d7efc22e1e7e3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UITweenManager
+  OpenPeakScale: 1.02
+  OpenScaleDuration: 0.1
