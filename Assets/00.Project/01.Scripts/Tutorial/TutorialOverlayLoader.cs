@@ -28,8 +28,7 @@ namespace TaskTown.Tutorial
         private const string InputGateOwner = "TutorialOverlayLoader";
 
         [Header("튜토리얼 오버레이")]
-        // TODO(PR 전): 테스트 Scene 직접 연결을 제거하고 정식 SceneFlow 로드 경로로 교체합니다.
-        [SerializeField] private string tutorialSceneName = "Choi_tutorial_Overlay_Test";
+        [SerializeField] private string tutorialSceneName = "tutorial_Overlay";
         [SerializeField] private bool loadOnStart = true;
 
         private SaveManager saveManager;
