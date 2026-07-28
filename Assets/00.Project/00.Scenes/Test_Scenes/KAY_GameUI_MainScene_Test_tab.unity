@@ -708,6 +708,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 651394444}
     - target: {fileID: 3397020993281574583, guid: 01500b7ce6a787c44a8881e8a02e9195, type: 3}
+      propertyPath: bottomIcons.Array.size
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 3397020993281574583, guid: 01500b7ce6a787c44a8881e8a02e9195, type: 3}
       propertyPath: 'bottomIcons.Array.data[0]'
       value: 
       objectReference: {fileID: 1066973366}
@@ -727,6 +731,10 @@ PrefabInstance:
       propertyPath: 'bottomIcons.Array.data[4]'
       value: 
       objectReference: {fileID: 423873393}
+    - target: {fileID: 3397020993281574583, guid: 01500b7ce6a787c44a8881e8a02e9195, type: 3}
+      propertyPath: 'bottomIcons.Array.data[5]'
+      value: 
+      objectReference: {fileID: 1116806465}
     - target: {fileID: 3709761523516988655, guid: 01500b7ce6a787c44a8881e8a02e9195, type: 3}
       propertyPath: m_Name
       value: _GameManager
@@ -5657,7 +5665,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7604552312270693887, guid: 55e1e275548c8114288934700ec54fa9, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -11102,6 +11110,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 4811925134361835756}
     - target: {fileID: 6442045360655717704, guid: b0ab10f74a427804cacc14f3f3f86129, type: 3}
+      propertyPath: villageUI
+      value: 
+      objectReference: {fileID: 2643772414286524360}
+    - target: {fileID: 6442045360655717704, guid: b0ab10f74a427804cacc14f3f3f86129, type: 3}
       propertyPath: gachaPanel
       value: 
       objectReference: {fileID: 0}
@@ -11117,6 +11129,10 @@ PrefabInstance:
       propertyPath: optionButton
       value: 
       objectReference: {fileID: 423873394}
+    - target: {fileID: 6442045360655717704, guid: b0ab10f74a427804cacc14f3f3f86129, type: 3}
+      propertyPath: villageButton
+      value: 
+      objectReference: {fileID: 1116806467}
     - target: {fileID: 6442045360655717704, guid: b0ab10f74a427804cacc14f3f3f86129, type: 3}
       propertyPath: animalDexPanel
       value: 
@@ -11210,6 +11226,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 968221804118175414, guid: b0ab10f74a427804cacc14f3f3f86129, type: 3}
   m_PrefabInstance: {fileID: 2643772414286524357}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &2643772414286524360 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8478550235658878390, guid: b0ab10f74a427804cacc14f3f3f86129, type: 3}
+  m_PrefabInstance: {fileID: 2643772414286524357}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: afd018cc164161e42b0ea4b9c6f50dda, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIController_Gacha
 --- !u!1001 &4811925134361835755
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -11557,15 +11584,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 503240989676646160, guid: 9d43c5162df0acc468713f7ebeca458c, type: 3}
       propertyPath: m_AnchorMax.x
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 503240989676646160, guid: 9d43c5162df0acc468713f7ebeca458c, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 503240989676646160, guid: 9d43c5162df0acc468713f7ebeca458c, type: 3}
       propertyPath: m_SizeDelta.x
-      value: -17
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 976981767740584987, guid: 9d43c5162df0acc468713f7ebeca458c, type: 3}
       propertyPath: m_IsActive
@@ -11717,7 +11744,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2673047739574115298, guid: 9d43c5162df0acc468713f7ebeca458c, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2901363096509647736, guid: 9d43c5162df0acc468713f7ebeca458c, type: 3}
       propertyPath: m_AnchorMax.y
@@ -12461,15 +12488,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8840402434967579442, guid: 9d43c5162df0acc468713f7ebeca458c, type: 3}
       propertyPath: m_AnchorMax.x
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8840402434967579442, guid: 9d43c5162df0acc468713f7ebeca458c, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8840402434967579442, guid: 9d43c5162df0acc468713f7ebeca458c, type: 3}
       propertyPath: m_SizeDelta.x
-      value: -17
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8993707782407550924, guid: 9d43c5162df0acc468713f7ebeca458c, type: 3}
       propertyPath: m_AnchorMax.y
@@ -12618,6 +12645,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 681113740}
     m_Modifications:
+    - target: {fileID: 1460572940624274993, guid: aa66621d8ac83824ca118d9cbebb3573, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1987786687874056765, guid: aa66621d8ac83824ca118d9cbebb3573, type: 3}
       propertyPath: m_AnchorMax.x
       value: 0
