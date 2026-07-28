@@ -7,10 +7,7 @@ using UI;
 
 namespace TaskTown.Village
 {
-    /// <summary>
-    /// 팀원의 UI 스크립트 수정 없이 확정 버튼 이벤트를 후킹(Hooking)하여
-    /// 새로 추가된 동물의 버스 소환 연출을 트리거하는 비침습적 브릿지 클래스입니다.
-    /// </summary>
+    // 새로 추가된 동물의 버스 소환 연출을 트리거하는 비침습적 브릿지 클래스
     public class VillagePlacementBridge : MonoBehaviour
     {
         [Header("UI 및 연출 컴포넌트 참조")]
@@ -37,9 +34,7 @@ namespace TaskTown.Village
             UnhookConfirmButton();
         }
 
-        /// <summary>
-        /// 팀원 코드 수정 없이 UIController의 Confirm 버튼 onClick 이벤트에 내 로직을 추가합니다.
-        /// </summary>
+        // UIController의 Confirm 버튼 onClick 이벤트에 내 로직을 추가
         private void HookConfirmButton()
         {
             if (uiController != null)
@@ -56,7 +51,7 @@ namespace TaskTown.Village
 
             if (_targetedConfirmButton != null)
             {
-                // 기존 팀원 리스너는 유지하면서, 내 리스너를 다중 등록(Hooking)
+                // 기존 리스너는 유지하면서, 내 리스너를 다중 등록(Hooking)
                 _targetedConfirmButton.onClick.RemoveListener(OnConfirmButtonClicked);
                 _targetedConfirmButton.onClick.AddListener(OnConfirmButtonClicked);
                 Debug.Log("[VillagePlacementBridge] 팀원 UI Confirm 버튼 후킹 성공!", this);
@@ -75,9 +70,7 @@ namespace TaskTown.Village
             }
         }
 
-        /// <summary>
-        /// Confirm 버튼 클릭 시 팀원의 OnClickConfirmAnimalSet() 실행 직후 실행되는 콜백입니다.
-        /// </summary>
+        // Confirm 버튼 클릭 시 OnClickConfirmAnimalSet() 실행 직후 실행되는 콜백
         private void OnConfirmButtonClicked()
         {
             if (uiManager == null || placementDirector == null) return;
@@ -111,14 +104,12 @@ namespace TaskTown.Village
             {
                 Debug.Log($"[VillagePlacementBridge] 신규 주민 {newlyAddedDataList.Count}마리 소환 버스 연출을 시작합니다!", this);
 
-                // 5. 주인님의 버스 연출 실행
+                // 5.버스 연출 실행
                 placementDirector.StartBatchBusSummon(newlyAddedDataList);
             }
         }
 
-        /// <summary>
-        /// 시간 복잡도 $O(N)$으로 신규 추가된 animalId를 추출합니다.
-        /// </summary>
+        // 시간 복잡도 $O(N)$으로 신규 추가된 animalId를 추출
         private List<string> ExtractNewlyAddedIds(List<string> previous, IReadOnlyList<string> current)
         {
             List<string> newlyAdded = new List<string>();
