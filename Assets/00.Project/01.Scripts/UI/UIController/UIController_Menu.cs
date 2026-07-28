@@ -13,25 +13,32 @@ public class UIController_Menu : MonoBehaviour
     [SerializeField] private Button gachaButton;
     [Tooltip("동물 도감 오픈")]
     [SerializeField] private Button animalDexButton;
+    [Tooltip("마을 업그레이드 오픈")]
+    [SerializeField] private Button villageButton;
     [Tooltip("옵션 패널 오픈")]
     [SerializeField] private Button optionButton;
     [Tooltip("화면 축소 버튼")]
     [SerializeField] private Button minimizeButton;
 
     [Header("오픈할 UI 패널")]
-    [SerializeField] private UIPanelWindow animalInventoryPanel;
-    [SerializeField] private UIPanelWindow toolInventoryPanel;
-    [SerializeField] private UIPanelWindow gachaPanel;
-    [SerializeField] private UIPanelWindow animalDexPanel;
-    [SerializeField] private UIPanelWindow optionPanel;
+    private UIPanelWindow animalInventoryPanel;
+    private UIPanelWindow toolInventoryPanel;
+    private UIPanelWindow gachaPanel;
+    private UIPanelWindow animalDexPanel;
+    private UIPanelWindow villagePanel;
+    private UIPanelWindow optionPanel;
 
-    [Header("인벤토리 UI 동기화")]
+    [Header("UI 동기화")]
     [Tooltip("동물 Inv 패널 오픈/닫기 시 상세 닫기 + SyncAllSlots 호출 대상")]
     [SerializeField] private UIController_AnimalInv animalInvUI;
     [Tooltip("도구 Inv 패널 오픈/닫기 시 상세 닫기 + SyncAllSlots 호출 대상")]
     [SerializeField] private UIController_ToolInv toolInvUI;
     [Tooltip("동물 도감 패널 오픈 시 상세 닫기 등 오픈 처리 호출 대상")]
     [SerializeField] private UIController_AnimalDex animalDexUI;
+    [Tooltip("뽑기 패널 오픈 시 가격 텍스트 갱신 호출 대상")]
+    [SerializeField] private UIController_Gacha gachaUI;
+    [Tooltip("마을 패널 오픈 시 텍스트 갱신 호출 대상")]
+    [SerializeField] private UIController_VillageUpgrade villageUI;
 
     [Header("패널 오픈시 초기 위치 고정")]
     [SerializeField] private bool usePanelOpenDefaultPosition;
@@ -51,11 +58,16 @@ public class UIController_Menu : MonoBehaviour
         if (animalDexUI == null)
             animalDexUI = GetComponent<UIController_AnimalDex>();
 
+        if (gachaUI == null)
+            gachaUI = GetComponent<UIController_Gacha>();
+
+
         animalInventoryButton.onClick.AddListener(() => TogglePanel(animalInventoryPanel));
         toolInventoryButton.onClick.AddListener(() => TogglePanel(toolInventoryPanel));
         gachaButton.onClick.AddListener(() => TogglePanel(gachaPanel));
         animalDexButton.onClick.AddListener(() => TogglePanel(animalDexPanel));
         optionButton.onClick.AddListener(() => TogglePanel(optionPanel));
+        villageButton.onClick.AddListener(() => TogglePanel(villagePanel));
 
         // GameMasterManager의 축소와 별개로, 같은 Minimize 버튼에 메뉴 패널 닫기를 추가 연결
         if (minimizeButton != null)
@@ -80,6 +92,9 @@ public class UIController_Menu : MonoBehaviour
 
             if (optionPanel == null && w.MenuType == GameMenuType.Option)
                 optionPanel = w;
+            
+            if (villagePanel == null && w.MenuType == GameMenuType.Villiage)
+                villagePanel = w;
         }
     }
 
@@ -148,6 +163,8 @@ public class UIController_Menu : MonoBehaviour
             toolInvUI?.NotifyPanelOpened();
         else if (panel == animalDexPanel)
             animalDexUI?.NotifyPanelOpened();
+        else if (panel == gachaPanel)
+            gachaUI?.NotifyPanelOpened();
     }
 
     /// <summary>
@@ -168,6 +185,7 @@ public class UIController_Menu : MonoBehaviour
         CloseIfOther(toolInventoryPanel, keepOpen);
         CloseIfOther(gachaPanel, keepOpen);
         CloseIfOther(animalDexPanel, keepOpen);
+        CloseIfOther(villagePanel, keepOpen);
         CloseIfOther(optionPanel, keepOpen);
     }
 

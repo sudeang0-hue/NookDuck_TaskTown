@@ -64,6 +64,7 @@ MonoBehaviour:
   animalInvUI: {fileID: 5297253450871963050}
   toolInvUI: {fileID: 4693624468742908777}
   animalDexUI: {fileID: 5183136650075570981}
+  gachaUI: {fileID: 8478550235658878390}
   usePanelOpenDefaultPosition: 1
   useTradeOffSetting: 1
 --- !u!114 &3179436167034268464
@@ -127,6 +128,7 @@ MonoBehaviour:
   toolInventory: {fileID: 0}
   toolSlotPrefab: {fileID: 6944075603417595130, guid: b8ceee9b095d2484e9576662e259b160, type: 3}
   toolSlotContentRoot: {fileID: 0}
+  toolInvPageController: {fileID: 0}
   slotMaplist: []
 --- !u!114 &8478550235658878390
 MonoBehaviour:
@@ -145,8 +147,12 @@ MonoBehaviour:
   coinWalletSource: {fileID: 0}
   animalOnePickButton: {fileID: 0}
   animalTenPickButton: {fileID: 0}
+  animalOnePickCost: {fileID: 0}
+  animalTenPickCost: {fileID: 0}
   toolOnePickButton: {fileID: 0}
   toolTenPickButton: {fileID: 0}
+  toolOnePickCost: {fileID: 0}
+  toolTenPickCost: {fileID: 0}
 --- !u!114 &5183136650075570981
 MonoBehaviour:
   m_ObjectHideFlags: 0
