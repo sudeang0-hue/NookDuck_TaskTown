@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-// 글로벌 키보드 입력을 수신하여 매크로/AI 타수를 검증(Filtering)하는 전담 클래스입니다.
+// 글로벌 키보드 입력을 수신하여 매크로/AI 타수를 검증(Filtering)하는 전담 클래스
 public class TypingInputFilter : MonoBehaviour
 {
     [Header("Anti-Macro / AI Protection")]

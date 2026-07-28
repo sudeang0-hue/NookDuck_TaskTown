@@ -2070,7 +2070,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3aaca499cdee1334eac08ad10a0cbf3b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TaskTown.KDH.ToolPlacementService
-  maxPlacedToolCount: 3
 --- !u!4 &545468628
 Transform:
   m_ObjectHideFlags: 0
@@ -2158,6 +2157,10 @@ PrefabInstance:
       propertyPath: coinWalletSource
       value: 
       objectReference: {fileID: 1566871428}
+    - target: {fileID: 7183985050904730177, guid: 0c3bc518a8c206045b4251e435e075a6, type: 3}
+      propertyPath: townLevelProviderSource
+      value: 
+      objectReference: {fileID: 9079599831195136031}
     - target: {fileID: 7406306307270272899, guid: 0c3bc518a8c206045b4251e435e075a6, type: 3}
       propertyPath: coinWalletSource
       value: 
@@ -7613,8 +7616,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EarnProcessor
   baseCoinPerClick: 5
   baseCoinPerTyping: 3
-  maxCoinPerHour: 10000000
-  limitPeriodSeconds: 30
+  maxCoinPerHour: 10000
+  limitPeriodSeconds: 3600
 --- !u!114 &1566871428
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8408,7 +8411,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3aaca499cdee1334eac08ad10a0cbf3b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TaskTown.KDH.ToolPlacementService
-  maxPlacedToolCount: 3
 --- !u!4 &1918441679
 Transform:
   m_ObjectHideFlags: 0

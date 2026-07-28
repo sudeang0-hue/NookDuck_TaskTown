@@ -14,6 +14,18 @@ namespace TaskTown.KDH
         [SerializeField] private MonoBehaviour coinWalletSource;
         private ICoinWallet CoinWallet => coinWalletSource as ICoinWallet;
 
+        // #18(도구 상한): ITownLevelProvider를 구현한 컴포넌트(VillageUpgradeUI_Manager)를 연결합니다.
+        // 비워두면 마을 레벨 1로 취급합니다(GachaManagerBase와 동일한 패턴).
+        [Tooltip("ITownLevelProvider를 구현한 컴포넌트(VillageUpgradeUI_Manager)를 연결합니다. 비워두면 마을 레벨 1로 취급합니다.")]
+        [SerializeField] private MonoBehaviour townLevelProviderSource;
+        private ITownLevelProvider townLevelProvider;
+
+        // 도구 상한(동시에 "동물이 장착된 도구" 슬롯 개수 제한). 마을 레벨을 올리면 늘어납니다.
+        // 값은 simulate_game.py 인플레이션 밸런스 시뮬레이션(#18 리밸런스)으로 확정했습니다.
+        [Header("도구 상한 (#18)")]
+        [SerializeField] private int toolCapacityBase = 5;
+        [SerializeField] private int toolCapacityPerLevel = 2;
+
         [Header("도구 런타임 슬롯")]
         [Tooltip("현재 플레이어가 보유한 도구 슬롯 목록")]
         [SerializeField] private List<SlotData_Tool> toolSlotsList = new List<SlotData_Tool>();
@@ -44,7 +56,36 @@ namespace TaskTown.KDH
 
             DontDestroyOnLoad(gameObject);
 
+            townLevelProvider = townLevelProviderSource as ITownLevelProvider;
+
             InitializeDictionary();
+        }
+
+        private int GetCurrentTownLevel()
+        {
+            return townLevelProvider != null ? townLevelProvider.CurrentTownLevel : 1;
+        }
+
+        /// <summary>
+        /// 현재 마을 레벨 기준 도구 상한(동시에 생산 가능한 "동물 장착 도구" 개수)을 반환합니다.
+        /// </summary>
+        public int GetToolCapacity()
+        {
+            return toolCapacityBase + (GetCurrentTownLevel() - 1) * toolCapacityPerLevel;
+        }
+
+        /// <summary>
+        /// 현재 동물이 장착되어 생산 중인 도구 슬롯 개수를 반환합니다.
+        /// </summary>
+        public int GetActiveToolCount()
+        {
+            int count = 0;
+            for (int i = 0; i < toolSlotsList.Count; i++)
+            {
+                if (toolSlotsList[i] != null && toolSlotsList[i].CurrentAnimalSet)
+                    count++;
+            }
+            return count;
         }
 
         /// <summary>
@@ -296,6 +337,14 @@ namespace TaskTown.KDH
             if (string.IsNullOrWhiteSpace(animalId))
             {
                 Debug.LogWarning("[InventoryManager_Tool] ��ġ�� AnimalId�� ��� �ֽ��ϴ�.");
+                return false;
+            }
+
+            // #18(도구 상한): 이 슬롯이 지금 비활성 상태에서 새로 활성화되는 경우에만 상한 체크.
+            // 이미 활성 상태인 도구에 다른 동물을 재배치하는 건 활성 슬롯 개수가 늘지 않으므로 통과.
+            if (!slot.CurrentAnimalSet && GetActiveToolCount() >= GetToolCapacity())
+            {
+                Debug.Log($"[InventoryManager_Tool] 도구 상한 초과로 장착 불가: {toolId} (상한 {GetToolCapacity()})");
                 return false;
             }
 
