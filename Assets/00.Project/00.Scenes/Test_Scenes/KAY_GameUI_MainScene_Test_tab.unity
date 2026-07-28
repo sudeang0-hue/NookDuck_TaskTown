@@ -2652,7 +2652,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3aaca499cdee1334eac08ad10a0cbf3b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TaskTown.KDH.ToolPlacementService
-  maxPlacedToolCount: 3
 --- !u!4 &545468628
 Transform:
   m_ObjectHideFlags: 0
@@ -8694,8 +8693,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EarnProcessor
   baseCoinPerClick: 5
   baseCoinPerTyping: 3
-  maxCoinPerHour: 10000000
-  limitPeriodSeconds: 30
+  maxCoinPerHour: 10000
+  limitPeriodSeconds: 3600
 --- !u!114 &1566871428
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9701,7 +9700,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3aaca499cdee1334eac08ad10a0cbf3b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TaskTown.KDH.ToolPlacementService
-  maxPlacedToolCount: 3
 --- !u!4 &1918441679
 Transform:
   m_ObjectHideFlags: 0
@@ -11127,7 +11125,7 @@ PrefabInstance:
     - target: {fileID: 6442045360655717704, guid: b0ab10f74a427804cacc14f3f3f86129, type: 3}
       propertyPath: villageUI
       value: 
-      objectReference: {fileID: 2643772414286524360}
+      objectReference: {fileID: 0}
     - target: {fileID: 6442045360655717704, guid: b0ab10f74a427804cacc14f3f3f86129, type: 3}
       propertyPath: gachaPanel
       value: 
@@ -11241,17 +11239,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 968221804118175414, guid: b0ab10f74a427804cacc14f3f3f86129, type: 3}
   m_PrefabInstance: {fileID: 2643772414286524357}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &2643772414286524360 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 8478550235658878390, guid: b0ab10f74a427804cacc14f3f3f86129, type: 3}
-  m_PrefabInstance: {fileID: 2643772414286524357}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: afd018cc164161e42b0ea4b9c6f50dda, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::UIController_Gacha
 --- !u!1001 &4811925134361835755
 PrefabInstance:
   m_ObjectHideFlags: 0
