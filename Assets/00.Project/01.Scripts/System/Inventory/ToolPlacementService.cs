@@ -2,18 +2,18 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-//¾²´Â ¹ý ¿¹½Ã
-// µµ±¸ ¹èÄ¡
+//ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡
 //ToolPlacementService.Instance.PlaceTool("toolId");
 
-// ¹èÄ¡µÈ µµ±¸¿¡ µ¿¹° ÇÒ´ç
+// ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ò´ï¿½
 //ToolPlacementService.Instance.AssignAnimal("toolId", "animalId");
 
-// ÇöÈ²
+// ï¿½ï¿½È²
 //bool placed = ToolPlacementService.Instance.IsToolPlaced("toolId");
 //int count = ToolPlacementService.Instance.PlacedToolCount;
 
-// ÇØÁ¦
+// ï¿½ï¿½ï¿½ï¿½
 //ToolPlacementService.Instance.UnassignAnimal("toolId");
 //ToolPlacementService.Instance.UnplaceTool("toolId");
 
@@ -22,14 +22,12 @@ using UnityEngine;
 namespace TaskTown.KDH
 {
     /// <summary>
-    /// µµ±¸ ¹èÄ¡ / µ¿¹° ÇÒ´ç¸¸ ´ã´çÇÏ´Â ¾ãÀº ÁøÀÔÁ¡.
-    /// InventoryManager_Tool / Animal À» Á÷Á¢ ¸¸ÁöÁö ¸»°í ¿©±â¸¸ È£ÃâÇÏ¼¼¿ä.
+    /// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ / ï¿½ï¿½ï¿½ï¿½ ï¿½Ò´ç¸¸ ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½.
+    /// InventoryManager_Tool / Animal ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½â¸¸ È£ï¿½ï¿½ï¿½Ï¼ï¿½ï¿½ï¿½.
     /// </summary>
     public class ToolPlacementService : MonoBehaviour
     {
         public static ToolPlacementService Instance { get; private set; }
-
-        [SerializeField] private int maxPlacedToolCount = 3; // ³ªÁß¿¡ ¾÷±×·¹ÀÌµå·Î Áõ°¡
 
         private void Awake()
         {
@@ -43,10 +41,11 @@ namespace TaskTown.KDH
 
 
 
-        // ---------- Á¶È¸ ----------
-        public int MaxPlacedToolCount => maxPlacedToolCount;
+        // ---------- ï¿½ï¿½È¸ ----------
+        // #18: ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ ï¿½ï¿½Ñµï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ï·ï¿½ ï¿½ï¿½È­ (InventoryManager_Tool.GetToolCapacity)
+        public int MaxPlacedToolCount => InventoryManager_Tool.Instance != null ? InventoryManager_Tool.Instance.GetToolCapacity() : 0;
         public int PlacedToolCount => GetPlacedTools().Count;
-        public bool CanPlaceMoreTools() => PlacedToolCount < maxPlacedToolCount;
+        public bool CanPlaceMoreTools() => PlacedToolCount < MaxPlacedToolCount;
         public bool IsToolPlaced(string toolId) => TryGetTool(toolId, out SlotData_Tool slot) && slot.CurrentSet;
 
         public bool TryGetAssignedAnimalId(string toolId, out string animalId)
@@ -77,11 +76,11 @@ namespace TaskTown.KDH
 
 
 
-        // ---------- ¹èÄ¡ ----------
+        // ---------- ï¿½ï¿½Ä¡ ----------
         public bool PlaceTool(string toolId)
         {
             if (!CanPlaceMoreTools()) return false;
-            if (IsToolPlaced(toolId)) return true; // ÀÌ¹Ì ¹èÄ¡µÊ
+            if (IsToolPlaced(toolId)) return true; // ï¿½Ì¹ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½
 
             return InventoryManager_Tool.Instance != null && InventoryManager_Tool.Instance.TrySetTool(toolId);
         }
@@ -93,22 +92,22 @@ namespace TaskTown.KDH
 
 
 
-        // ---------- µ¿¹° ÇÒ´ç (¹èÄ¡µÈ µµ±¸¸¸, µµ±¸ 1 : µ¿¹° 1) ----------
+        // ---------- ï¿½ï¿½ï¿½ï¿½ ï¿½Ò´ï¿½ (ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ 1 : ï¿½ï¿½ï¿½ï¿½ 1) ----------
         public bool AssignAnimal(string toolId, string animalId)
         {
             if (InventoryManager_Tool.Instance == null) return false;
             if (InventoryManager_Animal.Instance == null) return false;
 
-            // 1) µµ±¸°¡ ¹èÄ¡µÇ¾î ÀÖ¾î¾ß ÇÔ
+            // 1) ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½Ç¾ï¿½ ï¿½Ö¾ï¿½ï¿½ ï¿½ï¿½
             if (!IsToolPlaced(toolId)) return false;
 
-            // 2) µ¿¹° º¸À¯ È®ÀÎ
+            // 2) ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ È®ï¿½ï¿½
             if (!InventoryManager_Animal.Instance.TryGetAnimalSlot(animalId, out _)) return false;
 
-            // 3) °°Àº µ¿¹°ÀÌ ´Ù¸¥ µµ±¸¿¡ ÀÖÀ¸¸é ÇØÁ¦
+            // 3) ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ù¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             ClearAnimalFromAllTools(animalId);
 
-            // 4) ÇØ´ç µµ±¸¿¡ ÇÒ´ç
+            // 4) ï¿½Ø´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ò´ï¿½
             return InventoryManager_Tool.Instance.TryAssignAnimalToTool(toolId, animalId);
         }
 
@@ -119,7 +118,7 @@ namespace TaskTown.KDH
 
 
 
-        // ---------- ³»ºÎ ----------
+        // ---------- ï¿½ï¿½ï¿½ï¿½ ----------
         private bool TryGetTool(string toolId, out SlotData_Tool slot)
         {
             slot = null;
@@ -140,18 +139,5 @@ namespace TaskTown.KDH
         }
 
 
-
-        // ¾÷±×·¹ÀÌµå·Î ¹èÄ¡ ÇÑµµ ¿Ã¸± ¶§
-        public void SetMaxPlacedToolCount(int count)
-        {
-            maxPlacedToolCount = Mathf.Max(1, count);
-        }
-
-        //----------------------26.07.27 KDH-------------------------------
-        public void IncreaseMaxPlacedToolCount(int amount)
-        {
-            maxPlacedToolCount = Mathf.Max(1, maxPlacedToolCount + amount);
-        }
-        //------------------------------------------------------------------
     }
 }
