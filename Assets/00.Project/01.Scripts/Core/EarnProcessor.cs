@@ -1,4 +1,4 @@
-//나범 코드 및 추가 를 했습니다 :-)
+//나범 키보드 , 마우스 클릭 이벤트 구독 코드 수정 및 추가 했습니다 :-)
 
 using UnityEngine;
 
@@ -37,15 +37,21 @@ public class EarnProcessor : MonoBehaviour
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
     }
-    //[추가] 필터에서 검증된 타이핑 이벤트 구독 및 해제
+    // [NB 추가] 키보드 및 마우스 이벤트 통합 구독
     private void OnEnable()
     {
+        // 1. 검증된 타이핑 이벤트 구독
         TypingInputFilter.OnTypingValidated += ProcessValidatedTyping;
+
+        // 2. 전역 마우스 클릭 이벤트 구독
+        GlobalMouseHook.OnGlobalMouseClicked += ProcessValidatedMouseClick;
     }
 
     private void OnDisable()
     {
+        // 메모리 누수 방지를 위한 이벤트 해제
         TypingInputFilter.OnTypingValidated -= ProcessValidatedTyping;
+        GlobalMouseHook.OnGlobalMouseClicked -= ProcessValidatedMouseClick;
     }
 
     private void Update()
@@ -98,11 +104,21 @@ public class EarnProcessor : MonoBehaviour
         CheckLimitAndAddCoin(earnedCoin);
     }
 
-    // [NB 핵심 추가] TypingGoldManager에서 호출할 메서드. 
-    // 기본값 연산을 여기서 수행하도록 하여 경제 밸런스 권한을 유지
+    // [NB 핵심 추가] TypingInputFilter에서 호출되는 핸들러
     public void ProcessValidatedTyping()
     {
         int earnedCoin = baseCoinPerTyping * TypingMultiplier;
+        CheckLimitAndAddCoin(earnedCoin);
+    }
+
+    // [NB 핵심 추가] 마우스 후킹에서 호출되는 핸들러
+    private void ProcessValidatedMouseClick(MouseClickType clickType)
+    {
+        // 좌클릭/우클릭 차등 보상 처리 예시 (우클릭 시 2배 배율 예시)
+        int currentClickMultiplier = (clickType == MouseClickType.Right) ? ClickMultiplier * 2 : ClickMultiplier;
+
+        // $EarnedCoin = BaseCoin \times Multiplier$
+        int earnedCoin = baseCoinPerClick * currentClickMultiplier;
         CheckLimitAndAddCoin(earnedCoin);
     }
 

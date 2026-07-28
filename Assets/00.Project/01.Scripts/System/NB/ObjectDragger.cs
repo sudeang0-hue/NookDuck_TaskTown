@@ -7,6 +7,7 @@ public class ObjectDragger : MonoBehaviour
     private Vector3 offset;
     private bool isDragging = false;
     private GameMasterManager gameManager;
+    private VillagerPlacementDirector placementDirector; //디렉터 참조 캐싱
     private Camera _mainCamera; // 메인 카메라 캐싱 변수
 
     [Header("관성(부드러움) 설정")]
@@ -26,7 +27,8 @@ public class ObjectDragger : MonoBehaviour
     void Start()
     {
         gameManager = Object.FindFirstObjectByType<GameMasterManager>();
-
+        // [신규] VillagerPlacementDirector 씬 내 탐색 및 캐싱
+        placementDirector = Object.FindFirstObjectByType<VillagerPlacementDirector>();
         //VillageHouse 레이어를 가진 모든 자식 Collider 수집
         CacheVillageHouseColliders();
     }
@@ -35,6 +37,9 @@ public class ObjectDragger : MonoBehaviour
     {
         bool isExpanded = gameManager == null || gameManager.GetIsExpanded();
 
+        // 버스 연출 진행 여부 확인
+        bool isBusSummoning = placementDirector != null && placementDirector.IsBusSummoning;
+
         // 확장/축소 상태가 변경될 때만 Collider 상태 업데이트 (성능 최적화)
         if (_lastExpandedState != isExpanded)
         {
@@ -42,9 +47,10 @@ public class ObjectDragger : MonoBehaviour
             SetVillageHouseCollidersEnabled(isExpanded);
         }
 
-        // 축소 모드일 때는 드래그 중단 및 처리 방지
-        if (!isExpanded)
+        // 축소 모드이거나 '버스 연출 중'일 때는 드래그 중단 및 처리 원천 차단
+        if (!isExpanded || isBusSummoning)
         {
+            // 드래그 도중에 버스 연출이 시작되었을 경우를 대비한 강제 드래그 해제
             if (isDragging)
             {
                 ToggleChildAgents(true);
