@@ -1,11 +1,11 @@
+//NB
+
 using System;
 using System.Collections;
 using System.Runtime.InteropServices;
 using UnityEngine;
 
-/// <summary>
-/// [ECHO TD] 싱글/다중 모니터 대응 및 Window 좌표 위치 강제 보정 컨트롤러
-/// </summary>
+// 싱글/다중 모니터 대응 및 Window 좌표 위치 강제 보정 컨트롤러
 [RequireComponent(typeof(Camera))]
 public class MultiMonitorManager : MonoBehaviour
 {

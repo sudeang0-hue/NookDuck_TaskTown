@@ -8,7 +8,7 @@ using TaskTown.Gacha;  // GachaEntryData 네임스페이스
 [System.Serializable]
 public struct VillageAnimalEntry
 {
-    [Tooltip("데이터 팀이 작성한 동물 데이터 에셋 (AnimalDataSO)")]
+    [Tooltip("동물 데이터 에셋 (AnimalDataSO)")]
     public AnimalDataSO animalData;
 
     [Tooltip("마을에 스폰될 관상용 3D 프리팹")]

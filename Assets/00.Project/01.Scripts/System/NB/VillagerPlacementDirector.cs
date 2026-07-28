@@ -84,10 +84,8 @@ public class VillagerPlacementDirector : MonoBehaviour
     // [외부 UI / 시스템 호출용 API]
     // =========================================================================
 
-    /// <summary>
-    /// 단일 동물 데이터(AnimalDataSO)를 인자로 받아 버스 소환을 시작합니다.
-    /// UI 버튼 클릭 시 개별 동물을 배치할 때 호출합니다.
-    /// </summary>
+    // 단일 동물 데이터(AnimalDataSO)를 인자로 받아 버스 소환을 시작
+    // UI 버튼 클릭 시 개별 동물을 배치할 때 호출
     public void StartBusSummon(AnimalDataSO animalData)
     {
         if (IsBusSummoning)
@@ -101,9 +99,7 @@ public class VillagerPlacementDirector : MonoBehaviour
         StartBatchBusSummon(list);
     }
 
-    /// <summary>
-    /// 단일 프리팹(GameObject)을 인자로 받아 버스 소환을 시작합니다.
-    /// </summary>
+    // 단일 프리팹(GameObject)을 인자로 받아 버스 소환을 시작
     public void StartBusSummon(GameObject customAnimalPrefab = null)
     {
         if (IsBusSummoning)
@@ -117,9 +113,7 @@ public class VillagerPlacementDirector : MonoBehaviour
         StartBatchBusSummon(list);
     }
 
-    /// <summary>
-    /// 여러 동물 데이터 리스트를 받아 다중 소환 연출을 시작합니다. (최대 maxBatchCount마리)
-    /// </summary>
+    // 여러 동물 데이터 리스트를 받아 다중 소환 연출을 시작 (최대 maxBatchCount마리)
     public void StartBatchBusSummon(List<AnimalDataSO> animalDataList)
     {
         if (IsBusSummoning)
@@ -140,9 +134,7 @@ public class VillagerPlacementDirector : MonoBehaviour
         StartBatchBusSummon(prefabList);
     }
 
-    /// <summary>
-    /// 프리팹 리스트를 직접 전달하여 다중 소환을 진행하는 최하단 메인 API입니다.
-    /// </summary>
+    // 프리팹 리스트를 직접 전달하여 다중 소환을 진행하는 최하단 메인 API
     public void StartBatchBusSummon(List<GameObject> customAnimalPrefabList)
     {
         // 중복 실행 방지 가드 클로즈
@@ -169,9 +161,7 @@ public class VillagerPlacementDirector : MonoBehaviour
         ExecuteBusSequence(outgoingAnimal: null, isSwap: false);
     }
 
-    /// <summary>
-    /// DB에서 무작위 동물을 선택해 소환하는 UI 테스트/이벤트용 임시 버튼 연결 함수입니다.
-    /// </summary>
+    // DB에서 무작위 동물을 선택해 소환하는 UI 테스트/이벤트용 임시 버튼 연결 함수
     public void StartRandomBusSummonFromDB(int count = 1)
     {
         if (IsBusSummoning) return;
@@ -191,9 +181,7 @@ public class VillagerPlacementDirector : MonoBehaviour
         }
     }
 
-    // =========================================================================
     // 메인 오케스트레이터 시퀀스 (DOTween)
-    // =========================================================================
     private void ExecuteBusSequence(GameObject outgoingAnimal, bool isSwap)
     {
         if (busObject == null) return;
@@ -270,9 +258,7 @@ public class VillagerPlacementDirector : MonoBehaviour
         _busSequence.OnKill(() => IsBusSummoning = false);
     }
 
-    // =========================================================================
     // 다중 주민 하차 처리 (부채꼴 착지 오프셋 계산)
-    // =========================================================================
     private void SpawnSingleAnimalFromBatch(int index, int totalCount)
     {
         if (index >= _overrideAnimalPrefabList.Count) return;

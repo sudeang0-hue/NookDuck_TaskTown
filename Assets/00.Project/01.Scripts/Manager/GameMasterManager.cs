@@ -1,11 +1,11 @@
+//NB
+
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
 using System.Collections;
 
-/// <summary>
-/// 메인 화면의 확장/축소 상태, 카메라 포커스 연동, 하단 아이콘 애니메이션을 전담하는 메인 매니저
-/// </summary>
+// 메인 화면의 확장/축소 상태, 카메라 포커스 연동, 하단 아이콘 애니메이션을 전담하는 메인 매니저
 public class GameMasterManager : MonoBehaviour
 {
     [Header("3D 오브젝트 및 카메라 설정")]
@@ -105,9 +105,7 @@ public class GameMasterManager : MonoBehaviour
         CameraDirector.OnCameraFocusStarted -= CloseAllUI;
     }
 
-    /// <summary>
-    /// 동물이 클릭되거나 카메라 포커스가 동작할 때 메인 메뉴 및 팝업 UI를 수거하는 핸들러
-    /// </summary>
+    // 동물이 클릭되거나 카메라 포커스가 동작할 때 메인 메뉴 및 팝업 UI를 수거하는 핸들러
     public void CloseAllUI()
     {
         // 전체 메뉴 패널이 열려있다면 즉시 페이드 아웃 처리
@@ -127,9 +125,7 @@ public class GameMasterManager : MonoBehaviour
 
     #region 화면 확장 / 축소 제어
 
-    /// <summary>
-    /// 화면 축소 진입점 (연타 방지 가드 적용)
-    /// </summary>
+    // 화면 축소 진입점 (연타 방지 가드 적용)
     public void SetMinimizedScreen()
     {
         if (!isExpanded || isTransitioning) return;
@@ -170,9 +166,7 @@ public class GameMasterManager : MonoBehaviour
         isTransitioning = false;
     }
 
-    /// <summary>
-    /// 화면 확장 진입점 (연타 방지 가드 적용)
-    /// </summary>
+    // 화면 확장 진입점 (연타 방지 가드 적용)
     public void SetExpandedScreen()
     {
         if (isExpanded || isTransitioning) return;

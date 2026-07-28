@@ -1,10 +1,10 @@
+//NB
+
 using UnityEngine;
 using System.Runtime.InteropServices;
 using System;
 
-/// <summary>
-/// 다중 모니터 환경에서 주 모니터 중앙으로 카메라와 UI를 정렬해주는 관리자 클래스
-/// </summary>
+// 다중 모니터 환경에서 주 모니터 중앙으로 카메라와 UI를 정렬해주는 관리자 클래스
 public class CameraMonitorAligner : MonoBehaviour
 {
     [Header("카메라 설정")]
@@ -40,9 +40,7 @@ public class CameraMonitorAligner : MonoBehaviour
 #endif
     }
 
-    /// <summary>
-    /// 주 모니터의 위치를 계산하여 카메라의 오프셋을 재조정합니다.
-    /// </summary>
+    // 주 모니터의 위치를 계산하여 카메라의 오프셋을 재조정
     private void AlignToPrimaryMonitor()
     {
         // 1. 가상 화면(모든 모니터가 합쳐진 영역)의 정보 가져오기
@@ -68,7 +66,7 @@ public class CameraMonitorAligner : MonoBehaviour
         float deltaY = pCenterY - vCenterY;
 
         // 4. 카메라 픽셀 -> 월드 좌표 변환
-        // (직교 카메라 기준. Perspective일 경우 거리(Z)에 따른 FOV 계산이 추가로 필요합니다)
+        // (직교 카메라 기준. Perspective일 경우 거리(Z)에 따른 FOV 계산이 추가로 필요)
         float worldPerPixel = (targetCamera.orthographicSize * 2f) / Screen.height;
 
         // 5. 유니티 월드 좌표계 적용 (Y축은 화면과 방향이 반대일 수 있으므로 부호 주의)
