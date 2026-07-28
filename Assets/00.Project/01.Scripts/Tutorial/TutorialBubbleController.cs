@@ -60,6 +60,7 @@ namespace TaskTown.Tutorial
                 return;
 
             tutorialManager.ProgressChanged += HandleProgressChanged;
+            tutorialManager.StepChanged += HandleStepChanged;
             tutorialManager.PauseChanged += HandlePauseChanged;
             view.AdvanceRequested += HandleAdvanceRequested;
             isSubscribed = true;
@@ -73,6 +74,7 @@ namespace TaskTown.Tutorial
             if (tutorialManager != null)
             {
                 tutorialManager.ProgressChanged -= HandleProgressChanged;
+                tutorialManager.StepChanged -= HandleStepChanged;
                 tutorialManager.PauseChanged -= HandlePauseChanged;
             }
 
@@ -90,6 +92,15 @@ namespace TaskTown.Tutorial
         private void HandlePauseChanged(bool isPaused)
         {
             RefreshView();
+        }
+
+        private void HandleStepChanged(
+            TutorialStep previousStep,
+            TutorialStep nextStep)
+        {
+            // 대화 단계 전환은 버튼 클릭 시 이미 Punch를 실행하므로 중복 재생하지 않습니다.
+            if (!IsDialogueStep(previousStep) && nextStep != TutorialStep.Completed)
+                view?.PlayPunch();
         }
 
         private void HandleAdvanceRequested()

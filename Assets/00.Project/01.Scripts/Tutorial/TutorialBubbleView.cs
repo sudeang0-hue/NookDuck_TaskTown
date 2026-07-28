@@ -21,6 +21,7 @@ namespace TaskTown.Tutorial
         [SerializeField] private TMP_Text progressText;
         [SerializeField] private Button advanceButton;
         [SerializeField] private GameObject advanceIndicator;
+        [SerializeField] private TutorialBubbleHoverTween hoverTween;
 
         private bool canAdvance;
 
@@ -32,6 +33,9 @@ namespace TaskTown.Tutorial
         {
             if (canvasGroup == null)
                 TryGetComponent(out canvasGroup);
+
+            if (hoverTween == null && advanceButton != null)
+                advanceButton.TryGetComponent(out hoverTween);
         }
 
         private void OnEnable()
@@ -72,8 +76,13 @@ namespace TaskTown.Tutorial
                 portraitPlaceholder.SetActive(speakerPortrait == null);
 
             canAdvance = showAdvanceButton;
-            if (advanceButton != null && advanceButton.targetGraphic != null)
-                advanceButton.targetGraphic.raycastTarget = showAdvanceButton;
+            if (advanceButton != null)
+            {
+                // 퀘스트 단계에서도 Hover 판정은 유지하고 클릭 진행만 차단합니다.
+                advanceButton.interactable = showAdvanceButton;
+                if (advanceButton.targetGraphic != null)
+                    advanceButton.targetGraphic.raycastTarget = true;
+            }
 
             if (advanceIndicator != null)
                 advanceIndicator.SetActive(showAdvanceButton);
@@ -81,6 +90,9 @@ namespace TaskTown.Tutorial
 
         public void SetVisible(bool isVisible)
         {
+            if (!isVisible)
+                hoverTween?.CollapseImmediate();
+
             if (canvasGroup == null)
                 return;
 
@@ -89,10 +101,18 @@ namespace TaskTown.Tutorial
             canvasGroup.blocksRaycasts = isVisible;
         }
 
+        public void PlayPunch()
+        {
+            hoverTween?.PlayPunch();
+        }
+
         private void HandleAdvanceClicked()
         {
             if (canAdvance)
+            {
+                PlayPunch();
                 AdvanceRequested?.Invoke();
+            }
         }
 
         private static void SetText(TMP_Text target, string value)
