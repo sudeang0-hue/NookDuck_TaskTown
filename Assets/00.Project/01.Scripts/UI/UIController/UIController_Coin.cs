@@ -1,9 +1,12 @@
 using System.Collections;
+using System.Globalization;
 using TMPro;
 using UnityEngine;
 
 public class UIController_Coin : MonoBehaviour
 {
+    private const long Million = 1_000_000;
+    private const long Billion = 1_000_000_000;
 
     [Header("획득 코인 텍스트")]
     [SerializeField] private TMP_Text allCoinText;   // 현재 보유 코인
@@ -90,7 +93,8 @@ public class UIController_Coin : MonoBehaviour
             return;
         }
 
-        allCoinText.text = coinAmount.ToString("N0");
+        //allCoinText.text = coinAmount.ToString("N0");
+        allCoinText.text = FormatCoinAmount(coinAmount);
     }
 
     private void UpdateAutoCoinText(long coinPerHour)
@@ -102,5 +106,22 @@ public class UIController_Coin : MonoBehaviour
         }
 
         autoCoinText.text = $"{coinPerHour:N0}{prefix}";
+        // autoCoinText.text = $"{FormatCoinAmount(coinPerHour)}{prefix}";
+    }
+
+    private string FormatCoinAmount(long coinAmount)
+    {
+        
+        if (coinAmount < Billion)
+        {
+            
+            return coinAmount.ToString("N0");
+        }
+
+        double formattedAmount = coinAmount / (double)Billion;
+
+        return formattedAmount.ToString(
+            "0.##",
+            CultureInfo.InvariantCulture) + "B";
     }
 }

@@ -1,9 +1,14 @@
 using System.Collections;
+using System.Globalization;
 using TMPro;
 using UnityEngine;
 
 public class UIController_Coin_mini : MonoBehaviour
 {
+    private const long Million = 1_000_000;
+    private const long Billion = 1_000_000_000;
+
+
     [SerializeField] private CoinManager coinManager;
 
     [Header("È¹µæ ÄÚÀÎ ÅØ½ºÆ®")]
@@ -99,6 +104,31 @@ public class UIController_Coin_mini : MonoBehaviour
             return;
         }
 
-        allCoinText.text = coinAmount.ToString("N0");
+        //allCoinText.text = coinAmount.ToString("N0");
+        allCoinText.text = FormatCoinAmount(coinAmount);
+    }
+
+    private string FormatCoinAmount(long coinAmount)
+    {
+
+        if (coinAmount >= Billion)
+        {
+            double formattedAmount = coinAmount / (double)Billion;
+
+            return formattedAmount.ToString(
+                "0.##",
+                CultureInfo.InvariantCulture) + "B";
+        }
+
+        if (coinAmount >= Million)
+        {
+            double formattedAmount = coinAmount / (double)Million;
+
+            return formattedAmount.ToString(
+                "0.##",
+                CultureInfo.InvariantCulture) + "M";
+        }
+
+        return coinAmount.ToString("N0");
     }
 }
