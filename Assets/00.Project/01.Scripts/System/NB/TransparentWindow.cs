@@ -40,6 +40,10 @@ public class TransparentWindow : MonoBehaviour
     private const uint SWP_SHOWWINDOW = 0x0040;
 
     private static readonly IntPtr HWND_TOPMOST = new IntPtr(-1);
+
+    // DPI Awareness Context 값 (Per-Monitor DPI Aware v2)
+    private static readonly IntPtr DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 = new IntPtr(-4);
+
     #endregion
 
     #region Win32 API Imports
@@ -57,6 +61,10 @@ public class TransparentWindow : MonoBehaviour
 
     [DllImport("Dwmapi.dll")]
     private static extern uint DwmExtendFrameIntoClientArea(IntPtr hWnd, ref MARGINS margins);
+
+    // OS 레벨 DPI 인식을 강제 지정하는 Win32 API
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool SetProcessDpiAwarenessContext(IntPtr dpiContext);
     #endregion
 
     [Header("Settings")]
@@ -78,21 +86,32 @@ public class TransparentWindow : MonoBehaviour
     private void Start()
     {
 #if !UNITY_EDITOR && UNITY_STANDALONE_WIN
-        // 1. 현재 유니티 윈도우 핸들 가져오기
+        // 1. DWM 연산 전, OS에 Per-Monitor V2 DPI 인식을 최우선으로 선언!
+        // 이 코드가 적용되면 OS가 가상 비트맵 스케일링을 건너뛰고 1:1 물리 픽셀을 직접 전달
+        try
+        {
+            SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[ECHO TD] DPI Context 설정 중 예외 발생 (구형 Windows OS 환경 가능성): {ex.Message}");
+        }
+
+        // 2. 현재 유니티 윈도우 핸들 수집
         hWnd = GetActiveWindow();
 
-        // 2. DWM 프레임을 클라이언트 영역까지 확장하여 바탕화면 투명화 적용
+        // 3. DWM 프레임 확장 (1:1 물리 픽셀 기준 바탕화면 투명화)
         MARGINS margins = new MARGINS { cxLeftWidth = -1, cxRightWidth = -1, cyTopHeight = -1, cyBottomHeight = -1 };
         DwmExtendFrameIntoClientArea(hWnd, ref margins);
 
-        // 3. 기본 창 스타일 설정 (테두리 없는 팝업 창)
+        // 4. 기본 창 스타일 설정 (테두리 없는 팝업 창)
         SetWindowLong(hWnd, GWL_STYLE, WS_POPUP | WS_VISIBLE);
 
-        // 4. 확장 창 스타일 설정 (TOPMOST + LAYERED 필수 적용!)
+        // 5. 확장 창 스타일 설정 (TOPMOST + LAYERED 필수 적용)
         uint exStyle = GetWindowLong(hWnd, GWL_EXSTYLE);
         SetWindowLong(hWnd, GWL_EXSTYLE, exStyle | WS_EX_TOPMOST | WS_EX_LAYERED);
 
-        // 5. 창 위치 및 최상단 상태 적용 갱신
+        // 6. 창 프레임 강제 갱신 (SWP_FRAMECHANGED를 호출하여 DWM 버퍼 재계산 유도)
         SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
 #endif
     }

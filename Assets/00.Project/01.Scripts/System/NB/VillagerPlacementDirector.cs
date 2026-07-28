@@ -1,194 +1,245 @@
 //NB
 
 using UnityEngine;
+using UnityEngine.AI;
 using DG.Tweening;
-using System;
-using Animal.Data;     // AnimalDataSO 네임스페이스
-using TaskTown.Gacha;  // GachaEntryData 네임스페이스
+using System.Collections;
+using System.Collections.Generic;
+using Animal.Data;
+using TaskTown.Gacha;
 
 public class VillagerPlacementDirector : MonoBehaviour
 {
-    [Header("오브젝트 연결")]
-    [Tooltip("버스 3D 모델 Transform")]
+    [Header("오브젝트 및 부모 연결")]
+    [SerializeField] private Transform villageOrigin;
+    [SerializeField] private Transform villagerParent;
     [SerializeField] private Transform busObject;
-
-    [Tooltip("버스 모델 하위에 부착된 트렁크/하차 지점 Transform")]
     [SerializeField] private Transform trunkTransform;
 
     [Header("데이터베이스 및 기본 프리팹")]
-    [Tooltip("마을 배치 DB 에셋 (AnimalDataSO로 프리팹을 찾을 때 사용)")]
     [SerializeField] private VillagePlacementDatabaseSO placementDB;
-
-    [Tooltip("소환될 동물 주민 프리팹 (DB나 외부 전달값이 없을 때 사용할 기본값)")]
     [SerializeField] private GameObject animalPrefab;
 
     [Header("버스 이동 경로 (Waypoints)")]
-    [Tooltip("씬에 배치된 경로 Transform 배열")]
     [SerializeField] private Transform[] pathPoints;
 
     [Header("버스 이동 옵션")]
     [SerializeField, Range(1f, 10f)] private float busMoveDuration = 3.0f;
     [SerializeField, Range(0.01f, 0.2f)] private float lookAheadValue = 0.05f;
 
-    [Header("트렁크 하차 점프 연출 옵션")]
-    [SerializeField, Range(0.5f, 5.0f)] private float exitJumpDistance = 1.8f;
+    [Header("트렁크 승/하차 점프 연출 옵션")]
+    [SerializeField, Range(0.5f, 5.0f)] private float exitJumpDistance = 2.0f;
     [SerializeField, Range(0.2f, 3.0f)] private float exitJumpHeight = 1.2f;
     [SerializeField, Range(0.1f, 2.0f)] private float exitJumpDuration = 0.6f;
-
-    // 동물이 뛰어내릴 방향 각도 오프셋
-    [Tooltip("트렁크 Forward 기준 동물이 튀어나갈 각도 (0: 직진, 90: 오른쪽, -90: 왼쪽, 180: 정반대)")]
     [SerializeField, Range(-180f, 180f)] private float exitAngleOffset = 0f;
 
-    // 초기 상태 저장 및 캐싱 변수
+    [Header("다중 배치(Batch) 옵션")]
+    [Tooltip("한 번의 버스 연출로 생성할 수 있는 최대 주민 수")]
+    [SerializeField, Range(1, 10)] private int maxBatchCount = 10;
+
+    [Tooltip("주민들이 연속으로 튀어나오는 시간 간격 (초)")]
+    [SerializeField, Range(0.05f, 0.5f)] private float batchSpawnInterval = 0.2f;
+
+    [Tooltip("여러 주민이 내릴 때 퍼지는 부채꼴 총 각도")]
+    [SerializeField, Range(30f, 180f)] private float spreadAngle = 120f;
+
+    // 외부 UI 스크립트나 입력 관리자에서 참조할 버스 연출 실행 상태
+    public bool IsBusSummoning { get; private set; } = false;
+
     private Vector3[] _waypointsCache;
     private Quaternion _initialBusRotation;
     private Sequence _busSequence;
-
-    // 외부에서 넘겨받은 프리팹을 임시로 저장할 변수
-    private GameObject _overrideAnimalPrefab;
+    private readonly List<GameObject> _overrideAnimalPrefabList = new List<GameObject>();
 
     private void Awake()
     {
-        // 1. 버스의 초기 원본 회전값 캐싱 (X, Z축 오차를 정제한 순수 Y축 회전값으로 저장)
+        if (villageOrigin == null) villageOrigin = transform.root;
+
         if (busObject != null)
         {
             Vector3 initEuler = busObject.rotation.eulerAngles;
             _initialBusRotation = Quaternion.Euler(0f, initEuler.y, 0f);
 
-            // 씬 시작 시 버스를 꺼두어 렌더링/컬링 연산 부하 차단
+            if (villageOrigin != null && busObject.parent != villageOrigin)
+                busObject.SetParent(villageOrigin, true);
+
             busObject.gameObject.SetActive(false);
         }
 
-        // 2. 경로 데이터 캐싱
         InitializeWaypoints();
     }
 
-    private void Update()
-    {
-        // 테스트용 단축키 (E) - placementDB에서 랜덤으로 동물을 하나 뽑아 테스트
-        if (Input.GetKeyDown(KeyCode.E))
-        {
-            if (placementDB != null && placementDB.entries.Count > 0)
-            {
-                // DB 항목 중 무작위 하나 선택
-                int randomIndex = UnityEngine.Random.Range(0, placementDB.entries.Count);
-                AnimalDataSO randomAnimalData = placementDB.entries[randomIndex].animalData;
-
-                // 해당 동물의 데이터로 버스 연출 시작!
-                StartBusSummon(randomAnimalData);
-            }
-            else
-            {
-                // DB가 없거나 비어있다면 기본 예비 프리팹으로 실행
-                StartBusSummon();
-            }
-        }
-    }
-
-    // Transform 배열에서 Vector3 위치 데이터 추출 및 캐싱
     private void InitializeWaypoints()
     {
-        if (pathPoints == null || pathPoints.Length < 2)
-        {
-            Debug.LogWarning("[VillagerPlacementDirector] 경로 포인트(pathPoints)가 최소 2개 이상 설정되어야 합니다!");
-            return;
-        }
+        if (pathPoints == null || pathPoints.Length < 2) return;
 
         _waypointsCache = new Vector3[pathPoints.Length];
         for (int i = 0; i < pathPoints.Length; i++)
         {
-            _waypointsCache[i] = pathPoints[i].position;
+            if (pathPoints[i] != null) _waypointsCache[i] = pathPoints[i].position;
         }
     }
 
-    // AnimalDataSO 에셋을 직접 받아서 호출하는 방식
+    // =========================================================================
+    // [외부 UI / 시스템 호출용 API]
+    // =========================================================================
+
+    // 단일 동물 데이터(AnimalDataSO)를 인자로 받아 버스 소환을 시작
+    // UI 버튼 클릭 시 개별 동물을 배치할 때 호출
     public void StartBusSummon(AnimalDataSO animalData)
     {
-        if (placementDB != null && animalData != null)
+        if (IsBusSummoning)
         {
-            GameObject targetPrefab = placementDB.GetVisualPrefab(animalData);
-            StartBusSummon(targetPrefab);
-        }
-        else
-        {
-            Debug.LogWarning("[VillagerPlacementDirector] placementDB가 없거나 animalData가 null입니다. 기본 연출을 실행합니다.");
-            StartBusSummon();
-        }
-    }
-
-    // 동물 ID(string)로 호출하는 방식
-    public void StartBusSummon(string animalID)
-    {
-        if (placementDB != null && !string.IsNullOrEmpty(animalID))
-        {
-            GameObject targetPrefab = placementDB.GetVisualPrefab(animalID);
-            StartBusSummon(targetPrefab);
-        }
-        else
-        {
-            Debug.LogWarning("[VillagerPlacementDirector] placementDB가 없거나 animalID가 유효하지 않습니다. 기본 연출을 실행합니다.");
-            StartBusSummon();
-        }
-    }
-
-    // GameObject 프리팹을 직접 받아서 호출하는 방식
-    public void StartBusSummon(GameObject customAnimalPrefab)
-    {
-        _overrideAnimalPrefab = customAnimalPrefab;
-        StartBusSummon(); // 기존 연출 로직 실행
-    }
-
-    // 버스 연출 시작 메인 로직
-    public void StartBusSummon()
-    {
-        if (busObject == null)
-        {
-            Debug.LogError("[VillagerPlacementDirector] busObject가 할당되지 않았습니다!");
+            Debug.LogWarning("[VillagerPlacementDirector] 이미 버스 연출이 진행 중입니다.");
             return;
         }
 
-        if (_waypointsCache == null || _waypointsCache.Length < 2)
+        List<AnimalDataSO> list = new List<AnimalDataSO>();
+        if (animalData != null) list.Add(animalData);
+        StartBatchBusSummon(list);
+    }
+
+    // 단일 프리팹(GameObject)을 인자로 받아 버스 소환을 시작
+    public void StartBusSummon(GameObject customAnimalPrefab = null)
+    {
+        if (IsBusSummoning)
         {
-            InitializeWaypoints();
-            if (_waypointsCache == null || _waypointsCache.Length < 2) return;
+            Debug.LogWarning("[VillagerPlacementDirector] 이미 버스 연출이 진행 중입니다.");
+            return;
         }
 
-        // 진행 중인 시퀀스가 있다면 안전하게 중단 및 메모리 해제
-        if (_busSequence != null && _busSequence.IsActive())
+        List<GameObject> list = new List<GameObject>();
+        if (customAnimalPrefab != null) list.Add(customAnimalPrefab);
+        StartBatchBusSummon(list);
+    }
+
+    // 여러 동물 데이터 리스트를 받아 다중 소환 연출을 시작 (최대 maxBatchCount마리)
+    public void StartBatchBusSummon(List<AnimalDataSO> animalDataList)
+    {
+        if (IsBusSummoning)
         {
-            _busSequence.Kill();
+            Debug.LogWarning("[VillagerPlacementDirector] 이미 버스 연출이 진행 중입니다.");
+            return;
         }
 
-        // 연출 시작 직전 버스 활성화 및 초기 위치/회전 완전 정제
+        List<GameObject> prefabList = new List<GameObject>();
+        if (placementDB != null && animalDataList != null)
+        {
+            foreach (var data in animalDataList)
+            {
+                GameObject prefab = placementDB.GetVisualPrefab(data);
+                if (prefab != null) prefabList.Add(prefab);
+            }
+        }
+        StartBatchBusSummon(prefabList);
+    }
+
+    // 프리팹 리스트를 직접 전달하여 다중 소환을 진행하는 최하단 메인 API
+    public void StartBatchBusSummon(List<GameObject> customAnimalPrefabList)
+    {
+        // 중복 실행 방지 가드 클로즈
+        if (IsBusSummoning) return;
+
+        _overrideAnimalPrefabList.Clear();
+
+        if (customAnimalPrefabList != null && customAnimalPrefabList.Count > 0)
+        {
+            // 최대 허용 개수만큼 Clamping
+            int count = Mathf.Min(customAnimalPrefabList.Count, maxBatchCount);
+            for (int i = 0; i < count; i++)
+            {
+                _overrideAnimalPrefabList.Add(customAnimalPrefabList[i]);
+            }
+        }
+        else
+        {
+            // 비어있다면 기본 예비 프리팹 1개 추가
+            if (animalPrefab != null)
+                _overrideAnimalPrefabList.Add(animalPrefab);
+        }
+
+        ExecuteBusSequence(outgoingAnimal: null, isSwap: false);
+    }
+
+    // DB에서 무작위 동물을 선택해 소환하는 UI 테스트/이벤트용 임시 버튼 연결 함수
+    public void StartRandomBusSummonFromDB(int count = 1)
+    {
+        if (IsBusSummoning) return;
+
+        if (placementDB != null && placementDB.entries.Count > 0)
+        {
+            List<AnimalDataSO> randomList = new List<AnimalDataSO>();
+            int targetCount = Mathf.Clamp(count, 1, maxBatchCount);
+
+            for (int i = 0; i < targetCount; i++)
+            {
+                int randomIndex = Random.Range(0, placementDB.entries.Count);
+                randomList.Add(placementDB.entries[randomIndex].animalData);
+            }
+
+            StartBatchBusSummon(randomList);
+        }
+    }
+
+    // 메인 오케스트레이터 시퀀스 (DOTween)
+    private void ExecuteBusSequence(GameObject outgoingAnimal, bool isSwap)
+    {
+        if (busObject == null) return;
+
+        InitializeWaypoints();
+        if (_waypointsCache == null || _waypointsCache.Length < 2) return;
+
+        if (_busSequence != null && _busSequence.IsActive()) _busSequence.Kill();
+
+        IsBusSummoning = true;
         busObject.gameObject.SetActive(true);
         busObject.position = _waypointsCache[0];
         busObject.rotation = _initialBusRotation;
 
         _busSequence = DOTween.Sequence();
 
-        // CatmullRom 경로 이동 + 프레임별 Y축 회전 강제 고정 (Yaw Locking)
+        // 1. 버스 진입
         _busSequence.Append(
             busObject.DOPath(_waypointsCache, busMoveDuration, PathType.CatmullRom, PathMode.Full3D)
                      .SetLookAt(lookAheadValue, Vector3.forward, Vector3.up)
                      .SetEase(Ease.InOutQuad)
-                     .OnUpdate(SanitizeBusRotation) // 매 프레임 X, Z 축 기울어짐 제거
+                     .OnUpdate(SanitizeBusRotation)
         );
 
-        // 경로 완료 후 미세 회전 오차 0°로 보정
-        _busSequence.AppendCallback(SanitizeBusRotation);
-
-        // 정차 브레이크 반동 (Punch 후 회전 비틀림 방지를 위해 완료 후 보정)
+        // 2. 정차 반동 연출
         _busSequence.Append(busObject.DOPunchPosition(busObject.forward * 0.4f, 0.35f, 8, 1f));
         _busSequence.AppendCallback(SanitizeBusRotation);
-
-        // 트렁크 문 열림 대기
         _busSequence.AppendInterval(0.2f);
 
-        // 동물 주민 하차 스폰
-        _busSequence.AppendCallback(SpawnAnimalFromTrunk);
+        // 3. 기존 주민 퇴장 (교체 모드일 경우)
+        if (outgoingAnimal != null)
+        {
+            _busSequence.AppendCallback(() => DespawnAnimalToTrunk(outgoingAnimal));
+            _busSequence.AppendInterval(exitJumpDuration + 0.1f);
+        }
 
-        // 대기 후 화면 밖으로 퇴장
-        _busSequence.AppendInterval(1.5f);
+        // 4. [다중 소환 연출] 주민 연속 하차
+        if (outgoingAnimal == null || isSwap)
+        {
+            int totalCount = _overrideAnimalPrefabList.Count;
+
+            for (int i = 0; i < totalCount; i++)
+            {
+                int index = i; // 클로저 이슈 방지용 로컬 변수 캡처
+
+                // 하차 콜백
+                _busSequence.AppendCallback(() => SpawnSingleAnimalFromBatch(index, totalCount));
+
+                // 튀어나오는 시간 간격 대기
+                if (i < totalCount - 1)
+                {
+                    _busSequence.AppendInterval(batchSpawnInterval);
+                }
+            }
+        }
+
+        // 5. 버스 퇴장
+        _busSequence.AppendInterval(1.2f);
         Vector3 exitTargetPosition = _waypointsCache[_waypointsCache.Length - 1] + busObject.forward * 20f;
         _busSequence.Append(
             busObject.DOMove(exitTargetPosition, 1.5f)
@@ -196,98 +247,104 @@ public class VillagerPlacementDirector : MonoBehaviour
                      .OnUpdate(SanitizeBusRotation)
         );
 
-        // 퇴장 완료 시 자동 비활성화
+        // 6. 상태 복원 및 종료 처리
         _busSequence.OnComplete(() =>
         {
             busObject.gameObject.SetActive(false);
-            Debug.Log("[VillagerPlacementDirector] 버스가 성공적으로 퇴장하여 비활성화되었습니다.");
+            IsBusSummoning = false;
+            _overrideAnimalPrefabList.Clear();
         });
+
+        _busSequence.OnKill(() => IsBusSummoning = false);
     }
 
-    // 버스의 X(Pitch)축과 Z(Roll)축 회전 오차를 원천 차단하고 Y(Yaw)축만 남기는 보정 메서드
-    private void SanitizeBusRotation()
+    // 다중 주민 하차 처리 (부채꼴 착지 오프셋 계산)
+    private void SpawnSingleAnimalFromBatch(int index, int totalCount)
     {
-        if (busObject == null) return;
+        if (index >= _overrideAnimalPrefabList.Count) return;
 
-        Vector3 currentEuler = busObject.rotation.eulerAngles;
-        // X축과 Z축을 완벽히 0°로 픽스하여 평면 회전만 유지
-        busObject.rotation = Quaternion.Euler(0f, currentEuler.y, 0f);
-    }
-
-    // 동물 주민 스폰 및 방향 오프셋이 적용된 하차 연출
-    private void SpawnAnimalFromTrunk()
-    {
-        // 외부에서 넘겨받은 프리팹이 있으면 우선 사용하고, 없으면 기본 animalPrefab 사용
-        GameObject prefabToSpawn = (_overrideAnimalPrefab != null) ? _overrideAnimalPrefab : animalPrefab;
-
-        if (prefabToSpawn == null)
-        {
-            Debug.LogWarning("[VillagerPlacementDirector] 소환할 동물 프리팹이 설정되지 않았습니다!");
-            _overrideAnimalPrefab = null;
-            return;
-        }
+        GameObject prefabToSpawn = _overrideAnimalPrefabList[index];
+        if (prefabToSpawn == null) prefabToSpawn = animalPrefab;
+        if (prefabToSpawn == null) return;
 
         Transform spawnPoint = (trunkTransform != null) ? trunkTransform : busObject;
 
-        // 오프셋 회전값 계산 (Y축 회전)
-        Quaternion angleRotation = Quaternion.Euler(0f, exitAngleOffset, 0f);
+        // 부채꼴 각도 분할 계산
+        float calculatedAngleOffset = exitAngleOffset;
 
-        // 최종 바라볼 회전 및 뛰어내릴 방향 벡터 산출
+        if (totalCount > 1)
+        {
+            float angleStep = spreadAngle / (totalCount - 1);
+            calculatedAngleOffset += (-spreadAngle * 0.5f) + (index * angleStep);
+        }
+
+        // 지그재그 거리를 주어 캐릭터 상호 겹침 방지
+        float staggeredDistance = exitJumpDistance + ((index % 2 == 0) ? 0f : 0.4f);
+
+        // 회전 및 착지 벡터 계산
+        Quaternion angleRotation = Quaternion.Euler(0f, calculatedAngleOffset, 0f);
         Quaternion finalSpawnRotation = spawnPoint.rotation * angleRotation;
         Vector3 exitDirection = finalSpawnRotation * Vector3.forward;
 
-        // 결정된 프리팹으로 인스턴스화
-        GameObject newAnimal = Instantiate(prefabToSpawn, spawnPoint.position, finalSpawnRotation);
+        Transform targetParent = (villagerParent != null) ? villagerParent : villageOrigin;
+
+        // 인스턴스화
+        GameObject newAnimal = Instantiate(prefabToSpawn, spawnPoint.position, finalSpawnRotation, targetParent);
+
+        // 스케일 보존 및 초기화
+        Vector3 targetScale = newAnimal.transform.localScale;
         newAnimal.transform.localScale = Vector3.zero;
 
-        // 착지 위치 계산
-        Vector3 landingPosition = spawnPoint.position + (exitDirection * exitJumpDistance);
+        // 착지 지점 계산
+        Vector3 landingPosition = spawnPoint.position + (exitDirection * staggeredDistance);
 
-        // 점프 연출 시퀀스
+        // 점프 트윈 연출
         Sequence animalSeq = DOTween.Sequence();
-        animalSeq.Join(newAnimal.transform.DOScale(Vector3.one, exitJumpDuration * 0.8f).SetEase(Ease.OutBack));
+        animalSeq.Join(newAnimal.transform.DOScale(targetScale, exitJumpDuration * 0.8f).SetEase(Ease.OutBack));
         animalSeq.Join(newAnimal.transform.DOJump(landingPosition, exitJumpHeight, 1, exitJumpDuration).SetEase(Ease.OutQuad));
-        animalSeq.Append(newAnimal.transform.DOPunchScale(new Vector3(0.2f, -0.2f, 0.2f), 0.25f, 5, 0.5f));
 
-        // 사용이 끝난 임시 변수 초기화
-        _overrideAnimalPrefab = null;
+        Vector3 punchAmount = targetScale * 0.2f;
+        punchAmount.y = -punchAmount.y;
+        animalSeq.Append(newAnimal.transform.DOPunchScale(punchAmount, 0.25f, 5, 0.5f));
+    }
+
+    private void DespawnAnimalToTrunk(GameObject targetAnimal)
+    {
+        if (targetAnimal == null) return;
+
+        if (targetAnimal.TryGetComponent<NavMeshAgent>(out var agent))
+        {
+            agent.enabled = false;
+        }
+
+        Transform trunk = (trunkTransform != null) ? trunkTransform : busObject;
+
+        Vector3 dirToTrunk = (trunk.position - targetAnimal.transform.position).normalized;
+        if (dirToTrunk != Vector3.zero)
+        {
+            targetAnimal.transform.rotation = Quaternion.LookRotation(dirToTrunk);
+        }
+
+        Sequence boardSeq = DOTween.Sequence();
+        boardSeq.Join(targetAnimal.transform.DOJump(trunk.position, exitJumpHeight, 1, exitJumpDuration).SetEase(Ease.InQuad));
+        boardSeq.Join(targetAnimal.transform.DOScale(Vector3.zero, exitJumpDuration).SetEase(Ease.InBack));
+
+        boardSeq.OnComplete(() =>
+        {
+            Destroy(targetAnimal);
+        });
+    }
+
+    private void SanitizeBusRotation()
+    {
+        if (busObject == null) return;
+        Vector3 currentEuler = busObject.rotation.eulerAngles;
+        busObject.rotation = Quaternion.Euler(0f, currentEuler.y, 0f);
     }
 
     private void OnDestroy()
     {
-        // 씬 전환/오브젝트 파괴 시 DOTween 메모리 누수 방지
-        if (_busSequence != null && _busSequence.IsActive())
-        {
-            _busSequence.Kill();
-        }
-    }
-
-    private void OnDrawGizmos()
-    {
-        if (pathPoints != null && pathPoints.Length >= 2)
-        {
-            Gizmos.color = Color.cyan;
-            for (int i = 0; i < pathPoints.Length - 1; i++)
-            {
-                if (pathPoints[i] != null && pathPoints[i + 1] != null)
-                {
-                    Gizmos.DrawLine(pathPoints[i].position, pathPoints[i + 1].position);
-                    Gizmos.DrawWireSphere(pathPoints[i].position, 0.2f);
-                }
-            }
-        }
-
-        // [시각화 디버깅] 하차 방향 및 착지 예상 위치 기즈모 표시
-        Transform debugPoint = (trunkTransform != null) ? trunkTransform : busObject;
-        if (debugPoint != null)
-        {
-            Gizmos.color = Color.yellow;
-            Quaternion debugRot = debugPoint.rotation * Quaternion.Euler(0f, exitAngleOffset, 0f);
-            Vector3 debugDir = debugRot * Vector3.forward;
-            Vector3 debugLanding = debugPoint.position + (debugDir * exitJumpDistance);
-
-            Gizmos.DrawRay(debugPoint.position, debugDir * exitJumpDistance);
-            Gizmos.DrawWireSphere(debugLanding, 0.3f);
-        }
+        IsBusSummoning = false;
+        if (_busSequence != null && _busSequence.IsActive()) _busSequence.Kill();
     }
 }
