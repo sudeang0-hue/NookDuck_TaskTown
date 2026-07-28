@@ -10,6 +10,7 @@ namespace TaskTown.Tutorial
     public sealed class TutorialStateMachine
     {
         public const long ManualCoinTarget = 100L;
+        public const long AutoProductionCoinTarget = 50L;
 
         private readonly TutorialSaveData progress;
 
@@ -19,10 +20,30 @@ namespace TaskTown.Tutorial
 
         public TutorialStep CurrentStep => progress.currentStep;
         public long ManualEarnedCoin => progress.manualEarnedCoin;
+        public long AutoProductionEarnedCoin => progress.autoProductionEarnedCoin;
         public int DialogueIndex => progress.dialogueIndex;
         public bool IsCompleted => progress.IsCompleted;
         public bool IsPaused { get; private set; }
         public TutorialSaveData Progress => progress.Copy();
+        public bool IsTownWindowGuideCompleted => HasFlag(
+            TutorialProgressFlags.TownWindowGuideCompleted);
+        public bool IsTownWindowMinimized => HasFlag(
+            TutorialProgressFlags.TownWindowMinimized);
+        public bool IsTownWindowExpanded => HasFlag(
+            TutorialProgressFlags.TownWindowExpanded);
+        public bool IsTownWindowRewardGranted => HasFlag(
+            TutorialProgressFlags.TownWindowRewardGranted);
+        public bool IsToolDrawCoinRewardGranted => HasFlag(
+            TutorialProgressFlags.ToolDrawCoinRewardGranted);
+        public bool IsTownWindowRewardReady =>
+            CurrentStep == TutorialStep.CollapseAndExpandTown &&
+            IsTownWindowGuideCompleted &&
+            IsTownWindowMinimized &&
+            IsTownWindowExpanded &&
+            !IsTownWindowRewardGranted;
+        public bool IsToolDrawCoinRewardReady =>
+            CurrentStep == TutorialStep.DrawAnimal &&
+            !IsToolDrawCoinRewardGranted;
 
         public TutorialStateMachine(TutorialSaveData initialProgress)
         {
@@ -57,7 +78,11 @@ namespace TaskTown.Tutorial
         /// </summary>
         public bool TryHandleSignal(TutorialSignalType signalType, long amount = 0L)
         {
-            if (IsPaused || IsCompleted)
+            if (IsCompleted)
+                return false;
+
+            // 축소 화면에서 확장 버튼을 누른 신호만 일시정지 중에도 복원할 수 있습니다.
+            if (IsPaused && signalType != TutorialSignalType.TownWindowExpanded)
                 return false;
 
             switch (CurrentStep)
@@ -69,8 +94,12 @@ namespace TaskTown.Tutorial
                 case TutorialStep.EarnManualCoin:
                     return TryAddManualCoin(signalType, amount);
 
+                case TutorialStep.CollapseAndExpandTown:
+                    return TryHandleTownWindowStep(signalType);
+
                 case TutorialStep.DrawAnimal:
-                    return TryAdvance(signalType, TutorialSignalType.AnimalDrawn);
+                    return signalType == TutorialSignalType.AnimalDrawn &&
+                           TryCompleteAnimalDrawReward();
 
                 case TutorialStep.DrawTool:
                     return TryAdvance(signalType, TutorialSignalType.ToolDrawn);
@@ -79,7 +108,7 @@ namespace TaskTown.Tutorial
                     return TryAdvance(signalType, TutorialSignalType.AnimalAssigned);
 
                 case TutorialStep.ConfirmAutoProduction:
-                    return TryAdvance(signalType, TutorialSignalType.AutoProductionConfirmed);
+                    return TryAddAutoProductionCoin(signalType, amount);
 
                 case TutorialStep.OpenVillageInfo:
                     return TryAdvance(signalType, TutorialSignalType.VillageInfoOpened);
@@ -100,10 +129,92 @@ namespace TaskTown.Tutorial
             progress.manualEarnedCoin = AddWithoutOverflow(progress.manualEarnedCoin, amount);
 
             if (progress.manualEarnedCoin >= ManualCoinTarget)
-                AdvanceTo(TutorialStep.DrawAnimal);
+                AdvanceTo(TutorialStep.CollapseAndExpandTown);
             else
                 NotifyProgressChanged();
 
+            return true;
+        }
+
+        private bool TryAddAutoProductionCoin(
+            TutorialSignalType signalType,
+            long amount)
+        {
+            if (signalType != TutorialSignalType.AutoProductionConfirmed || amount <= 0L)
+                return false;
+
+            progress.autoProductionEarnedCoin = AddWithoutOverflow(
+                progress.autoProductionEarnedCoin,
+                amount);
+
+            if (progress.autoProductionEarnedCoin >= AutoProductionCoinTarget)
+                AdvanceTo(TutorialStep.OpenVillageInfo);
+            else
+                NotifyProgressChanged();
+
+            return true;
+        }
+
+        private bool TryHandleTownWindowStep(TutorialSignalType signalType)
+        {
+            switch (signalType)
+            {
+                case TutorialSignalType.DialogueCompleted:
+                    if (IsTownWindowGuideCompleted)
+                        return false;
+
+                    SetFlag(TutorialProgressFlags.TownWindowGuideCompleted);
+                    progress.dialogueIndex = 0;
+                    NotifyProgressChanged();
+                    return true;
+
+                case TutorialSignalType.TownWindowMinimized:
+                    if (!IsTownWindowGuideCompleted || IsTownWindowMinimized)
+                        return false;
+
+                    SetFlag(TutorialProgressFlags.TownWindowMinimized);
+                    NotifyProgressChanged();
+                    return true;
+
+                case TutorialSignalType.TownWindowExpanded:
+                    if (!IsTownWindowMinimized || IsTownWindowExpanded)
+                        return false;
+
+                    SetFlag(TutorialProgressFlags.TownWindowExpanded);
+                    progress.dialogueIndex = 0;
+                    NotifyProgressChanged();
+                    return true;
+
+                default:
+                    return false;
+            }
+        }
+
+        /// <summary>
+        /// TutorialManager가 1,500 Town Coin 지급 가능 여부를 확인한 뒤 한 번만 호출합니다.
+        /// 플래그와 다음 단계를 같은 상태 변경 안에서 확정해 중복 호출을 차단합니다.
+        /// </summary>
+        public bool TryCompleteTownWindowReward()
+        {
+            if (!IsTownWindowRewardReady)
+                return false;
+
+            SetFlag(TutorialProgressFlags.TownWindowRewardGranted);
+            AdvanceTo(TutorialStep.DrawAnimal);
+            return true;
+        }
+
+        /// <summary>
+        /// 동물 뽑기 성공 뒤 도구 뽑기 비용 지급 여부와 다음 단계를 한 번에 확정합니다.
+        /// 실제 1,500 Town Coin 지급은 TutorialManager가 처리합니다.
+        /// </summary>
+        public bool TryCompleteAnimalDrawReward()
+        {
+            if (!IsToolDrawCoinRewardReady)
+                return false;
+
+            SetFlag(TutorialProgressFlags.ToolDrawCoinRewardGranted);
+            AdvanceTo(TutorialStep.DrawTool);
             return true;
         }
 
@@ -155,7 +266,18 @@ namespace TaskTown.Tutorial
         private static bool IsDialogueStep(TutorialStep step)
         {
             return step == TutorialStep.IntroDialogue ||
-                   step == TutorialStep.CompletionDialogue;
+                   step == TutorialStep.CompletionDialogue ||
+                   step == TutorialStep.CollapseAndExpandTown;
+        }
+
+        private bool HasFlag(TutorialProgressFlags flag)
+        {
+            return progress.HasProgressFlag(flag);
+        }
+
+        private void SetFlag(TutorialProgressFlags flag)
+        {
+            progress.SetProgressFlag(flag);
         }
 
         private static long AddWithoutOverflow(long current, long amount)

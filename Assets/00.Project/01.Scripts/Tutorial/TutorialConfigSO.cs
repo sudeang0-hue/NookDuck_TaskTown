@@ -7,7 +7,8 @@ namespace TaskTown.Tutorial
     public enum TutorialProgressDisplayType
     {
         None = 0,
-        ManualCoin = 1
+        ManualCoin = 1,
+        AutoProductionCoin = 2
     }
 
     [Serializable]
@@ -15,6 +16,7 @@ namespace TaskTown.Tutorial
     {
         [SerializeField] private TutorialStep step;
         [SerializeField, TextArea(2, 6)] private List<string> messages = new();
+        [SerializeField, TextArea(2, 6)] private List<string> completionMessages = new();
         [SerializeField, TextArea(2, 4)] private string objectiveText;
         [SerializeField] private TutorialProgressDisplayType progressDisplayType;
         [SerializeField] private string progressFormat = "{0} / {1}";
@@ -22,6 +24,7 @@ namespace TaskTown.Tutorial
 
         public TutorialStep Step => step;
         public IReadOnlyList<string> Messages => messages;
+        public IReadOnlyList<string> CompletionMessages => completionMessages;
         public string ObjectiveText => objectiveText;
         public TutorialProgressDisplayType ProgressDisplayType => progressDisplayType;
         public string ProgressFormat => progressFormat;
@@ -70,9 +73,27 @@ namespace TaskTown.Tutorial
                 : 0;
         }
 
+        public int GetCompletionMessageCount(TutorialStep step)
+        {
+            return TryGetStepContent(step, out TutorialStepContent content)
+                ? content.CompletionMessages.Count
+                : 0;
+        }
+
         public int ClampDialogueIndex(TutorialStep step, int dialogueIndex)
         {
             int messageCount = GetMessageCount(step);
+            if (messageCount <= 0)
+                return 0;
+
+            return Mathf.Clamp(dialogueIndex, 0, messageCount - 1);
+        }
+
+        public int ClampCompletionDialogueIndex(
+            TutorialStep step,
+            int dialogueIndex)
+        {
+            int messageCount = GetCompletionMessageCount(step);
             if (messageCount <= 0)
                 return 0;
 
@@ -93,6 +114,23 @@ namespace TaskTown.Tutorial
 
             int clampedIndex = ClampDialogueIndex(step, dialogueIndex);
             message = content.Messages[clampedIndex] ?? string.Empty;
+            return !string.IsNullOrWhiteSpace(message);
+        }
+
+        public bool TryGetCompletionMessage(
+            TutorialStep step,
+            int dialogueIndex,
+            out string message)
+        {
+            if (!TryGetStepContent(step, out TutorialStepContent content) ||
+                content.CompletionMessages.Count == 0)
+            {
+                message = string.Empty;
+                return false;
+            }
+
+            int clampedIndex = ClampCompletionDialogueIndex(step, dialogueIndex);
+            message = content.CompletionMessages[clampedIndex] ?? string.Empty;
             return !string.IsNullOrWhiteSpace(message);
         }
     }

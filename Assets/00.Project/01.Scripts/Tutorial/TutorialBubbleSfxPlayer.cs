@@ -85,10 +85,18 @@ namespace TaskTown.Tutorial
 
         private static int GetQuestIndex(TutorialStep step)
         {
-            return step >= TutorialStep.EarnManualCoin &&
-                   step <= TutorialStep.UpgradeVillage
-                ? (int)step - (int)TutorialStep.EarnManualCoin
-                : -1;
+            return step switch
+            {
+                TutorialStep.EarnManualCoin => 0,
+                TutorialStep.CollapseAndExpandTown => 1,
+                TutorialStep.DrawAnimal => 2,
+                TutorialStep.DrawTool => 3,
+                TutorialStep.AssignAnimal => 4,
+                TutorialStep.ConfirmAutoProduction => 5,
+                TutorialStep.OpenVillageInfo => 6,
+                TutorialStep.UpgradeVillage => 7,
+                _ => -1
+            };
         }
     }
 }

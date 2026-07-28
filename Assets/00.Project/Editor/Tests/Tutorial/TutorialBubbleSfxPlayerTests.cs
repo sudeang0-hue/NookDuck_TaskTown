@@ -22,21 +22,24 @@ namespace TaskTown.EditorTests.Tutorial
                 player.GetQuestClearSoundId(TutorialStep.EarnManualCoin));
             Assert.AreEqual(
                 "SFX_Player_Collect_Pop_2",
+                player.GetQuestClearSoundId(TutorialStep.CollapseAndExpandTown));
+            Assert.AreEqual(
+                "SFX_Player_Collect_Pop_3",
                 player.GetQuestClearSoundId(TutorialStep.DrawAnimal));
             Assert.AreEqual(
-                "SFX_Player_Collect_Pop_3",
+                "SFX_Player_Collect_Pop_1",
                 player.GetQuestClearSoundId(TutorialStep.DrawTool));
             Assert.AreEqual(
-                "SFX_Player_Collect_Pop_1",
+                "SFX_Player_Collect_Pop_2",
                 player.GetQuestClearSoundId(TutorialStep.AssignAnimal));
             Assert.AreEqual(
-                "SFX_Player_Collect_Pop_2",
+                "SFX_Player_Collect_Pop_3",
                 player.GetQuestClearSoundId(TutorialStep.ConfirmAutoProduction));
             Assert.AreEqual(
-                "SFX_Player_Collect_Pop_3",
+                "SFX_Player_Collect_Pop_1",
                 player.GetQuestClearSoundId(TutorialStep.OpenVillageInfo));
             Assert.AreEqual(
-                "SFX_Player_Collect_Pop_1",
+                "SFX_Player_Collect_Pop_2",
                 player.GetQuestClearSoundId(TutorialStep.UpgradeVillage));
             Assert.AreEqual(
                 string.Empty,

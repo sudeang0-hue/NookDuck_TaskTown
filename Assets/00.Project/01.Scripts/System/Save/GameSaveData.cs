@@ -47,12 +47,13 @@ namespace TaskTown.KDH
     [Serializable]
     public class TutorialSaveData
     {
-        public const int CurrentVersion = 1;
+        public const int CurrentVersion = 2;
 
         public int version = CurrentVersion;
         public TutorialStep currentStep = TutorialStep.IntroDialogue;
         public int dialogueIndex;
         public long manualEarnedCoin;
+        public long autoProductionEarnedCoin;
         public int rewardFlags;
 
         public bool IsCompleted => currentStep == TutorialStep.Completed;
@@ -70,6 +71,7 @@ namespace TaskTown.KDH
                 currentStep = currentStep,
                 dialogueIndex = dialogueIndex,
                 manualEarnedCoin = manualEarnedCoin,
+                autoProductionEarnedCoin = autoProductionEarnedCoin,
                 rewardFlags = rewardFlags
             };
 
@@ -79,7 +81,7 @@ namespace TaskTown.KDH
 
         public void Normalize()
         {
-            if (version <= 0)
+            if (version < CurrentVersion)
                 version = CurrentVersion;
 
             if (!Enum.IsDefined(typeof(TutorialStep), currentStep))
@@ -87,7 +89,34 @@ namespace TaskTown.KDH
 
             dialogueIndex = Math.Max(0, dialogueIndex);
             manualEarnedCoin = Math.Max(0L, manualEarnedCoin);
+            autoProductionEarnedCoin = Math.Max(0L, autoProductionEarnedCoin);
             rewardFlags = Math.Max(0, rewardFlags);
+
+            // 보상 지급 직후 비정상 종료된 저장도 동물 뽑기 단계에서 안전하게 재개합니다.
+            if (currentStep == TutorialStep.CollapseAndExpandTown &&
+                HasProgressFlag(TutorialProgressFlags.TownWindowRewardGranted))
+            {
+                currentStep = TutorialStep.DrawAnimal;
+                dialogueIndex = 0;
+            }
+
+            // 도구 뽑기용 보상 플래그가 저장된 비정상 종료 상태는 다음 단계에서 재개합니다.
+            if (currentStep == TutorialStep.DrawAnimal &&
+                HasProgressFlag(TutorialProgressFlags.ToolDrawCoinRewardGranted))
+            {
+                currentStep = TutorialStep.DrawTool;
+                dialogueIndex = 0;
+            }
+        }
+
+        public bool HasProgressFlag(TutorialProgressFlags flag)
+        {
+            return (rewardFlags & (int)flag) != 0;
+        }
+
+        public void SetProgressFlag(TutorialProgressFlags flag)
+        {
+            rewardFlags |= (int)flag;
         }
     }
 

@@ -22,6 +22,7 @@ namespace TaskTown.EditorTests.Save
             Assert.AreEqual(TutorialStep.IntroDialogue, data.tutorial.currentStep);
             Assert.IsFalse(data.tutorial.IsCompleted);
             Assert.AreEqual(0L, data.tutorial.manualEarnedCoin);
+            Assert.AreEqual(0L, data.tutorial.autoProductionEarnedCoin);
         }
 
         [Test]
@@ -37,6 +38,7 @@ namespace TaskTown.EditorTests.Save
                     currentStep = (TutorialStep)999,
                     dialogueIndex = -1,
                     manualEarnedCoin = -100,
+                    autoProductionEarnedCoin = -50,
                     rewardFlags = -1
                 }
             };
@@ -49,6 +51,7 @@ namespace TaskTown.EditorTests.Save
             Assert.AreEqual(TutorialStep.IntroDialogue, data.tutorial.currentStep);
             Assert.AreEqual(0, data.tutorial.dialogueIndex);
             Assert.AreEqual(0L, data.tutorial.manualEarnedCoin);
+            Assert.AreEqual(0L, data.tutorial.autoProductionEarnedCoin);
             Assert.AreEqual(0, data.tutorial.rewardFlags);
         }
 
@@ -69,14 +72,52 @@ namespace TaskTown.EditorTests.Save
             TutorialSaveData original = new TutorialSaveData
             {
                 currentStep = TutorialStep.EarnManualCoin,
-                manualEarnedCoin = 45
+                manualEarnedCoin = 45,
+                autoProductionEarnedCoin = 20
             };
 
             TutorialSaveData copy = original.Copy();
             copy.manualEarnedCoin = 90;
+            copy.autoProductionEarnedCoin = 40;
 
             Assert.AreEqual(45L, original.manualEarnedCoin);
             Assert.AreEqual(90L, copy.manualEarnedCoin);
+            Assert.AreEqual(20L, original.autoProductionEarnedCoin);
+            Assert.AreEqual(40L, copy.autoProductionEarnedCoin);
+        }
+
+        [Test]
+        public void Normalize_축소확장보상지급플래그가있으면_동물뽑기로복구한다()
+        {
+            TutorialSaveData progress = new TutorialSaveData
+            {
+                currentStep = TutorialStep.CollapseAndExpandTown,
+                dialogueIndex = 3,
+                rewardFlags =
+                    (int)TutorialProgressFlags.TownWindowRewardGranted
+            };
+
+            progress.Normalize();
+
+            Assert.AreEqual(TutorialStep.DrawAnimal, progress.currentStep);
+            Assert.AreEqual(0, progress.dialogueIndex);
+        }
+
+        [Test]
+        public void Normalize_도구뽑기보상지급플래그가있으면_도구뽑기로복구한다()
+        {
+            TutorialSaveData progress = new TutorialSaveData
+            {
+                currentStep = TutorialStep.DrawAnimal,
+                dialogueIndex = 2,
+                rewardFlags =
+                    (int)TutorialProgressFlags.ToolDrawCoinRewardGranted
+            };
+
+            progress.Normalize();
+
+            Assert.AreEqual(TutorialStep.DrawTool, progress.currentStep);
+            Assert.AreEqual(0, progress.dialogueIndex);
         }
     }
 }

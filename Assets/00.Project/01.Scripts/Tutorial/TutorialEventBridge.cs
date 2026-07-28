@@ -27,6 +27,11 @@ namespace TaskTown.Tutorial
         [SerializeField] private TownUpgradeManager townUpgradeManager;
         [SerializeField] private GameMasterManager gameMasterManager;
 
+        [Header("튜토리얼 버튼 강조")]
+        [SerializeField] private TutorialButtonHighlighter buttonHighlighter;
+        [SerializeField] private UIController_Menu menuController;
+        [SerializeField] private UIController_Gacha gachaController;
+
         private readonly HashSet<string> assignedToolIds = new HashSet<string>();
 
         private bool hasStarted;
@@ -76,6 +81,8 @@ namespace TaskTown.Tutorial
 
             tutorialManager.StepChanged -= HandleStepChanged;
             tutorialManager.StepChanged += HandleStepChanged;
+            tutorialManager.ProgressChanged -= HandleProgressChanged;
+            tutorialManager.ProgressChanged += HandleProgressChanged;
             tutorialManager.TutorialCompleted -= HandleTutorialCompleted;
             tutorialManager.TutorialCompleted += HandleTutorialCompleted;
 
@@ -94,6 +101,7 @@ namespace TaskTown.Tutorial
             if (tutorialManager != null)
             {
                 tutorialManager.StepChanged -= HandleStepChanged;
+                tutorialManager.ProgressChanged -= HandleProgressChanged;
                 tutorialManager.TutorialCompleted -= HandleTutorialCompleted;
             }
 
@@ -125,6 +133,12 @@ namespace TaskTown.Tutorial
                 townUpgradeManager = TownUpgradeManager.Instance;
             if (gameMasterManager == null)
                 gameMasterManager = FindAnyObjectByType<GameMasterManager>();
+            if (buttonHighlighter == null)
+                TryGetComponent(out buttonHighlighter);
+            if (menuController == null)
+                menuController = FindAnyObjectByType<UIController_Menu>();
+            if (gachaController == null)
+                gachaController = FindAnyObjectByType<UIController_Gacha>();
         }
 
         private void HandleStepChanged(TutorialStep previousStep, TutorialStep nextStep)
@@ -133,6 +147,11 @@ namespace TaskTown.Tutorial
 
             if (nextStep != TutorialStep.Completed)
                 SubscribeCurrentStep(nextStep);
+        }
+
+        private void HandleProgressChanged(TutorialSaveData progress)
+        {
+            RefreshButtonHighlight();
         }
 
         private void HandleTutorialCompleted()
@@ -146,8 +165,6 @@ namespace TaskTown.Tutorial
             if (gameMasterManager == null)
                 return;
 
-            tutorialManager.SetPaused(!gameMasterManager.GetIsExpanded());
-
             if (gameMasterManager.btnMinimize != null)
             {
                 gameMasterManager.btnMinimize.onClick.RemoveListener(HandleWindowStateButtonClicked);
@@ -159,6 +176,8 @@ namespace TaskTown.Tutorial
                 gameMasterManager.btnMaximize.onClick.RemoveListener(HandleWindowStateButtonClicked);
                 gameMasterManager.btnMaximize.onClick.AddListener(HandleWindowStateButtonClicked);
             }
+
+            SynchronizeWindowState();
         }
 
         private void UnsubscribeWindowState()
@@ -192,8 +211,38 @@ namespace TaskTown.Tutorial
             yield return null;
 
             windowStateSyncCoroutine = null;
-            if (tutorialManager != null && gameMasterManager != null)
-                tutorialManager.SetPaused(!gameMasterManager.GetIsExpanded());
+            SynchronizeWindowState();
+        }
+
+        private void SynchronizeWindowState()
+        {
+            if (tutorialManager == null || gameMasterManager == null)
+                return;
+
+            bool isExpanded = gameMasterManager.GetIsExpanded();
+            bool isWindowTutorial =
+                tutorialManager.CurrentStep == TutorialStep.CollapseAndExpandTown;
+
+            if (isWindowTutorial && tutorialManager.IsTownWindowGuideCompleted)
+            {
+                if (isExpanded)
+                {
+                    if (tutorialManager.IsTownWindowMinimized &&
+                        !tutorialManager.IsTownWindowExpanded)
+                    {
+                        tutorialManager.ReportSignal(
+                            TutorialSignalType.TownWindowExpanded);
+                    }
+                }
+                else if (!tutorialManager.IsTownWindowMinimized)
+                {
+                    tutorialManager.ReportSignal(
+                        TutorialSignalType.TownWindowMinimized);
+                }
+            }
+
+            tutorialManager.SetPaused(!isExpanded);
+            RefreshButtonHighlight();
         }
 
         private void SubscribeCurrentStep(TutorialStep step)
@@ -207,6 +256,10 @@ namespace TaskTown.Tutorial
                         earnProcessor.ManualCoinGranted += HandleManualCoinGranted;
                     else
                         WarnMissingSource(nameof(EarnProcessor), step);
+                    break;
+
+                case TutorialStep.CollapseAndExpandTown:
+                    SynchronizeWindowState();
                     break;
 
                 case TutorialStep.DrawAnimal:
@@ -256,10 +309,14 @@ namespace TaskTown.Tutorial
                         WarnMissingSource(nameof(TownUpgradeManager), step);
                     break;
             }
+
+            RefreshButtonHighlight();
         }
 
         private void UnsubscribeCurrentStep()
         {
+            buttonHighlighter?.Clear();
+
             if (!subscribedStep.HasValue)
                 return;
 
@@ -352,7 +409,53 @@ namespace TaskTown.Tutorial
 
         private void HandleProductionCoinGranted(int amount)
         {
-            tutorialManager?.ReportSignal(TutorialSignalType.AutoProductionConfirmed);
+            tutorialManager?.ReportSignal(
+                TutorialSignalType.AutoProductionConfirmed,
+                amount);
+        }
+
+        private void RefreshButtonHighlight()
+        {
+            if (buttonHighlighter == null || tutorialManager == null)
+                return;
+
+            switch (tutorialManager.CurrentStep)
+            {
+                case TutorialStep.CollapseAndExpandTown:
+                    if (!tutorialManager.IsTownWindowGuideCompleted)
+                    {
+                        buttonHighlighter.Clear();
+                    }
+                    else if (!tutorialManager.IsTownWindowMinimized)
+                    {
+                        buttonHighlighter.Highlight(gameMasterManager?.btnMinimize);
+                    }
+                    else if (!tutorialManager.IsTownWindowExpanded)
+                    {
+                        buttonHighlighter.Highlight(gameMasterManager?.btnMaximize);
+                    }
+                    else
+                    {
+                        buttonHighlighter.Clear();
+                    }
+                    break;
+
+                case TutorialStep.DrawAnimal:
+                    buttonHighlighter.Highlight(
+                        menuController?.GachaButton,
+                        gachaController?.AnimalOnePickButton);
+                    break;
+
+                case TutorialStep.DrawTool:
+                    buttonHighlighter.Highlight(
+                        menuController?.GachaButton,
+                        gachaController?.ToolOnePickButton);
+                    break;
+
+                default:
+                    buttonHighlighter.Clear();
+                    break;
+            }
         }
 
         private void HandleVillageInfoOpened()

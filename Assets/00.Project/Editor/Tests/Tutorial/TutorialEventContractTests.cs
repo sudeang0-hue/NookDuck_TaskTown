@@ -4,6 +4,7 @@ using NUnit.Framework;
 using TaskTown.Gacha;
 using TaskTown.KDH;
 using UI;
+using UnityEngine.UI;
 
 namespace TaskTown.EditorTests.Tutorial
 {
@@ -24,6 +25,23 @@ namespace TaskTown.EditorTests.Tutorial
 
             Assert.NotNull(eventInfo, $"{sourceType.Name}.{eventName} 이벤트가 필요합니다.");
             Assert.AreEqual(expectedHandlerType, eventInfo.EventHandlerType);
+        }
+
+        [TestCase(typeof(UIController_Menu), nameof(UIController_Menu.GachaButton))]
+        [TestCase(typeof(UIController_Gacha), nameof(UIController_Gacha.AnimalOnePickButton))]
+        [TestCase(typeof(UIController_Gacha), nameof(UIController_Gacha.ToolOnePickButton))]
+        public void TutorialButtonHighlight가사용하는버튼_읽기전용계약을유지한다(
+            Type sourceType,
+            string propertyName)
+        {
+            PropertyInfo property = sourceType.GetProperty(
+                propertyName,
+                BindingFlags.Public | BindingFlags.Instance);
+
+            Assert.IsNotNull(property);
+            Assert.AreEqual(typeof(Button), property.PropertyType);
+            Assert.IsTrue(property.CanRead);
+            Assert.IsFalse(property.CanWrite);
         }
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Globalization;
 using TaskTown.KDH;
 using UnityEngine;
@@ -147,6 +148,12 @@ namespace TaskTown.Tutorial
                 return;
             }
 
+            if (step == TutorialStep.CollapseAndExpandTown)
+            {
+                HandleTownWindowAdvance(content);
+                return;
+            }
+
             int messageCount = content.Messages.Count;
             if (messageCount <= 0)
                 return;
@@ -158,6 +165,46 @@ namespace TaskTown.Tutorial
             sfxPlayer?.PlayDialogueAdvance();
 
             if (dialogueIndex < messageCount - 1)
+            {
+                tutorialManager.TrySetDialogueIndex(dialogueIndex + 1);
+                return;
+            }
+
+            tutorialManager.ReportSignal(TutorialSignalType.DialogueCompleted);
+        }
+
+        private void HandleTownWindowAdvance(TutorialStepContent content)
+        {
+            IReadOnlyList<string> messages;
+            bool isGuideDialogue = !tutorialManager.IsTownWindowGuideCompleted;
+
+            if (isGuideDialogue)
+            {
+                messages = content.Messages;
+            }
+            else if (tutorialManager.IsTownWindowExpanded)
+            {
+                messages = content.CompletionMessages;
+            }
+            else
+            {
+                return;
+            }
+
+            if (messages.Count <= 0)
+                return;
+
+            int dialogueIndex = isGuideDialogue
+                ? config.ClampDialogueIndex(
+                    TutorialStep.CollapseAndExpandTown,
+                    tutorialManager.DialogueIndex)
+                : config.ClampCompletionDialogueIndex(
+                    TutorialStep.CollapseAndExpandTown,
+                    tutorialManager.DialogueIndex);
+
+            sfxPlayer?.PlayDialogueAdvance();
+
+            if (dialogueIndex < messages.Count - 1)
             {
                 tutorialManager.TrySetDialogueIndex(dialogueIndex + 1);
                 return;
@@ -178,8 +225,22 @@ namespace TaskTown.Tutorial
             }
 
             TutorialStep step = tutorialManager.CurrentStep;
-            if (!config.TryGetStepContent(step, out TutorialStepContent content) ||
-                !config.TryGetMessage(step, tutorialManager.DialogueIndex, out string message))
+            if (!config.TryGetStepContent(step, out TutorialStepContent content))
+            {
+                view.SetVisible(false);
+                return;
+            }
+
+            if (step == TutorialStep.CollapseAndExpandTown)
+            {
+                RefreshTownWindowView(content);
+                return;
+            }
+
+            if (!config.TryGetMessage(
+                    step,
+                    tutorialManager.DialogueIndex,
+                    out string message))
             {
                 view.SetVisible(false);
                 return;
@@ -197,13 +258,102 @@ namespace TaskTown.Tutorial
             }
 
             string progress = BuildProgressText(content);
-            view.Render(
-                config.SpeakerName,
-                config.SpeakerPortrait,
+            RenderView(
+                step,
                 message,
                 content.ObjectiveText,
                 progress,
                 content.AllowClickAdvance);
+        }
+
+        private void RefreshTownWindowView(TutorialStepContent content)
+        {
+            TutorialStep step = TutorialStep.CollapseAndExpandTown;
+
+            if (!tutorialManager.IsTownWindowGuideCompleted)
+            {
+                int clampedIndex = config.ClampDialogueIndex(
+                    step,
+                    tutorialManager.DialogueIndex);
+                if (clampedIndex != tutorialManager.DialogueIndex &&
+                    tutorialManager.TrySetDialogueIndex(clampedIndex))
+                {
+                    return;
+                }
+
+                if (!config.TryGetMessage(
+                        step,
+                        clampedIndex,
+                        out string guideMessage))
+                {
+                    view.SetVisible(false);
+                    return;
+                }
+
+                RenderView(step, guideMessage, string.Empty, string.Empty, true);
+                return;
+            }
+
+            if (!tutorialManager.IsTownWindowMinimized)
+            {
+                int lastGuideIndex = content.Messages.Count - 1;
+                if (lastGuideIndex < 0 ||
+                    !config.TryGetMessage(step, lastGuideIndex, out string guideMessage))
+                {
+                    view.SetVisible(false);
+                    return;
+                }
+
+                RenderView(
+                    step,
+                    guideMessage,
+                    content.ObjectiveText,
+                    string.Empty,
+                    false);
+                return;
+            }
+
+            if (!tutorialManager.IsTownWindowExpanded)
+            {
+                view.SetVisible(false);
+                return;
+            }
+
+            int completionIndex = config.ClampCompletionDialogueIndex(
+                step,
+                tutorialManager.DialogueIndex);
+            if (completionIndex != tutorialManager.DialogueIndex &&
+                tutorialManager.TrySetDialogueIndex(completionIndex))
+            {
+                return;
+            }
+
+            if (!config.TryGetCompletionMessage(
+                    step,
+                    completionIndex,
+                    out string completionMessage))
+            {
+                view.SetVisible(false);
+                return;
+            }
+
+            RenderView(step, completionMessage, string.Empty, string.Empty, true);
+        }
+
+        private void RenderView(
+            TutorialStep step,
+            string message,
+            string objective,
+            string progress,
+            bool allowClickAdvance)
+        {
+            view.Render(
+                config.SpeakerName,
+                config.SpeakerPortrait,
+                message,
+                objective,
+                progress,
+                allowClickAdvance);
             view.SetVisible(true);
             presentedStep = step;
             hasPresentedStep = true;
@@ -236,8 +386,24 @@ namespace TaskTown.Tutorial
 
         private string BuildProgressText(TutorialStepContent content)
         {
-            if (content.ProgressDisplayType != TutorialProgressDisplayType.ManualCoin)
-                return string.Empty;
+            long current;
+            long target;
+
+            switch (content.ProgressDisplayType)
+            {
+                case TutorialProgressDisplayType.ManualCoin:
+                    current = tutorialManager.ManualEarnedCoin;
+                    target = TutorialStateMachine.ManualCoinTarget;
+                    break;
+
+                case TutorialProgressDisplayType.AutoProductionCoin:
+                    current = tutorialManager.AutoProductionEarnedCoin;
+                    target = TutorialStateMachine.AutoProductionCoinTarget;
+                    break;
+
+                default:
+                    return string.Empty;
+            }
 
             string format = string.IsNullOrWhiteSpace(content.ProgressFormat)
                 ? "{0} / {1}"
@@ -248,16 +414,15 @@ namespace TaskTown.Tutorial
                 return string.Format(
                     CultureInfo.CurrentCulture,
                     format,
-                    tutorialManager.ManualEarnedCoin,
-                    TutorialStateMachine.ManualCoinTarget);
+                    current,
+                    target);
             }
             catch (FormatException)
             {
                 Debug.LogWarning(
                     $"[TutorialBubbleController] 잘못된 진행도 형식입니다: {format}",
                     config);
-                return $"{tutorialManager.ManualEarnedCoin} / " +
-                       TutorialStateMachine.ManualCoinTarget;
+                return $"{current} / {target}";
             }
         }
 
@@ -269,8 +434,14 @@ namespace TaskTown.Tutorial
 
         private static bool IsQuestStep(TutorialStep step)
         {
-            return step >= TutorialStep.EarnManualCoin &&
-                   step <= TutorialStep.UpgradeVillage;
+            return step == TutorialStep.EarnManualCoin ||
+                   step == TutorialStep.CollapseAndExpandTown ||
+                   step == TutorialStep.DrawAnimal ||
+                   step == TutorialStep.DrawTool ||
+                   step == TutorialStep.AssignAnimal ||
+                   step == TutorialStep.ConfirmAutoProduction ||
+                   step == TutorialStep.OpenVillageInfo ||
+                   step == TutorialStep.UpgradeVillage;
         }
     }
 }

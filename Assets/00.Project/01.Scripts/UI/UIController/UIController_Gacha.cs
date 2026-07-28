@@ -23,6 +23,13 @@ public class UIController_Gacha : MonoBehaviour
     [SerializeField] private Button toolOnePickButton;    // 도구 1회 뽑기
     [SerializeField] private Button toolTenPickButton;    // 도구 10회 뽑기
 
+    // -----------------------------------------------------------------------------
+    // [ 2026.07.28 - Choi - 튜토리얼 뽑기 버튼 강조 연동 ]
+    // 기능: Additive 튜토리얼 Scene이 동물·도구 1회 뽑기 버튼을 강조할 수 있게 읽기 전용으로 노출합니다.
+    // -----------------------------------------------------------------------------
+    public Button AnimalOnePickButton => animalOnePickButton;
+    public Button ToolOnePickButton => toolOnePickButton;
+
 
     private void Awake()
     {

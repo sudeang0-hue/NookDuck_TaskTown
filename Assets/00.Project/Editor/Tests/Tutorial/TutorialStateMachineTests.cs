@@ -29,7 +29,7 @@ namespace TaskTown.EditorTests.Tutorial
         }
 
         [Test]
-        public void ManualCoinEarned_실제지급량이100이상이되면_다음단계로진행한다()
+        public void ManualCoinEarned_실제지급량이100이상이되면_축소확장단계로진행한다()
         {
             TutorialStateMachine machine = CreateMachine(TutorialStep.EarnManualCoin);
 
@@ -39,7 +39,7 @@ namespace TaskTown.EditorTests.Tutorial
             Assert.IsTrue(firstHandled);
             Assert.IsTrue(secondHandled);
             Assert.AreEqual(105L, machine.ManualEarnedCoin);
-            Assert.AreEqual(TutorialStep.DrawAnimal, machine.CurrentStep);
+            Assert.AreEqual(TutorialStep.CollapseAndExpandTown, machine.CurrentStep);
         }
 
         [TestCase(0L)]
@@ -90,7 +90,8 @@ namespace TaskTown.EditorTests.Tutorial
             TutorialSaveData saved = new TutorialSaveData
             {
                 currentStep = TutorialStep.EarnManualCoin,
-                manualEarnedCoin = 70L
+                manualEarnedCoin = 70L,
+                autoProductionEarnedCoin = 20L
             };
 
             TutorialStateMachine machine = new TutorialStateMachine(saved);
@@ -99,6 +100,86 @@ namespace TaskTown.EditorTests.Tutorial
 
             Assert.AreEqual(TutorialStep.EarnManualCoin, machine.CurrentStep);
             Assert.AreEqual(70L, machine.ManualEarnedCoin);
+            Assert.AreEqual(20L, machine.AutoProductionEarnedCoin);
+        }
+
+        [Test]
+        public void CollapseAndExpandTown_하나의단계에서_안내축소확장을순서대로저장한다()
+        {
+            TutorialStateMachine machine = CreateMachine(
+                TutorialStep.CollapseAndExpandTown);
+
+            Assert.IsTrue(machine.TrySetDialogueIndex(2));
+            Assert.IsTrue(machine.TryHandleSignal(TutorialSignalType.DialogueCompleted));
+            Assert.IsTrue(machine.IsTownWindowGuideCompleted);
+            Assert.AreEqual(0, machine.DialogueIndex);
+
+            Assert.IsTrue(machine.TryHandleSignal(TutorialSignalType.TownWindowMinimized));
+            Assert.IsTrue(machine.IsTownWindowMinimized);
+
+            machine.SetPaused(true);
+            Assert.IsTrue(machine.TryHandleSignal(TutorialSignalType.TownWindowExpanded));
+            Assert.IsTrue(machine.IsTownWindowExpanded);
+            Assert.AreEqual(0, machine.DialogueIndex);
+            Assert.AreEqual(TutorialStep.CollapseAndExpandTown, machine.CurrentStep);
+        }
+
+        [Test]
+        public void CollapseAndExpandTown_보상완료는한번만확정하고_동물뽑기로진행한다()
+        {
+            TutorialSaveData progress = new TutorialSaveData
+            {
+                currentStep = TutorialStep.CollapseAndExpandTown,
+                rewardFlags =
+                    (int)TutorialProgressFlags.TownWindowGuideCompleted |
+                    (int)TutorialProgressFlags.TownWindowMinimized |
+                    (int)TutorialProgressFlags.TownWindowExpanded
+            };
+            TutorialStateMachine machine = new(progress);
+
+            bool first = machine.TryCompleteTownWindowReward();
+            bool second = machine.TryCompleteTownWindowReward();
+
+            Assert.IsTrue(first);
+            Assert.IsFalse(second);
+            Assert.IsTrue(machine.IsTownWindowRewardGranted);
+            Assert.AreEqual(TutorialStep.DrawAnimal, machine.CurrentStep);
+        }
+
+        [Test]
+        public void AnimalDrawn_도구뽑기보상은한번만확정하고_도구뽑기로진행한다()
+        {
+            TutorialStateMachine machine = CreateMachine(TutorialStep.DrawAnimal);
+
+            bool first = machine.TryHandleSignal(TutorialSignalType.AnimalDrawn);
+            bool second = machine.TryCompleteAnimalDrawReward();
+
+            Assert.IsTrue(first);
+            Assert.IsFalse(second);
+            Assert.IsTrue(machine.IsToolDrawCoinRewardGranted);
+            Assert.AreEqual(TutorialStep.DrawTool, machine.CurrentStep);
+        }
+
+        [Test]
+        public void AutoProductionConfirmed_자동생산누적50에도달하면_다음단계로진행한다()
+        {
+            TutorialStateMachine machine = CreateMachine(
+                TutorialStep.ConfirmAutoProduction);
+
+            Assert.IsTrue(machine.TryHandleSignal(
+                TutorialSignalType.AutoProductionConfirmed,
+                20L));
+            Assert.IsTrue(machine.TryHandleSignal(
+                TutorialSignalType.AutoProductionConfirmed,
+                29L));
+            Assert.AreEqual(49L, machine.AutoProductionEarnedCoin);
+            Assert.AreEqual(TutorialStep.ConfirmAutoProduction, machine.CurrentStep);
+
+            Assert.IsTrue(machine.TryHandleSignal(
+                TutorialSignalType.AutoProductionConfirmed,
+                1L));
+            Assert.AreEqual(50L, machine.AutoProductionEarnedCoin);
+            Assert.AreEqual(TutorialStep.OpenVillageInfo, machine.CurrentStep);
         }
 
         [Test]
@@ -110,10 +191,19 @@ namespace TaskTown.EditorTests.Tutorial
 
             Assert.IsTrue(machine.TryHandleSignal(TutorialSignalType.DialogueCompleted));
             Assert.IsTrue(machine.TryHandleSignal(TutorialSignalType.ManualCoinEarned, 100L));
+            Assert.IsTrue(machine.TryHandleSignal(TutorialSignalType.DialogueCompleted));
+            Assert.IsTrue(machine.TryHandleSignal(TutorialSignalType.TownWindowMinimized));
+            machine.SetPaused(true);
+            Assert.IsTrue(machine.TryHandleSignal(TutorialSignalType.TownWindowExpanded));
+            machine.SetPaused(false);
+            Assert.IsTrue(machine.TryCompleteTownWindowReward());
             Assert.IsTrue(machine.TryHandleSignal(TutorialSignalType.AnimalDrawn));
+            Assert.IsTrue(machine.IsToolDrawCoinRewardGranted);
             Assert.IsTrue(machine.TryHandleSignal(TutorialSignalType.ToolDrawn));
             Assert.IsTrue(machine.TryHandleSignal(TutorialSignalType.AnimalAssigned));
-            Assert.IsTrue(machine.TryHandleSignal(TutorialSignalType.AutoProductionConfirmed));
+            Assert.IsTrue(machine.TryHandleSignal(
+                TutorialSignalType.AutoProductionConfirmed,
+                TutorialStateMachine.AutoProductionCoinTarget));
             Assert.IsTrue(machine.TryHandleSignal(TutorialSignalType.VillageInfoOpened));
             Assert.IsTrue(machine.TryHandleSignal(TutorialSignalType.AnyUpgradePurchased));
             Assert.IsTrue(machine.TryHandleSignal(TutorialSignalType.DialogueCompleted));

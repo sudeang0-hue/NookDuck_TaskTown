@@ -40,6 +40,12 @@ public class UIController_Menu : MonoBehaviour
     [Tooltip("true면 한 번에 하나의 패널만 열고, false면 기존처럼 독립 토글")]
     [SerializeField] private bool useTradeOffSetting;
 
+    // -----------------------------------------------------------------------------
+    // [ 2026.07.28 - Choi - 튜토리얼 축소·확장 단계 연동 ]
+    // 기능: Additive 튜토리얼 Scene이 기존 뽑기 메뉴 버튼을 강조할 수 있게 읽기 전용으로 노출합니다.
+    // -----------------------------------------------------------------------------
+    public Button GachaButton => gachaButton;
+
     private void Awake()
     {
         if (animalInvUI == null)
