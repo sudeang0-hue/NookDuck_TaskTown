@@ -43,7 +43,9 @@ namespace UI
 
         [Header("Unlocked 규칙 (테스트)")]
         [SerializeField] private int unlockedAtLevel1 = DefaultUnlockedAtLevel1;
-        [SerializeField] private int[] unlockedByLevel = new int[0];
+        //[SerializeField] private int[] unlockedByLevel = new int[0];                                        기존코드
+        [SerializeField] private int[] unlockedByLevel = new int[10] { 5, 6, 7, 9, 10, 12, 13, 14, 16, 20 };  // 26.07.28 KDH 수정
+        // 기존 VillageAnimalSet_Canvas_tab프리펩의 인스펙터에 unlockedByLevel을 위 배열의 숫자를 그대로 집어넣으면 잘 작동함
         [SerializeField] private int testTownLevel = 1;
         [SerializeField] private VillageUpgradeUI_Manager villageUpgradeUIManager;
 
@@ -128,10 +130,13 @@ namespace UI
             int level = Mathf.Max(1, townLevel);
             int unlocked;
 
-            if (unlockedByLevel != null && unlockedByLevel.Length > level)
-                unlocked = unlockedByLevel[level];
+            //if (unlockedByLevel != null && unlockedByLevel.Length > level)   기존코드
+            if (unlockedByLevel != null && unlockedByLevel.Length > level-1) // 26.07.28 KDH 수정
+                //unlocked = unlockedByLevel[level];                          기존코드
+                unlocked = unlockedByLevel[level-1];                      // 26.07.28 KDH 수정
             else
-                unlocked = Mathf.Max(0, unlockedAtLevel1) + (level - 1);
+                //unlocked = Mathf.Max(0, unlockedAtLevel1) + (level - 1);  기존코드
+                unlocked = unlockedAtLevel1;                              // 26.07.28 KDH 수정
 
             return Mathf.Clamp(unlocked, 0, MaxCapacity);
         }
