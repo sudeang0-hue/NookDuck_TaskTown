@@ -17,7 +17,7 @@ public class GachaDirector : MonoBehaviour
     [Header("Test Asset")]
     [SerializeField] private Sprite testItemSprite;
 
-    [Header("★Simplified Bounce Settings★")]
+    [Header("Simplified Bounce Settings")]
     [SerializeField] private float startXOffset = -1200f; // 왼쪽 화면 바깥 출발점
     [SerializeField] private float firstJumpPower = 600f; // 1차 바운스 높이
     [SerializeField] private float firstJumpDuration = 0.6f;// 1차 바운스 시간
@@ -118,7 +118,7 @@ public class GachaDirector : MonoBehaviour
         {
             _isAnimating = false;
             if (panelCanvasGroup != null) panelCanvasGroup.blocksRaycasts = true; // 클릭 다시 허용
-            Debug.Log("<color=lime>[ECHO TD]</color> 심플 바운스 연출 완료!");
+            Debug.Log("<color=lime></color> 심플 바운스 연출 완료!");
         });
     }
 
