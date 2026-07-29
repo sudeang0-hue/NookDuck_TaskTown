@@ -11,8 +11,8 @@ GameObject:
   - component: {fileID: 6358032278415877349}
   - component: {fileID: 3397020993281574583}
   - component: {fileID: 7292674570500283821}
-  - component: {fileID: 4556516888078230745}
   - component: {fileID: 3817873676358197731}
+  - component: {fileID: 8750062108950540771}
   - component: {fileID: 2549582319301401772}
   - component: {fileID: 9177702154875922561}
   - component: {fileID: 5701726494756243612}
@@ -55,11 +55,6 @@ MonoBehaviour:
   minimizedPanel: {fileID: 0}
   menuPanel: {fileID: 0}
   menuCanvasGroup: {fileID: 0}
-  panelDex: {fileID: 0}
-  panelGacha: {fileID: 0}
-  panelManage: {fileID: 0}
-  panelOption: {fileID: 0}
-  panelToolInv: {fileID: 0}
   btnMinimize: {fileID: 0}
   btnMaximize: {fileID: 0}
   btnQuit: {fileID: 0}
@@ -88,33 +83,6 @@ MonoBehaviour:
   imageItem: {fileID: 0}
   effectGlow: {fileID: 0}
   testItemSprite: {fileID: 1918528007, guid: 0e6a98fe8a0f8ad4b9ef51b51fffad10, type: 3}
---- !u!114 &4556516888078230745
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3709761523516988655}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dedcd3e360ac0b942a9b51899ab70a6d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BusGachaDirector
-  busObject: {fileID: 0}
-  trunkTransform: {fileID: 0}
-  animalPrefab: {fileID: 919132149155446097, guid: 379612d7b5ec4054189335cfb8f5f5aa, type: 3}
-  pathPoints:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  busMoveDuration: 3
-  lookAheadValue: 0.05
-  exitJumpDistance: 3
-  exitJumpHeight: 1
-  exitJumpDuration: 0.5
-  exitAngleOffset: 180
 --- !u!114 &3817873676358197731
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -127,6 +95,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 86fc440b688e38b448ba198fc01d8585, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GlobalKeyboardHook
+--- !u!114 &8750062108950540771
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3709761523516988655}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d564e4c4fea798544970627ead3e1ebe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GlobalMouseHook
 --- !u!114 &2549582319301401772
 MonoBehaviour:
   m_ObjectHideFlags: 0

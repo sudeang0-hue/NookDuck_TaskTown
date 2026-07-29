@@ -76,6 +76,6 @@ public class CameraMonitorAligner : MonoBehaviour
         // 6. 카메라 위치 갱신 (safeCameraZ를 통해 짤림 방지)
         transform.position = new Vector3(finalWorldX, finalWorldY, safeCameraZ);
 
-        Debug.Log($"[ECHO TD] 카메라 주 모니터 정렬 완료! Delta: ({deltaX}, {deltaY}), WorldPos: {transform.position}");
+        Debug.Log($"카메라 주 모니터 정렬 완료! Delta: ({deltaX}, {deltaY}), WorldPos: {transform.position}");
     }
 }

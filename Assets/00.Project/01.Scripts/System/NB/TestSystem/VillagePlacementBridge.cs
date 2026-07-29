@@ -1,4 +1,4 @@
-//NB
+ï»¿//NB
 
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,182 +7,81 @@ using Animal.Data;
 using TaskTown.KDH;
 using UI;
 
-namespace TaskTown.Village
+// UI Confirm ë²„íŠ¼ì„ í›„í‚¹í•˜ì—¬ Directorì˜ ë²„ìŠ¤ ì—°ì¶œì„ ê¹”ë”í•˜ê²Œ ì‹¤í–‰í•´ ì£¼ëŠ” ë¸Œë¦¿ì§€ í´ë˜ìŠ¤
+public class VillagePlacementBridge : MonoBehaviour
 {
-    // »õ·Î Ãß°¡µÈ µ¿¹°ÀÇ ¹ö½º ¼ÒÈ¯ ¿¬ÃâÀ» Æ®¸®°ÅÇÏ´Â ºñÄ§½ÀÀû ºê¸´Áö Å¬·¡½º
-    public class VillagePlacementBridge : MonoBehaviour
+    [Header("UI ë° ì—°ì¶œ ì»´í¬ë„ŒíŠ¸ ì°¸ì¡°")]
+    [SerializeField] private VillageAnimalSetUI_Manager uiManager;
+    [SerializeField] private UIController_VillageAnimalSet uiController;
+    [SerializeField] private VillagerPlacementDirector placementDirector;
+
+    [Header("ë°ì´í„° ì°¸ì¡° (ë¯¸ì—°ê²° ì‹œ Instance ì‚¬ìš©)")]
+    [SerializeField] private InventoryManager_Animal animalInventory;
+
+    private Button _targetedConfirmButton;
+
+    private void Start()
     {
-        [Header("UI ¹× ¿¬Ãâ ÄÄÆ÷³ÍÆ® ÂüÁ¶")]
-        [SerializeField] private VillageAnimalSetUI_Manager uiManager;
-        [SerializeField] private UIController_VillageAnimalSet uiController;
-        [SerializeField] private VillagerPlacementDirector placementDirector;
+        ResolveInventory();
+        HookConfirmButton();
+    }
 
-        [Header("µ¥ÀÌÅÍ ÂüÁ¶ (¹Ì¿¬°á ½Ã Instance »ç¿ë)")]
-        [SerializeField] private InventoryManager_Animal animalInventory;
+    private void OnDestroy()
+    {
+        UnhookConfirmButton();
+    }
 
-        // ÀÌÀü È®Á¤ ¹èÄ¡ »óÅÂ¸¦ ÀúÀåÇØµÑ Ä³½Ã ¹öÆÛ
-        private readonly List<string> _previousPlacedIds = new List<string>();
-        private Button _targetedConfirmButton;
-
-        private void Start()
+    private void HookConfirmButton()
+    {
+        if (uiController != null)
         {
-            ResolveInventory();
-            InitPreviousCache();
-            HookConfirmButton();
+            _targetedConfirmButton = uiController.ConfirmSetAnimalButton;
         }
-
-        private void OnDestroy()
+        else if (uiManager != null)
         {
-            UnhookConfirmButton();
-        }
-
-        // UIControllerÀÇ Confirm ¹öÆ° onClick ÀÌº¥Æ®¿¡ ³» ·ÎÁ÷À» Ãß°¡
-        private void HookConfirmButton()
-        {
+            uiController = FindFirstObjectByType<UIController_VillageAnimalSet>();
             if (uiController != null)
-            {
-                _targetedConfirmButton = uiController.ConfirmSetAnimalButton; // public ÇÁ·ÎÆÛÆ¼ È°¿ë
-            }
-            else if (uiManager != null)
-            {
-                // UIController°¡ Á÷Á¢ ¿¬°áµÇÁö ¾ÊÀº °æ¿ì Find
-                uiController = FindFirstObjectByType<UIController_VillageAnimalSet>();
-                if (uiController != null)
-                    _targetedConfirmButton = uiController.ConfirmSetAnimalButton;
-            }
-
-            if (_targetedConfirmButton != null)
-            {
-                // ±âÁ¸ ¸®½º³Ê´Â À¯ÁöÇÏ¸é¼­, ³» ¸®½º³Ê¸¦ ´ÙÁß µî·Ï(Hooking)
-                _targetedConfirmButton.onClick.RemoveListener(OnConfirmButtonClicked);
-                _targetedConfirmButton.onClick.AddListener(OnConfirmButtonClicked);
-                Debug.Log("[VillagePlacementBridge] ÆÀ¿ø UI Confirm ¹öÆ° ÈÄÅ· ¼º°ø!", this);
-            }
-            else
-            {
-                Debug.LogError("[VillagePlacementBridge] Confirm ¹öÆ°À» Ã£Áö ¸øÇß½À´Ï´Ù. Inspector ¿¬°áÀ» È®ÀÎÇÏ¼¼¿ä.", this);
-            }
+                _targetedConfirmButton = uiController.ConfirmSetAnimalButton;
         }
 
-        private void UnhookConfirmButton()
+        if (_targetedConfirmButton != null)
         {
-            if (_targetedConfirmButton != null)
-            {
-                _targetedConfirmButton.onClick.RemoveListener(OnConfirmButtonClicked);
-            }
+            _targetedConfirmButton.onClick.RemoveListener(OnConfirmButtonClicked);
+            _targetedConfirmButton.onClick.AddListener(OnConfirmButtonClicked);
+            Debug.Log("[VillagePlacementBridge] íŒ€ì› UI Confirm ë²„íŠ¼ í›„í‚¹ ì„±ê³µ!", this);
         }
-
-        // Confirm ¹öÆ° Å¬¸¯ ½Ã OnClickConfirmAnimalSet() ½ÇÇà Á÷ÈÄ ½ÇÇàµÇ´Â Äİ¹é
-        private void OnConfirmButtonClicked()
+        else
         {
-            if (uiManager == null || placementDirector == null) return;
-
-            // ÀÌ¹Ì ¹ö½º°¡ ¿¬Ãâ ÁßÀÌ¶ó¸é Áßº¹ ½ÇÇà ¹æÁö
-            if (placementDirector.IsBusSummoning)
-            {
-                Debug.LogWarning("[VillagePlacementBridge] ÀÌ¹Ì ¹ö½º ¿¬ÃâÀÌ ÁøÇà ÁßÀÔ´Ï´Ù.", this);
-                return;
-            }
-
-            // 1. È®Á¤µÈ ÇöÀç ¹èÄ¡ ID ¸ñ·Ï °¡Á®¿À±â
-            IReadOnlyList<string> currentPlacedIds = uiManager.PlacedAnimalIds;
-
-            // 2. ÀÌÀü ¹èÄ¡¿Í ºñ±³ÇÏ¿© »õ·Î Ãß°¡µÈ animalId¸¸ ÃßÃâ ($O(N)$)
-            List<string> newlyAddedIds = ExtractNewlyAddedIds(_previousPlacedIds, currentPlacedIds);
-
-            // 3. Â÷ºĞ »óÅÂ ¾÷µ¥ÀÌÆ® (´ÙÀ½ È®Á¤À» À§ÇØ Ä³½Ã °»½Å)
-            UpdatePreviousCache(currentPlacedIds);
-
-            if (newlyAddedIds.Count == 0)
-            {
-                Debug.Log("[VillagePlacementBridge] »õ·Î Ãß°¡µÈ µ¿¹°ÀÌ ¾øÀ¸¹Ç·Î ¹ö½º ¿¬ÃâÀ» ½ºÅµÇÕ´Ï´Ù.", this);
-                return;
-            }
-
-            // 4. animalId -> AnimalDataSO (GachaEntryData »ó¼ÓÃ¼) º¯È¯
-            List<AnimalDataSO> newlyAddedDataList = ConvertIdsToDataList(newlyAddedIds);
-
-            if (newlyAddedDataList.Count > 0)
-            {
-                Debug.Log($"[VillagePlacementBridge] ½Å±Ô ÁÖ¹Î {newlyAddedDataList.Count}¸¶¸® ¼ÒÈ¯ ¹ö½º ¿¬ÃâÀ» ½ÃÀÛÇÕ´Ï´Ù!", this);
-
-                // 5.¹ö½º ¿¬Ãâ ½ÇÇà
-                placementDirector.StartBatchBusSummon(newlyAddedDataList);
-            }
+            Debug.LogError("[VillagePlacementBridge] Confirm ë²„íŠ¼ì„ ì°¾ì§€ ëª»í–ˆìŠµë‹ˆë‹¤. Inspector ì—°ê²°ì„ í™•ì¸í•˜ì„¸ìš”.", this);
         }
+    }
 
-        // ½Ã°£ º¹Àâµµ $O(N)$À¸·Î ½Å±Ô Ãß°¡µÈ animalId¸¦ ÃßÃâ
-        private List<string> ExtractNewlyAddedIds(List<string> previous, IReadOnlyList<string> current)
+    private void UnhookConfirmButton()
+    {
+        if (_targetedConfirmButton != null)
         {
-            List<string> newlyAdded = new List<string>();
-            List<string> prevCopy = new List<string>(previous);
-
-            if (current != null)
-            {
-                for (int i = 0; i < current.Count; i++)
-                {
-                    string id = current[i];
-                    if (string.IsNullOrEmpty(id)) continue;
-
-                    if (prevCopy.Contains(id))
-                    {
-                        prevCopy.Remove(id); // ÀÌ¹Ì ÀÖ´ø µ¿¹°ÀÌ¸é Á¦¿Ü
-                    }
-                    else
-                    {
-                        newlyAdded.Add(id); // ¾ø´ø µ¿¹°ÀÌ¸é ½Å±Ô Ãß°¡
-                    }
-                }
-            }
-
-            return newlyAdded;
+            _targetedConfirmButton.onClick.RemoveListener(OnConfirmButtonClicked);
         }
+    }
 
-        private List<AnimalDataSO> ConvertIdsToDataList(List<string> ids)
+    private void OnConfirmButtonClicked()
+    {
+        if (placementDirector == null) return;
+
+        if (placementDirector.IsBusSummoning)
         {
-            List<AnimalDataSO> list = new List<AnimalDataSO>();
-            ResolveInventory();
-
-            if (animalInventory == null) return list;
-
-            foreach (string id in ids)
-            {
-                // InventoryManager_AnimalÀ» ÅëÇØ GachaEntryData ±â¹İÀÇ AnimalDataSO Á¶È¸
-                AnimalDataSO data = animalInventory.GetAnimalData(id);
-                if (data != null)
-                {
-                    list.Add(data);
-                }
-            }
-
-            return list;
+            Debug.LogWarning("[VillagePlacementBridge] ì´ë¯¸ ë²„ìŠ¤ ì—°ì¶œì´ ì§„í–‰ ì¤‘ì…ë‹ˆë‹¤.", this);
+            return;
         }
 
-        private void InitPreviousCache()
-        {
-            if (uiManager != null)
-            {
-                UpdatePreviousCache(uiManager.PlacedAnimalIds);
-            }
-        }
+        // Bridgeì—ì„œ ë¶ˆì™„ì „í•˜ê²Œ ì°¨ë¶„ì„ êµ¬í•˜ì§€ ì•Šê³ , 3D ì›”ë“œ ìƒíƒœë¥¼ ì¢…í•© ë¹„êµí•˜ëŠ” Directorì˜ Sync ë©”ì„œë“œë¥¼ í˜¸ì¶œ
+        Debug.Log("[VillagePlacementBridge] ì£¼ë¯¼ êµì²´/ìŠ¤í° ë²„ìŠ¤ ì—°ì¶œì„ ìš”ì²­í•©ë‹ˆë‹¤!", this);
+        placementDirector.RequestVillagerSync();
+    }
 
-        private void UpdatePreviousCache(IReadOnlyList<string> source)
-        {
-            _previousPlacedIds.Clear();
-            if (source != null)
-            {
-                for (int i = 0; i < source.Count; i++)
-                {
-                    if (!string.IsNullOrEmpty(source[i]))
-                        _previousPlacedIds.Add(source[i]);
-                }
-            }
-        }
-
-        private void ResolveInventory()
-        {
-            if (animalInventory == null)
-                animalInventory = InventoryManager_Animal.Instance;
-        }
+    private void ResolveInventory()
+    {
+        if (animalInventory == null)
+            animalInventory = InventoryManager_Animal.Instance;
     }
 }
