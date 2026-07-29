@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 // 클릭 코인 / 타이핑 코인 / 도구 효율, 세 가지 개별 업그레이드를 관리합니다.
@@ -15,6 +16,15 @@ using UnityEngine;
 public class TownUpgradeManager : MonoBehaviour
 {
     public static TownUpgradeManager Instance { get; private set; }
+
+    // -----------------------------------------------------------------------------
+    // [ 2026.07.27 - Choi - 튜토리얼 기능 업데이트 ]
+    // 기능: 세 업그레이드 중 하나의 구매 성공을 튜토리얼 진행 판정에 전달합니다.
+    // -----------------------------------------------------------------------------
+    /// <summary>
+    /// 클릭, 타이핑, 도구 효율 중 하나의 업그레이드 구매가 성공했을 때 발생합니다.
+    /// </summary>
+    public event Action UpgradePurchased;
 
     [System.Serializable]
     public class UpgradeTrack
@@ -131,6 +141,12 @@ public class TownUpgradeManager : MonoBehaviour
 
         track.TryLevelUp();
         onLeveledUp?.Invoke();
+
+        // -----------------------------------------------------------------------------
+        // [ 2026.07.27 - Choi - 튜토리얼 기능 업데이트 ]
+        // 기능: 비용 차감과 레벨 상승이 끝난 경우에만 업그레이드 완료 이벤트를 보냅니다.
+        // -----------------------------------------------------------------------------
+        UpgradePurchased?.Invoke();
         return true;
     }
 

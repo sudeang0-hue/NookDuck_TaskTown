@@ -1,0 +1,122 @@
+using System.Reflection;
+using NUnit.Framework;
+using TaskTown.KDH;
+using TaskTown.Tutorial;
+using UnityEngine;
+using UnityEngine.TestTools;
+
+namespace TaskTown.EditorTests.Tutorial
+{
+    public class TutorialManagerTests
+    {
+        [Test]
+        public void SetPaused_상태가바뀔때만PauseChanged를호출한다()
+        {
+            GameObject gameObject = new("TutorialManagerTest");
+            TutorialManager manager = gameObject.AddComponent<TutorialManager>();
+            LogAssert.Expect(
+                LogType.Warning,
+                "[TutorialManager] SaveManager가 없어 기본 진행 상태로 시작합니다. " +
+                "현재 진행은 디스크 저장에 포함되지 않습니다.");
+            manager.Initialize(null);
+
+            int eventCount = 0;
+            bool lastPaused = false;
+            manager.PauseChanged += isPaused =>
+            {
+                eventCount++;
+                lastPaused = isPaused;
+            };
+
+            manager.SetPaused(true);
+            manager.SetPaused(true);
+            Assert.AreEqual(1, eventCount);
+            Assert.IsTrue(lastPaused);
+
+            manager.SetPaused(false);
+            Assert.AreEqual(2, eventCount);
+            Assert.IsFalse(lastPaused);
+
+            Object.DestroyImmediate(gameObject);
+        }
+
+        [Test]
+        public void CollapseAndExpandTown_완료대화연속입력에도_1500코인을한번만지급한다()
+        {
+            GameObject coinObject = new("CoinManagerTest");
+            CoinManager coinManager = coinObject.AddComponent<CoinManager>();
+            FieldInfo coinInstanceField = typeof(CoinManager).GetField(
+                "<Instance>k__BackingField",
+                BindingFlags.Static | BindingFlags.NonPublic);
+            Assert.IsNotNull(coinInstanceField);
+            coinInstanceField.SetValue(null, coinManager);
+            GameObject tutorialObject = new("TutorialManagerTest");
+            TutorialManager manager = tutorialObject.AddComponent<TutorialManager>();
+            TutorialStateMachine machine = new(new TutorialSaveData
+            {
+                currentStep = TutorialStep.CollapseAndExpandTown,
+                rewardFlags =
+                    (int)TutorialProgressFlags.TownWindowGuideCompleted |
+                    (int)TutorialProgressFlags.TownWindowMinimized |
+                    (int)TutorialProgressFlags.TownWindowExpanded
+            });
+
+            FieldInfo stateMachineField = typeof(TutorialManager).GetField(
+                "stateMachine",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.IsNotNull(stateMachineField);
+            stateMachineField.SetValue(manager, machine);
+
+            bool first = manager.ReportSignal(TutorialSignalType.DialogueCompleted);
+            bool second = manager.ReportSignal(TutorialSignalType.DialogueCompleted);
+
+            Assert.IsTrue(first);
+            Assert.IsFalse(second);
+            Assert.AreEqual(TutorialManager.TownWindowCompletionReward, coinManager.Balance);
+            Assert.AreEqual(TutorialStep.DrawAnimal, manager.CurrentStep);
+            Assert.IsTrue(manager.IsTownWindowRewardGranted);
+
+            coinInstanceField.SetValue(null, null);
+            Object.DestroyImmediate(tutorialObject);
+            Object.DestroyImmediate(coinObject);
+        }
+
+        [Test]
+        public void AnimalDrawn_연속신호에도_도구뽑기용1500코인을한번만지급한다()
+        {
+            GameObject coinObject = new("CoinManagerTest");
+            CoinManager coinManager = coinObject.AddComponent<CoinManager>();
+            FieldInfo coinInstanceField = typeof(CoinManager).GetField(
+                "<Instance>k__BackingField",
+                BindingFlags.Static | BindingFlags.NonPublic);
+            Assert.IsNotNull(coinInstanceField);
+            coinInstanceField.SetValue(null, coinManager);
+
+            GameObject tutorialObject = new("TutorialManagerTest");
+            TutorialManager manager = tutorialObject.AddComponent<TutorialManager>();
+            TutorialStateMachine machine = new(new TutorialSaveData
+            {
+                currentStep = TutorialStep.DrawAnimal
+            });
+
+            FieldInfo stateMachineField = typeof(TutorialManager).GetField(
+                "stateMachine",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.IsNotNull(stateMachineField);
+            stateMachineField.SetValue(manager, machine);
+
+            bool first = manager.ReportSignal(TutorialSignalType.AnimalDrawn);
+            bool second = manager.ReportSignal(TutorialSignalType.AnimalDrawn);
+
+            Assert.IsTrue(first);
+            Assert.IsFalse(second);
+            Assert.AreEqual(TutorialManager.ToolDrawCoinReward, coinManager.Balance);
+            Assert.AreEqual(TutorialStep.DrawTool, manager.CurrentStep);
+            Assert.IsTrue(manager.IsToolDrawCoinRewardGranted);
+
+            coinInstanceField.SetValue(null, null);
+            Object.DestroyImmediate(tutorialObject);
+            Object.DestroyImmediate(coinObject);
+        }
+    }
+}

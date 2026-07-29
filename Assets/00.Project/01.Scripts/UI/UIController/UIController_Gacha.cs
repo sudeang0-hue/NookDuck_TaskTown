@@ -6,7 +6,6 @@ using UnityEngine.UI;
 
 namespace UI
 {
-
     public class UIController_Gacha : MonoBehaviour
     {
         [Header("동물/도구 뽑기 가챠 매니저")]
@@ -31,6 +30,12 @@ namespace UI
         [SerializeField] private TMP_Text toolOnePickCost;    // 도구 1회 뽑기 가격
         [SerializeField] private TMP_Text toolTenPickCost;    // 도구 10회 뽑기 가격
 
+        // -----------------------------------------------------------------------------
+        // [ 2026.07.28 - Choi - 튜토리얼 뽑기 버튼 강조 연동 ]
+        // 기능: Additive 튜토리얼 Scene이 동물·도구 1회 뽑기 버튼을 강조할 수 있게 읽기 전용으로 노출합니다.
+        // -----------------------------------------------------------------------------
+        public Button AnimalOnePickButton => animalOnePickButton;
+        public Button ToolOnePickButton => toolOnePickButton;
 
         private void Awake()
         {

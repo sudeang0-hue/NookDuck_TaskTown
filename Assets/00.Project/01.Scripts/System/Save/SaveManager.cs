@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.IO;
 using TaskTown.Gacha;
 using TaskTown.Gacha.Demo;
 using UnityEngine;
@@ -18,7 +17,6 @@ namespace TaskTown.KDH
     {
         public static SaveManager Instance { get; private set; }
 
-        private const string SaveFileName = "gamesave.json";
         private const float AutoSaveIntervalSeconds = 60f;
 
         [Tooltip("CoinManager를 연결합니다(코인 저장/복원용).")]
@@ -28,7 +26,14 @@ namespace TaskTown.KDH
         [SerializeField] private MonoBehaviour townLevelProviderSource;
 
         private ITownLevelProvider TownLevelProvider => townLevelProviderSource as ITownLevelProvider;
-        private string SavePath => Path.Combine(Application.persistentDataPath, SaveFileName);
+
+        // -----------------------------------------------------------------------------
+        // [ 2026.07.27 - Choi - 튜토리얼 기능 업데이트 ]
+        // 기능: TutorialManager가 전달한 진행 상태를 복사해 안전하게 보관합니다.
+        // -----------------------------------------------------------------------------
+        private TutorialSaveData tutorialProgress = TutorialSaveData.CreateDefault();
+
+        public TutorialSaveData TutorialProgress => tutorialProgress.Copy();
 
         private void Awake()
         {
@@ -72,12 +77,18 @@ namespace TaskTown.KDH
 
         public bool HasSave()
         {
-            return File.Exists(SavePath);
+            return GameSaveStorage.Exists();
         }
 
         public void SaveGame()
         {
             GameSaveData data = new GameSaveData();
+
+            // -----------------------------------------------------------------------------
+            // [ 2026.07.27 - Choi - 튜토리얼 기능 업데이트 ]
+            // 기능: 현재 튜토리얼 진행 상태를 기존 게임 저장 JSON에 함께 포함합니다.
+            // -----------------------------------------------------------------------------
+            data.tutorial = tutorialProgress.Copy();
 
             if (coinManager != null)
                 data.coins = coinManager.Balance;
@@ -130,35 +141,34 @@ namespace TaskTown.KDH
                 }
             }
 
-            try
-            {
-                File.WriteAllText(SavePath, JsonUtility.ToJson(data));
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogError($"[SaveManager] 저장 실패: {e.Message}");
-            }
+            if (!GameSaveStorage.Save(data, out string errorMessage))
+                Debug.LogError($"[SaveManager] 저장 실패: {errorMessage}");
         }
 
         // 저장돼 있던 초당 생산량을 반환합니다(오프라인 보상 계산용). 세이브가 없으면 0.
         public float LoadGame()
         {
-            if (!File.Exists(SavePath))
+            if (!GameSaveStorage.Exists())
                 return 0f;
 
-            GameSaveData data;
-            try
+            GameSaveLoadStatus loadStatus = GameSaveStorage.Load(
+                out GameSaveData data,
+                out string errorMessage);
+
+            if (loadStatus == GameSaveLoadStatus.Failed)
             {
-                data = JsonUtility.FromJson<GameSaveData>(File.ReadAllText(SavePath));
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogError($"[SaveManager] 로드 실패: {e.Message}");
+                Debug.LogError($"[SaveManager] 로드 실패: {errorMessage}");
                 return 0f;
             }
 
             if (data == null)
                 return 0f;
+
+            // -----------------------------------------------------------------------------
+            // [ 2026.07.27 - Choi - 튜토리얼 기능 업데이트 ]
+            // 기능: 저장 파일에서 불러온 튜토리얼 진행 상태를 런타임 복사본으로 복원합니다.
+            // -----------------------------------------------------------------------------
+            tutorialProgress = data.tutorial.Copy();
 
             // 코인
             if (coinManager != null)
@@ -214,11 +224,29 @@ namespace TaskTown.KDH
             return data.productionRatePerSecond;
         }
 
+        // -----------------------------------------------------------------------------
+        // [ 2026.07.27 - Choi - 튜토리얼 기능 업데이트 ]
+        // 기능: TutorialManager와 SaveManager가 진행 상태를 복사본으로 교환합니다.
+        // -----------------------------------------------------------------------------
+        /// <summary>
+        /// TutorialManager가 갱신한 진행 상태를 다음 저장에 포함합니다.
+        /// 외부에서 전달된 인스턴스는 복사하여 보관합니다.
+        /// </summary>
+        public void SetTutorialProgress(TutorialSaveData progress)
+        {
+            tutorialProgress = progress?.Copy() ?? TutorialSaveData.CreateDefault();
+        }
+
+        public TutorialSaveData GetTutorialProgressCopy()
+        {
+            return tutorialProgress.Copy();
+        }
+
         // 엔딩 후 난이도 리셋 등에서 진행 데이터를 완전히 초기화할 때 사용합니다.
         public void DeleteSave()
         {
-            if (File.Exists(SavePath))
-                File.Delete(SavePath);
+            if (!GameSaveStorage.Delete(out string errorMessage))
+                Debug.LogError($"[SaveManager] 저장 파일 삭제 실패: {errorMessage}");
         }
     }
 }

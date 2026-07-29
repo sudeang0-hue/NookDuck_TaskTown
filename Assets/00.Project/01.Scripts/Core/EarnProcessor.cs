@@ -1,10 +1,20 @@
 //나범 키보드 , 마우스 클릭 이벤트 구독 코드 수정 및 추가 했습니다 :-)
 
+using System;
 using UnityEngine;
 
 public class EarnProcessor : MonoBehaviour
 {
     public static EarnProcessor Instance { get; private set; }
+
+    /// <summary>
+    /// 클릭 또는 타이핑 보상이 CoinManager에 실제 지급됐을 때만 발생합니다.
+    /// </summary>
+    // -----------------------------------------------------------------------------
+    // [ 2026.07.27 - Choi - 튜토리얼 기능 업데이트 ]
+    // 기능: 실제 지급된 수동 코인량을 튜토리얼 진행 판정에 전달합니다.
+    // -----------------------------------------------------------------------------
+    public event Action<int> ManualCoinGranted;
 
     [Header("Click & Typing Balance")]
     [SerializeField] private int baseCoinPerClick = 5; // 클릭당 기본 획득량
@@ -83,7 +93,12 @@ public class EarnProcessor : MonoBehaviour
         // CoinManager에 최종 반영
         if (CoinManager.Instance != null)
         {
+            // -----------------------------------------------------------------------------
+            // [ 2026.07.27 - Choi - 튜토리얼 기능 업데이트 ]
+            // 기능: 지갑 지급 성공 후 실제 허용된 수량만 튜토리얼 이벤트로 알립니다.
+            // -----------------------------------------------------------------------------
             CoinManager.Instance.Add(allowedAmount);
+            ManualCoinGranted?.Invoke(allowedAmount);
         }
         return true;
     }
