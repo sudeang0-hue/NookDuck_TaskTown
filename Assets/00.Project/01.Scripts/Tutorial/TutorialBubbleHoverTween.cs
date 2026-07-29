@@ -82,11 +82,12 @@ namespace TaskTown.Tutorial
 
             KillScaleTween();
 
-            Vector3 baseScale = scaleTarget.localScale;
+            // 진행 중인 Punch를 Kill하면 Transform은 중간 Scale에 남습니다.
+            // 그 값을 다음 Punch의 기준으로 사용하지 않고 현재 Hover 상태의 절대 Scale로 복원해
+            // 짧은 시간에 연속 클릭해도 말풍선 크기가 누적되지 않도록 합니다.
+            Vector3 baseScale = GetStableScale();
+            scaleTarget.localScale = baseScale;
             Vector3 punchAmount = baseScale * punchStrength;
-            bool shouldCollapseAfterPunch =
-                !isPointerOver &&
-                !Mathf.Approximately(baseScale.x, collapsedScale);
 
             Tween punchTween = scaleTarget
                 .DOPunchScale(
@@ -100,11 +101,13 @@ namespace TaskTown.Tutorial
             TrackScaleTween(punchTween);
             punchTween.OnComplete(() =>
             {
-                if (scaleTween == punchTween)
-                    scaleTween = null;
+                if (scaleTween != punchTween)
+                    return;
 
-                if (shouldCollapseAfterPunch && !isPointerOver)
-                    PlayScale(collapsedScale, collapseDuration, collapseDelay);
+                // DOPunchScale의 계산 오차나 중간 재생 상태가 다음 클릭에 남지 않도록
+                // 완료 시에도 현재 Hover 상태의 절대 Scale을 보장합니다.
+                scaleTarget.localScale = GetStableScale();
+                scaleTween = null;
             });
         }
 
@@ -153,6 +156,12 @@ namespace TaskTown.Tutorial
                 return true;
 
             return TryGetComponent(out scaleTarget);
+        }
+
+        private Vector3 GetStableScale()
+        {
+            float stableScale = isPointerOver ? expandedScale : collapsedScale;
+            return Vector3.one * stableScale;
         }
 
         private void KillScaleTween()

@@ -94,7 +94,7 @@ public class TransparentWindow : MonoBehaviour
         }
         catch (Exception ex)
         {
-            Debug.LogWarning($"[ECHO TD] DPI Context 설정 중 예외 발생 (구형 Windows OS 환경 가능성): {ex.Message}");
+            Debug.LogWarning($"DPI Context 설정 중 예외 발생 (구형 Windows OS 환경 가능성): {ex.Message}");
         }
 
         // 2. 현재 유니티 윈도우 핸들 수집

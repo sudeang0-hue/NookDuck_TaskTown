@@ -67,7 +67,7 @@ public class MultiMonitorManager : MonoBehaviour
         }
         catch (Exception e)
         {
-            Debug.LogWarning($"[ECHO] DPI Awareness 설정 실패: {e.Message}");
+            Debug.LogWarning($"DPI Awareness 설정 실패: {e.Message}");
         }
 #endif
     }
@@ -93,7 +93,7 @@ public class MultiMonitorManager : MonoBehaviour
 
         if (!isMultiMonitor)
         {
-            Debug.Log("[ECHO] 싱글 모니터 환경: 좌표를 (0,0) 위치로 강제 고정합니다.");
+            Debug.Log("싱글 모니터 환경: 좌표를 (0,0) 위치로 강제 고정합니다.");
             
             // 뷰포트 영역 전체화면 보정
             targetCam.rect = new Rect(0f, 0f, 1f, 1f);
@@ -108,7 +108,7 @@ public class MultiMonitorManager : MonoBehaviour
         }
         else
         {
-            Debug.Log("[ECHO] 다중 모니터 환경: 가상 화면 스캔 및 뷰포트 오프셋 계산을 적용합니다.");
+            Debug.Log("다중 모니터 환경: 가상 화면 스캔 및 뷰포트 오프셋 계산을 적용합니다.");
             
             Screen.SetResolution(vWidth, vHeight, FullScreenMode.Windowed);
             yield return new WaitForSecondsRealtime(0.05f);
