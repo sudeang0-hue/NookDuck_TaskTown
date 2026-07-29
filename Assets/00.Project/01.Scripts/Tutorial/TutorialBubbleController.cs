@@ -96,9 +96,15 @@ namespace TaskTown.Tutorial
 
         private void HandleProgressChanged(TutorialSaveData progress)
         {
-            // 단계 전환 시에는 StepChanged에서 완료음을 재생한 뒤 다음 문구를 표시합니다.
-            if (hasPresentedStep && tutorialManager.CurrentStep != presentedStep)
+            // 상태 머신은 목표치를 달성한 ProgressChanged를 다음 단계 값으로 전달합니다.
+            // 기존 퀘스트를 유지하는 완료 연출 동안에는 최종 목표 수치를 먼저 확정 표시합니다.
+            if (hasPresentedStep &&
+                progress != null &&
+                progress.currentStep != presentedStep)
+            {
+                TryRenderCompletedProgress(progress);
                 return;
+            }
 
             RefreshView();
         }
@@ -121,9 +127,12 @@ namespace TaskTown.Tutorial
             {
                 view?.PlayPunch();
 
-                float presentationDelay = sfxPlayer != null
-                    ? sfxPlayer.PlayQuestClear(previousStep)
-                    : 0f;
+                float presentationDelay = 0f;
+                if (sfxPlayer != null)
+                {
+                    sfxPlayer.PlayQuestClear(previousStep);
+                    presentationDelay = sfxPlayer.QuestClearPresentationDelay;
+                }
 
                 if (presentationDelay > 0f && isActiveAndEnabled)
                 {
@@ -359,6 +368,33 @@ namespace TaskTown.Tutorial
             hasPresentedStep = true;
         }
 
+        private bool TryRenderCompletedProgress(TutorialSaveData progress)
+        {
+            if (view == null || config == null || progress == null ||
+                !config.TryGetStepContent(
+                    presentedStep,
+                    out TutorialStepContent content) ||
+                !TryGetProgressValues(
+                    content.ProgressDisplayType,
+                    progress.manualEarnedCoin,
+                    progress.autoProductionEarnedCoin,
+                    out long current,
+                    out long target) ||
+                current < target ||
+                !config.TryGetMessage(presentedStep, 0, out string message))
+            {
+                return false;
+            }
+
+            RenderView(
+                presentedStep,
+                message,
+                content.ObjectiveText,
+                FormatProgressText(content, target, target),
+                false);
+            return true;
+        }
+
         private IEnumerator PresentStepAfterDelay(float delay)
         {
             yield return new WaitForSecondsRealtime(delay);
@@ -386,24 +422,50 @@ namespace TaskTown.Tutorial
 
         private string BuildProgressText(TutorialStepContent content)
         {
-            long current;
-            long target;
+            if (!TryGetProgressValues(
+                    content.ProgressDisplayType,
+                    tutorialManager.ManualEarnedCoin,
+                    tutorialManager.AutoProductionEarnedCoin,
+                    out long current,
+                    out long target))
+            {
+                return string.Empty;
+            }
 
-            switch (content.ProgressDisplayType)
+            return FormatProgressText(content, current, target);
+        }
+
+        private static bool TryGetProgressValues(
+            TutorialProgressDisplayType displayType,
+            long manualEarnedCoin,
+            long autoProductionEarnedCoin,
+            out long current,
+            out long target)
+        {
+            switch (displayType)
             {
                 case TutorialProgressDisplayType.ManualCoin:
-                    current = tutorialManager.ManualEarnedCoin;
+                    current = manualEarnedCoin;
                     target = TutorialStateMachine.ManualCoinTarget;
-                    break;
+                    return true;
 
                 case TutorialProgressDisplayType.AutoProductionCoin:
-                    current = tutorialManager.AutoProductionEarnedCoin;
+                    current = autoProductionEarnedCoin;
                     target = TutorialStateMachine.AutoProductionCoinTarget;
-                    break;
+                    return true;
 
                 default:
-                    return string.Empty;
+                    current = 0L;
+                    target = 0L;
+                    return false;
             }
+        }
+
+        private string FormatProgressText(
+            TutorialStepContent content,
+            long current,
+            long target)
+        {
 
             string format = string.IsNullOrWhiteSpace(content.ProgressFormat)
                 ? "{0} / {1}"
