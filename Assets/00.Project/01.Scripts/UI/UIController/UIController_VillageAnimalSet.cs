@@ -25,7 +25,7 @@ namespace UI
         [SerializeField] private Button confirmSetAnimalButton;
 
         [Header("아이콘 조회 (미연결 시 Instance 사용)")]
-        [SerializeField] private InventoryManager_Animal animalInventory;
+        private InventoryManager_Animal animalInventory;
 
         [Header("인스펙터 확인용")]
         [SerializeField] private List<SlotUI_VillageAnimal> activeSlots = new List<SlotUI_VillageAnimal>();

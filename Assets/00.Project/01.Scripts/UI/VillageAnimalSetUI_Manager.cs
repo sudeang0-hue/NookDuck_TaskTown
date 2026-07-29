@@ -33,7 +33,7 @@ namespace UI
         [SerializeField] private UIController_VillageAnimalSetList animalSetList;
 
         [Header("인벤토리 (미연결 시 Instance 사용)")]
-        [SerializeField] private InventoryManager_Animal animalInventory;
+        private InventoryManager_Animal animalInventory;
 
         [Header("배치 버퍼 (확정본, 인덱스 = 슬롯 번호)")]
         [SerializeField] private int maxCapacity = DefaultMaxCapacity;
@@ -341,10 +341,9 @@ namespace UI
 
             // 확정본 기준으로 슬롯 UI를 다시 그림 (비운 슬롯은 empty 유지)
             RefreshUI();
-
-            Debug.Log(
-                "[VillageAnimalSetUI.OnClickConfirmAnimalSet] Confirm 완료 — RefreshUI 반영",
-                this);
+            
+            ClosePanel();
+            Debug.Log("[VillageAnimalSetUI.OnClickConfirmAnimalSet] Confirm 완료 — RefreshUI 반영, 창 닫기",this);
         }
 
         public void OnClickSetAnimal(int slotIndex)

@@ -27,7 +27,7 @@ namespace UI
         private void Awake()
         {
             if (villageUIManager == null)
-                villageUIManager = GetComponentInParent<VillageInfoUI_Manager>();
+                villageUIManager = GetComponent<VillageInfoUI_Manager>();
 
             BindClosePanelButtons();
         }

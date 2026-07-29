@@ -13,7 +13,7 @@ namespace UI
     public class UIController_AnimalInv : MonoBehaviour
     {
         [Header("동물 인벤토리")]
-        [SerializeField] private InventoryManager_Animal animalInventory;
+        private InventoryManager_Animal animalInventory;
 
         [SerializeField] private SlotUI_AnimalInv animalSlotPrefab;
         [SerializeField] private Transform animalSlotContentRoot;
@@ -28,7 +28,7 @@ namespace UI
         private void Awake()
         {
             if (animalInventory == null)
-                animalInventory = InventoryManager_Animal.Instance;
+                animalInventory = FindFirstObjectByType<InventoryManager_Animal>();
         }
 
         private void OnEnable()

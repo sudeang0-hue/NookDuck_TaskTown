@@ -7,7 +7,7 @@ namespace UI
     public class UIController_ToolInv : MonoBehaviour
     {
         [Header("도구 인벤토리")]
-        [SerializeField] private InventoryManager_Tool toolInventory;
+        private InventoryManager_Tool toolInventory;
 
         [SerializeField] private KAY.SlotUI_ToolInv toolSlotPrefab;
         [SerializeField] private Transform toolSlotContentRoot;
@@ -23,7 +23,7 @@ namespace UI
         private void Awake()
         {
             if (toolInventory == null)
-                toolInventory = InventoryManager_Tool.Instance;
+                toolInventory = FindFirstObjectByType<InventoryManager_Tool>();
         }
 
         private void OnEnable()

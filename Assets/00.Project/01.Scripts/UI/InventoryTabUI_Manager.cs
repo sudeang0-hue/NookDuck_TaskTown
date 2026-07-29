@@ -24,13 +24,26 @@ namespace UI
 
         [Header("UI 동기화")]
         [Tooltip("동물 Inv 패널 오픈/닫기 시 상세 닫기 + SyncAllSlots 호출 대상")]
-        [SerializeField] private UIController_AnimalInv animalInvUI;
+        private UIController_AnimalInv animalInvUI;
         [Tooltip("도구 Inv 패널 오픈/닫기 시 상세 닫기 + SyncAllSlots 호출 대상")]
-        [SerializeField] private UIController_ToolInv toolInvUI;
+        private UIController_ToolInv toolInvUI;
 
         private InventoryTabType lastOpenedTab = InventoryTabType.AnimalInv;
 
 
+        private void Awake()
+        {
+            if (animalInvUI == null)
+            {
+                animalInvUI = FindFirstObjectByType<UIController_AnimalInv>();
+            }
+
+            if (toolInvUI == null)
+            {
+                toolInvUI = FindFirstObjectByType<UIController_ToolInv>();
+            }
+
+        }
         private void OnEnable()
         {
             RegisterButtonListeners(openAnimalInvButtons, OpenAnimalInvTab);
