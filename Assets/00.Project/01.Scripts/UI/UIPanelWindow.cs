@@ -38,6 +38,12 @@ namespace UI
 
         public GameMenuType MenuType => gameMenuType;
 
+        /// <summary>OpenPanel* 호출로 패널이 활성화된 직후.</summary>
+        public event Action OnPanelOpened;
+
+        /// <summary>ClosePanel 호출로 비활성화되기 직전. (Edit 취소 등 정리용)</summary>
+        public event Action OnPanelClosed;
+
         private Canvas rootCanvas;
         private Vector2 defaultUIPanelPosition; // UIController_AnimalInvPage 패널의 초기 위치
         private Vector2 dragOffset; // 드래그 비활성 (복구 시 주석 해제)
@@ -93,6 +99,7 @@ namespace UI
 
             BringToFront();
             PlayOpenScaleTween();
+            OnPanelOpened?.Invoke();
         }
 
         public void OpenPanelSetPosition()
@@ -101,10 +108,14 @@ namespace UI
             ResetPosition();
             BringToFront();
             PlayOpenScaleTween();
+            OnPanelOpened?.Invoke();
         }
 
         public void ClosePanel()
         {
+            // SetActive(false) 전에 통지 — 구독자가 Edit 취소 등을 활성 상태에서 처리
+            OnPanelClosed?.Invoke();
+
             StopOpenScaleTween();
             ResetPosition();
             gameObject.SetActive(false);
