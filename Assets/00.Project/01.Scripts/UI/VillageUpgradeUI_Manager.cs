@@ -324,7 +324,7 @@ namespace UI
             RefreshInteractableStates();
         }
 
-        //-----------------------26.07.27 KDH-------------------------------
+        //-----------------------26.07.27 KDH-------------------------------------------------------------
         /// <summary>
         /// 디버그/테스트용. 마을 레벨을 지정값으로 두고 사이클·UI를 갱신합니다.
         /// 도구 상한은 uiTownLevel에서 자동으로 다시 계산되므로 별도 초기화가 필요 없습니다(#18).
@@ -334,6 +334,40 @@ namespace UI
             uiTownLevel = Mathf.Max(1, level);
             ResetCycleAndRefreshUI(); // 내부에서 RefreshAllUI → UIController 갱신 + OnVillageUpgradeStateChanged
         }
-        //-------------------------------------------------------------------
+        //--------------------------------------26.07.29 KDH---------------------------------------------------------
+        /// <summary>
+        /// 디버그용. UI 버튼과 동일하게 해당 트랙을 1회 완료 처리하고 UI를 갱신합니다.
+        /// </summary>
+        public bool DebugTryUpgradeClick()
+        {
+            if (clickDone) return false;
+
+            if (TownUpgradeManager.Instance == null|| !TownUpgradeManager.Instance.DebugForceUpgradeClick()) return false;
+
+            //clickDone = true;   마을 레벨에 제한이 걸리게 하는 코드
+            RefreshAllUI();
+            return true;
+        }
+        public bool DebugTryUpgradeTyping()
+        {
+            if (typingDone) return false;
+
+            if (TownUpgradeManager.Instance == null || !TownUpgradeManager.Instance.DebugForceUpgradeTyping()) return false;
+
+            //typingDone = true;
+            RefreshAllUI();
+            return true;
+        }
+        public bool DebugTryUpgradeTool()
+        {
+            if (toolDone) return false;
+
+            if (TownUpgradeManager.Instance == null || !TownUpgradeManager.Instance.DebugForceUpgradeToolEfficiency()) return false;
+
+            //toolDone = true;
+            RefreshAllUI();
+            return true;
+        }
+        //---------------------------------------------------------------------------------------------
     }
 }

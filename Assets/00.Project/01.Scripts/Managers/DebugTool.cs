@@ -247,22 +247,49 @@ public class DebugTool : MonoBehaviour
             GUILayout.BeginHorizontal();
             GUILayout.Label($"클릭 코인 Lv.{townUpgradeManager.ClickLevel}", GUILayout.Width(120f));
             GUILayout.Label($"다음 비용 {townUpgradeManager.ClickUpgradeNextCost:N0}", GUILayout.Width(120f));
+            //-------------------------------------26.07.29 KDH---------------------------------------------
+            //if (GUILayout.Button("구매", GUILayout.Width(60f)))
+            //    BuyUpgrade(townUpgradeManager.TryUpgradeClick, "클릭 코인");   Original
             if (GUILayout.Button("구매", GUILayout.Width(60f)))
-                BuyUpgrade(townUpgradeManager.TryUpgradeClick, "클릭 코인");
+            {
+                if (villageUpgradeUIManager == null)
+                    lastUpgradeActionText = "VillageUpgradeUI_Manager 없음";
+                else
+                    BuyUpgrade(villageUpgradeUIManager.DebugTryUpgradeClick, "클릭 코인");
+            }
+            //-----------------------------------------------------------------------------------------
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GUILayout.Label($"타이핑 코인 Lv.{townUpgradeManager.TypingLevel}", GUILayout.Width(120f));
             GUILayout.Label($"다음 비용 {townUpgradeManager.TypingUpgradeNextCost:N0}", GUILayout.Width(120f));
+            //-------------------------------------26.07.29 KDH---------------------------------------------
+            //if (GUILayout.Button("구매", GUILayout.Width(60f)))
+            //    BuyUpgrade(townUpgradeManager.TryUpgradeTyping, "타이핑 코인");     Original
             if (GUILayout.Button("구매", GUILayout.Width(60f)))
-                BuyUpgrade(townUpgradeManager.TryUpgradeTyping, "타이핑 코인");
+            {
+                if (villageUpgradeUIManager == null)
+                    lastUpgradeActionText = "VillageUpgradeUI_Manager 없음";
+                else
+                    BuyUpgrade(villageUpgradeUIManager.DebugTryUpgradeTyping, "타이핑 코인");
+            }
+            //------------------------------------------------------------------------------------------
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GUILayout.Label($"도구 효율 Lv.{townUpgradeManager.ToolEfficiencyLevel}", GUILayout.Width(120f));
             GUILayout.Label($"다음 비용 {townUpgradeManager.ToolEfficiencyUpgradeNextCost:N0}", GUILayout.Width(120f));
+            //-------------------------------------26.07.29 KDH---------------------------------------------
+            //if (GUILayout.Button("구매", GUILayout.Width(60f)))
+            //    BuyUpgrade(townUpgradeManager.TryUpgradeToolEfficiency, "도구 효율");
             if (GUILayout.Button("구매", GUILayout.Width(60f)))
-                BuyUpgrade(townUpgradeManager.TryUpgradeToolEfficiency, "도구 효율");
+            {
+                if (villageUpgradeUIManager == null)
+                    lastUpgradeActionText = "VillageUpgradeUI_Manager 없음";
+                else
+                    BuyUpgrade(villageUpgradeUIManager.DebugTryUpgradeTool, "도구 효율");
+            }
+            //------------------------------------------------------------------------------------------
             GUILayout.EndHorizontal();
 
             GUILayout.Label($"마지막 결과: {lastUpgradeActionText}");
@@ -276,7 +303,7 @@ public class DebugTool : MonoBehaviour
                 lastUpgradeActionText = "VillageUpgradeUI_Manager 없음";
             else
             {
-                townUpgradeManager.LoadLevels(1, 1, 1);
+                townUpgradeManager.LoadLevels(0, 0, 0);   // 26.07.29 LoadLevels(1,1,1) Change
                 villageUpgradeUIManager.DebugSetTownLevel(1);
                 lastUpgradeActionText = "마을 레벨 Lv.1 초기화";
             }
