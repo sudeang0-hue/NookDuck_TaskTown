@@ -4,6 +4,7 @@
  * 레벨업 가능시 버튼 활성화
  * 불가능하면 버튼 비활성화
  * 슬롯 클릭 시 Animal_Inv_Page 오픈
+ * [2026.07.27 나범 수정] 5종 고유 카드 배경 스프라이트 통스왑 로직 적용
  */
 
 using Animal.Data;
@@ -24,6 +25,17 @@ public class SlotUI_AnimalInv : SlotUIBase
     [SerializeField] private TMP_Text currentCountText;
     [SerializeField] private TMP_Text requireCountText;
 
+    // ------------------------------------------------------------------------------------------
+    // [2026.07.27 업데이트] 5가지 개별 카드 배경 스프라이트 에셋 바인딩
+    // ------------------------------------------------------------------------------------------
+    [Header("카드 배경 (등급별 5종 개별 이미지)")]
+    [Tooltip("슬롯 카드의 바탕이 되는 UI Image 컴포넌트")]
+    [SerializeField] private Image cardBackgroundImage;
+
+    [Tooltip("Size를 5로 설정하고 각 등급별 전용 배경 스프라이트를 드래그 앤 드롭하세요.\n[0]: 노말, [1]: 레어, [2]: 에픽, [3]: 유니크, [4]: 레전더리")]
+    [SerializeField] private Sprite[] gradeBackgroundSprites = new Sprite[5];
+    // ------------------------------------------------------------------------------------------
+
     [Header("동물 인벤토리 슬롯")]
     [Tooltip("현재 레벨의 별 모양 이미지")]
     [SerializeField] private Image levelImage;
@@ -40,6 +52,11 @@ public class SlotUI_AnimalInv : SlotUIBase
 
     private SlotData_Animal currentSlotData;
     private UIController_AnimalInvPage animalInvPageController;
+
+    // ------------------------------------------------------------------------------------------
+    // [2026.07.27 업데이트] O(N) 씬 탐색을 피하기 위한 Placement UI 캐싱 변수
+    private UIController_ToolPlacement cachedPlacementUi;
+    // ------------------------------------------------------------------------------------------
 
     private void Awake()
     {
@@ -130,6 +147,12 @@ public class SlotUI_AnimalInv : SlotUIBase
         SetBaseInfo(data.Id, data.DisplayName, data.Icon);
         ApplyIconAndName(data);
 
+        // ------------------------------------------------------------------------------------------
+        // [2026.07.27 업데이트 ]동물의 등급에 따른 5종 고유 배경 스프라이트 적용
+        ApplyGradeBackground(data);
+        // ------------------------------------------------------------------------------------------
+
+
         // 본체 1마리를 제외한 재료 수량을 UI에 표시 (예: 내부 1 → 0/4)
         if (currentCountText != null)
             currentCountText.text = Mathf.Max(0, currentSlotData.CurrentCount - 1).ToString();
@@ -157,6 +180,46 @@ public class SlotUI_AnimalInv : SlotUIBase
 
         if (animalNameText != null)
             animalNameText.text = data.DisplayName;
+    }
+
+    // ------------------------------------------------------------------------------------------
+    // [2026.07.27 업데이트 ] 등급에 따라 5개의 고유 배경 스프라이트 중 하나를 1:1 교체
+    // ------------------------------------------------------------------------------------------
+    private void ApplyGradeBackground(AnimalDataSO data)
+    {
+        if (cardBackgroundImage == null)
+        {
+            Debug.LogWarning("[SlotUI_AnimalInv] cardBackgroundImage가 할당되지 않았습니다.", this);
+            return;
+        }
+
+        if (gradeBackgroundSprites == null || gradeBackgroundSprites.Length == 0)
+        {
+            Debug.LogWarning("[SlotUI_AnimalInv] gradeBackgroundSprites 배열이 비어있습니다.", this);
+            return;
+        }
+
+        // 1. Grade Enum/int 값을 인덱스로 변환 (0: Normal, 1: Rare, 2: Epic, 3: Unique, 4: Legendary)
+        int rawIndex = (int)data.Grade;
+
+        // 2. 배열 범위를 안전하게 클램핑 ($0 \le Index \le \text{Length}-1$)
+        int safeIndex = Mathf.Clamp(rawIndex, 0, gradeBackgroundSprites.Length - 1);
+
+        Sprite selectedSprite = gradeBackgroundSprites[safeIndex];
+
+        if (selectedSprite != null)
+        {
+            // 3. 원본 아트 색상이 변색 없이 순수하게 나오도록 White로 보장
+            cardBackgroundImage.color = Color.white;
+
+            // 4. 고유 배경 스프라이트 텍스처 자산을 통째로 교체
+            cardBackgroundImage.sprite = selectedSprite;
+            cardBackgroundImage.enabled = true;
+        }
+        else
+        {
+            Debug.LogWarning($"[SlotUI_AnimalInv] {safeIndex}번 등급에 해당하는 배경 스프라이트가 Inspector에 할당되지 않았습니다.", this);
+        }
     }
 
     private void UpdateLevelUpButton()
@@ -195,11 +258,19 @@ public class SlotUI_AnimalInv : SlotUIBase
             return;
         }
 
+        // ------------------------------------------------------------------------------------------
+        // [2026.07.27 업데이트 ] 지연 캐싱(Lazy Caching)을 통해 O(N) 씬 탐색 연산을 최초 1회로 단축
+        // ------------------------------------------------------------------------------------------
+        if (cachedPlacementUi == null)
+        {
+            cachedPlacementUi = FindFirstObjectByType<UIController_ToolPlacement>();
+        }
 
-        // ------------------------------------26.07.22 KDH 추가------------------------------------
-        UIController_ToolPlacement placementUi = FindFirstObjectByType<UIController_ToolPlacement>();
-        if (placementUi != null) placementUi.SetSelectedAnimal(currentSlotData.AnimalId);
-        //------------------------------------------------------------------------------------------
+        if (cachedPlacementUi != null)
+        {
+            cachedPlacementUi.SetSelectedAnimal(currentSlotData.AnimalId);
+        }
+        // ------------------------------------------------------------------------------------------
 
         animalInvPageController.OpenAnimalInvPage(currentSlotData);
     }
@@ -258,6 +329,15 @@ public class SlotUI_AnimalInv : SlotUIBase
             levelImage.sprite = null;
             levelImage.enabled = false;
         }
+
+        // ------------------------------------------------------------------------------------------
+        // [2026.07.27 업데이트 ] 슬롯 초기화 시 카드 배경 스프라이트도 깔끔하게 리셋
+        if (cardBackgroundImage != null)
+        {
+            cardBackgroundImage.sprite = null;
+            cardBackgroundImage.enabled = false;
+        }
+        // ------------------------------------------------------------------------------------------
 
         if (levelupButton != null)
             levelupButton.gameObject.SetActive(false);

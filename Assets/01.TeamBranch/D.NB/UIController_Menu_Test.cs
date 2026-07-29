@@ -1,4 +1,5 @@
-﻿//NB - 아영님의 UIController_Menu 에 기능 추가 및 충돌 해결 통합본
+﻿/*
+//NB - 아영님의 UIController_Menu 에 기능 추가 및 충돌 해결 통합본
 using UI;
 using UnityEngine;
 using UnityEngine.UI;
@@ -116,3 +117,5 @@ public class UIController_Menu_Test : MonoBehaviour
             gameMaster.CloseOption();
     }
 }
+
+*/

@@ -32,7 +32,7 @@ namespace UI
         [SerializeField] private GameObject villagePanelContent; // VillageInfo_Root
         [SerializeField] private UIController_VillageInfo uiController;
         [SerializeField] private Canvas villageCanvas;
-        [Tooltip("VillageUpgrade_root의 필수 업그레이드/마을 레벨업 비용 소스")]
+        [Tooltip("VillageUpgrade_root 상태 동기화 소스 (마을 레벨 등)")]
         [SerializeField] private VillageUpgradeUI_Manager villageUpgradeUIManager;
 
         [Header("클릭 (Input System + Raycast)")]
@@ -49,20 +49,14 @@ namespace UI
         [Tooltip("true면 Village 패널 바깥을 클릭했을 때 패널을 닫습니다. (패널 위·VillageHouse 클릭은 제외)")]
         [SerializeField] private bool closeOnOutsideClick = false;
 
-        [Header("테스트용 마을 정보 (VillageSystem 연동 전)")]
-        [SerializeField] private int townLevel = 1;
-        [SerializeField] private int clickCoin = 10;
-        [SerializeField] private int typingCoin = 5;
-        [SerializeField] private int toolCapacity = 3;
-        [SerializeField] private float autoProductBonus = 1.2f;
-        [SerializeField] private int requireLevelupCoin = 200;
+        [Header("폴백 수치 (VillageUpgrade / TownUpgrade 미연결 시)")]
+        [SerializeField] private int fallbackTownLevel = 1;
+        [SerializeField] private int fallbackClickCoin = 10;
+        [SerializeField] private int fallbackTypingCoin = 5;
+        [SerializeField] private float fallbackAutoProductBonus = 1f;
 
-        [Header("테스트용 다음 레벨 (LvUp Hover 미리보기)")]
-        [SerializeField] private int nextTownLevel = 2;
-        [SerializeField] private int nextClickCoin = 20;
-        [SerializeField] private int nextTypingCoin = 10;
-        [SerializeField] private int nextToolCapacity = 4;
-        [SerializeField] private float nextAutoProductBonus = 1.5f;
+        [Header("장착 가능 도구 수량 (마을 시스템 미구현 — 임시 표시값)")]
+        [SerializeField] private int toolCapacityPlaceholder = 0;
 
         private bool isPanelOpen;
         private Coroutine autoCloseCoroutine;
@@ -362,40 +356,6 @@ namespace UI
             PushVillageDataToUI();
         }
 
-        /// <summary>
-        /// VillageInfo의 Lv_Up_Button 클릭 시 호출합니다.
-        /// 필수 3종 완료 + 코인 충족일 때만 마을 레벨업을 수행합니다.
-        /// </summary>
-        public bool TryRequestVillageLevelUp()
-        {
-            TryResolveVillageUpgradeManager();
-            if (villageUpgradeUIManager == null)
-                return false;
-
-            bool leveledUp = villageUpgradeUIManager.TryVillageLevelUp();
-            if (leveledUp)
-                PushVillageDataToUI();
-
-            return leveledUp;
-        }
-
-        /// <summary>
-        /// Coin_Slider Hover 시 다음 레벨 미리보기 수치를 LvUp 패널에 반영합니다.
-        /// VillageSystem 연동 전까지는 Inspector 테스트 값을 사용합니다.
-        /// </summary>
-        public void ApplyLvUpHoverPreview(VillageLvUpStateHover hover)
-        {
-            if (hover == null)
-                return;
-
-            hover.SetPreview(
-                nextTownLevel,
-                nextClickCoin,
-                nextTypingCoin,
-                nextToolCapacity,
-                nextAutoProductBonus);
-        }
-
         private void HidePanelContent()
         {
             if (PanelContent != null)
@@ -436,6 +396,10 @@ namespace UI
             PushVillageDataToUI();
         }
 
+        /// <summary>
+        /// VillageUpgrade_root / TownUpgradeManager 현재 상태를 VillageInfo에 반영합니다.
+        /// 장착 가능 도구 수량은 마을 시스템 미구현이라 placeholder를 사용합니다.
+        /// </summary>
         private void PushVillageDataToUI()
         {
             if (uiController == null)
@@ -443,39 +407,29 @@ namespace UI
 
             TryResolveVillageUpgradeManager();
 
-            long currentCoin = 0;
-            if (CoinManager.Instance != null)
-                currentCoin = CoinManager.Instance.totalCoin;
+            int displayTownLevel = fallbackTownLevel;
+            if (villageUpgradeUIManager != null)
+                displayTownLevel = villageUpgradeUIManager.UiTownLevel;
 
-            int displayClickCoin = clickCoin;
-            int displayTypingCoin = typingCoin;
+            int displayClickCoin = fallbackClickCoin;
+            int displayTypingCoin = fallbackTypingCoin;
             if (EarnProcessor.Instance != null)
             {
                 displayClickCoin = EarnProcessor.Instance.BaseCoinPerClick * EarnProcessor.Instance.ClickMultiplier;
                 displayTypingCoin = EarnProcessor.Instance.BaseCoinPerTyping * EarnProcessor.Instance.TypingMultiplier;
             }
 
-            // RequireCoinText / Lv_Up_Button 게이트는 VillageUpgradeUI_Manager와 동기화
-            int displayTownLevel = townLevel;
-            long displayRequireCoin = requireLevelupCoin;
-            bool requiredUpgradesComplete = false;
-
-            if (villageUpgradeUIManager != null)
-            {
-                displayTownLevel = villageUpgradeUIManager.UiTownLevel;
-                displayRequireCoin = villageUpgradeUIManager.GetVillageLevelUpCost();
-                requiredUpgradesComplete = villageUpgradeUIManager.IsReadyForVillageLevelUp;
-            }
+            // VillageUpgrade의 toolProductValue와 동일 소스 (도구 효율 = 생산량 보너스)
+            float displayBonus = fallbackAutoProductBonus;
+            if (TownUpgradeManager.Instance != null)
+                displayBonus = TownUpgradeManager.Instance.ToolEfficiencyMultiplier;
 
             uiController.Refresh(
                 displayTownLevel,
                 displayClickCoin,
                 displayTypingCoin,
-                toolCapacity,
-                autoProductBonus,
-                currentCoin,
-                displayRequireCoin,
-                requiredUpgradesComplete);
+                toolCapacityPlaceholder,
+                displayBonus);
         }
 
         private void FaceCamera()

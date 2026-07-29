@@ -12,7 +12,7 @@ using UnityEngine;
 
 namespace UI
 {
-    public class VillageUpgradeUI_Manager : MonoBehaviour
+    public class VillageUpgradeUI_Manager : MonoBehaviour, ITownLevelProvider
     {
         private const int RequiredUpgradeTotal = 3;
 
@@ -55,6 +55,12 @@ namespace UI
 
         /// <summary>UI 전용 마을 레벨.</summary>
         public int UiTownLevel => uiTownLevel;
+
+        /// <summary>
+        /// ITownLevelProvider 구현 (#18: 도구 상한/뽑기 확률 등 다른 시스템이 마을 레벨을
+        /// 참조할 때 이 컴포넌트를 그대로 연결할 수 있도록).
+        /// </summary>
+        public int CurrentTownLevel => uiTownLevel;
 
         private void Awake()
         {
@@ -163,7 +169,6 @@ namespace UI
 
         /// <summary>
         /// 필수 3종 완료 + 비용 지불 가능 시 마을 레벨업을 수행합니다.
-        /// VillageInfo의 Lv_Up_Button에서도 호출합니다.
         /// </summary>
         public bool TryVillageLevelUp()
         {
@@ -174,6 +179,8 @@ namespace UI
             if (CoinManager.Instance == null || !CoinManager.Instance.TrySpend(cost))
                 return false;
 
+            // #18: 도구 상한(ToolPlacementService.MaxPlacedToolCount)은 이제 InventoryManager_Tool.GetToolCapacity()에서
+            // 마을 레벨 기준으로 직접 계산되므로, uiTownLevel만 올리면 자동으로 함께 늘어납니다(별도 수동 증가 불필요).
             uiTownLevel++;
             ResetCycleAndRefreshUI();
             return true;
@@ -316,5 +323,17 @@ namespace UI
         {
             RefreshInteractableStates();
         }
+
+        //-----------------------26.07.27 KDH-------------------------------
+        /// <summary>
+        /// 디버그/테스트용. 마을 레벨을 지정값으로 두고 사이클·UI를 갱신합니다.
+        /// 도구 상한은 uiTownLevel에서 자동으로 다시 계산되므로 별도 초기화가 필요 없습니다(#18).
+        /// </summary>
+        public void DebugSetTownLevel(int level)
+        {
+            uiTownLevel = Mathf.Max(1, level);
+            ResetCycleAndRefreshUI(); // 내부에서 RefreshAllUI → UIController 갱신 + OnVillageUpgradeStateChanged
+        }
+        //-------------------------------------------------------------------
     }
 }

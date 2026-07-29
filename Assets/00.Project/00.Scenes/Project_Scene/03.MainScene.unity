@@ -7117,9 +7117,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 61bad1cd03bdaa443a987e623aad5cde, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EarnProcessor
-  baseCoinPerClick: 3
-  baseCoinPerTyping: 5
-  maxCoinPerHour: 100000
+  baseCoinPerClick: 5
+  baseCoinPerTyping: 3
+  maxCoinPerHour: 10000
   limitPeriodSeconds: 3600
 --- !u!114 &1566871428
 MonoBehaviour:
@@ -8603,12 +8603,20 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 6249430324934195944}
     m_Modifications:
-    - target: {fileID: 1987786687874056765, guid: aa66621d8ac83824ca118d9cbebb3573, type: 3}
-      propertyPath: m_AnchorMax.x
+    - target: {fileID: 1460572940624274993, guid: aa66621d8ac83824ca118d9cbebb3573, type: 3}
+      propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1987786687874056765, guid: aa66621d8ac83824ca118d9cbebb3573, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0.509
+      objectReference: {fileID: 0}
+    - target: {fileID: 1987786687874056765, guid: aa66621d8ac83824ca118d9cbebb3573, type: 3}
       propertyPath: m_AnchorMax.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2848440221852887775, guid: aa66621d8ac83824ca118d9cbebb3573, type: 3}
+      propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3380399432965371174, guid: aa66621d8ac83824ca118d9cbebb3573, type: 3}
@@ -9169,6 +9177,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 6249430324934195944}
     m_Modifications:
+    - target: {fileID: 1565753721670009692, guid: af1a110ac527dd64c9d04a1b0cdb72b2, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3226973513321819073, guid: af1a110ac527dd64c9d04a1b0cdb72b2, type: 3}
       propertyPath: m_Name
       value: VillageUpgrade_Canvas_tab
@@ -10130,6 +10142,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3335853933603585921, guid: 6f7daaca604fb004d8ae0d8d874fba92, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -10143,9 +10159,33 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 6249430324934195944}
     m_Modifications:
+    - target: {fileID: 503240989676646160, guid: 9d43c5162df0acc468713f7ebeca458c, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 503240989676646160, guid: 9d43c5162df0acc468713f7ebeca458c, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 503240989676646160, guid: 9d43c5162df0acc468713f7ebeca458c, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5248713117113089641, guid: 9d43c5162df0acc468713f7ebeca458c, type: 3}
       propertyPath: m_Name
       value: VillageAnimalSet_Canvas_tab
+      objectReference: {fileID: 0}
+    - target: {fileID: 8840402434967579442, guid: 9d43c5162df0acc468713f7ebeca458c, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8840402434967579442, guid: 9d43c5162df0acc468713f7ebeca458c, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8840402434967579442, guid: 9d43c5162df0acc468713f7ebeca458c, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 9183282109522510813, guid: 9d43c5162df0acc468713f7ebeca458c, type: 3}
       propertyPath: m_Pivot.x
@@ -10719,6 +10759,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4095309194377974802, guid: 4c12fad4e6f63e4428641c0af8352516, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6036893259966903902, guid: 4c12fad4e6f63e4428641c0af8352516, type: 3}
+      propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6511659495983562800, guid: 4c12fad4e6f63e4428641c0af8352516, type: 3}

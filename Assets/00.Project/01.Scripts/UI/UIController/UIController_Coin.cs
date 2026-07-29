@@ -1,9 +1,14 @@
 using System.Collections;
+using System.Globalization;
+using TaskTown.KDH;
 using TMPro;
 using UnityEngine;
 
 public class UIController_Coin : MonoBehaviour
 {
+    private const long Million = 1_000_000;
+    private const long Billion = 1_000_000_000;
+    private const float SecondsPerHour = 3600f;
 
     [Header("획득 코인 텍스트")]
     [SerializeField] private TMP_Text allCoinText;   // 현재 보유 코인
@@ -15,6 +20,9 @@ public class UIController_Coin : MonoBehaviour
     private bool isSubscribed;
     private Coroutine subscribeRoutine;
 
+    // 직전에 표시한 초당 생산량. 변경 시에만 autoCoinText를 갱신한다.
+    private float lastDisplayedCoinPerSecond = float.NaN;
+
     private void Start()
     {
         TrySubscribeCoinEvent();
@@ -22,6 +30,9 @@ public class UIController_Coin : MonoBehaviour
 
     private void OnEnable()
     {
+        // 재활성화 시 이전 캐시를 버리고 다시 그리도록 한다.
+        lastDisplayedCoinPerSecond = float.NaN;
+
         TrySubscribeCoinEvent();
 
         if (!isSubscribed && subscribeRoutine == null)
@@ -43,6 +54,12 @@ public class UIController_Coin : MonoBehaviour
             CoinManager.Instance.OnCoinChanged -= UpdateAllCoinText;
 
         isSubscribed = false;
+    }
+
+    // RealProductionTicker.Update 이후 값을 읽기 위해 LateUpdate에서 갱신한다.
+    private void LateUpdate()
+    {
+        RefreshAutoCoinTextIfNeeded();
     }
 
     private IEnumerator SubscribeWhenCoinManagerReady()
@@ -79,7 +96,7 @@ public class UIController_Coin : MonoBehaviour
         isSubscribed = true;
 
         UpdateAllCoinText(CoinManager.Instance.totalCoin);
-        UpdateAutoCoinText(0);
+        RefreshAutoCoinTextIfNeeded();
     }
 
     private void UpdateAllCoinText(long coinAmount)
@@ -90,7 +107,23 @@ public class UIController_Coin : MonoBehaviour
             return;
         }
 
-        allCoinText.text = coinAmount.ToString("N0");
+        //allCoinText.text = coinAmount.ToString("N0");
+        allCoinText.text = FormatCoinAmount(coinAmount);
+    }
+
+    // 장착/레벨/도구효율 등으로 초당 생산량이 바뀌면 시간당(/h) 텍스트를 갱신한다.
+    private void RefreshAutoCoinTextIfNeeded()
+    {
+        float coinPerSecond = RealProductionTicker.Instance != null
+            ? RealProductionTicker.Instance.CurrentCoinPerSecond
+            : 0f;
+
+        if (!float.IsNaN(lastDisplayedCoinPerSecond)
+            && Mathf.Approximately(lastDisplayedCoinPerSecond, coinPerSecond))
+            return;
+
+        lastDisplayedCoinPerSecond = coinPerSecond;
+        UpdateAutoCoinText((long)(coinPerSecond * SecondsPerHour));
     }
 
     private void UpdateAutoCoinText(long coinPerHour)
@@ -102,5 +135,22 @@ public class UIController_Coin : MonoBehaviour
         }
 
         autoCoinText.text = $"{coinPerHour:N0}{prefix}";
+        // autoCoinText.text = $"{FormatCoinAmount(coinPerHour)}{prefix}";
+    }
+
+    private string FormatCoinAmount(long coinAmount)
+    {
+        
+        if (coinAmount < Billion)
+        {
+            
+            return coinAmount.ToString("N0");
+        }
+
+        double formattedAmount = coinAmount / (double)Billion;
+
+        return formattedAmount.ToString(
+            "0.##",
+            CultureInfo.InvariantCulture) + "B";
     }
 }

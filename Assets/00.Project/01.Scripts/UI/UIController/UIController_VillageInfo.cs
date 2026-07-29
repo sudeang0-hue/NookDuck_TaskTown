@@ -1,15 +1,13 @@
-﻿using System.Collections;
-using TMPro;
+﻿using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace UI
 {
     /// <summary>
-    /// 연결된 마을 정보의 출력과 갱신을 담당합니다.
-    /// CurrentCoin / Slider / 레벨업 버튼은 CoinManager와 연동합니다.
-    /// RequireCoin / Lv_Up_Button은 VillageUpgradeUI_Manager의 마을 레벨업 게이트와 연동합니다.
-    /// 메뉴·축소 등 닫기 트리거 버튼 클릭 시 Village 패널을 닫습니다.
+    /// VillageInfo_Root 표시 전담.
+    /// 마을 레벨 / 클릭·타이핑 획득량 / 생산 보너스(도구 효율) / 장착 가능 도구 수량을 출력합니다.
+    /// 업그레이드·레벨업 상호작용은 VillageUpgrade_root에서 처리합니다.
     /// </summary>
     public class UIController_VillageInfo : MonoBehaviour
     {
@@ -19,62 +17,24 @@ namespace UI
         [SerializeField] private TMP_Text typingCoinText;
         [SerializeField] private TMP_Text toolCapacityText;
         [SerializeField] private TMP_Text autoProductBonusText;
-        [SerializeField] private TMP_Text currentCoinText;
-        [SerializeField] private TMP_Text requireLevelupCoinText;
-        [SerializeField] private Slider coinSlider;
-
-        [Header("상호작용 버튼")]
-        [SerializeField] private Button upgradeButton;
-        [SerializeField] private VillageInfoUI_Manager villageUIManager;
 
         [Header("패널 닫기 트리거")]
         [Tooltip("닫기 버튼, Minimize 등. 클릭 시 VillageInfo 패널을 닫습니다.")]
         [SerializeField] private Button[] closePanelButtons;
 
-        private const string CurrentCoinPrefix = "CurrentCoin: ";
-
-        private long requireLevelupCoin;
-        private bool requiredUpgradesComplete;
-        private bool isSubscribed;
-        private Coroutine subscribeRoutine;
+        [SerializeField] private VillageInfoUI_Manager villageUIManager;
 
         private void Awake()
         {
             if (villageUIManager == null)
                 villageUIManager = GetComponentInParent<VillageInfoUI_Manager>();
 
-            if (upgradeButton != null)
-                upgradeButton.onClick.AddListener(OnClickUpgrade);
-
             BindClosePanelButtons();
         }
 
         private void OnDestroy()
         {
-            if (upgradeButton != null)
-                upgradeButton.onClick.RemoveListener(OnClickUpgrade);
-
             UnbindClosePanelButtons();
-        }
-
-        private void OnEnable()
-        {
-            TrySubscribeCoinEvent();
-            RefreshCoinView();
-
-            if (!isSubscribed && subscribeRoutine == null)
-                subscribeRoutine = StartCoroutine(SubscribeWhenCoinManagerReady());
-        }
-
-        private void OnDisable()
-        {
-            if (subscribeRoutine != null)
-            {
-                StopCoroutine(subscribeRoutine);
-                subscribeRoutine = null;
-            }
-
-            UnsubscribeCoinEvent();
         }
 
         private void BindClosePanelButtons()
@@ -113,120 +73,22 @@ namespace UI
             villageUIManager.ClosePanel();
         }
 
+        /// <summary>
+        /// VillageUpgrade / TownUpgrade 현재 상태를 VillageInfo 텍스트에 반영합니다.
+        /// </summary>
         public void Refresh(
             int townLevel,
             int clickCoin,
             int typingCoin,
             int toolCapacity,
-            float autoProductBonus,
-            long currentCoin,
-            long requireLevelupCoin,
-            bool requiredUpgradesComplete)
+            float autoProductBonus)
         {
-            this.requireLevelupCoin = requireLevelupCoin < 0 ? 0 : requireLevelupCoin;
-            this.requiredUpgradesComplete = requiredUpgradesComplete;
-
             SetText(townLevelText, "TownLevel : " + townLevel);
             SetText(clickCoinText, "Click : " + clickCoin.ToString("N0"));
             SetText(typingCoinText, "Typing : " + typingCoin.ToString("N0"));
             SetText(toolCapacityText, "Tool : " + toolCapacity.ToString("N0"));
-            SetText(autoProductBonusText, "Bonus : " + autoProductBonus.ToString("N0") + " %");
-            SetText(requireLevelupCoinText, "Require : \n" + this.requireLevelupCoin.ToString("N0"));
-
-            long displayCoin = currentCoin;
-            if (CoinManager.Instance != null)
-                displayCoin = CoinManager.Instance.totalCoin;
-
-            ApplyCoinProgress(displayCoin);
-            TrySubscribeCoinEvent();
-        }
-
-        private void OnClickUpgrade()
-        {
-            if (villageUIManager != null)
-            {
-                villageUIManager.TryRequestVillageLevelUp();
-                return;
-            }
-
-            RefreshCoinView();
-        }
-
-        private IEnumerator SubscribeWhenCoinManagerReady()
-        {
-            const float timeoutSeconds = 3f;
-            float elapsed = 0f;
-
-            while (CoinManager.Instance == null && elapsed < timeoutSeconds)
-            {
-                elapsed += Time.unscaledDeltaTime;
-                yield return null;
-            }
-
-            subscribeRoutine = null;
-            TrySubscribeCoinEvent();
-            RefreshCoinView();
-        }
-
-        private void TrySubscribeCoinEvent()
-        {
-            if (isSubscribed)
-                return;
-
-            if (CoinManager.Instance == null)
-                return;
-
-            CoinManager.Instance.OnCoinChanged += OnCoinChanged;
-            isSubscribed = true;
-        }
-
-        private void UnsubscribeCoinEvent()
-        {
-            if (!isSubscribed)
-                return;
-
-            if (CoinManager.Instance != null)
-                CoinManager.Instance.OnCoinChanged -= OnCoinChanged;
-
-            isSubscribed = false;
-        }
-
-        private void OnCoinChanged(long coinAmount)
-        {
-            ApplyCoinProgress(coinAmount);
-        }
-
-        private void RefreshCoinView()
-        {
-            if (CoinManager.Instance == null)
-                return;
-
-            ApplyCoinProgress(CoinManager.Instance.totalCoin);
-        }
-
-        private void ApplyCoinProgress(long currentCoin)
-        {
-            SetText(currentCoinText, CurrentCoinPrefix + "\n" + currentCoin.ToString("N0"));
-
-            if (coinSlider != null)
-            {
-                coinSlider.minValue = 0f;
-                coinSlider.maxValue = 1f;
-
-                if (requireLevelupCoin <= 0)
-                    coinSlider.value = 0f;
-                else
-                    coinSlider.value = Mathf.Clamp01((float)currentCoin / requireLevelupCoin);
-            }
-
-            if (upgradeButton != null)
-            {
-                // 필수 업그레이드 3종 완료 && 마을 레벨업 비용 충족일 때만 버튼 표시
-                bool canUpgrade = requiredUpgradesComplete
-                    && requireLevelupCoin > 0
-                    && currentCoin >= requireLevelupCoin;
-                upgradeButton.gameObject.SetActive(canUpgrade);
-            }
+            // VillageUpgrade의 toolProductValue 표기와 동일 (도구 효율 배율)
+            SetText(autoProductBonusText, "Bonus : " + autoProductBonus.ToString("0.#") + " %");
         }
 
         private static void SetText(TMP_Text target, string value)
