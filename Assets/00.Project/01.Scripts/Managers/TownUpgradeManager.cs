@@ -163,4 +163,28 @@ public class TownUpgradeManager : MonoBehaviour
         toolEfficiencyUpgrade.SetLevel(toolEfficiencyLevel);
         ApplyEarnProcessorEffects();
     }
+
+    //-----------------------26.07.29 KDH-----------------------------
+    public bool DebugForceUpgradeClick()
+    {
+        return DebugForceUpgrade(clickUpgrade, ApplyEarnProcessorEffects);
+    }
+    public bool DebugForceUpgradeTyping()
+    {
+        return DebugForceUpgrade(typingUpgrade, ApplyEarnProcessorEffects);
+    }
+    public bool DebugForceUpgradeToolEfficiency()
+    {
+        return DebugForceUpgrade(toolEfficiencyUpgrade, null);
+    }
+    private bool DebugForceUpgrade(UpgradeTrack track, System.Action onLeveledUp)
+    {
+        // 코인/CoinManager 검사 없음. 최대 레벨만 막음.
+        if (track.IsMaxLevel) return false;
+
+        track.TryLevelUp();
+        onLeveledUp?.Invoke();
+        return true;
+    }
+    //------------------------------------------------------------------
 }
