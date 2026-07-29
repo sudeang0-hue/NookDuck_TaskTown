@@ -104,13 +104,17 @@ namespace UI
             BindEditButton();
             BindConfirmButton();
             SubscribeEvents();
+            SubscribePanelEvents();
         }
 
         private void OnDisable()
         {
+            // 컴포넌트 비활성 시에도 Edit 잔존 방지 (패널만 닫힌 경우는 PanelClosed에서 처리)
+            DiscardEditOnPanelLeave();
             UnbindEditButton();
             UnbindConfirmButton();
             UnsubscribeEvents();
+            UnsubscribePanelEvents();
         }
 
         private void OnDestroy()
@@ -118,6 +122,7 @@ namespace UI
             UnbindEditButton();
             UnbindConfirmButton();
             UnsubscribeEvents();
+            UnsubscribePanelEvents();
         }
 
         public int GetUnlockedSlotCount()
@@ -188,12 +193,14 @@ namespace UI
         {
             ShowPanel();
             isPanelOpen = true;
+            // 패널 재오픈 시 Edit 잔존 없이 확정본으로 표시
+            DiscardEditOnPanelLeave();
             RefreshUI();
         }
 
         public void ClosePanel()
         {
-            CancelEditMode();
+            DiscardEditOnPanelLeave();
             HideSetAnimalListPanel();
             HidePanel();
             isPanelOpen = false;
@@ -250,6 +257,59 @@ namespace UI
             SetConfirmButtonActive(false);
             ApplyEditModeToSlots();
             RefreshUI();
+        }
+
+        /// <summary>
+        /// Confirm 없이 패널을 떠날 때: 수정 중 드래프트를 버리고 Edit/Confirm 이전 상태로 되돌립니다.
+        /// </summary>
+        private void DiscardEditOnPanelLeave()
+        {
+            if (!isEditMode && editDraftIds == null)
+            {
+                SetConfirmButtonActive(false);
+                return;
+            }
+
+            Debug.Log(
+                "[VillageAnimalSetUI.DiscardEditOnPanelLeave] 패널 이탈 — Confirm 없이 Edit 초기화",
+                this);
+
+            CancelEditMode();
+        }
+
+        private void HandlePanelOpened()
+        {
+            isPanelOpen = true;
+            DiscardEditOnPanelLeave();
+            RefreshUI();
+        }
+
+        private void HandlePanelClosed()
+        {
+            // 탭/메뉴가 UIPanelWindow.ClosePanel만 호출해도 Edit이 남지 않도록 처리
+            DiscardEditOnPanelLeave();
+            HideSetAnimalListPanel();
+            isPanelOpen = false;
+        }
+
+        private void SubscribePanelEvents()
+        {
+            if (villageAnimalSetPanel == null)
+                return;
+
+            villageAnimalSetPanel.OnPanelOpened -= HandlePanelOpened;
+            villageAnimalSetPanel.OnPanelOpened += HandlePanelOpened;
+            villageAnimalSetPanel.OnPanelClosed -= HandlePanelClosed;
+            villageAnimalSetPanel.OnPanelClosed += HandlePanelClosed;
+        }
+
+        private void UnsubscribePanelEvents()
+        {
+            if (villageAnimalSetPanel == null)
+                return;
+
+            villageAnimalSetPanel.OnPanelOpened -= HandlePanelOpened;
+            villageAnimalSetPanel.OnPanelClosed -= HandlePanelClosed;
         }
 
         /// <summary>
