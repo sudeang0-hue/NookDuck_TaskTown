@@ -91,6 +91,73 @@ namespace TaskTown.EditorTests.Tutorial
         }
 
         [Test]
+        public void Punch_진행중연속호출해도_Hover기준Scale이누적되지않는다()
+        {
+            GameObject bubble = new(
+                "SpeechBubble",
+                typeof(RectTransform),
+                typeof(TutorialBubbleHoverTween));
+            RectTransform rectTransform = bubble.GetComponent<RectTransform>();
+            TutorialBubbleHoverTween hoverTween = bubble.GetComponent<TutorialBubbleHoverTween>();
+
+            SerializedObject serialized = new(hoverTween);
+            serialized.FindProperty("scaleTarget").objectReferenceValue = rectTransform;
+            serialized.FindProperty("expandDuration").floatValue = 0f;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+
+            hoverTween.CollapseImmediate();
+            hoverTween.OnPointerEnter(null);
+
+            // 이전 Punch가 커진 중간 Scale에서 중단된 상황을 반복해 재현합니다.
+            for (int index = 0; index < 5; index++)
+            {
+                hoverTween.PlayPunch();
+                rectTransform.localScale = Vector3.one * (1.05f + index * 0.03f);
+            }
+
+            hoverTween.PlayPunch();
+            Assert.AreEqual(Vector3.one, rectTransform.localScale);
+
+            Tween tween = GetScaleTween(hoverTween);
+            Assert.IsNotNull(tween);
+            tween.Complete();
+            Assert.AreEqual(Vector3.one, rectTransform.localScale);
+
+            hoverTween.CollapseImmediate();
+            Object.DestroyImmediate(bubble);
+        }
+
+        [Test]
+        public void Punch_축소상태에서재호출해도_CollapsedScale로복원한다()
+        {
+            GameObject bubble = new(
+                "SpeechBubble",
+                typeof(RectTransform),
+                typeof(TutorialBubbleHoverTween));
+            RectTransform rectTransform = bubble.GetComponent<RectTransform>();
+            TutorialBubbleHoverTween hoverTween = bubble.GetComponent<TutorialBubbleHoverTween>();
+
+            SerializedObject serialized = new(hoverTween);
+            serialized.FindProperty("scaleTarget").objectReferenceValue = rectTransform;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+
+            hoverTween.CollapseImmediate();
+            hoverTween.PlayPunch();
+            rectTransform.localScale = Vector3.one * 0.62f;
+
+            hoverTween.PlayPunch();
+            Assert.AreEqual(Vector3.one * 0.5f, rectTransform.localScale);
+
+            Tween tween = GetScaleTween(hoverTween);
+            Assert.IsNotNull(tween);
+            tween.Complete();
+            Assert.AreEqual(Vector3.one * 0.5f, rectTransform.localScale);
+
+            hoverTween.CollapseImmediate();
+            Object.DestroyImmediate(bubble);
+        }
+
+        [Test]
         public void StepChanged_퀘스트완료시만_Punch를실행한다()
         {
             GameObject controllerObject = new(
