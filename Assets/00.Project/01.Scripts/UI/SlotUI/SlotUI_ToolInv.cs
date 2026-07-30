@@ -1,8 +1,8 @@
-/* ???? ???? ?????? ??? ??��? ?????
- * ???? ???? ???
- * ??? ???? ???
- * ?????? ????? ??? ????
- * ???????? ??? ??????
+/* 개별 도구 슬롯의 화면 표시를 담당함
+ * 현재 수량 표시
+ * 필요 수량 표시
+ * 레벨업 가능시 버튼 활성화
+ * 불가능하면 버튼 비활성화
  */
 
 using System;
@@ -21,39 +21,39 @@ namespace KAY
         [Header("References")]
         [SerializeField] private InventoryManager_Tool toolInventory;
 
-        [Header("??? ???? ??????")]
+        [Header("해당 도구 데이터")]
         [SerializeField] private Image toolIconImage;
         [SerializeField] private TMP_Text toolNameText;
         [SerializeField] private TMP_Text currentCountText;
         [SerializeField] private TMP_Text requireCountText;
 
-        [Header("???? ?��??? ???? UIController_ToolInvPage")]
-        [Tooltip("???? ?????? ?? ??? ?????")]
+        [Header("도구 인벤토리 상세 UIController_ToolInvPage")]
+        [Tooltip("현재 레벨의 별 모양 이미지")]
         [SerializeField] private Image levelImage;
 
-        [Header("?????? ???")]
+        [Header("레벨업 버튼")]
         [SerializeField] private Button levelupButton;
 
-        [Tooltip("?????? ?????? ?????? ??????")]
+        [Tooltip("현재 이 도구에 배치된 동물 아이콘")]
         [SerializeField] private Image setupAnimal;
-        [Tooltip("?? ?????? ?????? ?????? ??????")]
+        [Tooltip("이 도구의 특화 동물 아이콘")]
         [SerializeField] private Image findspecialAnimal;
-        //[Tooltip("?? ?????? ?��??? ???�� ????")]
+        //[Tooltip("이 도구의 시간당 생산량 텍스트")]
         //[SerializeField] private TMP_Text outoCoinPerHourText;
 
-        [Header("?????? ?????")]
-        [Tooltip("1?? ~ 5?? ?????. ???? ?��?")]
+        [Header("레벨업 이미지")]
+        [Tooltip("1성 ~ 5성 이미지. 단일 컬러")]
         [SerializeField] private Sprite[] levelSprites;
 
         private SlotData_Tool currentSlotData;
 
-        [Header("??? ???? ???")]
+        [Header("클릭 범위 버튼")]
         [SerializeField] private Button coverButton;
 
 
         private UIController_ToolInvPage toolInvPageController;
 
-        // ?????? ??��??? ??????��? ???? ?? ???
+        // 필요하면 외부에서 콜백으로도 받을 수 있게
         private Action<SlotData_Tool> onSelected;
 
         private void Awake()
@@ -66,7 +66,7 @@ namespace KAY
                 levelupButton.gameObject.SetActive(false);
             }
 
-            //--------------------------26.07.23 KDH ????--------------------------------
+            //--------------------------26.07.23 KDH 수정--------------------------------
             if (coverButton == null)
                 coverButton = GetComponentInChildren<Button>(true);
 
@@ -95,28 +95,28 @@ namespace KAY
 
             if (slotData == null)
             {
-                Debug.LogWarning("[SlotUI_ToolInv] ?????? ???? ??????? ???????.", this);
+                Debug.LogWarning("[SlotUI_ToolInv] 초기화할 슬롯 데이터가 없습니다.", this);
                 return;
             }
             if (coverButton == null)
-                Debug.LogWarning("[SlotUI_ToolInv] coverButton?? ??????? ???????.", this);
+                Debug.LogWarning("[SlotUI_ToolInv] coverButton이 연결되지 않았습니다.", this);
 
             currentSlotData = slotData;
             RefreshView();
         }
 
-        //------------------------26.07.23 KDH ????----------------------------------------
+        //------------------------26.07.23 KDH 수정----------------------------------------
         private void HandleSlotClicked()
         {
             if (currentSlotData == null)
             {
-                Debug.LogWarning("[SlotUI_ToolInv] ???? ????? ???? ??????? ???????.", this);
+                Debug.LogWarning("[SlotUI_ToolInv] 현재 슬롯에 도구 데이터가 없습니다.", this);
                 return;
             }
 
             if (toolInvPageController == null)
             {
-                Debug.LogWarning("[SlotUI_ToolInv] UIController_ToolInvPage?? ??????? ???????.", this);
+                Debug.LogWarning("[SlotUI_ToolInv] UIController_ToolInvPage가 연결되지 않았습니다.", this);
                 return;
             }
 
@@ -129,15 +129,15 @@ namespace KAY
 
             toolInvPageController.OpenToolInvPage(currentSlotData);
 
-            //// 1) ??? ???????? ToolId ????
+            //// 1) 배치 컨트롤러에 ToolId 전달
             //UIController_ToolPlacement placementUi = FindFirstObjectByType<UIController_ToolPlacement>();
 
             //if (placementUi != null) placementUi.SetSelectedTool(currentSlotData.ToolId);
 
-            //// 2) (????) ??? ??????? ??? ?????? ???
+            //// 2) (선택) 다른 쪽에서도 듣고 싶으면 콜백
             //onSelected?.Invoke(currentSlotData);
 
-            //Debug.Log($"[SlotUI_ToolInv] ?????: {currentSlotData.ToolId}");
+            //Debug.Log($"[SlotUI_ToolInv] 선택됨: {currentSlotData.ToolId}");
 
         }
         //-----------------------------------------------------------------------------------
@@ -146,7 +146,7 @@ namespace KAY
         {
             if (slotData == null)
             {
-                Debug.LogWarning("[SlotUI_ToolInv] ?????? ???? ??????? ???????.", this);
+                Debug.LogWarning("[SlotUI_ToolInv] 갱신할 슬롯 데이터가 없습니다.", this);
                 return;
             }
 
@@ -173,7 +173,7 @@ namespace KAY
             SetBaseInfo(data.Id, data.DisplayName, data.Icon);
             ApplyIconAndName(data);
 
-            // ??? 1???? ?????? ??? ?????? UI?? ??? (??: ???? 1 ?? 0/4)
+            // 본체 1개를 제외한 재료 수량을 UI에 표시 (예: 내부 1 → 0/4)
             if (currentCountText != null)
                 currentCountText.text = Mathf.Max(0, currentSlotData.CurrentCount - 1).ToString();
 
@@ -192,7 +192,7 @@ namespace KAY
         }
 
         /// <summary>
-        /// ???? ???? / ?? ???? ??? ???? ??????? ????????.
+        /// 동물 장착 / 특화 동물 해금 상태 아이콘만 갱신합니다.
         /// </summary>
         public void RefreshStatusIcons()
         {
@@ -216,8 +216,8 @@ namespace KAY
         }
 
         /// <summary>
-        /// ??? ???? ???????? ???? ????? ????? ID?? ??????.
-        /// ???? ??? ????? ????? DisplayName ???? ????
+        /// 슬롯 아이콘과 이름 텍스트를 적용합니다. 현재는 이름 대신 ID를 표시합니다.
+        /// 필요하면 아래 DisplayName 주석을 사용하세요.
         /// </summary>
         private void ApplyIconAndName(ToolDataSO data)
         {
@@ -247,7 +247,7 @@ namespace KAY
         {
             if (currentSlotData == null)
             {
-                Debug.LogWarning("[SlotUI_ToolInv] ???????? ???? ??????? ???????.", this);
+                Debug.LogWarning("[SlotUI_ToolInv] 레벨업할 슬롯 데이터가 없습니다.", this);
                 return;
             }
 
@@ -255,7 +255,7 @@ namespace KAY
 
             if (toolInventory == null)
             {
-                Debug.LogWarning("[SlotUI_ToolInv] InventoryManager_Tool?? ??????? ???????.", this);
+                Debug.LogWarning("[SlotUI_ToolInv] InventoryManager_Tool이 연결되지 않았습니다.", this);
                 return;
             }
 
@@ -267,7 +267,7 @@ namespace KAY
             if (levelupButton != null)
                 levelupButton.onClick.RemoveListener(OnClickLevelUp);
 
-            //-----------------------26.07.23 KDH ????----------------------------------
+            //-----------------------26.07.23 KDH 수정----------------------------------
             if (coverButton != null)
                 coverButton.onClick.RemoveListener(HandleSlotClicked);
             //----------------------------------------------------------

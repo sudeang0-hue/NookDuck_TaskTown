@@ -108,7 +108,7 @@ namespace TaskTown.KDH
 
                 if (string.IsNullOrWhiteSpace(slot.ToolId))
                 {
-                    Debug.LogWarning("[InventoryManager_Tool] ToolId�� ��� �ִ� ������ �����մϴ�.");
+                    Debug.LogWarning("[InventoryManager_Tool] ToolId가 비어 있는 슬롯을 제거합니다.");
 
                     toolSlotsList.RemoveAt(i);
                     continue;
@@ -116,7 +116,7 @@ namespace TaskTown.KDH
 
                 if (toolSlotsDic.ContainsKey(slot.ToolId))
                 {
-                    Debug.LogWarning($"[InventoryManager_Tool] �ߺ� ToolId ������ �����մϴ�: {slot.ToolId}");
+                    Debug.LogWarning($"[InventoryManager_Tool] 중복 ToolId 슬롯을 제거합니다: {slot.ToolId}");
 
                     toolSlotsList.RemoveAt(i);
                     continue;
@@ -124,7 +124,7 @@ namespace TaskTown.KDH
 
                 toolSlotsDic.Add(slot.ToolId, slot);
 
-                // ���� ��ġ ��� �ý��� ����
+                // 성장 수치 계산 시스템 연결
                 RefreshSlotGrowthData(slot);
             }
         }
@@ -138,7 +138,7 @@ namespace TaskTown.KDH
 
             if (toolDatabase == null)
             {
-                Debug.LogWarning("[InventoryManager_Tool] ToolDatabase�� ������� �ʾҽ��ϴ�.");
+                Debug.LogWarning("[InventoryManager_Tool] ToolDatabase가 연결되지 않았습니다.");
                 return null;
             }
 
@@ -250,13 +250,13 @@ namespace TaskTown.KDH
         {
             if (!TryGetToolSlot(toolId, out SlotData_Tool slot))
             {
-                Debug.LogWarning($"[InventoryManager_Tool] �������� ���� �����Դϴ�: {toolId}");
+                Debug.LogWarning($"[InventoryManager_Tool] 존재하지 않는 슬롯입니다: {toolId}");
                 return false;
             }
 
             if (slot.IsMaxLevel)
             {
-                Debug.Log($"[InventoryManager_Tool] �̹� �ִ� ������ �����Դϴ�: {toolId}");
+                Debug.Log($"[InventoryManager_Tool] 이미 최대 레벨인 도구입니다: {toolId}");
                 return false;
             }
 
@@ -284,19 +284,19 @@ namespace TaskTown.KDH
 
             NotifySlotChanged(slot);
 
-            Debug.Log($"[InventoryManager_Tool] ���� ������ ����: {toolId} / ���� ���� {slot.Level}");
+            Debug.Log($"[InventoryManager_Tool] 도구 레벨업 성공: {toolId} / 현재 레벨 {slot.Level}");
 
             return true;
         }
 
         /// <summary>
-        /// ������ ��ġ ���·� �����մϴ�.
+        /// 도구를 배치 상태로 설정합니다.
         /// </summary>
         public bool TrySetTool(string toolId)
         {
             if (!TryGetToolSlot(toolId, out SlotData_Tool slot))
             {
-                Debug.LogWarning($"[InventoryManager_Tool] �������� ���� �����Դϴ�: {toolId}");
+                Debug.LogWarning($"[InventoryManager_Tool] 존재하지 않는 슬롯입니다: {toolId}");
                 return false;
             }
 
@@ -307,13 +307,13 @@ namespace TaskTown.KDH
         }
 
         /// <summary>
-        /// ���� ��ġ�� �����մϴ�.
+        /// 도구 배치를 해제합니다.
         /// </summary>
         public bool TryUnsetTool(string toolId)
         {
             if (!TryGetToolSlot(toolId, out SlotData_Tool slot))
             {
-                Debug.LogWarning($"[InventoryManager_Tool] �������� ���� �����Դϴ�: {toolId}");
+                Debug.LogWarning($"[InventoryManager_Tool] 존재하지 않는 슬롯입니다: {toolId}");
                 return false;
             }
 
@@ -325,19 +325,19 @@ namespace TaskTown.KDH
         }
 
         /// <summary>
-        /// ������ ������ ��ġ�մϴ�.
+        /// 도구에 동물을 배치합니다.
         /// </summary>
         public bool TryAssignAnimalToTool(string toolId, string animalId)
         {
             if (!TryGetToolSlot(toolId, out SlotData_Tool slot))
             {
-                Debug.LogWarning($"[InventoryManager_Tool] �������� ���� �����Դϴ�: {toolId}");
+                Debug.LogWarning($"[InventoryManager_Tool] 존재하지 않는 슬롯입니다: {toolId}");
                 return false;
             }
 
             if (string.IsNullOrWhiteSpace(animalId))
             {
-                Debug.LogWarning("[InventoryManager_Tool] ��ġ�� AnimalId�� ��� �ֽ��ϴ�.");
+                Debug.LogWarning("[InventoryManager_Tool] 배치할 AnimalId가 비어 있습니다.");
                 return false;
             }
 
@@ -366,13 +366,13 @@ namespace TaskTown.KDH
         }
 
         /// <summary>
-        /// ������ ��ġ�� ������ �����մϴ�.
+        /// 도구에 배치된 동물을 해제합니다.
         /// </summary>
         public bool TryRemoveAnimalFromTool(string toolId)
         {
             if (!TryGetToolSlot(toolId, out SlotData_Tool slot))
             {
-                Debug.LogWarning($"[InventoryManager_Tool] �������� ���� �����Դϴ�: {toolId}");
+                Debug.LogWarning($"[InventoryManager_Tool] 존재하지 않는 슬롯입니다: {toolId}");
                 return false;
             }
 
@@ -447,7 +447,7 @@ namespace TaskTown.KDH
 
                 if (toolSlotsDic.ContainsKey(saveData.tooldata.Id))
                 {
-                    Debug.LogWarning($"[InventoryManager_Tool] ���� �����Ϳ� �ߺ� ID�� �ֽ��ϴ�: {saveData.tooldata.Id}");
+                    Debug.LogWarning($"[InventoryManager_Tool] 저장 데이터에 중복 ID가 있습니다: {saveData.tooldata.Id}");
                     continue;
                 }
 
