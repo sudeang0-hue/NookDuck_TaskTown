@@ -14,6 +14,10 @@ namespace TaskTown.KDH
         [SerializeField] private MonoBehaviour coinWalletSource;
         private ICoinWallet CoinWallet => coinWalletSource as ICoinWallet;
 
+        [Tooltip("IEndlessModeProvider를 구현한 컴포넌트(VillageUpgradeUI_Manager)를 연결합니다. 비워두면 일반 모드로 취급합니다.")]
+        [SerializeField] private MonoBehaviour endlessModeProviderSource;
+        private IEndlessModeProvider endlessModeProvider;
+
         //인벤토리 최대 슬롯 수
         // public int maxSlots = 999;
 
@@ -48,7 +52,15 @@ namespace TaskTown.KDH
 
             DontDestroyOnLoad(gameObject);
 
+            endlessModeProvider = endlessModeProviderSource as IEndlessModeProvider;
+
             InitializeDictionary();
+        }
+
+        // #19: 엔드리스 모드에서는 동물 개별 레벨 5 상한을 해제합니다.
+        private bool IsEndlessMode()
+        {
+            return endlessModeProvider != null && endlessModeProvider.IsEndlessMode;
         }
 
         /// <summary>
@@ -185,7 +197,7 @@ namespace TaskTown.KDH
         {
             if (!TryGetAnimalSlot(animalId, out SlotData_Animal slot)) return false;
 
-            if (!slot.CanLevelUp()) return false;
+            if (!slot.CanLevelUp(IsEndlessMode())) return false;
 
             long coinCost = slot.GetLevelUpCoinCost();
 
@@ -206,7 +218,8 @@ namespace TaskTown.KDH
                 return false;
             }
 
-            if (slot.IsMaxLevel)
+            bool endless = IsEndlessMode();
+            if (!endless && slot.IsMaxLevel)
             {
                 Debug.Log($"[InventoryManager_Animal] 이미 최대 레벨인 동물입니다: {animalId}");
                 return false;
@@ -223,13 +236,13 @@ namespace TaskTown.KDH
             }
 
             // 재료 소모 후 레벨업 (본체 1개는 유지)
-            if (!slot.TryConsumeForLevelUp())
+            if (!slot.TryConsumeForLevelUp(endless))
             {
                 Debug.Log($"[InventoryManager_Animal] 재료 소모 실패: {animalId}");
                 return false;
             }
 
-            slot.AnimalLevelUp();
+            slot.AnimalLevelUp(endless);
 
             // 다음 레벨 요구치 갱신
             RefreshSlotGrowthData(slot);
@@ -319,7 +332,12 @@ namespace TaskTown.KDH
 
             int requiredCount = LevelUpRequirementCalculator.GetRequiredDuplicateCount(slot.Level);
 
-            slot.ApplyGrowthData(requiredCount, slot.LevelUpCost, false);
+            // 기존엔 maxLevel 인자가 항상 false로 고정되어 있어서, AnimalLevelUp()이 레벨5에서 설정한
+            // isMaxLevel을 이 호출이 곧바로 다시 풀어버리는 버그가 있었습니다(#19 작업 중 발견,
+            // InventoryManager_Tool과 동일한 버그). 실제 레벨 기준으로 다시 계산하도록 수정 -
+            // 엔드리스 모드에서는 항상 false(상한 없음).
+            bool isMax = !IsEndlessMode() && slot.Level >= 5;
+            slot.ApplyGrowthData(requiredCount, slot.LevelUpCost, isMax);
         }
 
         /// <summary>

@@ -12,7 +12,7 @@ using UnityEngine;
 
 namespace UI
 {
-    public class VillageUpgradeUI_Manager : MonoBehaviour, ITownLevelProvider
+    public class VillageUpgradeUI_Manager : MonoBehaviour, ITownLevelProvider, IEndlessModeProvider
     {
         private const int RequiredUpgradeTotal = 3;
 
@@ -30,6 +30,10 @@ namespace UI
 
         [Header("UI 전용 마을 레벨")]
         [SerializeField] private int uiTownLevel = 1;
+
+        [Header("엔드리스 모드 (#19 사전 작업)")]
+        [Tooltip("레벨10 완주 후 '엔드리스로 계속'을 선택하면 켜집니다. 켜지면 업그레이드/동물·도구 레벨 상한이 전부 해제됩니다.")]
+        [SerializeField] private bool isEndlessMode = false;
 
         private bool clickDone;
         private bool typingDone;
@@ -61,6 +65,12 @@ namespace UI
         /// 참조할 때 이 컴포넌트를 그대로 연결할 수 있도록).
         /// </summary>
         public int CurrentTownLevel => uiTownLevel;
+
+        /// <summary>
+        /// IEndlessModeProvider 구현. 켜져 있으면 TownUpgradeManager/InventoryManager_Tool/Animal이
+        /// 각자의 레벨 상한 체크를 건너뜁니다.
+        /// </summary>
+        public bool IsEndlessMode => isEndlessMode;
 
         private void Awake()
         {
@@ -333,6 +343,25 @@ namespace UI
         {
             uiTownLevel = Mathf.Max(1, level);
             ResetCycleAndRefreshUI(); // 내부에서 RefreshAllUI → UIController 갱신 + OnVillageUpgradeStateChanged
+        }
+        //--------------------------------------26.07.30 KNW---------------------------------------------------------
+        /// <summary>
+        /// 레벨10 완주 후 "엔드리스로 계속" 선택 시 호출합니다(#19). 완주 판정/선택 UI는 별도 작업으로 아직
+        /// 이 메서드를 호출하는 곳이 없습니다 - 지금은 시그니처만 준비해둡니다.
+        /// </summary>
+        public void EnableEndlessMode()
+        {
+            isEndlessMode = true;
+            RefreshAllUI();
+        }
+
+        /// <summary>
+        /// 디버그/테스트 전용. 완주 선택 UI 없이 엔드리스 모드를 강제로 켜고 끕니다.
+        /// </summary>
+        public void DebugSetEndlessMode(bool value)
+        {
+            isEndlessMode = value;
+            RefreshAllUI();
         }
         //--------------------------------------26.07.29 KDH---------------------------------------------------------
         /// <summary>
