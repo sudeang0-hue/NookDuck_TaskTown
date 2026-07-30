@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using TaskTown.Gacha;
 using TaskTown.Gacha.Demo;
+using UI;
 using UnityEngine;
 
 namespace TaskTown.KDH
@@ -22,7 +23,7 @@ namespace TaskTown.KDH
         [Tooltip("CoinManager를 연결합니다(코인 저장/복원용).")]
         [SerializeField] private CoinManager coinManager;
 
-        [Tooltip("ITownLevelProvider를 구현한 컴포넌트(예: DemoTownLevelProvider). 마을 레벨 저장/복원용.")]
+        [Tooltip("ITownLevelProvider 구현체. 마을 관리 패널은 VillageUpgradeUI_Manager를 연결하세요.")]
         [SerializeField] private MonoBehaviour townLevelProviderSource;
 
         private ITownLevelProvider TownLevelProvider => townLevelProviderSource as ITownLevelProvider;
@@ -93,7 +94,11 @@ namespace TaskTown.KDH
             if (coinManager != null)
                 data.coins = coinManager.Balance;
 
-            if (TownLevelProvider != null)
+            // 마을 레벨: 관리 패널이 있으면 그쪽을 진실 소스로 저장
+            VillageUpgradeUI_Manager villageUpgradeForSave = FindFirstObjectByType<VillageUpgradeUI_Manager>();
+            if (villageUpgradeForSave != null)
+                data.townLevel = villageUpgradeForSave.UiTownLevel;
+            else if (TownLevelProvider != null)
                 data.townLevel = TownLevelProvider.CurrentTownLevel;
 
             if (RealProductionTicker.Instance != null)
@@ -129,6 +134,16 @@ namespace TaskTown.KDH
                     if (slot == null || string.IsNullOrEmpty(slot.ToolId))
                         continue;
 
+                    // data.tools.Add(new ToolSaveEntry
+                    // {
+                    //     id = slot.ToolId,
+                    //     level = slot.Level,
+                    //     count = slot.CurrentCount,
+                    //     currentSet = slot.CurrentSet,
+                    //     currentAnimalSet = slot.CurrentAnimalSet,
+                    //     currentAnimalId = slot.CurrentAnimalId
+                    // });
+                    // 26.07.29. KAY 수정
                     data.tools.Add(new ToolSaveEntry
                     {
                         id = slot.ToolId,
@@ -136,7 +151,8 @@ namespace TaskTown.KDH
                         count = slot.CurrentCount,
                         currentSet = slot.CurrentSet,
                         currentAnimalSet = slot.CurrentAnimalSet,
-                        currentAnimalId = slot.CurrentAnimalId
+                        currentAnimalId = slot.CurrentAnimalId,
+                        hasRevealedSpecialAnimal = slot.HasRevealedSpecialAnimal
                     });
                 }
             }
@@ -174,16 +190,15 @@ namespace TaskTown.KDH
             if (coinManager != null)
                 coinManager.SetCoin(data.coins);
 
-            // 마을 레벨 (현재는 임시 DemoTownLevelProvider만 세터를 가짐)
-            if (townLevelProviderSource is DemoTownLevelProvider demoProvider)
-                demoProvider.SetLevel(data.townLevel);
-
             // 클릭/타이핑/도구효율 업그레이드 레벨 복원 (TownUpgradeManager, 이슈 #72)
             if (TownUpgradeManager.Instance != null)
             {
                 TownUpgradeManager.Instance.LoadLevels(
                     data.clickUpgradeLevel, data.typingUpgradeLevel, data.toolEfficiencyUpgradeLevel);
             }
+
+            // 마을 레벨 복원: 요소 레벨 적용 후 UI에 townLevel 반영 (사이클 플래그는 추후 세이브)
+            ApplyTownLevelFromSave(data.townLevel);
 
             // 동물 인벤토리: 저장된 ID로 SO를 다시 조회해서 복원
             InventoryManager_Animal animalManager = InventoryManager_Animal.Instance;
@@ -213,9 +228,14 @@ namespace TaskTown.KDH
                     if (so == null)
                         continue;
 
+                    // toolSaves.Add(new SlotSaveData_Tool(
+                    //     so, entry.level, entry.count,
+                    //     entry.currentSet, entry.currentAnimalSet, entry.currentAnimalId));
+                    // 26.07.29. KAY 수정
                     toolSaves.Add(new SlotSaveData_Tool(
                         so, entry.level, entry.count,
-                        entry.currentSet, entry.currentAnimalSet, entry.currentAnimalId));
+                        entry.currentSet, entry.currentAnimalSet, entry.currentAnimalId,
+                        entry.hasRevealedSpecialAnimal));
                 }
 
                 toolManager.LoadSaveData(toolSaves);
@@ -240,6 +260,29 @@ namespace TaskTown.KDH
         public TutorialSaveData GetTutorialProgressCopy()
         {
             return tutorialProgress.Copy();
+        }
+
+        /// <summary>
+        /// 세이브 townLevel을 마을 관리 패널(및 하위 호환 Demo)에 적용합니다.
+        /// </summary>
+        private void ApplyTownLevelFromSave(int townLevel)
+        {
+            int level = Mathf.Max(1, townLevel);
+
+            if (townLevelProviderSource is VillageUpgradeUI_Manager villageFromInspector)
+            {
+                villageFromInspector.SetTownLevelFromSave(level);
+            }
+            else
+            {
+                VillageUpgradeUI_Manager villageUpgrade = FindFirstObjectByType<VillageUpgradeUI_Manager>();
+                if (villageUpgrade != null)
+                    villageUpgrade.SetTownLevelFromSave(level);
+            }
+
+            // DemoTownLevelProvider가 따로 있으면 동기화 (가챠 등 기존 연결 유지)
+            if (townLevelProviderSource is DemoTownLevelProvider demoProvider)
+                demoProvider.SetLevel(level);
         }
 
         // 엔딩 후 난이도 리셋 등에서 진행 데이터를 완전히 초기화할 때 사용합니다.

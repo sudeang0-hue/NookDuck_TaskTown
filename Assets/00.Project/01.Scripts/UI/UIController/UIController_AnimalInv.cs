@@ -21,14 +21,24 @@ namespace UI
         [Header("동물 상세 페이지 (씬의 Animal_Inv_Page)")]
         [SerializeField] private UIController_AnimalInvPage animalInvPageController;
 
+        [Header("마을 동물 배치 (미연결 시 Find)")]
+        private VillageAnimalSetUI_Manager villageAnimalSet;
+
         [Header("인스펙터 확인용 인벤토리 리스트")]
         [SerializeField] private List<SlotUI_AnimalInv> slotMaplist = new List<SlotUI_AnimalInv>();
         private readonly Dictionary<string, SlotUI_AnimalInv> slotMap = new Dictionary<string, SlotUI_AnimalInv>();
+
+        private InventoryManager_Tool toolInventory;
+        private bool subscribedToToolInventory;
+        private bool subscribedToVillagePlacement;
 
         private void Awake()
         {
             if (animalInventory == null)
                 animalInventory = FindFirstObjectByType<InventoryManager_Animal>();
+
+            ResolveToolInventory();
+            ResolveVillageAnimalSet();
         }
 
         private void OnEnable()
@@ -42,6 +52,9 @@ namespace UI
             animalInventory.OnAnimalInventoryChanged += SyncAllSlots;
             animalInventory.OnAnimalSlotChanged += RefreshSlot;
 
+            SubscribeToolInventoryEvents();
+            SubscribeVillagePlacementEvents();
+
             // 컨트롤러는 상시 활성 매니저에 있으므로, Content가 켜져 있을 때만 즉시 동기화
             SyncAllSlots();
         }
@@ -53,6 +66,8 @@ namespace UI
         public void NotifyPanelOpened()
         {
             animalInvPageController?.CloseAnimalInvPage();
+            SubscribeToolInventoryEvents();
+            SubscribeVillagePlacementEvents();
             SyncAllSlots();
         }
 
@@ -67,11 +82,14 @@ namespace UI
 
         private void OnDisable()
         {
-            if (animalInventory == null)
-                return;
+            if (animalInventory != null)
+            {
+                animalInventory.OnAnimalInventoryChanged -= SyncAllSlots;
+                animalInventory.OnAnimalSlotChanged -= RefreshSlot;
+            }
 
-            animalInventory.OnAnimalInventoryChanged -= SyncAllSlots;
-            animalInventory.OnAnimalSlotChanged -= RefreshSlot;
+            UnsubscribeToolInventoryEvents();
+            UnsubscribeVillagePlacementEvents();
         }
 
         private bool TryResolveInventory()
@@ -103,6 +121,78 @@ namespace UI
             }
 
             return true;
+        }
+
+        private void ResolveToolInventory()
+        {
+            if (toolInventory == null)
+                toolInventory = InventoryManager_Tool.Instance;
+        }
+
+        private void ResolveVillageAnimalSet()
+        {
+            if (villageAnimalSet == null)
+                villageAnimalSet = FindFirstObjectByType<VillageAnimalSetUI_Manager>();
+        }
+
+        private void SubscribeToolInventoryEvents()
+        {
+            ResolveToolInventory();
+            if (toolInventory == null || subscribedToToolInventory)
+                return;
+
+            toolInventory.OnToolSlotChanged += HandleToolSlotChanged;
+            toolInventory.OnToolInventoryChanged += RefreshAllStatusIcons;
+            subscribedToToolInventory = true;
+        }
+
+        private void UnsubscribeToolInventoryEvents()
+        {
+            if (toolInventory == null || !subscribedToToolInventory)
+                return;
+
+            toolInventory.OnToolSlotChanged -= HandleToolSlotChanged;
+            toolInventory.OnToolInventoryChanged -= RefreshAllStatusIcons;
+            subscribedToToolInventory = false;
+        }
+
+        private void SubscribeVillagePlacementEvents()
+        {
+            ResolveVillageAnimalSet();
+            if (villageAnimalSet == null || subscribedToVillagePlacement)
+                return;
+
+            villageAnimalSet.OnVillagePlacementChanged += RefreshAllStatusIcons;
+            subscribedToVillagePlacement = true;
+        }
+
+        private void UnsubscribeVillagePlacementEvents()
+        {
+            if (villageAnimalSet == null || !subscribedToVillagePlacement)
+                return;
+
+            villageAnimalSet.OnVillagePlacementChanged -= RefreshAllStatusIcons;
+            subscribedToVillagePlacement = false;
+        }
+
+        private void HandleToolSlotChanged(SlotData_Tool _)
+        {
+            RefreshAllStatusIcons();
+        }
+
+        /// <summary>
+        /// 도구 장착/마을 배치 변경 시 슬롯 상태 아이콘만 갱신합니다.
+        /// </summary>
+        private void RefreshAllStatusIcons()
+        {
+            if (!CanUpdateView())
+                return;
+
+            foreach (KeyValuePair<string, SlotUI_AnimalInv> pair in slotMap)
+            {
+                if (pair.Value != null)
+                    pair.Value.RefreshStatusIcons();
+            }
         }
 
         /// <summary>

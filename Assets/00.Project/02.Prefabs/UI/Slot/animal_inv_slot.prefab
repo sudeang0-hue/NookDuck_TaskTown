@@ -282,6 +282,8 @@ MonoBehaviour:
   - {fileID: 741724498, guid: bbbe321216ce69d4bb46de0f02e5a7c5, type: 3}
   - {fileID: -996449262, guid: bbbe321216ce69d4bb46de0f02e5a7c5, type: 3}
   - {fileID: -634167065, guid: bbbe321216ce69d4bb46de0f02e5a7c5, type: 3}
+  hasTool: {fileID: 468761956106113592}
+  setVillage: {fileID: 4434637502673925875}
   levelImage: {fileID: 885291223040022519}
   levelupButton: {fileID: 4966130060903140672}
   levelSprites:
@@ -1059,7 +1061,7 @@ GameObject:
   - component: {fileID: 8583935002961056634}
   - component: {fileID: 468761956106113592}
   m_Layer: 5
-  m_Name: animal_tool
+  m_Name: hasTool_icon
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1082,7 +1084,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 16, y: 20}
-  m_SizeDelta: {x: 20, y: 20}
+  m_SizeDelta: {x: 25, y: 25}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &8583935002961056634
 CanvasRenderer:
@@ -1255,7 +1257,7 @@ GameObject:
   - component: {fileID: 7793229108675986407}
   - component: {fileID: 4434637502673925875}
   m_Layer: 5
-  m_Name: animal_set_villiage
+  m_Name: setVilliage_icon
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1278,7 +1280,7 @@ RectTransform:
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
   m_AnchoredPosition: {x: -13.299988, y: 20}
-  m_SizeDelta: {x: 20, y: 20}
+  m_SizeDelta: {x: 25, y: 25}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &7793229108675986407
 CanvasRenderer:
@@ -1308,7 +1310,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 928115279, guid: e9cb4efdf60292f46880b3b717c0aaac, type: 3}
+  m_Sprite: {fileID: -411687944, guid: e9cb4efdf60292f46880b3b717c0aaac, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1

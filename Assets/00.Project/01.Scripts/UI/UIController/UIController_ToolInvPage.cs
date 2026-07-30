@@ -115,6 +115,10 @@ namespace UI
             if (slotData == null)
                 return;
 
+            // 상세 페이지가 닫혀 있어도 특화 동물 장착 해금은 보정합니다.
+            // (장착 시 Manager에서 이미 해금하지만, 구 세이브/예외 경로 대비)
+            TryRevealSpecialAnimalIfMatched(slotData);
+
             if (toolInvPagePanel == null || !toolInvPagePanel.activeSelf)
                 return;
 
@@ -201,7 +205,10 @@ namespace UI
                 return;
             }
 
-            ApplyStaticInfo(data);
+            // 현재 장착이 특화 동물이면 해금 보정 후 이름 표시에 반영
+            TryRevealSpecialAnimalIfMatched(slotData);
+
+            ApplyStaticInfo(slotData, data);
             ApplyRuntimeInfo(slotData, data);
             UpdateLevelUpButton(slotData);
         }
@@ -210,7 +217,7 @@ namespace UI
         /// ToolDataSO 기반 정적 정보 표시 (아이콘, 이름, 등급, 특화 동물)
         /// 현재 텍스트 깨짐 현상으로 인해 도구의 ID 로 표시하는 중
         /// </summary>
-        private void ApplyStaticInfo(ToolDataSO data)
+        private void ApplyStaticInfo(SlotData_Tool slotData, ToolDataSO data)
         {
             if (toolIconImage != null)
             {
@@ -223,7 +230,7 @@ namespace UI
             //toolNameText.text = data.DisplayName;
 
             ApplyGradeImage(data.Grade);
-            ApplySpecialAnimalName(data);
+            ApplySpecialAnimalName(slotData, data);
         }
 
         private void ApplyGradeImage(ItemGrade grade)
@@ -246,8 +253,9 @@ namespace UI
 
         /// <summary>
         /// ToolDataSO.SpecialAnimalId 기준으로 특화 동물 이름을 표시합니다.
+        /// SlotData_Tool.HasRevealedSpecialAnimal이 false면 ???, true면 동물 이름을 표시합니다.
         /// </summary>
-        private void ApplySpecialAnimalName(ToolDataSO data)
+        private void ApplySpecialAnimalName(SlotData_Tool slotData, ToolDataSO data)
         {
             if (specialAnimal == null)
                 return;
@@ -259,14 +267,46 @@ namespace UI
                 return;
             }
 
+            if (slotData == null || !slotData.HasRevealedSpecialAnimal)
+            {
+                specialAnimal.text = "Special Animal : ???";
+                return;
+            }
+
             AnimalDataSO animalData = null;
             if (InventoryManager_Animal.Instance != null)
                 animalData = InventoryManager_Animal.Instance.GetAnimalData(specialId);
 
-            if (animalData != null && !string.IsNullOrEmpty(animalData.DisplayName))
-                specialAnimal.text = animalData.DisplayName;
-            else
-                specialAnimal.text = specialId;
+            string animalName = animalData != null && !string.IsNullOrEmpty(animalData.DisplayName)
+                ? animalData.DisplayName
+                : specialId;
+
+            specialAnimal.text = $"Special Animal : {animalName}";
+        }
+
+        /// <summary>
+        /// 현재 장착 동물이 이 도구의 특화 동물이면 이름 해금을 보정합니다.
+        /// 정상 경로는 InventoryManager_Tool.TryAssignAnimalToTool에서 해금합니다.
+        /// </summary>
+        private void TryRevealSpecialAnimalIfMatched(SlotData_Tool slotData)
+        {
+            if (slotData == null || slotData.ToolData == null)
+                return;
+
+            if (slotData.HasRevealedSpecialAnimal)
+                return;
+
+            if (!slotData.CurrentAnimalSet || string.IsNullOrEmpty(slotData.CurrentAnimalId))
+                return;
+
+            string specialId = slotData.ToolData.SpecialAnimalId;
+            if (string.IsNullOrEmpty(specialId))
+                return;
+
+            if (slotData.CurrentAnimalId != specialId)
+                return;
+
+            slotData.RevealSpecialAnimal();
         }
 
         /// <summary>

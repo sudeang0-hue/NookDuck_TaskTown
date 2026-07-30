@@ -7,6 +7,7 @@
  * [2026.07.27 나범 수정] 5종 고유 카드 배경 스프라이트 통스왑 로직 적용
  */
 
+using System.Collections.Generic;
 using Animal.Data;
 using TaskTown.KDH;
 using TMPro;
@@ -37,6 +38,9 @@ public class SlotUI_AnimalInv : SlotUIBase
     // ------------------------------------------------------------------------------------------
 
     [Header("동물 인벤토리 슬롯")]
+    [SerializeField] private Image hasTool;
+    [SerializeField] private Image setVillage;
+
     [Tooltip("현재 레벨의 별 모양 이미지")]
     [SerializeField] private Image levelImage;
 
@@ -57,6 +61,9 @@ public class SlotUI_AnimalInv : SlotUIBase
     // [2026.07.27 업데이트] O(N) 씬 탐색을 피하기 위한 Placement UI 캐싱 변수
     private UIController_ToolPlacement cachedPlacementUi;
     // ------------------------------------------------------------------------------------------
+
+    // 마을 확정 배치 조회용 캐시
+    private VillageAnimalSetUI_Manager cachedVillageAnimalSet;
 
     private void Awake()
     {
@@ -168,6 +175,61 @@ public class SlotUI_AnimalInv : SlotUIBase
         }
 
         UpdateLevelUpButton();
+        UpdateStatusIcons();
+    }
+
+    /// <summary>
+    /// 도구 장착 / 마을 확정 배치 상태 아이콘만 갱신합니다.
+    /// </summary>
+    public void RefreshStatusIcons()
+    {
+        UpdateStatusIcons();
+    }
+
+    private void UpdateStatusIcons()
+    {
+        string animalId = currentSlotData != null ? currentSlotData.AnimalId : string.Empty;
+
+        bool toolEquipped = HasToolEquipped(animalId);
+        if (hasTool != null)
+            hasTool.gameObject.SetActive(toolEquipped);
+
+        bool villagePlaced = IsConfirmedVillagePlaced(animalId);
+        if (setVillage != null)
+            setVillage.gameObject.SetActive(villagePlaced);
+    }
+
+    private static bool HasToolEquipped(string animalId)
+    {
+        if (string.IsNullOrEmpty(animalId) || InventoryManager_Tool.Instance == null)
+            return false;
+
+        IReadOnlyList<SlotData_Tool> toolSlots = InventoryManager_Tool.Instance.ToolSlotsList;
+        if (toolSlots == null)
+            return false;
+
+        for (int i = 0; i < toolSlots.Count; i++)
+        {
+            SlotData_Tool toolSlot = toolSlots[i];
+            if (toolSlot != null && toolSlot.CurrentAnimalSet && toolSlot.CurrentAnimalId == animalId)
+                return true;
+        }
+
+        return false;
+    }
+
+    private bool IsConfirmedVillagePlaced(string animalId)
+    {
+        if (string.IsNullOrEmpty(animalId))
+            return false;
+
+        if (cachedVillageAnimalSet == null)
+            cachedVillageAnimalSet = FindFirstObjectByType<VillageAnimalSetUI_Manager>();
+
+        if (cachedVillageAnimalSet == null)
+            return false;
+
+        return cachedVillageAnimalSet.IsConfirmedPlaced(animalId);
     }
 
     private void ApplyIconAndName(AnimalDataSO data)
@@ -341,5 +403,11 @@ public class SlotUI_AnimalInv : SlotUIBase
 
         if (levelupButton != null)
             levelupButton.gameObject.SetActive(false);
+
+        if (hasTool != null)
+            hasTool.gameObject.SetActive(false);
+
+        if (setVillage != null)
+            setVillage.gameObject.SetActive(false);
     }
 }

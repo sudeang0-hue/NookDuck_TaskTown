@@ -36,7 +36,7 @@ namespace UI
         }
 
         /// <summary>
-        /// ±âº»À¸·Î ¿ÀÇÂÇÒ ÆĞ³Î
+        /// ê¸°ë³¸ íƒ­ í™”ë©´ ì—´ê¸°(ë§ˆì„ ì—…ê·¸ë ˆì´ë“œ íƒ­)
         /// </summary>
         public void OpenDefaultTab()
         {
@@ -44,7 +44,7 @@ namespace UI
         }
 
         /// <summary>
-        /// ¸¶À» ¾÷±×·¹ÀÌµå ÅÇ ¿­±â
+        /// ë§ˆì„ ì—…ê·¸ë ˆì´ë“œ íƒ­ ì—´ê¸°
         /// </summary>
         public void OpenVillageUpgradeTab()
         {
@@ -52,10 +52,21 @@ namespace UI
 
             animalSetPanel?.ClosePanel();
             villageUpgradePanel?.OpenPanelDefaultPosition();
+
+            // ì˜¤í”ˆ ì‹œ ì„¸ì´ë¸Œ ë°˜ì˜ëœ ìš”ì†Œ ì—…ê·¸ë ˆì´ë“œ/ë§ˆì„ ë ˆë²¨ì„ UIì— ë‹¤ì‹œ ê·¸ë¦¼
+            VillageUpgradeUI_Manager upgradeManager =
+                villageUpgradePanel != null
+                    ? villageUpgradePanel.GetComponentInParent<VillageUpgradeUI_Manager>()
+                    : null;
+
+            if (upgradeManager == null)
+                upgradeManager = FindFirstObjectByType<VillageUpgradeUI_Manager>();
+
+            upgradeManager?.RefreshAllUI();
         }
 
         /// <summary>
-        /// µ¿¹° ¹èÄ¡ ÅÇ ¿­±â
+        /// ë™ë¬¼ ë°°ì¹˜ íƒ­ ì—´ê¸°
         /// </summary>
         public void OpenAnimalSetTab()
         {
@@ -66,7 +77,7 @@ namespace UI
         }
 
         /// <summary>
-        /// ¸¶Áö¸·À¸·Î ¿­¾ú´ø ÅÇ ´Ù½Ã ¿­±â
+        /// ë§ˆì§€ë§‰ìœ¼ë¡œ ì—´ì—ˆë˜ íƒ­ ì—´ê¸°
         /// </summary>
         private void OpenLastTab()
         {
@@ -83,7 +94,7 @@ namespace UI
         }
 
         /// <summary>
-        /// ¸Ş´º ¹öÆ°¿¡¼­ È£ÃâÇÒ Toggle ¸Ş¼­µå
+        /// íƒ­ í† ê¸€ê¸°ëŠ¥. ëª¨ë“  íƒ­ ë‹«ê³  ë§ˆì§€ë§‰ìœ¼ë¡œ ì—° íƒ­ ì—´ê¸°
         /// </summary>
         public void ToggleTownTabs()
         {
@@ -97,7 +108,7 @@ namespace UI
         }
 
         /// <summary>
-        /// ÆĞ³Î È°¼ºÈ­ »óÅÂ¸¦ È®ÀÎÇÏ´Â ¸Ş¼­µå
+        /// ì—´ë ¤ìˆëŠ” íƒ­ì´ ìˆëŠ”ì§€ íŒë‹¨
         /// </summary>
         public bool IsAnyTabOpen
         {
@@ -112,7 +123,7 @@ namespace UI
         }
 
         /// <summary>
-        /// ÅÇ ´İ±â
+        /// ëª¨ë“  íƒ­ ë‹«ê¸°
         /// </summary>
         public void CloseAllTabs()
         {
