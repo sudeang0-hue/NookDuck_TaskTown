@@ -15,6 +15,8 @@ namespace TaskTown.KDH
         [SerializeField] private bool currentSet = false;
         [SerializeField] private bool currentAnimalSet = false;
         [SerializeField] private string currentAnimalId = null;
+        // 26.07.29. KAY 수정
+        [SerializeField] private bool hasRevealedSpecialAnimal = false;
 
         [Header("레벨업 요구 데이터")]
         [SerializeField] private bool isMaxLevel;
@@ -31,12 +33,24 @@ namespace TaskTown.KDH
         public bool CurrentSet => currentSet;
         public bool CurrentAnimalSet => currentAnimalSet;
         public string CurrentAnimalId => currentAnimalId != null ? currentAnimalId : string.Empty;
+        // 26.07.29. KAY 수정
+        public bool HasRevealedSpecialAnimal => hasRevealedSpecialAnimal;
         public bool IsMaxLevel => isMaxLevel;
         public int LevelUpCost => levelUpCost;
         public int RequiredUpgradeCount => requiredUpgradeCount;
 
 
-        public SlotData_Tool(ToolDataSO toolData, int level, int currentCount, bool currentSet, bool currentAnimalSet, string currentAnimalId)
+        // public SlotData_Tool(ToolDataSO toolData, int level, int currentCount, bool currentSet, bool currentAnimalSet, string currentAnimalId)
+        // {
+        //     this.toolData = toolData;
+        //     this.level = Mathf.Max(1, level);
+        //     this.currentCount = Mathf.Max(1, currentCount);
+        //     this.currentSet = currentSet;
+        //     this.currentAnimalSet = currentAnimalSet;
+        //     this.currentAnimalId = currentAnimalId;
+        // }
+        // 26.07.29. KAY 수정
+        public SlotData_Tool(ToolDataSO toolData, int level, int currentCount, bool currentSet, bool currentAnimalSet, string currentAnimalId, bool hasRevealedSpecialAnimal = false)
         {
             this.toolData = toolData;
             this.level = Mathf.Max(1, level);
@@ -44,6 +58,7 @@ namespace TaskTown.KDH
             this.currentSet = currentSet;
             this.currentAnimalSet = currentAnimalSet;
             this.currentAnimalId = currentAnimalId;
+            this.hasRevealedSpecialAnimal = hasRevealedSpecialAnimal;
         }
 
         /// <summary>
@@ -96,6 +111,15 @@ namespace TaskTown.KDH
         {
             currentAnimalSet = false;
             currentAnimalId = null;
+        }
+
+        /// <summary>
+        /// 특화 동물에게 1회 이상 장착되어 이름이 해금된 상태로 표시합니다.
+        /// </summary>
+        // 26.07.29. KAY 수정
+        public void RevealSpecialAnimal()
+        {
+            hasRevealedSpecialAnimal = true;
         }
 
         /// <summary>

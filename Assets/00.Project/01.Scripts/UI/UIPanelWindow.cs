@@ -21,6 +21,8 @@ public enum GameMenuType
     AnimalDex,
     Villiage,
     Option,
+    AnimalSet,
+    LevelUpPopup
 }
 
 namespace UI

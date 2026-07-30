@@ -87,7 +87,7 @@ GameObject:
   - component: {fileID: 523744613284280658}
   - component: {fileID: 5584990889502651697}
   m_Layer: 5
-  m_Name: tool_setup_animal
+  m_Name: setup_animal
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -109,7 +109,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 20, y: 20}
+  m_AnchoredPosition: {x: 17, y: 20}
   m_SizeDelta: {x: 20, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &523744613284280658
@@ -133,14 +133,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 0.9764151, b: 0.9764151, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -1356058056, guid: 5c096b2989022c64f9470c7739d51146, type: 3}
+  m_Sprite: {fileID: 1906087997, guid: 859313b7d16edc04faa141480dd1fa30, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -238,7 +238,7 @@ GameObject:
   - component: {fileID: 1702605830234798576}
   - component: {fileID: 2738981132763398527}
   m_Layer: 5
-  m_Name: tool_special_animal
+  m_Name: find_special_animal
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -258,9 +258,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 6034145218044218834}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 1, y: 1}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -6, y: -10}
+  m_AnchorMin: {x: 1, y: 0}
+  m_AnchorMax: {x: 1, y: 0}
+  m_AnchoredPosition: {x: -5, y: 30}
   m_SizeDelta: {x: 20, y: 20}
   m_Pivot: {x: 1, y: 1}
 --- !u!222 &1702605830234798576
@@ -284,14 +284,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 0.5068493, b: 0, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: -1562065053, guid: 859313b7d16edc04faa141480dd1fa30, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -319,7 +319,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &6638690072861365921
 RectTransform:
   m_ObjectHideFlags: 0
@@ -549,8 +549,8 @@ MonoBehaviour:
   requireCountText: {fileID: 9107488583164619988}
   levelImage: {fileID: 7006388260545491735}
   levelupButton: {fileID: 5105066043531520056}
-  curentAnimalicon: {fileID: 5584990889502651697}
-  specialAnimalicon: {fileID: 2738981132763398527}
+  setupAnimal: {fileID: 5584990889502651697}
+  findspecialAnimal: {fileID: 2738981132763398527}
   levelSprites:
   - {fileID: 1170962086, guid: bbbe321216ce69d4bb46de0f02e5a7c5, type: 3}
   - {fileID: 809184096, guid: bbbe321216ce69d4bb46de0f02e5a7c5, type: 3}
@@ -729,7 +729,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: 19.9, y: 0}
+  m_AnchoredPosition: {x: 13.7, y: 0}
   m_SizeDelta: {x: 50, y: 30}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!222 &4092022626558890204

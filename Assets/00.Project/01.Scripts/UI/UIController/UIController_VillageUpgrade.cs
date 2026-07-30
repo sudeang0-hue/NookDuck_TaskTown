@@ -61,9 +61,9 @@ namespace UI
 
         public void RefreshTrackLevels(int clickLevel, int typingLevel, int toolLevel)
         {
-            SetText(clickCoinLevel, "Lv." + clickLevel);
-            SetText(typingCoinLevel, "Lv." + typingLevel);
-            SetText(toolProductLevel, "Lv." + toolLevel);
+            SetText(clickCoinLevel, $"Lv.{clickLevel + 1}");
+            SetText(typingCoinLevel, $"Lv.{typingLevel + 1}");
+            SetText(toolProductLevel, $"Lv.{toolLevel + 1}");
         }
 
         public void RefreshTrackCosts(
