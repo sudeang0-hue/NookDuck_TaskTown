@@ -9,6 +9,8 @@ public class WorldHoverOutlineDetector : MonoBehaviour
     [SerializeField, Min(0f)] private float maxDistance = 1000f;
 
     private HoverOutlineTarget currentTarget;
+    private Vector2 lastMousePosition;
+    private bool hasLastMousePosition;
 
     private void Awake()
     {
@@ -23,22 +25,21 @@ public class WorldHoverOutlineDetector : MonoBehaviour
             return;
         }
 
-        // 변경 전
-        //if (EventSystem.current != null &&
-        //    EventSystem.current.IsPointerOverGameObject())
-        //{
-        //    ChangeTarget(null);
-        //    return;
-        //}
+        Vector2 mousePosition = Mouse.current.position.ReadValue();
 
-        // 변경 후
+        // 마우스 좌표가 변하지 않으면 Raycast / UI 판정 생략
+        if (hasLastMousePosition && mousePosition == lastMousePosition)
+            return;
+
+        hasLastMousePosition = true;
+        lastMousePosition = mousePosition;
+
         if (InputGuard.IsPointerOverUI())
         {
             ChangeTarget(null);
             return;
         }
 
-        Vector2 mousePosition = Mouse.current.position.ReadValue();
         Ray ray = targetCamera.ScreenPointToRay(mousePosition);
 
         if (Physics.Raycast(
@@ -75,5 +76,6 @@ public class WorldHoverOutlineDetector : MonoBehaviour
     private void OnDisable()
     {
         ChangeTarget(null);
+        hasLastMousePosition = false;
     }
 }

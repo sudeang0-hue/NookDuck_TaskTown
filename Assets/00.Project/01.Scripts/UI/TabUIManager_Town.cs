@@ -10,7 +10,7 @@ public enum TownTabType
 
 namespace UI
 {
-    public class TownTabUI_Manager : MonoBehaviour
+    public class TabUIManager_Town : MonoBehaviour
     {
         [SerializeField] private Button[] openVillageUpgradeButtons;
         [SerializeField] private Button[] openAnimalSetButtons;
