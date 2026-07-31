@@ -393,7 +393,7 @@ GameObject:
   - component: {fileID: 3967506446779531869}
   - component: {fileID: 6484926949760946238}
   - component: {fileID: 1029149069766631710}
-  - component: {fileID: 8482230456957307648}
+  - component: {fileID: 8244679955231056257}
   m_Layer: 5
   m_Name: Menu_Canvas
   m_TagString: Untagged
@@ -502,14 +502,6 @@ MonoBehaviour:
   villageButton: {fileID: 4079745973781706873}
   optionButton: {fileID: 2460837419374566141}
   minimizeButton: {fileID: 0}
-  animalInvUI: {fileID: 0}
-  toolInvUI: {fileID: 0}
-  animalDexUI: {fileID: 0}
-  gachaUI: {fileID: 0}
-  inventoryTabManager: {fileID: 1029149069766631710}
-  townTabManager: {fileID: 8482230456957307648}
-  usePanelOpenDefaultPosition: 1
-  useTradeOffSetting: 1
 --- !u!114 &1029149069766631710
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -530,9 +522,7 @@ MonoBehaviour:
   - {fileID: 0}
   AnimalInvPanel: {fileID: 0}
   ToolInvPanel: {fileID: 0}
-  animalInvUI: {fileID: 0}
-  toolInvUI: {fileID: 0}
---- !u!114 &8482230456957307648
+--- !u!114 &8244679955231056257
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -541,9 +531,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 4898307031730683649}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c50ba00cbfbc6ba42bfb71c7dc403032, type: 3}
+  m_Script: {fileID: 11500000, guid: 15d582980d78d1744b19ac50ec6f4d2c, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::UI.UIController_TownTabManager
+  m_EditorClassIdentifier: Assembly-CSharp::UI.TabUIManager_Town
   openVillageUpgradeButtons:
   - {fileID: 0}
   - {fileID: 0}

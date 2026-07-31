@@ -36,8 +36,8 @@ public class UIController_Menu : MonoBehaviour
     private UIController_Gacha gachaUI;
 
     [Header("탭 전환 Manager")]
-    private InventoryTabUI_Manager inventoryTabManager;
-    private TownTabUI_Manager townTabManager;
+    private TabUIManager_Inventory inventoryTabManager;
+    private TabUIManager_Town townTabManager;
 
     [Header("패널 오픈시 초기 위치 고정")]
     private bool usePanelOpenDefaultPosition = true;
@@ -134,10 +134,10 @@ public class UIController_Menu : MonoBehaviour
 
         // 같은 자식1 오브젝트 본인에게 붙어있는 컴포넌트라면 기존대로 유지
         if (inventoryTabManager == null)
-            inventoryTabManager = GetComponent<InventoryTabUI_Manager>();
+            inventoryTabManager = GetComponent<TabUIManager_Inventory>();
 
         if (townTabManager == null)
-            townTabManager = GetComponent<TownTabUI_Manager>();
+            townTabManager = GetComponent<TabUIManager_Town>();
 
     }
 
