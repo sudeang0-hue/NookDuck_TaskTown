@@ -23,6 +23,7 @@ namespace TaskTown.Tutorial
         [SerializeField] private ToolGachaManager toolGachaManager;
         [SerializeField] private InventoryManager_Tool toolInventoryManager;
         [SerializeField] private RealProductionTicker realProductionTicker;
+        [SerializeField] private VillageAnimalSetUI_Manager villageAnimalSetUIManager;
         [SerializeField] private VillageInfoUI_Manager villageInfoUIManager;
         [SerializeField] private TownUpgradeManager townUpgradeManager;
         [SerializeField] private GameMasterManager gameMasterManager;
@@ -31,8 +32,10 @@ namespace TaskTown.Tutorial
         [SerializeField] private TutorialButtonHighlighter buttonHighlighter;
         [SerializeField] private UIController_Menu menuController;
         [SerializeField] private UIController_Gacha gachaController;
+        [SerializeField] private UIController_VillageAnimalSet villageAnimalSetController;
 
         private readonly HashSet<string> assignedToolIds = new HashSet<string>();
+        private readonly List<string> initialVillageAnimalIds = new List<string>();
 
         private bool hasStarted;
         private bool isConnected;
@@ -127,6 +130,11 @@ namespace TaskTown.Tutorial
                 toolInventoryManager = InventoryManager_Tool.Instance;
             if (realProductionTicker == null)
                 realProductionTicker = RealProductionTicker.Instance;
+            if (villageAnimalSetUIManager == null)
+            {
+                villageAnimalSetUIManager = FindFirstObjectByType<VillageAnimalSetUI_Manager>(
+                    FindObjectsInactive.Include);
+            }
             if (villageInfoUIManager == null)
                 villageInfoUIManager = FindAnyObjectByType<VillageInfoUI_Manager>();
             if (townUpgradeManager == null)
@@ -139,6 +147,11 @@ namespace TaskTown.Tutorial
                 menuController = FindAnyObjectByType<UIController_Menu>();
             if (gachaController == null)
                 gachaController = FindAnyObjectByType<UIController_Gacha>();
+            if (villageAnimalSetController == null)
+            {
+                villageAnimalSetController = FindFirstObjectByType<UIController_VillageAnimalSet>(
+                    FindObjectsInactive.Include);
+            }
         }
 
         private void HandleStepChanged(TutorialStep previousStep, TutorialStep nextStep)
@@ -295,6 +308,19 @@ namespace TaskTown.Tutorial
                         WarnMissingSource(nameof(RealProductionTicker), step);
                     break;
 
+                case TutorialStep.PlaceAnimalInVillage:
+                    if (villageAnimalSetUIManager != null)
+                    {
+                        CaptureVillagePlacement();
+                        villageAnimalSetUIManager.OnVillagePlacementChanged +=
+                            HandleVillagePlacementChanged;
+                    }
+                    else
+                    {
+                        WarnMissingSource(nameof(VillageAnimalSetUI_Manager), step);
+                    }
+                    break;
+
                 case TutorialStep.OpenVillageInfo:
                     if (villageInfoUIManager != null)
                         villageInfoUIManager.PanelOpened += HandleVillageInfoOpened;
@@ -346,6 +372,15 @@ namespace TaskTown.Tutorial
                 case TutorialStep.ConfirmAutoProduction:
                     if (realProductionTicker != null)
                         realProductionTicker.ProductionCoinGranted -= HandleProductionCoinGranted;
+                    break;
+
+                case TutorialStep.PlaceAnimalInVillage:
+                    if (villageAnimalSetUIManager != null)
+                    {
+                        villageAnimalSetUIManager.OnVillagePlacementChanged -=
+                            HandleVillagePlacementChanged;
+                    }
+                    initialVillageAnimalIds.Clear();
                     break;
 
                 case TutorialStep.OpenVillageInfo:
@@ -414,6 +449,65 @@ namespace TaskTown.Tutorial
                 amount);
         }
 
+        private void CaptureVillagePlacement()
+        {
+            initialVillageAnimalIds.Clear();
+            if (villageAnimalSetUIManager == null)
+                return;
+
+            IReadOnlyList<string> placedIds = villageAnimalSetUIManager.PlacedAnimalIds;
+            if (placedIds == null)
+                return;
+
+            for (int index = 0; index < placedIds.Count; index++)
+                initialVillageAnimalIds.Add(placedIds[index] ?? string.Empty);
+        }
+
+        private void HandleVillagePlacementChanged()
+        {
+            if (!HasValidVillagePlacementChange())
+                return;
+
+            tutorialManager?.ReportSignal(TutorialSignalType.VillageAnimalPlaced);
+        }
+
+        private bool HasValidVillagePlacementChange()
+        {
+            if (villageAnimalSetUIManager == null)
+                return false;
+
+            IReadOnlyList<string> currentIds = villageAnimalSetUIManager.PlacedAnimalIds;
+            if (currentIds == null)
+                return false;
+
+            int initialPlacedCount = 0;
+            int currentPlacedCount = 0;
+            bool hasChanged = currentIds.Count != initialVillageAnimalIds.Count;
+            int compareCount = Mathf.Max(currentIds.Count, initialVillageAnimalIds.Count);
+
+            for (int index = 0; index < compareCount; index++)
+            {
+                string initialId = index < initialVillageAnimalIds.Count
+                    ? initialVillageAnimalIds[index]
+                    : string.Empty;
+                string currentId = index < currentIds.Count
+                    ? currentIds[index] ?? string.Empty
+                    : string.Empty;
+
+                if (!string.IsNullOrEmpty(initialId))
+                    initialPlacedCount++;
+                if (!string.IsNullOrEmpty(currentId))
+                    currentPlacedCount++;
+                if (!string.Equals(initialId, currentId, System.StringComparison.Ordinal))
+                    hasChanged = true;
+            }
+
+            // 단순 확정이나 주민 제거만으로는 완료하지 않고, 한 명 이상을 유지한 실제 배치 변경만 인정합니다.
+            return hasChanged &&
+                   currentPlacedCount > 0 &&
+                   currentPlacedCount >= initialPlacedCount;
+        }
+
         private void RefreshButtonHighlight()
         {
             if (buttonHighlighter == null || tutorialManager == null)
@@ -450,6 +544,12 @@ namespace TaskTown.Tutorial
                     buttonHighlighter.Highlight(
                         menuController?.GachaButton,
                         gachaController?.ToolOnePickButton);
+                    break;
+
+                case TutorialStep.PlaceAnimalInVillage:
+                    buttonHighlighter.Highlight(
+                        villageAnimalSetController?.EditSetAnimalButton,
+                        villageAnimalSetController?.ConfirmSetAnimalButton);
                     break;
 
                 default:

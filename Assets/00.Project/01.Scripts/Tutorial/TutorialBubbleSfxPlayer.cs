@@ -114,8 +114,9 @@ namespace TaskTown.Tutorial
                 TutorialStep.DrawTool => 3,
                 TutorialStep.AssignAnimal => 4,
                 TutorialStep.ConfirmAutoProduction => 5,
-                TutorialStep.OpenVillageInfo => 6,
-                TutorialStep.UpgradeVillage => 7,
+                TutorialStep.PlaceAnimalInVillage => 6,
+                TutorialStep.OpenVillageInfo => 7,
+                TutorialStep.UpgradeVillage => 8,
                 _ => -1
             };
         }

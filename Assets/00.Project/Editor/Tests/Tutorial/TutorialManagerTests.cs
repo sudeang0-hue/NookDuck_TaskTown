@@ -111,8 +111,11 @@ namespace TaskTown.EditorTests.Tutorial
             Assert.IsTrue(first);
             Assert.IsFalse(second);
             Assert.AreEqual(TutorialManager.ToolDrawCoinReward, coinManager.Balance);
-            Assert.AreEqual(TutorialStep.DrawTool, manager.CurrentStep);
+            Assert.AreEqual(TutorialStep.AnimalDrawExplanation, manager.CurrentStep);
             Assert.IsTrue(manager.IsToolDrawCoinRewardGranted);
+
+            Assert.IsTrue(manager.ReportSignal(TutorialSignalType.DialogueCompleted));
+            Assert.AreEqual(TutorialStep.DrawTool, manager.CurrentStep);
 
             coinInstanceField.SetValue(null, null);
             Object.DestroyImmediate(tutorialObject);

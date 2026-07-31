@@ -157,7 +157,7 @@ namespace TaskTown.EditorTests.Tutorial
             Assert.IsTrue(first);
             Assert.IsFalse(second);
             Assert.IsTrue(machine.IsToolDrawCoinRewardGranted);
-            Assert.AreEqual(TutorialStep.DrawTool, machine.CurrentStep);
+            Assert.AreEqual(TutorialStep.AnimalDrawExplanation, machine.CurrentStep);
         }
 
         [Test]
@@ -179,6 +179,19 @@ namespace TaskTown.EditorTests.Tutorial
                 TutorialSignalType.AutoProductionConfirmed,
                 1L));
             Assert.AreEqual(50L, machine.AutoProductionEarnedCoin);
+            Assert.AreEqual(TutorialStep.VillagePlacementExplanation, machine.CurrentStep);
+        }
+
+        [Test]
+        public void VillagePlacement_안내후실제배치변경신호로마을정보단계에진입한다()
+        {
+            TutorialStateMachine machine = CreateMachine(
+                TutorialStep.VillagePlacementExplanation);
+
+            Assert.IsTrue(machine.TryHandleSignal(TutorialSignalType.DialogueCompleted));
+            Assert.AreEqual(TutorialStep.PlaceAnimalInVillage, machine.CurrentStep);
+
+            Assert.IsTrue(machine.TryHandleSignal(TutorialSignalType.VillageAnimalPlaced));
             Assert.AreEqual(TutorialStep.OpenVillageInfo, machine.CurrentStep);
         }
 
@@ -199,12 +212,16 @@ namespace TaskTown.EditorTests.Tutorial
             Assert.IsTrue(machine.TryCompleteTownWindowReward());
             Assert.IsTrue(machine.TryHandleSignal(TutorialSignalType.AnimalDrawn));
             Assert.IsTrue(machine.IsToolDrawCoinRewardGranted);
+            Assert.IsTrue(machine.TryHandleSignal(TutorialSignalType.DialogueCompleted));
             Assert.IsTrue(machine.TryHandleSignal(TutorialSignalType.ToolDrawn));
             Assert.IsTrue(machine.TryHandleSignal(TutorialSignalType.AnimalAssigned));
             Assert.IsTrue(machine.TryHandleSignal(
                 TutorialSignalType.AutoProductionConfirmed,
                 TutorialStateMachine.AutoProductionCoinTarget));
+            Assert.IsTrue(machine.TryHandleSignal(TutorialSignalType.DialogueCompleted));
+            Assert.IsTrue(machine.TryHandleSignal(TutorialSignalType.VillageAnimalPlaced));
             Assert.IsTrue(machine.TryHandleSignal(TutorialSignalType.VillageInfoOpened));
+            Assert.IsTrue(machine.TryHandleSignal(TutorialSignalType.DialogueCompleted));
             Assert.IsTrue(machine.TryHandleSignal(TutorialSignalType.AnyUpgradePurchased));
             Assert.IsTrue(machine.TryHandleSignal(TutorialSignalType.DialogueCompleted));
 
@@ -258,6 +275,23 @@ namespace TaskTown.EditorTests.Tutorial
             Assert.AreEqual(1, progressChangedCount);
             Assert.AreEqual(1, stepChangedCount);
             Assert.AreEqual(1, completedCount);
+        }
+
+        [Test]
+        public void Normalize_동물뽑기보상직후저장은결과설명단계에서재개한다()
+        {
+            TutorialSaveData progress = new TutorialSaveData
+            {
+                version = 2,
+                currentStep = TutorialStep.DrawAnimal,
+                rewardFlags = (int)TutorialProgressFlags.ToolDrawCoinRewardGranted
+            };
+
+            progress.Normalize();
+
+            Assert.AreEqual(TutorialSaveData.CurrentVersion, progress.version);
+            Assert.AreEqual(TutorialStep.AnimalDrawExplanation, progress.currentStep);
+            Assert.AreEqual(0, progress.dialogueIndex);
         }
 
         private static TutorialStateMachine CreateMachine(TutorialStep step)

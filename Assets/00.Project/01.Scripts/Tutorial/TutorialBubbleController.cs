@@ -518,6 +518,9 @@ namespace TaskTown.Tutorial
         private static bool IsDialogueStep(TutorialStep step)
         {
             return step == TutorialStep.IntroDialogue ||
+                   step == TutorialStep.AnimalDrawExplanation ||
+                   step == TutorialStep.VillagePlacementExplanation ||
+                   step == TutorialStep.UpgradeExplanation ||
                    step == TutorialStep.CompletionDialogue;
         }
 
@@ -529,6 +532,7 @@ namespace TaskTown.Tutorial
                    step == TutorialStep.DrawTool ||
                    step == TutorialStep.AssignAnimal ||
                    step == TutorialStep.ConfirmAutoProduction ||
+                   step == TutorialStep.PlaceAnimalInVillage ||
                    step == TutorialStep.OpenVillageInfo ||
                    step == TutorialStep.UpgradeVillage;
         }
