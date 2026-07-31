@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Animal.Data;
 using TaskTown.KDH;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
@@ -25,7 +26,10 @@ namespace UI
         [SerializeField] private Button confirmSetAnimalButton;
 
         [Header("아이콘 조회 (미연결 시 Instance 사용)")]
-        [SerializeField] private InventoryManager_Animal animalInventory;
+        private InventoryManager_Animal animalInventory;
+
+        [SerializeField] private TMP_Text setAnimalText;
+        [SerializeField] private TMP_Text maxAnimalText;
 
         [Header("인스펙터 확인용")]
         [SerializeField] private List<SlotUI_VillageAnimal> activeSlots = new List<SlotUI_VillageAnimal>();
@@ -91,6 +95,37 @@ namespace UI
                     onSetAnimalClicked,
                     onRemoveAnimalClicked);
             }
+
+            // 최대 배치 수는 unlockedCount와 동일 (레벨업 시 Refresh로 갱신)
+            RefreshMaxAnimalText(unlockedCount);
+        }
+
+        /// <summary>
+        /// 확정 배치 수(set)와 최대 배치 수(max/unlocked) 텍스트를 갱신합니다.
+        /// setAnimalText는 Confirm(확정본) 기준으로 넘깁니다.
+        /// </summary>
+        public void RefreshCountTexts(int setCount, int maxCount)
+        {
+            RefreshSetAnimalText(setCount);
+            RefreshMaxAnimalText(maxCount);
+        }
+
+        /// <summary>현재 마을에 확정 배치된 동물 수. Confirm 후 갱신.</summary>
+        public void RefreshSetAnimalText(int setCount)
+        {
+            if (setAnimalText == null)
+                return;
+
+            setAnimalText.text = Mathf.Max(0, setCount).ToString();
+        }
+
+        /// <summary>현재 마을 레벨 기준 배치 가능 최대 수(= unlockedCount). 레벨업 시 갱신.</summary>
+        public void RefreshMaxAnimalText(int maxCount)
+        {
+            if (maxAnimalText == null)
+                return;
+
+            maxAnimalText.text = "/ " + Mathf.Max(0, maxCount).ToString();
         }
 
         public void BindSlotCallbacks(Action<int> setAnimalClicked, Action<int> removeAnimalClicked)

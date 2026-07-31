@@ -6,6 +6,7 @@ using UnityEngine;
 
 namespace TaskTown.KDH
 {
+    [DefaultExecutionOrder(-100)]
     public class InventoryManager_Animal : MonoBehaviour
     {
         public static InventoryManager_Animal Instance { get; private set; }

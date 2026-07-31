@@ -137,5 +137,7 @@ namespace TaskTown.KDH
         public bool currentSet;
         public bool currentAnimalSet;
         public string currentAnimalId;
+        // 26.07.29. KAY 수정
+        public bool hasRevealedSpecialAnimal;
     }
 }

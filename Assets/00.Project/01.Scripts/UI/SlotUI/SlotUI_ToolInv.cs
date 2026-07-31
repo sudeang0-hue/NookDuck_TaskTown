@@ -1,8 +1,8 @@
-/* °³º° µµ±¸ ½½·ÔÀÇ È­¸é Ç¥½Ã¸¦ ´ã´çÇÔ
- * ÇöÀç ¼ö·® Ç¥½Ã
- * ÇÊ¿ä ¼ö·® Ç¥½Ã
- * ·¹º§¾÷ °¡´É½Ã ¹öÆ° È°¼ºÈ­
- * ºÒ°¡´ÉÇÏ¸é ¹öÆ° ºñÈ°¼ºÈ­
+/* ê°œë³„ ë„êµ¬ ìŠ¬ë¡¯ì˜ í™”ë©´ í‘œì‹œë¥¼ ë‹´ë‹¹í•¨
+ * í˜„ì¬ ìˆ˜ëŸ‰ í‘œì‹œ
+ * í•„ìš” ìˆ˜ëŸ‰ í‘œì‹œ
+ * ë ˆë²¨ì—… ê°€ëŠ¥ì‹œ ë²„íŠ¼ í™œì„±í™”
+ * ë¶ˆê°€ëŠ¥í•˜ë©´ ë²„íŠ¼ ë¹„í™œì„±í™”
  */
 
 using System;
@@ -21,39 +21,39 @@ namespace KAY
         [Header("References")]
         [SerializeField] private InventoryManager_Tool toolInventory;
 
-        [Header("ÇØ´ç µµ±¸ µ¥ÀÌÅÍ")]
+        [Header("í•´ë‹¹ ë„êµ¬ ë°ì´í„°")]
         [SerializeField] private Image toolIconImage;
         [SerializeField] private TMP_Text toolNameText;
         [SerializeField] private TMP_Text currentCountText;
         [SerializeField] private TMP_Text requireCountText;
 
-        [Header("µµ±¸ ÀÎº¥Åä¸® ½½·Ô UIController_ToolInvPage")]
-        [Tooltip("ÇöÀç ·¹º§ÀÇ º° ¸ğ¾ç ÀÌ¹ÌÁö")]
+        [Header("ë„êµ¬ ì¸ë²¤í† ë¦¬ ìƒì„¸ UIController_ToolInvPage")]
+        [Tooltip("í˜„ì¬ ë ˆë²¨ì˜ ë³„ ëª¨ì–‘ ì´ë¯¸ì§€")]
         [SerializeField] private Image levelImage;
 
-        [Header("·¹º§¾÷ ¹öÆ°")]
+        [Header("ë ˆë²¨ì—… ë²„íŠ¼")]
         [SerializeField] private Button levelupButton;
 
-        [Tooltip("ÇöÀç ÀÌ µµ±¸¿¡ ¹èÄ¡µÈ µ¿¹° ¾ÆÀÌÄÜ")]
-        [SerializeField] private Image curentAnimalicon;
-        [Tooltip("ÀÌ µµ±¸ÀÇ Æ¯È­ µ¿¹° ¾ÆÀÌÄÜ")]
-        [SerializeField] private Image specialAnimalicon;
-        //[Tooltip("ÀÌ µµ±¸ÀÇ ½Ã°£´ç »ı»ê·® ÅØ½ºÆ®")]
+        [Tooltip("í˜„ì¬ ì´ ë„êµ¬ì— ë°°ì¹˜ëœ ë™ë¬¼ ì•„ì´ì½˜")]
+        [SerializeField] private Image setupAnimal;
+        [Tooltip("ì´ ë„êµ¬ì˜ íŠ¹í™” ë™ë¬¼ ì•„ì´ì½˜")]
+        [SerializeField] private Image findspecialAnimal;
+        //[Tooltip("ì´ ë„êµ¬ì˜ ì‹œê°„ë‹¹ ìƒì‚°ëŸ‰ í…ìŠ¤íŠ¸")]
         //[SerializeField] private TMP_Text outoCoinPerHourText;
 
-        [Header("·¹º§¾÷ ÀÌ¹ÌÁö")]
-        [Tooltip("1¼º ~ 5¼º ÀÌ¹ÌÁö. ´ÜÀÏ ÄÃ·¯")]
+        [Header("ë ˆë²¨ì—… ì´ë¯¸ì§€")]
+        [Tooltip("1ì„± ~ 5ì„± ì´ë¯¸ì§€. ë‹¨ì¼ ì»¬ëŸ¬")]
         [SerializeField] private Sprite[] levelSprites;
 
         private SlotData_Tool currentSlotData;
 
-        [Header("Å¬¸¯ ¹üÀ§ ¹öÆ°")]
+        [Header("í´ë¦­ ë²”ìœ„ ë²„íŠ¼")]
         [SerializeField] private Button coverButton;
 
 
         private UIController_ToolInvPage toolInvPageController;
 
-        // ÇÊ¿äÇÏ¸é ¿ÜºÎ¿¡¼­ Äİ¹éÀ¸·Îµµ ¹ŞÀ» ¼ö ÀÖ°Ô
+        // í•„ìš”í•˜ë©´ ì™¸ë¶€ì—ì„œ ì½œë°±ìœ¼ë¡œë„ ë°›ì„ ìˆ˜ ìˆê²Œ
         private Action<SlotData_Tool> onSelected;
 
         private void Awake()
@@ -66,7 +66,7 @@ namespace KAY
                 levelupButton.gameObject.SetActive(false);
             }
 
-            //--------------------------26.07.23 KDH ¼öÁ¤--------------------------------
+            //--------------------------26.07.23 KDH ìˆ˜ì •--------------------------------
             if (coverButton == null)
                 coverButton = GetComponentInChildren<Button>(true);
 
@@ -95,28 +95,28 @@ namespace KAY
 
             if (slotData == null)
             {
-                Debug.LogWarning("[SlotUI_ToolInv] ÃÊ±âÈ­ÇÒ ½½·Ô µ¥ÀÌÅÍ°¡ ¾ø½À´Ï´Ù.", this);
+                Debug.LogWarning("[SlotUI_ToolInv] ì´ˆê¸°í™”í•  ìŠ¬ë¡¯ ë°ì´í„°ê°€ ì—†ìŠµë‹ˆë‹¤.", this);
                 return;
             }
             if (coverButton == null)
-                Debug.LogWarning("[SlotUI_ToolInv] coverButtonÀÌ ¿¬°áµÇÁö ¾Ê¾Ò½À´Ï´Ù.", this);
+                Debug.LogWarning("[SlotUI_ToolInv] coverButtonì´ ì—°ê²°ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.", this);
 
             currentSlotData = slotData;
             RefreshView();
         }
 
-        //------------------------26.07.23 KDH ¼öÁ¤----------------------------------------
+        //------------------------26.07.23 KDH ìˆ˜ì •----------------------------------------
         private void HandleSlotClicked()
         {
             if (currentSlotData == null)
             {
-                Debug.LogWarning("[SlotUI_ToolInv] ÇöÀç ½½·Ô¿¡ µµ±¸ µ¥ÀÌÅÍ°¡ ¾ø½À´Ï´Ù.", this);
+                Debug.LogWarning("[SlotUI_ToolInv] í˜„ì¬ ìŠ¬ë¡¯ì— ë„êµ¬ ë°ì´í„°ê°€ ì—†ìŠµë‹ˆë‹¤.", this);
                 return;
             }
 
             if (toolInvPageController == null)
             {
-                Debug.LogWarning("[SlotUI_ToolInv] UIController_ToolInvPage°¡ ¿¬°áµÇÁö ¾Ê¾Ò½À´Ï´Ù.", this);
+                Debug.LogWarning("[SlotUI_ToolInv] UIController_ToolInvPageê°€ ì—°ê²°ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.", this);
                 return;
             }
 
@@ -129,15 +129,15 @@ namespace KAY
 
             toolInvPageController.OpenToolInvPage(currentSlotData);
 
-            //// 1) ¹èÄ¡ ÄÁÆ®·Ñ·¯¿¡ ToolId Àü´Ş
+            //// 1) ë°°ì¹˜ ì»¨íŠ¸ë¡¤ëŸ¬ì— ToolId ì „ë‹¬
             //UIController_ToolPlacement placementUi = FindFirstObjectByType<UIController_ToolPlacement>();
 
             //if (placementUi != null) placementUi.SetSelectedTool(currentSlotData.ToolId);
 
-            //// 2) (¼±ÅÃ) ´Ù¸¥ ÂÊ¿¡¼­µµ µè°í ½ÍÀ¸¸é Äİ¹é
+            //// 2) (ì„ íƒ) ë‹¤ë¥¸ ìª½ì—ì„œë„ ë“£ê³  ì‹¶ìœ¼ë©´ ì½œë°±
             //onSelected?.Invoke(currentSlotData);
 
-            //Debug.Log($"[SlotUI_ToolInv] ¼±ÅÃµÊ: {currentSlotData.ToolId}");
+            //Debug.Log($"[SlotUI_ToolInv] ì„ íƒë¨: {currentSlotData.ToolId}");
 
         }
         //-----------------------------------------------------------------------------------
@@ -146,7 +146,7 @@ namespace KAY
         {
             if (slotData == null)
             {
-                Debug.LogWarning("[SlotUI_ToolInv] °»½ÅÇÒ ½½·Ô µ¥ÀÌÅÍ°¡ ¾ø½À´Ï´Ù.", this);
+                Debug.LogWarning("[SlotUI_ToolInv] ê°±ì‹ í•  ìŠ¬ë¡¯ ë°ì´í„°ê°€ ì—†ìŠµë‹ˆë‹¤.", this);
                 return;
             }
 
@@ -173,7 +173,7 @@ namespace KAY
             SetBaseInfo(data.Id, data.DisplayName, data.Icon);
             ApplyIconAndName(data);
 
-            // º»Ã¼ 1°³¸¦ Á¦¿ÜÇÑ Àç·á ¼ö·®À» UI¿¡ Ç¥½Ã (¿¹: ³»ºÎ 1 ¡æ 0/4)
+            // ë³¸ì²´ 1ê°œë¥¼ ì œì™¸í•œ ì¬ë£Œ ìˆ˜ëŸ‰ì„ UIì— í‘œì‹œ (ì˜ˆ: ë‚´ë¶€ 1 â†’ 0/4)
             if (currentCountText != null)
                 currentCountText.text = Mathf.Max(0, currentSlotData.CurrentCount - 1).ToString();
 
@@ -188,11 +188,36 @@ namespace KAY
             }
 
             UpdateLevelUpButton();
+            UpdateStatusIcons();
         }
 
         /// <summary>
-        /// ÆùÆ® ±úÁü Çö»óÀ¸·Î ÀÎÇØ Ç¥½ÃµÇ´Â ÀÌ¸§À» ID·Î ¼³Á¤ÇÔ.
-        /// ÃßÈÄ ÆùÆ® ÀÛ¾÷ÀÌ ¿Ï·áµÇ¸é DisplayName À¸·Î º¯°æ
+        /// ë™ë¬¼ ì¥ì°© / íŠ¹í™” ë™ë¬¼ í•´ê¸ˆ ìƒíƒœ ì•„ì´ì½˜ë§Œ ê°±ì‹ í•©ë‹ˆë‹¤.
+        /// </summary>
+        public void RefreshStatusIcons()
+        {
+            UpdateStatusIcons();
+        }
+
+        private void UpdateStatusIcons()
+        {
+            bool hasSetupAnimal = currentSlotData != null &&
+                currentSlotData.CurrentAnimalSet &&
+                !string.IsNullOrEmpty(currentSlotData.CurrentAnimalId);
+
+            if (setupAnimal != null)
+                setupAnimal.gameObject.SetActive(hasSetupAnimal);
+
+            bool specialRevealed = currentSlotData != null &&
+                currentSlotData.HasRevealedSpecialAnimal;
+
+            if (findspecialAnimal != null)
+                findspecialAnimal.gameObject.SetActive(specialRevealed);
+        }
+
+        /// <summary>
+        /// ìŠ¬ë¡¯ ì•„ì´ì½˜ê³¼ ì´ë¦„ í…ìŠ¤íŠ¸ë¥¼ ì ìš©í•©ë‹ˆë‹¤. í˜„ì¬ëŠ” ì´ë¦„ ëŒ€ì‹  IDë¥¼ í‘œì‹œí•©ë‹ˆë‹¤.
+        /// í•„ìš”í•˜ë©´ ì•„ë˜ DisplayName ì£¼ì„ì„ ì‚¬ìš©í•˜ì„¸ìš”.
         /// </summary>
         private void ApplyIconAndName(ToolDataSO data)
         {
@@ -222,7 +247,7 @@ namespace KAY
         {
             if (currentSlotData == null)
             {
-                Debug.LogWarning("[SlotUI_ToolInv] ·¹º§¾÷ÇÒ ½½·Ô µ¥ÀÌÅÍ°¡ ¾ø½À´Ï´Ù.", this);
+                Debug.LogWarning("[SlotUI_ToolInv] ë ˆë²¨ì—…í•  ìŠ¬ë¡¯ ë°ì´í„°ê°€ ì—†ìŠµë‹ˆë‹¤.", this);
                 return;
             }
 
@@ -230,7 +255,7 @@ namespace KAY
 
             if (toolInventory == null)
             {
-                Debug.LogWarning("[SlotUI_ToolInv] InventoryManager_ToolÀÌ ¿¬°áµÇÁö ¾Ê¾Ò½À´Ï´Ù.", this);
+                Debug.LogWarning("[SlotUI_ToolInv] InventoryManager_Toolì´ ì—°ê²°ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.", this);
                 return;
             }
 
@@ -242,7 +267,7 @@ namespace KAY
             if (levelupButton != null)
                 levelupButton.onClick.RemoveListener(OnClickLevelUp);
 
-            //-----------------------26.07.23 KDH ¼öÁ¤----------------------------------
+            //-----------------------26.07.23 KDH ìˆ˜ì •----------------------------------
             if (coverButton != null)
                 coverButton.onClick.RemoveListener(HandleSlotClicked);
             //----------------------------------------------------------
@@ -277,6 +302,12 @@ namespace KAY
 
             if (levelupButton != null)
                 levelupButton.gameObject.SetActive(false);
+
+            if (setupAnimal != null)
+                setupAnimal.gameObject.SetActive(false);
+
+            if (findspecialAnimal != null)
+                findspecialAnimal.gameObject.SetActive(false);
         }
     }
 }

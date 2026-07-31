@@ -29,6 +29,10 @@ namespace UI
 
         [Header("참조")]
         [SerializeField] private UIController_VillageUpgrade uiController;
+        [Tooltip("VillageUpgrade_root의 UIPanelWindow. 비어 있으면 자식에서 찾습니다.")]
+        [SerializeField] private UIPanelWindow upgradePanel;
+
+        [SerializeField] private LevelUpPopup levelUpPopup;
 
         [Header("마을 레벨업 비용")]
         [SerializeField] private TownUpgradeCostConfig townUpgradeCostConfig = new TownUpgradeCostConfig();
@@ -45,6 +49,7 @@ namespace UI
         private bool toolDone;
 
         private bool isCoinSubscribed;
+        private bool isPanelOpenSubscribed;
         private Coroutine subscribeRoutine;
 
         private int CompletedCount
@@ -82,12 +87,16 @@ namespace UI
             if (uiController == null)
                 uiController = GetComponent<UIController_VillageUpgrade>();
 
+            if (upgradePanel == null)
+                upgradePanel = GetComponentInChildren<UIPanelWindow>(true);
+
             BindButtons();
         }
 
         private void OnDestroy()
         {
             UnbindButtons();
+            UnsubscribePanelOpened();
             UnsubscribeCoinEvent();
         }
 
@@ -102,11 +111,12 @@ namespace UI
 
         private void OnEnable()
         {
+            TrySubscribePanelOpened();
             TrySubscribeCoinEvent();
             RefreshAllUI();
 
-            if (!isCoinSubscribed && subscribeRoutine == null)
-                subscribeRoutine = StartCoroutine(SubscribeWhenCoinManagerReady());
+            if (subscribeRoutine == null)
+                subscribeRoutine = StartCoroutine(SubscribeWhenDependenciesReady());
         }
 
         private void OnDisable()
@@ -117,7 +127,17 @@ namespace UI
                 subscribeRoutine = null;
             }
 
+            UnsubscribePanelOpened();
             UnsubscribeCoinEvent();
+        }
+
+        /// <summary>
+        /// 세이브 townLevel 복원용. 사이클 완료 플래그는 건드리지 않습니다(사이클 저장은 추후).
+        /// </summary>
+        public void SetTownLevelFromSave(int level)
+        {
+            uiTownLevel = Mathf.Max(1, level);
+            RefreshAllUI();
         }
 
         private void BindButtons()
@@ -156,22 +176,111 @@ namespace UI
                 uiController.VillageLevelUpButton.onClick.RemoveListener(OnClickVillageLevelUp);
         }
 
+        /// <summary>
+        /// 클릭당 코인 업그레이드 버튼클릭
+        /// </summary>
         private void OnClickUpgradeClick()
         {
-            TryCompleteTrack(ref clickDone, () =>
-                TownUpgradeManager.Instance != null && TownUpgradeManager.Instance.TryUpgradeClick());
+            // 기존 코드
+            //TryCompleteTrack(ref clickDone, () =>
+            //    TownUpgradeManager.Instance != null && TownUpgradeManager.Instance.TryUpgradeClick());
+
+            // 2026.07.30 KAY 수정 ---------------------------------------------------------------------
+            TownUpgradeManager manager = TownUpgradeManager.Instance;
+
+            // #19: 엔드리스 모드에서는 clickDone 완료 사이클 개념이 없으므로(TryCompleteTrack 참고)
+            // 팝업을 여는 이 시점부터도 막지 않습니다.
+            if ((!isEndlessMode && clickDone) || manager == null || manager.IsClickUpgradeMaxLevel)
+                return;
+
+            long cost = manager.ClickUpgradeNextCost;
+
+            OpenUpgradePopup(
+                "클릭 코인 획득량을 업그레이드하시겠습니까?",
+                cost,
+                () => TryCompleteTrack(
+                    ref clickDone,
+                    () => manager.TryUpgradeClick()));
+            Debug.Log("클릭 코인 획득량을 업그레이드하시겠습니까?");
         }
 
+        /// <summary>
+        /// 타이핑당 코인 업그레이드 버튼클릭
+        /// </summary>
         private void OnClickUpgradeTyping()
         {
-            TryCompleteTrack(ref typingDone, () =>
-                TownUpgradeManager.Instance != null && TownUpgradeManager.Instance.TryUpgradeTyping());
+            // 기존 코드
+            //TryCompleteTrack(ref typingDone, () =>
+            //    TownUpgradeManager.Instance != null && TownUpgradeManager.Instance.TryUpgradeTyping());
+
+            // 2026.07.30 KAY 수정 ---------------------------------------------------------------------
+            TownUpgradeManager manager = TownUpgradeManager.Instance;
+
+            // #19: 엔드리스 모드에서는 typingDone 완료 사이클 개념이 없으므로 팝업을 여는
+            // 이 시점부터도 막지 않습니다.
+            if ((!isEndlessMode && typingDone) || manager == null || manager.IsTypingUpgradeMaxLevel)
+                return;
+
+            long cost = manager.TypingUpgradeNextCost;
+
+            OpenUpgradePopup(
+                "타이핑 코인 획득량을 업그레이드하시겠습니까?",
+                cost,
+                () => TryCompleteTrack(
+                    ref typingDone,
+                    () => manager.TryUpgradeTyping()));
+
+            Debug.Log("타이핑 코인 획득량을 업그레이드하시겠습니까?");
         }
 
+        /// <summary>
+        /// 도구 생산 효율 업그레이드 버튼클릭
+        /// </summary>
         private void OnClickUpgradeTool()
         {
-            TryCompleteTrack(ref toolDone, () =>
-                TownUpgradeManager.Instance != null && TownUpgradeManager.Instance.TryUpgradeToolEfficiency());
+            // 기존 코드
+            //TryCompleteTrack(ref toolDone, () =>
+            //    TownUpgradeManager.Instance != null && TownUpgradeManager.Instance.TryUpgradeToolEfficiency());
+
+            // 2026.07.30 KAY 수정 ---------------------------------------------------------------------
+            TownUpgradeManager manager = TownUpgradeManager.Instance;
+
+            // #19: 엔드리스 모드에서는 toolDone 완료 사이클 개념이 없으므로 팝업을 여는
+            // 이 시점부터도 막지 않습니다.
+            if ((!isEndlessMode && toolDone) || manager == null || manager.IsToolEfficiencyUpgradeMaxLevel)
+                return;
+
+            long cost = manager.ToolEfficiencyUpgradeNextCost;
+
+            OpenUpgradePopup(
+                "도구 생산 효율을 업그레이드하시겠습니까?",
+                cost,
+                () => TryCompleteTrack(
+                    ref toolDone,
+                    () => manager.TryUpgradeToolEfficiency()));
+
+            Debug.Log("도구 생산 효율을 업그레이드하시겠습니까?");
+        }
+
+        /// <summary>
+        /// 마을 레벨업 버튼클릭
+        /// </summary>
+        private void OnClickVillageLevelUp()
+        {
+            // 기존 코드
+            // TryVillageLevelUp();
+
+            // 2026.07.30 KAY 수정 ---------------------------------------------------------------------
+            // #19: 마을 레벨 상한(10) 도달 시 방어적으로 팝업조차 열지 않습니다.
+            if (IsVillageLevelMaxed || !IsReadyForVillageLevelUp)
+                return;
+
+            long cost = GetVillageLevelUpCost();
+
+            OpenUpgradePopup(
+                $"마을을 Lv.{uiTownLevel + 1}로 업그레이드하시겠습니까?",
+                cost,
+                () => TryVillageLevelUp());
         }
 
         private void TryCompleteTrack(ref bool doneFlag, System.Func<bool> tryUpgrade)
@@ -192,10 +301,23 @@ namespace UI
             RefreshAllUI();
         }
 
-        private void OnClickVillageLevelUp()
+        /// <summary>
+        /// 코인 소모 업그레이드 확인 팝업을 엽니다.
+        /// </summary>
+        private void OpenUpgradePopup(string message, long cost, Action confirmAction)
         {
-            TryVillageLevelUp();
+            if (levelUpPopup == null)
+            {
+                Debug.LogWarning("[VillageUpgradeUI_Manager] LevelUpPopup이 연결되지 않았습니다.");
+                return;
+            }
+
+            if (confirmAction == null)
+                return;
+
+            levelUpPopup.OpenLevelUpPopup(message, $"Expend Coin : <color=#4F2002><b>{cost:N0}</b></color>", confirmAction);
         }
+
 
         /// <summary>
         /// 마을 레벨이 상한(10)에 도달했는지. 엔드리스 모드여도 마을 레벨 자체는 10에서 고정되고,
@@ -253,6 +375,7 @@ namespace UI
             if (uiController == null)
                 return;
 
+            // 요소 영구 업그레이드 상태 (TownUpgradeManager / EarnProcessor — 세이브 복원값 포함)
             TownUpgradeManager tum = TownUpgradeManager.Instance;
             if (tum != null)
             {
@@ -266,7 +389,6 @@ namespace UI
                     tum.IsToolEfficiencyUpgradeMaxLevel);
             }
 
-            // 각 _pan Value: 클릭/타이핑은 EarnProcessor 현재 획득량, 도구효율은 TownUpgrade 배율
             int clickValue = 0;
             int typingValue = 0;
             if (EarnProcessor.Instance != null)
@@ -293,6 +415,39 @@ namespace UI
 
             RefreshInteractableStates();
             OnVillageUpgradeStateChanged?.Invoke();
+        }
+
+        private void OnUpgradePanelOpened()
+        {
+            // Canvas는 상시 활성, root만 토글되므로 오픈 시 세이브 반영 상태(요소/마을 레벨)를 다시 그립니다.
+            RefreshAllUI();
+        }
+
+        private void TrySubscribePanelOpened()
+        {
+            if (isPanelOpenSubscribed)
+                return;
+
+            if (upgradePanel == null)
+                upgradePanel = GetComponentInChildren<UIPanelWindow>(true);
+
+            if (upgradePanel == null)
+                return;
+
+            upgradePanel.OnPanelOpened -= OnUpgradePanelOpened;
+            upgradePanel.OnPanelOpened += OnUpgradePanelOpened;
+            isPanelOpenSubscribed = true;
+        }
+
+        private void UnsubscribePanelOpened()
+        {
+            if (!isPanelOpenSubscribed)
+                return;
+
+            if (upgradePanel != null)
+                upgradePanel.OnPanelOpened -= OnUpgradePanelOpened;
+
+            isPanelOpenSubscribed = false;
         }
 
         private void RefreshInteractableStates()
@@ -325,12 +480,15 @@ namespace UI
             uiController.SetVillageLevelUpInteractable(villageEnabled);
         }
 
-        private IEnumerator SubscribeWhenCoinManagerReady()
+        private IEnumerator SubscribeWhenDependenciesReady()
         {
             const float timeoutSeconds = 3f;
             float elapsed = 0f;
 
-            while (CoinManager.Instance == null && elapsed < timeoutSeconds)
+            while (elapsed < timeoutSeconds
+                   && (CoinManager.Instance == null
+                       || EarnProcessor.Instance == null
+                       || TownUpgradeManager.Instance == null))
             {
                 elapsed += Time.unscaledDeltaTime;
                 yield return null;
@@ -338,7 +496,7 @@ namespace UI
 
             subscribeRoutine = null;
             TrySubscribeCoinEvent();
-            RefreshInteractableStates();
+            RefreshAllUI();
         }
 
         private void TrySubscribeCoinEvent()
