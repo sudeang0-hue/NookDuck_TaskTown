@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿//NB
+
+using UnityEngine;
 using UnityEngine.AI;
 using System.Collections.Generic;
 
@@ -27,7 +29,7 @@ public class ObjectDragger : MonoBehaviour
     void Start()
     {
         gameManager = Object.FindFirstObjectByType<GameMasterManager>();
-        // [신규] VillagerPlacementDirector 씬 내 탐색 및 캐싱
+        // VillagerPlacementDirector 씬 내 탐색 및 캐싱
         placementDirector = Object.FindFirstObjectByType<VillagerPlacementDirector>();
         //VillageHouse 레이어를 가진 모든 자식 Collider 수집
         CacheVillageHouseColliders();
