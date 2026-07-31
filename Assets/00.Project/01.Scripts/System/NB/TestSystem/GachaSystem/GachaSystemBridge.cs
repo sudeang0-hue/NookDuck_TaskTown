@@ -1,5 +1,3 @@
-//NB
-
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -7,34 +5,54 @@ using TaskTown.Gacha;
 using TaskTown.KDH;
 using Tool.Data;
 
+public enum GachaType
+{
+    Tool,   // 도구 뽑기
+    Animal  // 동물 뽑기
+}
+
+/// <summary>
+/// [ECHO TD Refactored] 도구 및 동물 가챠 통합 브릿지 클래스.
+/// 인스펙터 이벤트 충돌을 방지하고 최근 실행된 가챠 타입을 추적합니다.
+/// </summary>
 public class GachaSystemBridge : MonoBehaviour
 {
-    [Header("Data Asset Reference")]
+    [Header("★ Data Asset References ★")]
     [SerializeField] private GachaPoolData toolGachaPoolData;
+    [SerializeField] private GachaPoolData animalGachaPoolData;
 
-    [Header("Teammate's System References")]
-    [SerializeField] private ToolGachaManager gachaManager;
+    [Header("★ System Manager References ★")]
+    [SerializeField] private ToolGachaManager toolGachaManager;
+    [SerializeField] private ToolGachaManager animalGachaManager; // 동물 매니저 클래스 연결
 
     [Tooltip("ICoinWallet을 구현한 코인 관리자 컴포넌트")]
     [SerializeField] private MonoBehaviour coinWalletSource;
     private ICoinWallet CoinWallet => coinWalletSource as ICoinWallet;
 
-    [Header("UI Window References")]
+    [Header("★ Main UI Window References ★")]
     [SerializeField] private GameObject teammateInitialWindow;
     [SerializeField] private Button btnOpenGachaWindow;
-    [SerializeField] private Button btnDraw1;
-    [SerializeField] private Button btnDraw10;
 
-    [Header("Result Window Re-roll Buttons")]
+    [Header("★ Tool Gacha UI Buttons ★")]
+    [SerializeField] private Button btnToolDraw1;
+    [SerializeField] private Button btnToolDraw10;
+
+    [Header("★ Animal Gacha UI Buttons ★")]
+    [SerializeField] private Button btnAnimalDraw1;
+    [SerializeField] private Button btnAnimalDraw10;
+
+    [Header("★ Result Window Re-roll Buttons ★")]
     [SerializeField] private Button btnResultDraw1;
     [SerializeField] private Button btnResultDraw10;
 
-    [Header("Director Reference")]
+    [Header("★ Director Reference ★")]
     [SerializeField] private GachaDirector gachaDirector;
 
-    private bool _isOpen = false;
+    // 최근에 실행한 가챠 타입을 기억 (결과창 다시 뽑기 용도)
+    private GachaType _lastExecutedType = GachaType.Tool;
+
     private float _lastClickTime = 0f;
-    private const float CLICK_THRESHOLD = 0.3f; // 연타 방지 간격 살짝 보정
+    private const float CLICK_THRESHOLD = 0.3f;
 
     private void Awake()
     {
@@ -50,90 +68,89 @@ public class GachaSystemBridge : MonoBehaviour
 
     private void InitButtonListeners()
     {
-        // 코드로 이벤트를 묶을 때는 인스펙터 버튼 OnClick 리스트를 비워두는 것이 안전합니다.
+        RemoveButtonListeners();
+
         if (btnOpenGachaWindow != null)
-        {
-            btnOpenGachaWindow.onClick.RemoveAllListeners();
             btnOpenGachaWindow.onClick.AddListener(ToggleGachaWindow);
-        }
 
-        if (btnDraw1 != null)
-        {
-            btnDraw1.onClick.RemoveAllListeners();
-            btnDraw1.onClick.AddListener(() => OnClickedDrawGacha(1));
-        }
+        // 도구 뽑기 바인딩
+        if (btnToolDraw1 != null)
+            btnToolDraw1.onClick.AddListener(() => OnClickedDrawGacha(GachaType.Tool, 1));
+        if (btnToolDraw10 != null)
+            btnToolDraw10.onClick.AddListener(() => OnClickedDrawGacha(GachaType.Tool, 10));
 
-        if (btnDraw10 != null)
-        {
-            btnDraw10.onClick.RemoveAllListeners();
-            btnDraw10.onClick.AddListener(() => OnClickedDrawGacha(10));
-        }
+        // 동물 뽑기 바인딩
+        if (btnAnimalDraw1 != null)
+            btnAnimalDraw1.onClick.AddListener(() => OnClickedDrawGacha(GachaType.Animal, 1));
+        if (btnAnimalDraw10 != null)
+            btnAnimalDraw10.onClick.AddListener(() => OnClickedDrawGacha(GachaType.Animal, 10));
 
+        // ★ 결과창 다시 뽑기: 최근 실행했던 가챠 타입(_lastExecutedType)으로 재요청!
         if (btnResultDraw1 != null)
-        {
-            btnResultDraw1.onClick.RemoveAllListeners();
-            btnResultDraw1.onClick.AddListener(() => OnClickedDrawGacha(1));
-        }
-
+            btnResultDraw1.onClick.AddListener(() => OnClickedDrawGacha(_lastExecutedType, 1));
         if (btnResultDraw10 != null)
-        {
-            btnResultDraw10.onClick.RemoveAllListeners();
-            btnResultDraw10.onClick.AddListener(() => OnClickedDrawGacha(10));
-        }
+            btnResultDraw10.onClick.AddListener(() => OnClickedDrawGacha(_lastExecutedType, 10));
     }
 
     private void RemoveButtonListeners()
     {
         if (btnOpenGachaWindow != null) btnOpenGachaWindow.onClick.RemoveAllListeners();
-        if (btnDraw1 != null) btnDraw1.onClick.RemoveAllListeners();
-        if (btnDraw10 != null) btnDraw10.onClick.RemoveAllListeners();
+        if (btnToolDraw1 != null) btnToolDraw1.onClick.RemoveAllListeners();
+        if (btnToolDraw10 != null) btnToolDraw10.onClick.RemoveAllListeners();
+        if (btnAnimalDraw1 != null) btnAnimalDraw1.onClick.RemoveAllListeners();
+        if (btnAnimalDraw10 != null) btnAnimalDraw10.onClick.RemoveAllListeners();
         if (btnResultDraw1 != null) btnResultDraw1.onClick.RemoveAllListeners();
         if (btnResultDraw10 != null) btnResultDraw10.onClick.RemoveAllListeners();
     }
 
     public void ToggleGachaWindow()
     {
-        _isOpen = !_isOpen;
-        if (_isOpen) OpenAllGachaWindows();
-        else CloseAllGachaWindows();
+        if (teammateInitialWindow == null) return;
+
+        bool isCurrentlyActive = teammateInitialWindow.activeSelf;
+        if (isCurrentlyActive) CloseAllGachaWindows();
+        else OpenAllGachaWindows();
     }
 
-    private void OpenAllGachaWindows()
+    public void OpenAllGachaWindows()
     {
         if (teammateInitialWindow != null) teammateInitialWindow.SetActive(true);
         if (gachaDirector != null) gachaDirector.OpenGachaWindowOnly();
     }
 
-    private void CloseAllGachaWindows()
+    public void CloseAllGachaWindows()
     {
         if (teammateInitialWindow != null) teammateInitialWindow.SetActive(false);
         if (gachaDirector != null) gachaDirector.CloseGachaUI();
     }
 
-    private void OnClickedDrawGacha(int drawCount)
+    private void OnClickedDrawGacha(GachaType gachaType, int drawCount)
     {
-        // 중복 클릭 쿨다운 방어
         if (Time.time - _lastClickTime < CLICK_THRESHOLD) return;
         _lastClickTime = Time.time;
 
-        if (gachaManager == null)
+        // 최근 가챠 타입 갱신
+        _lastExecutedType = gachaType;
+
+        ToolGachaManager targetManager = (gachaType == GachaType.Tool) ? toolGachaManager : animalGachaManager;
+
+        if (targetManager == null)
         {
-            Debug.LogError("<color=red>[GachaBridge]</color> GachaManager 참조가 연결되지 않았습니다!");
+            Debug.LogError($"<color=red>[GachaBridge]</color> {gachaType} GachaManager가 할당되지 않았습니다!");
             return;
         }
 
-        long requiredCost = gachaManager.GetCost(drawCount);
+        long requiredCost = targetManager.GetCost(drawCount);
 
         if (CoinWallet != null && CoinWallet.Balance < requiredCost)
         {
-            Debug.LogWarning($"<color=red>[GachaBridge] 골드 부족!</color> (필요: {requiredCost} / 보유: {CoinWallet.Balance})");
+            Debug.LogWarning($"<color=red>[GachaBridge] {gachaType} 골드 부족!</color> (필요: {requiredCost})");
             return;
         }
 
         if (CoinWallet != null && !CoinWallet.TrySpend(requiredCost)) return;
 
-        // 가챠 계산 실행
-        List<GachaResult> rollResults = gachaManager.RollMulti(drawCount);
+        List<GachaResult> rollResults = targetManager.RollMulti(drawCount);
         List<GachaEntryData> entryDataList = new List<GachaEntryData>();
 
         if (rollResults != null)
@@ -141,27 +158,11 @@ public class GachaSystemBridge : MonoBehaviour
             foreach (GachaResult result in rollResults)
             {
                 if (result.Entry == null) continue;
-
                 entryDataList.Add(result.Entry);
-
-     
-                if (result.Entry is ToolDataSO toolData)
-                {
-                    // GachaManager가 '순수 확률 계산'만 하고 지급을 안 하는 구조라면 아래 주석을 해제
-                    // 현재 1+1 버그가 발생한다면 GachaManager가 이미 지급을 하고 있는 상태
-
-                    /*
-                    if (InventoryManager_Tool.Instance != null)
-                    {
-                        InventoryManager_Tool.Instance.AddToolSlot(toolData);
-                    }
-                    */
-                    Debug.Log($"<color=cyan>[GachaBridge] 도구 결과 확인:</color> {toolData.DisplayName}");
-                }
+                Debug.Log($"<color=lime>[GachaBridge] {gachaType} 획득:</color> {result.Entry.DisplayName}");
             }
         }
 
-        _isOpen = false;
         if (teammateInitialWindow != null) teammateInitialWindow.SetActive(false);
 
         if (gachaDirector != null)

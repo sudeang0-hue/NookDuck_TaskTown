@@ -1,134 +1,207 @@
-using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using DG.Tweening;
+using TaskTown.Gacha;
 
+/// <summary>
+/// [ECHO TD] pure C# 및 유니티 기본 UI 전용 폴라로이드 카메라 가챠 연출 디렉터.
+/// (스페이스바 단축키 전용 테스트 버전)
+/// </summary>
 public class PolaroidGachaDirector : MonoBehaviour
 {
-    [Header("★ Camera & Mask References ★")]
-    [SerializeField] private RectTransform cameraTransform; // 카메라 RectTransform
-    [SerializeField] private RectMask2D slotMask;           // 슬롯 구멍 마스크 컴포넌트
-    [SerializeField] private RectTransform photoCardRect;   // 인화될 사진 카드 RectTransform
-    [SerializeField] private CanvasGroup photoCanvasGroup;   // 사진 카드 CanvasGroup
+    [Header("★ UI Visual Components ★")]
+    [SerializeField] private CanvasGroup flashCanvasGroup;
+    [SerializeField] private RectTransform cameraContainer;
+    [SerializeField] private RectTransform printedPhotoUI;
+    [SerializeField] private RectTransform resultWindowPanel;
+    [SerializeField] private CanvasGroup resultWindowCanvasGroup;
 
-    [Header("★ Result Popup References ★")]
-    [SerializeField] private GameObject resultPopupPanel;   // 결과창 패널
-    [SerializeField] private RectTransform resultCenterTarget; // 결과창 중앙 목표 위치
+    [Header("★ Result UI Data Binding ★")]
+    [SerializeField] private Image resultItemIcon;
+    [SerializeField] private TextMeshProUGUI resultItemNameText;
 
-    [Header("★ Photo Card Inner Data ★")]
-    [SerializeField] private Image animalPhotoImage;         // 카드 안 동물 이미지
-    [SerializeField] private TextMeshProUGUI animalNameText; // 카드 안 동물 이름
+    private Vector2 _photoOriginalAnchoredPos;
+    private Vector2 _resultWindowOriginalPos;
 
-    // 연출 제어용 시퀀스 객체
-    private Sequence _polaroidSequence;
-
-    /// <summary>
-    /// 폴라로이드 가챠 연출 시작 함수
-    /// </summary>
-    /// <param name="animalSprite">뽑힌 동물 이미지</param>
-    /// <param name="animalName">뽑힌 동물 이름</param>
-    /// <param name="onComplete">연출 종료 후 콜백</param>
-    public void PlayPolaroidEjectSequence(Sprite animalSprite, string animalName, Action onComplete = null)
+    private void Awake()
     {
-        // 1. 이전 트윈 안전하게 제거 및 데이터 바인딩
-        KillSequence();
+        if (printedPhotoUI != null)
+            _photoOriginalAnchoredPos = printedPhotoUI.anchoredPosition;
 
-        if (animalPhotoImage != null) animalPhotoImage.sprite = animalSprite;
-        if (animalNameText != null) animalNameText.text = animalName;
+        if (resultWindowPanel != null)
+            _resultWindowOriginalPos = resultWindowPanel.anchoredPosition;
 
-        // 2. 초기 상태 셋팅 (슬롯 구멍 안쪽에 은밀히 배치)
-        slotMask.enabled = true; // 마스크 활성화 (구멍 밖으로 나가는 부분만 보이게)
-
-        // 마스크 기준 슬롯 내부 시작 위치 설정 (Y축으로 위쪽에 숨겨둠)
-        photoCardRect.anchoredPosition = new Vector2(0f, 150f);
-        photoCardRect.localRotation = Quaternion.identity;
-        photoCardRect.localScale = Vector3.one * 0.8f; // 약간 작은 크기
-        photoCanvasGroup.alpha = 1f;
-
-        // 3. DOTween Sequence 연출 조립
-        _polaroidSequence = DOTween.Sequence();
-
-        // ----------------------------------------------------
-        // [Phase 1: 쭈욱~ 슬롯에서 인화되어 내려오기]
-        // ----------------------------------------------------
-        _polaroidSequence.Append(
-            photoCardRect.DOAnchorPosY(-80f, 0.8f) // 슬롯 밖으로 쑥 빠져나옴
-                .SetEase(Ease.OutCubic)
-        );
-        _polaroidSequence.AppendInterval(0.15f); // 잠깐 멈칫하는 폴라로이드 감성 딜레이
-
-        // ----------------------------------------------------
-        // [Phase 2: 바깥으로 휘리릭~ 날아가기 (마스크 탈출 & 공중 회전)]
-        // ----------------------------------------------------
-        _polaroidSequence.AppendCallback(() =>
-        {
-            // ★ 핵심 트릭: 마스크 제약을 풀어서 화면 어디든 자유롭게 날아다니게 만듭니다!
-            slotMask.enabled = false;
-        });
-
-        // [★ CS1503 오류 수정 지점 ★]
-        // Vector2를 Vector3로 변환하여 DOPath()의 Vector3[] 인수 요구사항을 완벽히 충족시킵니다.
-        Vector3 p0 = photoCardRect.anchoredPosition; // Vector2 -> Vector3 암시적 형변환
-        Vector3 p1 = new Vector3(p0.x + 400f, p0.y + 350f, 0f); // 우측 상단 공중 궤적 정점
-        Vector3 p2 = Vector3.zero; // 화면 중앙 도착점
-
-        // DOTween DOPath 사양에 맞춘 Vector3[] 배열 선언
-        Vector3[] pathPoints = new Vector3[] { p0, p1, p2 };
-
-        // 베지에 곡선 이동 + 360도 회전 + 스케일 팝업을 동시 진행(Join)
-        _polaroidSequence.Append(
-            photoCardRect.DOPath(pathPoints, 0.75f, PathType.CatmullRom)
-                .SetEase(Ease.OutQuad)
-        );
-        _polaroidSequence.Join(
-            photoCardRect.DORotate(new Vector3(0f, 0f, -360f), 0.75f, RotateMode.FastBeyond360)
-                .SetEase(Ease.OutCubic)
-        );
-        _polaroidSequence.Join(
-            photoCardRect.DOScale(1.3f, 0.75f) // 공중에서 커졌다가
-                .SetEase(Ease.OutBack)
-        );
-
-        // ----------------------------------------------------
-        // [Phase 3: 화면 위에서 가운데로 스르륵 내려오며 결과창 바인딩]
-        // ----------------------------------------------------
-        _polaroidSequence.Append(
-            photoCardRect.DOScale(1.0f, 0.3f) // 정크기 복원
-                .SetEase(Ease.InQuad)
-        );
-        _polaroidSequence.Join(
-            photoCardRect.DORotate(Vector3.zero, 0.3f) // 회전 정방향 정렬
-        );
-
-        // 결과창 패널 켜기 및 최종 바운스
-        _polaroidSequence.AppendCallback(() =>
-        {
-            if (resultPopupPanel != null) resultPopupPanel.SetActive(true);
-        });
-
-        _polaroidSequence.Append(
-            photoCardRect.DOPunchScale(new Vector3(0.15f, 0.15f, 0f), 0.35f, vibrato: 5, elasticity: 0.5f)
-        );
-
-        // 연출 완료 처리
-        _polaroidSequence.OnComplete(() =>
-        {
-            Debug.Log("<color=lime>[PolaroidSequence]</color> 사진 인화 및 안착 연출 완료!");
-            onComplete?.Invoke();
-        });
+        InitVisualState();
     }
 
-    private void KillSequence()
+    private void Update()
     {
-        if (_polaroidSequence != null && _polaroidSequence.IsActive())
+        // 주인님 요청: 스페이스바 누르면 곧바로 연출 실행!
+        if (Input.GetKeyDown(KeyCode.Space))
         {
-            _polaroidSequence.Kill();
-            _polaroidSequence = null;
+            StartGachaSequence(1, null);
         }
     }
 
-    private void OnDisable() => KillSequence();
-    private void OnDestroy() => KillSequence();
+    /// <summary>
+    /// 연출 시작 전 UI 초기화
+    /// </summary>
+    public void InitVisualState()
+    {
+        if (flashCanvasGroup != null) flashCanvasGroup.alpha = 0f;
+
+        if (cameraContainer != null)
+        {
+            cameraContainer.localScale = Vector3.zero;
+            cameraContainer.gameObject.SetActive(false);
+        }
+
+        if (printedPhotoUI != null)
+        {
+            printedPhotoUI.anchoredPosition = _photoOriginalAnchoredPos;
+            printedPhotoUI.localRotation = Quaternion.identity;
+            printedPhotoUI.gameObject.SetActive(false);
+        }
+
+        if (resultWindowPanel != null)
+        {
+            resultWindowPanel.anchoredPosition = new Vector2(_resultWindowOriginalPos.x, 1500f);
+            resultWindowPanel.gameObject.SetActive(false);
+        }
+
+        if (resultWindowCanvasGroup != null)
+        {
+            resultWindowCanvasGroup.blocksRaycasts = false;
+        }
+    }
+
+    /// <summary>
+    /// 연출 시작 진입점
+    /// </summary>
+    public void StartGachaSequence(int count, List<GachaEntryData> results)
+    {
+        // 전달된 데이터가 있을 때만 UI 텍스트/아이콘 바인딩 (null 예외 처리)
+        if (results != null && results.Count > 0 && results[0] != null)
+        {
+            if (resultItemNameText != null) resultItemNameText.text = results[0].DisplayName;
+            if (resultItemIcon != null) resultItemIcon.sprite = results[0].Icon;
+        }
+
+        StopAllCoroutines();
+        StartCoroutine(CoPlayPolaroidSequence());
+    }
+
+    /// <summary>
+    /// 메인 연출 시퀀스 코루틴
+    /// </summary>
+    private IEnumerator CoPlayPolaroidSequence()
+    {
+        InitVisualState();
+
+        // [Phase 1] 카메라 등장 (EaseOutBack 적용)
+        cameraContainer.gameObject.SetActive(true);
+        float duration = 0.5f;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / duration);
+            // $S(t) = 1 + 2.70158(t-1)^3 + 1.70158(t-1)^2$
+            float scale = 1f + 2.70158f * Mathf.Pow(t - 1f, 3) + 1.70158f * Mathf.Pow(t - 1f, 2);
+            cameraContainer.localScale = Vector3.one * scale;
+            yield return null;
+        }
+        cameraContainer.localScale = Vector3.one;
+
+        yield return new WaitForSeconds(0.2f);
+
+        // [Phase 2] 플래시 효과
+        duration = 0.15f;
+        elapsed = 0f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            flashCanvasGroup.alpha = Mathf.Lerp(0f, 1f, elapsed / duration);
+            yield return null;
+        }
+
+        printedPhotoUI.gameObject.SetActive(true);
+
+        duration = 0.25f;
+        elapsed = 0f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            flashCanvasGroup.alpha = Mathf.Lerp(1f, 0f, elapsed / duration);
+            yield return null;
+        }
+        flashCanvasGroup.alpha = 0f;
+
+        // [Phase 3] 사진 인화 (SmoothStep)
+        duration = 0.8f;
+        elapsed = 0f;
+        Vector2 startPos = _photoOriginalAnchoredPos;
+        Vector2 ejectTargetPos = startPos + new Vector2(0f, -250f);
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / duration);
+            // $S(t) = 3t^2 - 2t^3$
+            float smoothT = t * t * (3f - 2f * t);
+
+            printedPhotoUI.anchoredPosition = Vector2.Lerp(startPos, ejectTargetPos, smoothT);
+            yield return null;
+        }
+
+        yield return new WaitForSeconds(0.3f);
+
+        // [Phase 4] 사진 휘리릭 화면 밖으로 날아가기
+        duration = 0.6f;
+        elapsed = 0f;
+        Vector2 flyStartPos = printedPhotoUI.anchoredPosition;
+        Vector2 flyTargetPos = flyStartPos + new Vector2(1200f, 800f);
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / duration);
+            float easeT = t * t;
+
+            printedPhotoUI.anchoredPosition = Vector2.Lerp(flyStartPos, flyTargetPos, easeT);
+            float currentAngle = Mathf.Lerp(0f, -360f, easeT);
+            printedPhotoUI.localRotation = Quaternion.Euler(0f, 0f, currentAngle);
+
+            yield return null;
+        }
+
+        cameraContainer.gameObject.SetActive(false);
+
+        // [Phase 5] 결과창 스르륵 내려오기 (EaseOutCubic)
+        resultWindowPanel.gameObject.SetActive(true);
+        duration = 0.7f;
+        elapsed = 0f;
+
+        Vector2 topHidePos = new Vector2(_resultWindowOriginalPos.x, 1500f);
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / duration);
+            // $E(t) = 1 - (1 - t)^3$
+            float easeOutT = 1f - Mathf.Pow(1f - t, 3f);
+
+            resultWindowPanel.anchoredPosition = Vector2.Lerp(topHidePos, _resultWindowOriginalPos, easeOutT);
+            yield return null;
+        }
+
+        resultWindowPanel.anchoredPosition = _resultWindowOriginalPos;
+        if (resultWindowCanvasGroup != null)
+        {
+            resultWindowCanvasGroup.blocksRaycasts = true;
+        }
+    }
 }
