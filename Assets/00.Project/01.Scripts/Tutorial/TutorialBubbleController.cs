@@ -73,6 +73,7 @@ namespace TaskTown.Tutorial
             tutorialManager.StepChanged += HandleStepChanged;
             tutorialManager.PauseChanged += HandlePauseChanged;
             view.AdvanceRequested += HandleAdvanceRequested;
+            view.SkipConfirmed += HandleSkipConfirmed;
             isSubscribed = true;
         }
 
@@ -89,7 +90,10 @@ namespace TaskTown.Tutorial
             }
 
             if (view != null)
+            {
                 view.AdvanceRequested -= HandleAdvanceRequested;
+                view.SkipConfirmed -= HandleSkipConfirmed;
+            }
 
             isSubscribed = false;
         }
@@ -180,6 +184,14 @@ namespace TaskTown.Tutorial
             }
 
             tutorialManager.ReportSignal(TutorialSignalType.DialogueCompleted);
+        }
+
+        private void HandleSkipConfirmed()
+        {
+            StopPendingStepPresentation();
+
+            if (tutorialManager == null || !tutorialManager.TrySkipTutorial())
+                view?.ResetSkipRequest();
         }
 
         private void HandleTownWindowAdvance(TutorialStepContent content)

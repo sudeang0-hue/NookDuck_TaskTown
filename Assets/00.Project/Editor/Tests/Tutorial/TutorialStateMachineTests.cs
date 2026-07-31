@@ -226,6 +226,40 @@ namespace TaskTown.EditorTests.Tutorial
             Assert.AreEqual(TutorialStep.CompletionDialogue, machine.CurrentStep);
         }
 
+        [Test]
+        public void TrySkipTutorial_일시정지중연속호출에도_보상없이한번호완료한다()
+        {
+            TutorialStateMachine machine = new(new TutorialSaveData
+            {
+                currentStep = TutorialStep.CollapseAndExpandTown,
+                manualEarnedCoin = 75L,
+                rewardFlags =
+                    (int)TutorialProgressFlags.TownWindowGuideCompleted |
+                    (int)TutorialProgressFlags.TownWindowMinimized |
+                    (int)TutorialProgressFlags.TownWindowExpanded
+            });
+            int progressChangedCount = 0;
+            int stepChangedCount = 0;
+            int completedCount = 0;
+            machine.ProgressChanged += _ => progressChangedCount++;
+            machine.StepChanged += (_, _) => stepChangedCount++;
+            machine.Completed += () => completedCount++;
+            machine.SetPaused(true);
+
+            bool first = machine.TrySkipTutorial();
+            bool second = machine.TrySkipTutorial();
+
+            Assert.IsTrue(first);
+            Assert.IsFalse(second);
+            Assert.IsTrue(machine.IsCompleted);
+            Assert.AreEqual(TutorialStep.Completed, machine.CurrentStep);
+            Assert.AreEqual(75L, machine.ManualEarnedCoin);
+            Assert.IsFalse(machine.IsTownWindowRewardGranted);
+            Assert.AreEqual(1, progressChangedCount);
+            Assert.AreEqual(1, stepChangedCount);
+            Assert.AreEqual(1, completedCount);
+        }
+
         private static TutorialStateMachine CreateMachine(TutorialStep step)
         {
             return new TutorialStateMachine(new TutorialSaveData

@@ -150,6 +150,75 @@ namespace TaskTown.EditorTests.Tutorial
             }
         }
 
+        [Test]
+        public void SkipButton_확인과취소를거쳐_완료요청을한번호전달한다()
+        {
+            GameObject root = new(
+                "TutorialSkipViewTest",
+                typeof(CanvasGroup),
+                typeof(TutorialBubbleView));
+            GameObject skipRoot = new("TutorialSkipUI");
+            skipRoot.transform.SetParent(root.transform);
+            GameObject skipButtonObject = new("SkipButton", typeof(Button));
+            skipButtonObject.transform.SetParent(skipRoot.transform);
+            GameObject confirmationPanel = new("SkipConfirmationPanel");
+            confirmationPanel.transform.SetParent(skipRoot.transform);
+            GameObject confirmButtonObject = new("ConfirmButton", typeof(Button));
+            confirmButtonObject.transform.SetParent(confirmationPanel.transform);
+            GameObject cancelButtonObject = new("CancelButton", typeof(Button));
+            cancelButtonObject.transform.SetParent(confirmationPanel.transform);
+
+            TutorialBubbleView view = root.GetComponent<TutorialBubbleView>();
+            Button skipButton = skipButtonObject.GetComponent<Button>();
+            Button confirmButton = confirmButtonObject.GetComponent<Button>();
+            Button cancelButton = cancelButtonObject.GetComponent<Button>();
+
+            SerializedObject serialized = new(view);
+            serialized.FindProperty("canvasGroup").objectReferenceValue =
+                root.GetComponent<CanvasGroup>();
+            serialized.FindProperty("skipRoot").objectReferenceValue = skipRoot;
+            serialized.FindProperty("skipButton").objectReferenceValue = skipButton;
+            serialized.FindProperty("skipConfirmationPanel").objectReferenceValue =
+                confirmationPanel;
+            serialized.FindProperty("confirmSkipButton").objectReferenceValue =
+                confirmButton;
+            serialized.FindProperty("cancelSkipButton").objectReferenceValue =
+                cancelButton;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+
+            InvokeLifecycle(view, "OnEnable");
+            view.SetVisible(true);
+            int skipCount = 0;
+            view.SkipConfirmed += () => skipCount++;
+
+            skipButton.onClick.Invoke();
+            Assert.IsTrue(view.IsSkipConfirmationOpen);
+            Assert.IsTrue(confirmationPanel.activeSelf);
+            Assert.IsFalse(skipButton.interactable);
+
+            cancelButton.onClick.Invoke();
+            Assert.IsFalse(view.IsSkipConfirmationOpen);
+            Assert.IsFalse(confirmationPanel.activeSelf);
+            Assert.IsTrue(skipButton.interactable);
+
+            skipButton.onClick.Invoke();
+            confirmButton.onClick.Invoke();
+            confirmButton.onClick.Invoke();
+            Assert.AreEqual(1, skipCount);
+            Assert.IsFalse(confirmButton.interactable);
+            Assert.IsFalse(cancelButton.interactable);
+
+            view.ResetSkipRequest();
+            Assert.IsFalse(view.IsSkipConfirmationOpen);
+            Assert.IsTrue(skipButton.interactable);
+
+            view.SetVisible(false);
+            Assert.IsFalse(skipRoot.activeSelf);
+
+            InvokeLifecycle(view, "OnDisable");
+            Object.DestroyImmediate(root);
+        }
+
         private static void InvokeLifecycle(TutorialBubbleView view, string methodName)
         {
             MethodInfo method = typeof(TutorialBubbleView).GetMethod(
