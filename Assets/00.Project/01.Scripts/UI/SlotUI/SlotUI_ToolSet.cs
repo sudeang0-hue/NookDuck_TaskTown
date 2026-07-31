@@ -105,8 +105,8 @@ namespace UI
 
             if (toolNameText != null)
             {
-                //toolNameText.text = data.DisplayName;
-                toolNameText.text = data.Id;
+                toolNameText.text = data.DisplayName;
+                /*toolNameText.text = data.Id;*/
             }
         }
 

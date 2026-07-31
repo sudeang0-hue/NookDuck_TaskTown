@@ -438,6 +438,54 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 80764122}
   m_CullTransparentMesh: 1
+--- !u!1 &95455239
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 95455241}
+  - component: {fileID: 95455240}
+  m_Layer: 0
+  m_Name: WorldHoverOutlineDetector
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &95455240
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 95455239}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5ff2f310b16849348bd52de4ceb5d8bd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WorldHoverOutlineDetector
+  hoverTargetLayer:
+    serializedVersion: 2
+    m_Bits: 1024
+  maxDistance: 1000
+--- !u!4 &95455241
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 95455239}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -11.49384, y: 1.83065, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &97025290
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1668,9 +1716,17 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: -7511558181221131132, guid: 48aa254ae6dc2d14f9c8c119b2960cb0, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 48aa254ae6dc2d14f9c8c119b2960cb0, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: ba739572566e88d46a1300e1fbf2ff75, type: 2}
+    - target: {fileID: -7511558181221131132, guid: 48aa254ae6dc2d14f9c8c119b2960cb0, type: 3}
+      propertyPath: 'm_Materials.Array.data[1]'
+      value: 
+      objectReference: {fileID: 2100000, guid: a1b6824c43f196d4488ff1a3198c577c, type: 2}
     - target: {fileID: 919132149155446097, guid: 48aa254ae6dc2d14f9c8c119b2960cb0, type: 3}
       propertyPath: m_Name
       value: village_house
@@ -1689,6 +1745,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 48aa254ae6dc2d14f9c8c119b2960cb0, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1255209064}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 48aa254ae6dc2d14f9c8c119b2960cb0, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1255209068}
   m_SourcePrefab: {fileID: 100100000, guid: 48aa254ae6dc2d14f9c8c119b2960cb0, type: 3}
 --- !u!4 &421535596 stripped
 Transform:
@@ -4332,6 +4391,28 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.99386597, y: 0.997803, z: 0.68313617}
   m_Center: {x: 0, y: -0.00000005960465, z: 0.34156814}
+--- !u!23 &1255209066 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -7511558181221131132, guid: 48aa254ae6dc2d14f9c8c119b2960cb0, type: 3}
+  m_PrefabInstance: {fileID: 418738413}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1255209068
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1255209062}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d6ab04e0a8d69e4a82e8dff13bb767e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoverOutlineTarget
+  targetRenderer: {fileID: 1255209066}
+  outlineMaterialIndex: 1
+  outlineSizeProperty: _OutlineSize
+  defaultOutlineSize: 1
+  hoveredOutlineSize: 1.017
 --- !u!1001 &1269103744
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -7149,3 +7230,4 @@ SceneRoots:
   - {fileID: 257168340}
   - {fileID: 99533237}
   - {fileID: 756930587}
+  - {fileID: 95455241}
