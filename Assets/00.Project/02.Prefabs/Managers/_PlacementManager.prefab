@@ -1,0 +1,82 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &6139726820925833212
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4144212131040562348}
+  - component: {fileID: 1748949268059017212}
+  - component: {fileID: 7810007451103311273}
+  m_Layer: 0
+  m_Name: _PlacementManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4144212131040562348
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6139726820925833212}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -9.87396, y: 3.27941, z: -1.63675}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1748949268059017212
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6139726820925833212}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dedcd3e360ac0b942a9b51899ab70a6d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BusGachaDirector
+  villageOrigin: {fileID: 0}
+  villagerParent: {fileID: 0}
+  busObject: {fileID: 0}
+  trunkTransform: {fileID: 0}
+  placementDB: {fileID: 11400000, guid: aac39fac69118d041bc86ad00a727f96, type: 2}
+  animalPrefab: {fileID: 919132149155446097, guid: 379612d7b5ec4054189335cfb8f5f5aa, type: 3}
+  uiManager: {fileID: 0}
+  confirmButton: {fileID: 0}
+  pathPoints:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  busMoveDuration: 3
+  lookAheadValue: 0.05
+  exitJumpDistance: 3
+  exitJumpHeight: 1
+  exitJumpDuration: 0.5
+--- !u!114 &7810007451103311273
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6139726820925833212}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3c6e9d8282acb0d4fb644f9d234a1a2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TaskTown.Village.VillagePlacementBridge
+  uiManager: {fileID: 0}
+  uiController: {fileID: 0}
+  placementDirector: {fileID: 1748949268059017212}
+  animalInventory: {fileID: 0}
