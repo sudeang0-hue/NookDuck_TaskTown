@@ -450,6 +450,81 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 8eb0484ff55e2634ca351cab80c3b7d5, type: 3}
+--- !u!1 &293151304
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 293151305}
+  - component: {fileID: 293151307}
+  - component: {fileID: 293151306}
+  m_Layer: 5
+  m_Name: SlotMask
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &293151305
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 293151304}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1519454599}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: -153}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &293151306
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 293151304}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 0}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &293151307
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 293151304}
+  m_CullTransparentMesh: 1
 --- !u!1 &305098326
 GameObject:
   m_ObjectHideFlags: 0
@@ -714,6 +789,11 @@ GameObject:
 --- !u!225 &637119948 stripped
 CanvasGroup:
   m_CorrespondingSourceObject: {fileID: 5664829716350710890, guid: df8d51c0b6aba7042b4d4306ac054c54, type: 3}
+  m_PrefabInstance: {fileID: 815748624545923353}
+  m_PrefabAsset: {fileID: 0}
+--- !u!224 &637119949 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 4123400959741478756, guid: df8d51c0b6aba7042b4d4306ac054c54, type: 3}
   m_PrefabInstance: {fileID: 815748624545923353}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &658279446 stripped
@@ -1994,6 +2074,42 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 2223273691926813692, guid: df8d51c0b6aba7042b4d4306ac054c54, type: 3}
   m_PrefabInstance: {fileID: 815748624545923353}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1304074197
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1304074198}
+  m_Layer: 5
+  m_Name: PolaroidGachaPanel
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1304074198
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1304074197}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1519454599}
+  m_Father: {fileID: 637119949}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1306481038 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 6f45d80bc2915b642aa8d7c1f2d8d1b6, type: 3}
@@ -2596,6 +2712,82 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 997a9f26b2b231440ae5a8bd9650135f, type: 3}
+--- !u!1 &1519454598
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1519454599}
+  - component: {fileID: 1519454601}
+  - component: {fileID: 1519454600}
+  m_Layer: 5
+  m_Name: PolaroidCamera
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1519454599
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1519454598}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 293151305}
+  m_Father: {fileID: 1304074198}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 400, y: 450}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1519454600
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1519454598}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 21300000, guid: 50f8a75dc25ff5d4cb77b4aabde0d3c7, type: 3}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &1519454601
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1519454598}
+  m_CullTransparentMesh: 1
 --- !u!1001 &1522302874
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2827,6 +3019,55 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: c2f84ff620f0ceb4899508abbf2422e7, type: 3}
   m_PrefabInstance: {fileID: 1125352604}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1687386637 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4250810042803531125, guid: df8d51c0b6aba7042b4d4306ac054c54, type: 3}
+  m_PrefabInstance: {fileID: 815748624545923353}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1687386639
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1687386637}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 540a82514dce35b42ab81d9f3101a02f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GachaDirector
+  gachaPanel: {fileID: 637119946}
+  resultPopupPanel: {fileID: 1585365374}
+  panelCanvasGroup: {fileID: 637119948}
+  imageBoxTransform: {fileID: 1284184473}
+  imageBoxClosed: {fileID: 658279446}
+  imageBoxOpen: {fileID: 1731513857}
+  itemGridParent: {fileID: 1725314370}
+  itemSlotPrefab: {fileID: 8097019989727837340, guid: c8562b2eff53f2642a7e2aff39e18edb, type: 3}
+  btnConfirm: {fileID: 1863546440}
+  startPosition: {x: -1200, y: 0}
+  finalTargetPosition: {x: 0, y: -300}
+  jumpPower1: 420
+  duration1: 0.45
+  jumpPower2: 180
+  duration2: 0.32
+  jumpPower3: 60
+  duration3: 0.2
+  boxOpenWaitDelay: 0.1
+  popupEmergeDuration: 0.45
+  debugDummyEntries: []
+--- !u!225 &1687386640
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1687386637}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &1689541077
 GameObject:
   m_ObjectHideFlags: 0
@@ -4118,9 +4359,17 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 21905783241562207, guid: df8d51c0b6aba7042b4d4306ac054c54, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 776861117997161064, guid: df8d51c0b6aba7042b4d4306ac054c54, type: 3}
       propertyPath: m_Name
       value: NB_GachaCanvas
+      objectReference: {fileID: 0}
+    - target: {fileID: 776861117997161064, guid: df8d51c0b6aba7042b4d4306ac054c54, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4123400959741478756, guid: df8d51c0b6aba7042b4d4306ac054c54, type: 3}
       propertyPath: m_Pivot.x
@@ -4204,12 +4453,69 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4250810042803531125, guid: df8d51c0b6aba7042b4d4306ac054c54, type: 3}
       propertyPath: m_Name
-      value: ToolGachaDirector
+      value: ToolGachaPanel
+      objectReference: {fileID: 0}
+    - target: {fileID: 5178534670003471125, guid: df8d51c0b6aba7042b4d4306ac054c54, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5178534670003471125, guid: df8d51c0b6aba7042b4d4306ac054c54, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5178534670003471125, guid: df8d51c0b6aba7042b4d4306ac054c54, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5178534670003471125, guid: df8d51c0b6aba7042b4d4306ac054c54, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5993599040815968533, guid: df8d51c0b6aba7042b4d4306ac054c54, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5993599040815968533, guid: df8d51c0b6aba7042b4d4306ac054c54, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5993599040815968533, guid: df8d51c0b6aba7042b4d4306ac054c54, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5993599040815968533, guid: df8d51c0b6aba7042b4d4306ac054c54, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9144155471566325305, guid: df8d51c0b6aba7042b4d4306ac054c54, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9144155471566325305, guid: df8d51c0b6aba7042b4d4306ac054c54, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9144155471566325305, guid: df8d51c0b6aba7042b4d4306ac054c54, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9144155471566325305, guid: df8d51c0b6aba7042b4d4306ac054c54, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 4123400959741478756, guid: df8d51c0b6aba7042b4d4306ac054c54, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1304074198}
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4250810042803531125, guid: df8d51c0b6aba7042b4d4306ac054c54, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1687386640}
+    - targetCorrespondingSourceObject: {fileID: 4250810042803531125, guid: df8d51c0b6aba7042b4d4306ac054c54, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1687386639}
   m_SourcePrefab: {fileID: 100100000, guid: df8d51c0b6aba7042b4d4306ac054c54, type: 3}
 --- !u!1 &1657798505144428261 stripped
 GameObject:
@@ -4618,6 +4924,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 2047191650}
     - target: {fileID: 1425517654793326252, guid: cebc858fe203a924bbab1d71522034db, type: 3}
+      propertyPath: gachaDirector
+      value: 
+      objectReference: {fileID: 1687386639}
+    - target: {fileID: 1425517654793326252, guid: cebc858fe203a924bbab1d71522034db, type: 3}
       propertyPath: btnResultDraw1
       value: 
       objectReference: {fileID: 898750451}
@@ -4677,38 +4987,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 8804601233517803628, guid: cebc858fe203a924bbab1d71522034db, type: 3}
-      propertyPath: btnConfirm
-      value: 
-      objectReference: {fileID: 1863546440}
-    - target: {fileID: 8804601233517803628, guid: cebc858fe203a924bbab1d71522034db, type: 3}
-      propertyPath: gachaPanel
-      value: 
-      objectReference: {fileID: 637119946}
-    - target: {fileID: 8804601233517803628, guid: cebc858fe203a924bbab1d71522034db, type: 3}
-      propertyPath: imageBoxOpen
-      value: 
-      objectReference: {fileID: 1731513857}
-    - target: {fileID: 8804601233517803628, guid: cebc858fe203a924bbab1d71522034db, type: 3}
-      propertyPath: imageBoxClosed
-      value: 
-      objectReference: {fileID: 658279446}
-    - target: {fileID: 8804601233517803628, guid: cebc858fe203a924bbab1d71522034db, type: 3}
-      propertyPath: itemGridParent
-      value: 
-      objectReference: {fileID: 1725314370}
-    - target: {fileID: 8804601233517803628, guid: cebc858fe203a924bbab1d71522034db, type: 3}
-      propertyPath: panelCanvasGroup
-      value: 
-      objectReference: {fileID: 637119948}
-    - target: {fileID: 8804601233517803628, guid: cebc858fe203a924bbab1d71522034db, type: 3}
-      propertyPath: resultPopupPanel
-      value: 
-      objectReference: {fileID: 1585365374}
-    - target: {fileID: 8804601233517803628, guid: cebc858fe203a924bbab1d71522034db, type: 3}
-      propertyPath: imageBoxTransform
-      value: 
-      objectReference: {fileID: 1284184473}
     - target: {fileID: 8931990442777426129, guid: cebc858fe203a924bbab1d71522034db, type: 3}
       propertyPath: m_Name
       value: _GachaManager
