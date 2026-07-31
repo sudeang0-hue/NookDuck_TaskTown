@@ -1,3 +1,5 @@
+//NB
+
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -5,18 +7,14 @@ using TaskTown.Gacha;
 using TaskTown.KDH;
 using Tool.Data;
 
-/// <summary>
-/// [ECHO TD Architecture]
-/// GachaPool_Tool.asset 데이터 에셋을 직접 연결하여 도구 가챠를 보장하는 스크립트입니다.
-/// </summary>
+// GachaPool_Tool.asset 데이터 에셋을 직접 연결하여 도구 가챠를 보장하는 스크립트입니다.
 public class GachaSystemBridge : MonoBehaviour
 {
-    [Header("★ Data Asset Reference ★")]
+    [Header("Data Asset Reference ")]
     [SerializeField] private GachaPoolData toolGachaPoolData;
 
     [Header("Teammate's System References")]
-    // ★ [수정] GachaManagerBase 대신 팀원이 만든 'ToolGachaManager' 전용 타입으로 직접 지정합니다!
-    // 이렇게 바꾸면 인스펙터에 AnimalGachaManager를 실수로 드래그해도 유니티가 들어가지 않게 막아줍니다.
+    // GachaManagerBase 에서 'ToolGachaManager' 전용 타입으로 직접 지정
     [Tooltip("도구 가챠 전용 매니저 컴포넌트를 할당하세요.")]
     [SerializeField] private ToolGachaManager gachaManager;
 
@@ -113,9 +111,7 @@ public class GachaSystemBridge : MonoBehaviour
         if (gachaDirector != null) gachaDirector.CloseGachaUI();
     }
 
-    /// <summary>
-    /// GachaPool_Tool 에셋 기반 도구 전용 뽑기 파이프라인
-    /// </summary>
+    // GachaPool_Tool 에셋 기반 도구 전용 뽑기 파이프라인
     private void OnClickedDrawGacha(int drawCount)
     {
         if (Time.time - _lastClickTime < CLICK_THRESHOLD) return;
@@ -138,7 +134,7 @@ public class GachaSystemBridge : MonoBehaviour
 
         if (CoinWallet != null && !CoinWallet.TrySpend(requiredCost)) return;
 
-        // ★ [핵심] 가챠 매니저에게 GachaPool_Tool 에셋을 주입/셋팅할 수 있는 프로퍼티가 있다면 주입
+        // 가챠 매니저에게 GachaPool_Tool 에셋을 주입/셋팅할 수 있는 프로퍼티가 있다면 주입
         // 만약 GachaManagerBase에 Pool 변수가 공개되어 있다면 아래 주석 해제:
         // gachaManager.SetPool(toolGachaPoolData);
 

@@ -1,11 +1,11 @@
+//NB
+
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
 
-/// <summary>
-/// [ECHO TD Architecture]
-/// 에셋 없이 UI 스케일, 알파, 회전만으로 연출하는 최적화된 빛무리(Glow) 효과 컨트롤러.
-/// </summary>
+// 테스트
+// 에셋 없이 UI 스케일, 알파, 회전만으로 연출하는 최적화된 빛무리(Glow) 효과 컨트롤러.
 [RequireComponent(typeof(Image))]
 [RequireComponent(typeof(CanvasGroup))]
 public class GachaLightGlow : MonoBehaviour

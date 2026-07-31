@@ -1,14 +1,13 @@
+//NB
+
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
-using TaskTown.Gacha; // 팀원 가챠 네임스페이스 추가
+using TaskTown.Gacha;
 
-/// <summary>
-/// [ECHO TD Architecture]
-/// 가챠 연출 전담 View 디렉터.
-/// GachaEntryData 기반으로 결과를 슬롯 UI에 바인딩합니다.
-/// </summary>
+// 가챠 연출 전담 View 디렉터.
+// GachaEntryData 기반으로 결과를 슬롯 UI에 바인딩합니다.
 [RequireComponent(typeof(CanvasGroup))]
 public class GachaDirector : MonoBehaviour
 {
@@ -93,9 +92,7 @@ public class GachaDirector : MonoBehaviour
         Debug.Log("<color=cyan>[GachaDirector]</color> 가챠 UI 메인 창만 오픈되었습니다.");
     }
 
-    /// <summary>
-    /// [수정 완료] GachaEntryData 리스트를 매개변수로 받아서 가챠 연출을 시작합니다.
-    /// </summary>
+    // [수정 완료] GachaEntryData 리스트를 매개변수로 받아서 가챠 연출을 시작
     public void StartGachaSequence(int drawCount, List<GachaEntryData> resultEntries)
     {
         if (_isAnimating) return;
@@ -199,9 +196,7 @@ public class GachaDirector : MonoBehaviour
         PopulateResultSlots(drawCount, resultEntries);
     }
 
-    /// <summary>
-    /// [수정 완료] GachaEntryData를 받아 각 UI 슬롯에 바인딩합니다.
-    /// </summary>
+    //GachaEntryData를 받아 각 UI 슬롯에 바인딩
     private void PopulateResultSlots(int drawCount, List<GachaEntryData> resultEntries)
     {
         for (int i = 0; i < _spawnedSlotPool.Count; i++)
@@ -227,7 +222,7 @@ public class GachaDirector : MonoBehaviour
             GachaItemSlotUI slotUI = slotObj.GetComponent<GachaItemSlotUI>();
             if (slotUI != null && resultEntries != null && i < resultEntries.Count)
             {
-                // [핵심 해결] Sprite 대신 GachaEntryData 전달!
+                // Sprite 대신 GachaEntryData 전달!
                 slotUI.SetItem(resultEntries[i]);
             }
 
@@ -276,9 +271,7 @@ public class GachaDirector : MonoBehaviour
         if (resultPopupPanel != null) resultPopupPanel.transform.DOKill();
     }
 
-    /// <summary>
-    /// [수정 완료] 예외상황용 더미 GachaEntryData 생성 리스트
-    /// </summary>
+    //예외상황용 더미 GachaEntryData 생성 리스트
     private List<GachaEntryData> GetDummyEntries(int count)
     {
         List<GachaEntryData> list = new List<GachaEntryData>();
