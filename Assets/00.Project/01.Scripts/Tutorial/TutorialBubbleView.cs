@@ -23,11 +23,25 @@ namespace TaskTown.Tutorial
         [SerializeField] private GameObject advanceIndicator;
         [SerializeField] private TutorialBubbleHoverTween hoverTween;
 
+        [Header("Tutorial Skip")]
+        [SerializeField] private GameObject skipRoot;
+        [SerializeField] private Button skipButton;
+        [SerializeField] private GameObject skipConfirmationPanel;
+        [SerializeField] private Button confirmSkipButton;
+        [SerializeField] private Button cancelSkipButton;
+
         private bool canAdvance;
+        private bool isTutorialVisible;
+        private bool isSkipConfirmationOpen;
+        private bool isSkipRequestPending;
 
         public event Action AdvanceRequested;
+        public event Action SkipConfirmationOpened;
+        public event Action SkipConfirmed;
+        public event Action SkipCancelled;
 
         public bool IsVisible => canvasGroup != null && canvasGroup.alpha > 0f;
+        public bool IsSkipConfirmationOpen => isSkipConfirmationOpen;
 
         private void Awake()
         {
@@ -42,12 +56,32 @@ namespace TaskTown.Tutorial
         {
             if (advanceButton != null)
                 advanceButton.onClick.AddListener(HandleAdvanceClicked);
+
+            if (skipButton != null)
+                skipButton.onClick.AddListener(HandleSkipClicked);
+            if (confirmSkipButton != null)
+                confirmSkipButton.onClick.AddListener(HandleConfirmSkipClicked);
+            if (cancelSkipButton != null)
+                cancelSkipButton.onClick.AddListener(HandleCancelSkipClicked);
+
+            isTutorialVisible = IsVisible;
+            ResetSkipRequest();
         }
 
         private void OnDisable()
         {
             if (advanceButton != null)
                 advanceButton.onClick.RemoveListener(HandleAdvanceClicked);
+
+            if (skipButton != null)
+                skipButton.onClick.RemoveListener(HandleSkipClicked);
+            if (confirmSkipButton != null)
+                confirmSkipButton.onClick.RemoveListener(HandleConfirmSkipClicked);
+            if (cancelSkipButton != null)
+                cancelSkipButton.onClick.RemoveListener(HandleCancelSkipClicked);
+
+            isTutorialVisible = false;
+            ResetSkipRequest();
         }
 
         public void Render(
@@ -93,6 +127,12 @@ namespace TaskTown.Tutorial
             if (!isVisible)
                 hoverTween?.CollapseImmediate();
 
+            isTutorialVisible = isVisible;
+            if (!isVisible)
+                ResetSkipRequest();
+            else
+                RefreshSkipUi();
+
             if (canvasGroup == null)
                 return;
 
@@ -106,6 +146,17 @@ namespace TaskTown.Tutorial
             hoverTween?.PlayPunch();
         }
 
+        public void ResetSkipRequest()
+        {
+            isSkipConfirmationOpen = false;
+            isSkipRequestPending = false;
+
+            if (skipConfirmationPanel != null)
+                skipConfirmationPanel.SetActive(false);
+
+            RefreshSkipUi();
+        }
+
         private void HandleAdvanceClicked()
         {
             if (canAdvance)
@@ -113,6 +164,70 @@ namespace TaskTown.Tutorial
                 PlayPunch();
                 AdvanceRequested?.Invoke();
             }
+        }
+
+        private void HandleSkipClicked()
+        {
+            if (!isTutorialVisible || isSkipRequestPending ||
+                skipConfirmationPanel == null)
+            {
+                return;
+            }
+
+            isSkipConfirmationOpen = true;
+            skipConfirmationPanel.SetActive(true);
+            RefreshSkipUi();
+            SkipConfirmationOpened?.Invoke();
+        }
+
+        private void HandleConfirmSkipClicked()
+        {
+            if (!isTutorialVisible || !isSkipConfirmationOpen ||
+                isSkipRequestPending)
+            {
+                return;
+            }
+
+            isSkipRequestPending = true;
+            RefreshSkipUi();
+            SkipConfirmed?.Invoke();
+        }
+
+        private void HandleCancelSkipClicked()
+        {
+            if (!isTutorialVisible || !isSkipConfirmationOpen ||
+                isSkipRequestPending)
+            {
+                return;
+            }
+
+            isSkipConfirmationOpen = false;
+            if (skipConfirmationPanel != null)
+                skipConfirmationPanel.SetActive(false);
+
+            RefreshSkipUi();
+            SkipCancelled?.Invoke();
+        }
+
+        private void RefreshSkipUi()
+        {
+            if (skipRoot != null)
+                skipRoot.SetActive(isTutorialVisible);
+
+            if (skipButton != null)
+            {
+                skipButton.interactable = isTutorialVisible &&
+                                          !isSkipConfirmationOpen &&
+                                          !isSkipRequestPending;
+            }
+
+            bool canChoose = isTutorialVisible &&
+                             isSkipConfirmationOpen &&
+                             !isSkipRequestPending;
+            if (confirmSkipButton != null)
+                confirmSkipButton.interactable = canChoose;
+            if (cancelSkipButton != null)
+                cancelSkipButton.interactable = canChoose;
         }
 
         private static void SetText(TMP_Text target, string value)

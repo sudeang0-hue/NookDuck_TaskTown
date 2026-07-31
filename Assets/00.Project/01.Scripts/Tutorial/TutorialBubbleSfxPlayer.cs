@@ -13,6 +13,12 @@ namespace TaskTown.Tutorial
         [SerializeField] private string dialogueAdvanceSoundId =
             "SFX_Pop_Bubble_Single_1";
 
+        [Header("Skip Buttons")]
+        [SerializeField] private string skipOpenSoundId =
+            "SFX_Pop_Bubble_Single_1";
+        [SerializeField] private string skipConfirmSoundId = "UI_Click";
+        [SerializeField] private string skipCancelSoundId = "UI_Close";
+
         [Header("Quest Clear Playlist")]
         [SerializeField] private string[] questClearSoundIds =
         {
@@ -31,6 +37,21 @@ namespace TaskTown.Tutorial
         public bool PlayDialogueAdvance()
         {
             return PlayUI(dialogueAdvanceSoundId);
+        }
+
+        public bool PlaySkipOpen()
+        {
+            return PlayUI(skipOpenSoundId);
+        }
+
+        public bool PlaySkipConfirm()
+        {
+            return PlayUI(skipConfirmSoundId);
+        }
+
+        public bool PlaySkipCancel()
+        {
+            return PlayUI(skipCancelSoundId);
         }
 
         /// <summary>

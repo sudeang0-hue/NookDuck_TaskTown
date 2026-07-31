@@ -73,6 +73,9 @@ namespace TaskTown.Tutorial
             tutorialManager.StepChanged += HandleStepChanged;
             tutorialManager.PauseChanged += HandlePauseChanged;
             view.AdvanceRequested += HandleAdvanceRequested;
+            view.SkipConfirmationOpened += HandleSkipConfirmationOpened;
+            view.SkipConfirmed += HandleSkipConfirmed;
+            view.SkipCancelled += HandleSkipCancelled;
             isSubscribed = true;
         }
 
@@ -89,7 +92,12 @@ namespace TaskTown.Tutorial
             }
 
             if (view != null)
+            {
                 view.AdvanceRequested -= HandleAdvanceRequested;
+                view.SkipConfirmationOpened -= HandleSkipConfirmationOpened;
+                view.SkipConfirmed -= HandleSkipConfirmed;
+                view.SkipCancelled -= HandleSkipCancelled;
+            }
 
             isSubscribed = false;
         }
@@ -180,6 +188,25 @@ namespace TaskTown.Tutorial
             }
 
             tutorialManager.ReportSignal(TutorialSignalType.DialogueCompleted);
+        }
+
+        private void HandleSkipConfirmationOpened()
+        {
+            sfxPlayer?.PlaySkipOpen();
+        }
+
+        private void HandleSkipConfirmed()
+        {
+            sfxPlayer?.PlaySkipConfirm();
+            StopPendingStepPresentation();
+
+            if (tutorialManager == null || !tutorialManager.TrySkipTutorial())
+                view?.ResetSkipRequest();
+        }
+
+        private void HandleSkipCancelled()
+        {
+            sfxPlayer?.PlaySkipCancel();
         }
 
         private void HandleTownWindowAdvance(TutorialStepContent content)
