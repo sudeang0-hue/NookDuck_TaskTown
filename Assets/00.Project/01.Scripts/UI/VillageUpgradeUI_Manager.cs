@@ -91,6 +91,15 @@ namespace UI
             UnsubscribeCoinEvent();
         }
 
+        // #19: 인스펙터에서 isEndlessMode 체크박스를 Play Mode 중 직접 토글하는 경우
+        // (DebugSetEndlessMode()를 거치지 않으므로 RefreshAllUI가 호출되지 않음) UI가 갱신되지
+        // 않는 문제를 방지합니다.
+        private void OnValidate()
+        {
+            if (Application.isPlaying)
+                RefreshAllUI();
+        }
+
         private void OnEnable()
         {
             TrySubscribeCoinEvent();
@@ -167,13 +176,19 @@ namespace UI
 
         private void TryCompleteTrack(ref bool doneFlag, System.Func<bool> tryUpgrade)
         {
-            if (doneFlag)
+            // #19: doneFlag는 "이번 사이클(마을 레벨업 1회)에 1번만 구매 가능"을 막는 용도로,
+            // 원래 마을 레벨업 시 ResetCycleAndRefreshUI()가 리셋해줬습니다. 엔드리스 모드에서는
+            // 마을 레벨업 자체가 막혀있어 리셋이 다시는 일어나지 않으므로, doneFlag 체크/설정을
+            // 건너뛰어 클릭/타이핑/도구효율 구매가 계속 반복 가능하도록 합니다.
+            if (!isEndlessMode && doneFlag)
                 return;
 
             if (tryUpgrade == null || !tryUpgrade())
                 return;
 
-            doneFlag = true;
+            if (!isEndlessMode)
+                doneFlag = true;
+
             RefreshAllUI();
         }
 
@@ -263,13 +278,18 @@ namespace UI
             float toolProduct = tum != null ? tum.ToolEfficiencyMultiplier : 1f;
             uiController.RefreshTrackValues(clickValue, typingValue, toolProduct);
 
-            uiController.SetTrackComplete(clickDone, typingDone, toolDone);
+            // #19: 엔드리스 모드에서는 완료 사이클 개념이 없으므로(TryCompleteTrack 참고),
+            // 일반 모드에서 이미 세팅됐던 done 플래그가 남아있어도 완료 덮개를 띄우지 않습니다.
+            bool showClickComplete = !isEndlessMode && clickDone;
+            bool showTypingComplete = !isEndlessMode && typingDone;
+            bool showToolComplete = !isEndlessMode && toolDone;
+            uiController.SetTrackComplete(showClickComplete, showTypingComplete, showToolComplete);
             uiController.RefreshRequiredUpgrade(CompletedCount);
             uiController.RefreshVillageLevel(uiTownLevel);
 
             long villageCost = GetVillageLevelUpCost();
             uiController.RefreshVillageLevelUpCost(villageCost);
-            uiController.SetVillageLevelUpVisible(IsReadyForVillageLevelUp);
+            uiController.SetVillageLevelUpVisible(!IsVillageLevelMaxed && IsReadyForVillageLevelUp);
 
             RefreshInteractableStates();
             OnVillageUpgradeStateChanged?.Invoke();
@@ -283,17 +303,17 @@ namespace UI
             long coin = CoinManager.Instance != null ? CoinManager.Instance.totalCoin : 0;
             TownUpgradeManager tum = TownUpgradeManager.Instance;
 
-            bool clickEnabled = !clickDone
+            bool clickEnabled = (isEndlessMode || !clickDone)
                 && tum != null
                 && !tum.IsClickUpgradeMaxLevel
                 && coin >= tum.ClickUpgradeNextCost;
 
-            bool typingEnabled = !typingDone
+            bool typingEnabled = (isEndlessMode || !typingDone)
                 && tum != null
                 && !tum.IsTypingUpgradeMaxLevel
                 && coin >= tum.TypingUpgradeNextCost;
 
-            bool toolEnabled = !toolDone
+            bool toolEnabled = (isEndlessMode || !toolDone)
                 && tum != null
                 && !tum.IsToolEfficiencyUpgradeMaxLevel
                 && coin >= tum.ToolEfficiencyUpgradeNextCost;
