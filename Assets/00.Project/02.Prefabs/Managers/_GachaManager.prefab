@@ -1,0 +1,102 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &8931990442777426129
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4979360808928631818}
+  - component: {fileID: 9076959910709481901}
+  - component: {fileID: 8804601233517803628}
+  - component: {fileID: 1425517654793326252}
+  m_Layer: 0
+  m_Name: _GachaManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4979360808928631818
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8931990442777426129}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -9.87396, y: 3.27941, z: -1.63675}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!225 &9076959910709481901
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8931990442777426129}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
+--- !u!114 &8804601233517803628
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8931990442777426129}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 540a82514dce35b42ab81d9f3101a02f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GachaDirector
+  gachaPanel: {fileID: 0}
+  resultPopupPanel: {fileID: 0}
+  panelCanvasGroup: {fileID: 0}
+  imageBoxTransform: {fileID: 0}
+  imageBoxClosed: {fileID: 0}
+  imageBoxOpen: {fileID: 0}
+  itemGridParent: {fileID: 0}
+  itemSlotPrefab: {fileID: 8097019989727837340, guid: c8562b2eff53f2642a7e2aff39e18edb, type: 3}
+  btnConfirm: {fileID: 0}
+  startPosition: {x: -1200, y: 0}
+  finalTargetPosition: {x: 0, y: -300}
+  jumpPower1: 420
+  duration1: 0.45
+  jumpPower2: 180
+  duration2: 0.32
+  jumpPower3: 60
+  duration3: 0.2
+  boxOpenWaitDelay: 0.1
+  popupEmergeDuration: 0.45
+  debugDummyEntries: []
+--- !u!114 &1425517654793326252
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8931990442777426129}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db435658ae85333468e53beaaad3164b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GachaSystemBridge
+  toolGachaPoolData: {fileID: 11400000, guid: 21b1defa25af76948a0cb1155911667a, type: 2}
+  gachaManager: {fileID: 0}
+  coinWalletSource: {fileID: 0}
+  teammateInitialWindow: {fileID: 0}
+  btnOpenGachaWindow: {fileID: 0}
+  btnDraw1: {fileID: 0}
+  btnDraw10: {fileID: 0}
+  btnResultDraw1: {fileID: 0}
+  btnResultDraw10: {fileID: 0}
+  gachaDirector: {fileID: 8804601233517803628}
