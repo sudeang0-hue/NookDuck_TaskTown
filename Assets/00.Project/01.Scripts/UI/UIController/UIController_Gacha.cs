@@ -9,11 +9,11 @@ namespace UI
     public class UIController_Gacha : MonoBehaviour
     {
         [Header("동물/도구 뽑기 가챠 매니저")]
-        [SerializeField] private AnimalGachaManager animalGachaManager;
-        [SerializeField] private ToolGachaManager toolGachaManager;
+        private AnimalGachaManager animalGachaManager;
+        private ToolGachaManager toolGachaManager;
 
         [Tooltip("ICoinWallet을 구현한 컴포넌트(CoinManager)를 연결합니다. 비워두면 코인 확인 없이 뽑기를 진행합니다.")]
-        [SerializeField] private MonoBehaviour coinWalletSource;
+        private MonoBehaviour coinWalletSource;
         private ICoinWallet CoinWallet => coinWalletSource as ICoinWallet;
 
         private const int MultiRollCount = 10;
@@ -39,6 +39,9 @@ namespace UI
 
         private void Awake()
         {
+        }
+        private void Start()
+        {
             if (animalGachaManager == null)
             {
                 animalGachaManager = FindAnyObjectByType<AnimalGachaManager>();
@@ -48,9 +51,12 @@ namespace UI
             {
                 toolGachaManager = FindAnyObjectByType<ToolGachaManager>();
             }
-        }
-        private void Start()
-        {
+
+            if (coinWalletSource == null)
+            {
+                coinWalletSource = FindAnyObjectByType<CoinManager>();
+            }
+
             Subscribe();
         }
 

@@ -33,7 +33,7 @@ namespace UI
         [SerializeField] private UIController_VillageAnimalSetList animalSetList;
 
         [Header("인벤토리 (미연결 시 Instance 사용)")]
-        [SerializeField] private InventoryManager_Animal animalInventory;
+        private InventoryManager_Animal animalInventory;
 
         [Header("배치 버퍼 (확정본, 인덱스 = 슬롯 번호)")]
         [SerializeField] private int maxCapacity = DefaultMaxCapacity;
@@ -62,6 +62,8 @@ namespace UI
         private int pendingSlotIndex = -1;
 
         public event Action<int> OnRequestOpenAnimalSetList;
+        // 확정본(villageAnimalIds) 배치가 Confirm으로 변경되었을 때
+        public event Action OnVillagePlacementChanged;
 
         public bool IsPanelOpen => isPanelOpen;
         public bool IsEditMode => isEditMode;
@@ -163,6 +165,24 @@ namespace UI
             for (int i = 0; i < ids.Count; i++)
             {
                 if (ids[i] == animalId)
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// 확정본(villageAnimalIds)에만 있는지 판별합니다. Edit 드래프트는 무시합니다.
+        /// Animal Inv 슬롯의 setVillage 아이콘용.
+        /// </summary>
+        public bool IsConfirmedPlaced(string animalId)
+        {
+            if (string.IsNullOrEmpty(animalId) || villageAnimalIds == null)
+                return false;
+
+            for (int i = 0; i < villageAnimalIds.Count; i++)
+            {
+                if (villageAnimalIds[i] == animalId)
                     return true;
             }
 
@@ -325,7 +345,8 @@ namespace UI
                 this);
 
             // Remove로 비운 슬롯 포함, 현재 드래프트를 확정본에 그대로 반영
-            if (!CommitEditDraft())
+            bool committed = CommitEditDraft();
+            if (!committed)
             {
                 Debug.LogWarning(
                     "[VillageAnimalSetUI.OnClickConfirmAnimalSet] 확정할 드래프트가 없습니다. Edit 상태를 종료합니다.",
@@ -342,9 +363,11 @@ namespace UI
             // 확정본 기준으로 슬롯 UI를 다시 그림 (비운 슬롯은 empty 유지)
             RefreshUI();
 
-            Debug.Log(
-                "[VillageAnimalSetUI.OnClickConfirmAnimalSet] Confirm 완료 — RefreshUI 반영",
-                this);
+            if (committed)
+                OnVillagePlacementChanged?.Invoke();
+            
+            ClosePanel();
+            Debug.Log("[VillageAnimalSetUI.OnClickConfirmAnimalSet] Confirm 완료 — RefreshUI 반영, 창 닫기",this);
         }
 
         public void OnClickSetAnimal(int slotIndex)
@@ -508,6 +531,25 @@ namespace UI
             uiController.BindSlotCallbacks(OnClickSetAnimal, OnClickRemoveAnimal);
             uiController.RefreshSlots(activeIds, unlocked, isEditMode);
             uiController.SetConfirmButtonActive(isEditMode);
+
+            // set: 확정본만 카운트 (Edit 드래프트는 Confirm 전까지 미반영)
+            // max: unlockedCount (레벨업 시 OnVillageUpgradeStateChanged → RefreshUI)
+            uiController.RefreshCountTexts(CountPlacedIds(villageAnimalIds), unlocked);
+        }
+
+        private static int CountPlacedIds(IReadOnlyList<string> ids)
+        {
+            if (ids == null)
+                return 0;
+
+            int count = 0;
+            for (int i = 0; i < ids.Count; i++)
+            {
+                if (!string.IsNullOrEmpty(ids[i]))
+                    count++;
+            }
+
+            return count;
         }
 
         private IReadOnlyList<string> GetActivePlacementIds()

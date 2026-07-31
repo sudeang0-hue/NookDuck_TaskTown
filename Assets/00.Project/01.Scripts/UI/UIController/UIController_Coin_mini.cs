@@ -9,7 +9,7 @@ public class UIController_Coin_mini : MonoBehaviour
     private const long Billion = 1_000_000_000;
 
 
-    [SerializeField] private CoinManager coinManager;
+    private CoinManager coinManager;
 
     [Header("»πµÊ ƒ⁄¿Œ ≈ÿΩ∫∆Æ")]
     [SerializeField] private TMP_Text allCoinText;
@@ -17,6 +17,13 @@ public class UIController_Coin_mini : MonoBehaviour
     private bool isSubscribed;
     private Coroutine subscribeRoutine;
 
+    private void Awake()
+    {
+        if(coinManager == null)
+        {
+            coinManager = CoinManager.Instance;
+        }
+    }
     private void Start()
     {
         TrySubscribeCoinEvent();

@@ -6,14 +6,26 @@ namespace TaskTown.KDH
     [System.Serializable]
     public class SlotSaveData_Tool
     {
-        public ToolDataSO tooldata;    // µµ±¸ Á¤º¸
-        public int level;          // ÇöÀç µµ±¸ ·¹º§
-        public int currentCount;   // ÇöÀç º¸À¯ ¼ö·®
-        public bool currentSet; // ÇöÀç µµ±¸°¡ ¹èÄ¡µÇ¾ú´ÂÁö ¿©ºÎ
-        public bool currentAnimalSet; // ÇöÀç µµ±¸¿¡ µ¿¹°ÀÌ ¹èÄ¡µÇ¾ú´ÂÁö ¿©ºÎ
-        public string currentAnimalId; // ÇöÀç µµ±¸¿¡ ¹èÄ¡µÈ µ¿¹°ÀÇ Id
+        public ToolDataSO tooldata;    // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+        public int level;          // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+        public int currentCount;   // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+        public bool currentSet; // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½Ç¾ï¿½ï¿½Ö´ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+        public bool currentAnimalSet; // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½Ç¾ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+        public string currentAnimalId; // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Id
+        // 26.07.29. KAY ï¿½ï¿½ï¿½ï¿½
+        public bool hasRevealedSpecialAnimal; // Æ¯È­ ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¸ï¿½ ï¿½Ø±ï¿½ ï¿½ï¿½ï¿½ï¿½
 
-        public SlotSaveData_Tool(ToolDataSO tooldata, int level, int currentCount, bool currentSet, bool currentAnimalSet, string currentAnimalId)
+     // public SlotSaveData_Tool(ToolDataSO tooldata, int level, int currentCount, bool currentSet, bool currentAnimalSet, string currentAnimalId)
+        // {
+        //     this.tooldata = tooldata;
+        //     this.level = level;
+        //     this.currentCount = currentCount;
+        //     this.currentSet = currentSet;
+        //     this.currentAnimalSet = currentAnimalSet;
+        //     this.currentAnimalId = currentAnimalId;
+        // }
+        // 26.07.29. KAY ï¿½ï¿½ï¿½ï¿½
+        public SlotSaveData_Tool(ToolDataSO tooldata, int level, int currentCount, bool currentSet, bool currentAnimalSet, string currentAnimalId, bool hasRevealedSpecialAnimal = false)
         {
             this.tooldata = tooldata;
             this.level = level;
@@ -21,6 +33,7 @@ namespace TaskTown.KDH
             this.currentSet = currentSet;
             this.currentAnimalSet = currentAnimalSet;
             this.currentAnimalId = currentAnimalId;
+            this.hasRevealedSpecialAnimal = hasRevealedSpecialAnimal;
         }
     }
 

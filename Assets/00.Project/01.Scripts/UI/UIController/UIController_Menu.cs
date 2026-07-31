@@ -5,10 +5,6 @@ using UnityEngine.UI;
 public class UIController_Menu : MonoBehaviour
 {
     [Header("메뉴 목록 버튼")]
-    //[Tooltip("동물 인벤토리 오픈")]
-    //[SerializeField] private Button animalInventoryButton;
-    //[Tooltip("도구 인벤토리 오픈")]
-    //[SerializeField] private Button toolInventoryButton;
     [Tooltip("인벤토리 오픈")]
     [SerializeField] private Button inventoryButton;
     [Tooltip("뽑기 패널 오픈")]
@@ -27,31 +23,28 @@ public class UIController_Menu : MonoBehaviour
     private UIPanelWindow toolInventoryPanel;
     private UIPanelWindow gachaPanel;
     private UIPanelWindow animalDexPanel;
-    //private UIPanelWindow villagePanel;
     private UIPanelWindow optionPanel;
 
     [Header("UI 동기화")]
     [Tooltip("동물 Inv 패널 오픈/닫기 시 상세 닫기 + SyncAllSlots 호출 대상")]
-    [SerializeField] private UIController_AnimalInv animalInvUI;
+    private UIController_AnimalInv animalInvUI;
     [Tooltip("도구 Inv 패널 오픈/닫기 시 상세 닫기 + SyncAllSlots 호출 대상")]
-    [SerializeField] private UIController_ToolInv toolInvUI;
+    private UIController_ToolInv toolInvUI;
     [Tooltip("동물 도감 패널 오픈 시 상세 닫기 등 오픈 처리 호출 대상")]
-    [SerializeField] private UIController_AnimalDex animalDexUI;
+    private UIController_AnimalDex animalDexUI;
     [Tooltip("뽑기 패널 오픈 시 가격 텍스트 갱신 호출 대상")]
-    [SerializeField] private UIController_Gacha gachaUI;
-    //[Tooltip("마을 패널 오픈 시 텍스트 갱신 호출 대상")]
-    //[SerializeField] private UIController_VillageUpgrade villageUI;
+    private UIController_Gacha gachaUI;
 
     [Header("탭 전환 Manager")]
-    [SerializeField] private InventoryTabUI_Manager inventoryTabManager;
-    [SerializeField] private TownTabUI_Manager townTabManager;
+    private InventoryTabUI_Manager inventoryTabManager;
+    private TownTabUI_Manager townTabManager;
 
     [Header("패널 오픈시 초기 위치 고정")]
-    [SerializeField] private bool usePanelOpenDefaultPosition;
+    private bool usePanelOpenDefaultPosition = true;
 
     [Header("패널 배타 오픈")]
     [Tooltip("true면 한 번에 하나의 패널만 열고, false면 기존처럼 독립 토글")]
-    [SerializeField] private bool useTradeOffSetting;
+    private bool useTradeOffSetting = true;
 
     // -----------------------------------------------------------------------------
     // [ 2026.07.28 - Choi - 튜토리얼 축소·확장 단계 연동 ]
@@ -63,8 +56,6 @@ public class UIController_Menu : MonoBehaviour
     {
         UIControllerNullRefrerenceBind();
 
-        //animalInventoryButton.onClick.AddListener(() => TogglePanel(animalInventoryPanel));
-        //toolInventoryButton.onClick.AddListener(() => TogglePanel(toolInventoryPanel));
         if(inventoryButton != null)
         { 
             inventoryButton.onClick.AddListener(OnInventoryButtonClicked);
@@ -90,12 +81,7 @@ public class UIController_Menu : MonoBehaviour
 
         foreach (var w in windows)
         {
-            //if (animalInventoryPanel == null && w.MenuType == GameMenuType.AnimalInv)
-            //    animalInventoryPanel = w;
-
-            //if (toolInventoryPanel == null && w.MenuType == GameMenuType.ToolInv)
-            //    toolInventoryPanel = w;
-
+            
             if (gachaPanel == null && w.MenuType == GameMenuType.Gacha)
                 gachaPanel = w;
 
@@ -105,8 +91,6 @@ public class UIController_Menu : MonoBehaviour
             if (optionPanel == null && w.MenuType == GameMenuType.Option)
                 optionPanel = w;
             
-            //if (villagePanel == null && w.MenuType == GameMenuType.Villiage)
-            //    villagePanel = w;
         }
     }
 
@@ -121,21 +105,34 @@ public class UIController_Menu : MonoBehaviour
         TargetSelector.OnTargetSelected -= OnCameraTargetSelected;
     }
 
-
+    /// <summary>
+    /// UIController 자동 할당
+    /// </summary>
     private void UIControllerNullRefrerenceBind()
     {
+        // 부모 오브젝트가 없을 경우를 대비한 예외 처리
+        if (transform.parent == null)
+        {
+            Debug.LogWarning($"{name}의 부모 오브젝트를 찾을 수 없어 자동 바인딩을 실패했습니다.");
+            return;
+        }
+
+        Transform parentTransform = transform.parent;
+
         if (animalInvUI == null)
-            animalInvUI = GetComponent<UIController_AnimalInv>();
+            animalInvUI = parentTransform.GetComponentInChildren<UIController_AnimalInv>(true);
 
         if (toolInvUI == null)
-            toolInvUI = GetComponent<UIController_ToolInv>();
+            toolInvUI = parentTransform.GetComponentInChildren<UIController_ToolInv>(true);
 
         if (animalDexUI == null)
-            animalDexUI = GetComponent<UIController_AnimalDex>();
+            animalDexUI = parentTransform.GetComponentInChildren<UIController_AnimalDex>(true);
 
         if (gachaUI == null)
-            gachaUI = GetComponent<UIController_Gacha>();
+            gachaUI = parentTransform.GetComponentInChildren<UIController_Gacha>(true);
 
+
+        // 같은 자식1 오브젝트 본인에게 붙어있는 컴포넌트라면 기존대로 유지
         if (inventoryTabManager == null)
             inventoryTabManager = GetComponent<InventoryTabUI_Manager>();
 
@@ -228,11 +225,9 @@ public class UIController_Menu : MonoBehaviour
 
     private void CloseAllExcept(UIPanelWindow keepOpen)
     {
-        //CloseIfOther(animalInventoryPanel, keepOpen);
-        //CloseIfOther(toolInventoryPanel, keepOpen);
+        
         CloseIfOther(gachaPanel, keepOpen);
         CloseIfOther(animalDexPanel, keepOpen);
-        //CloseIfOther(villagePanel, keepOpen);
         CloseIfOther(optionPanel, keepOpen);
     }
 

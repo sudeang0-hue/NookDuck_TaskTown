@@ -7,7 +7,7 @@ namespace UI
 {
     public class UIController_AnimalDex : MonoBehaviour
     {
-        [Header("테스트용 동물 인벤토리\n추후 실제 인벤토리 클래스로 연결")]
+        [Header("동물 인벤토리")]
         [SerializeField] private InventoryManager_Animal animalInventory;
 
         [Header("동물 데이터베이스")]
@@ -29,10 +29,8 @@ namespace UI
 
         private void Awake()
         {
-            if (animalInventory == null)
-            {
-                animalInventory = InventoryManager_Animal.Instance;
-            }
+            //if (animalInventory == null)
+                animalInventory = FindFirstObjectByType<InventoryManager_Animal>();
 
             InitializeAnimalDex();
         }
