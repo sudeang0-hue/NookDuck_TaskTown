@@ -150,6 +150,11 @@ GACHA_COSTS = [1500, 2200, 3400, 5100, 7600, 11400, 17100, 25600, 38400]
 # 없었습니다(구간 하나를 늘리면 다른 구간이 깨지는 두더지잡기 현상을 좌표하강법/스케일링/
 # 구간별 수동보정으로 반복 확인). 완전한 단조증가가 자연스럽게 성립하는 지점을 찾은 결과
 # 총 78.6h로 확정(N=1000, avg=78.61h, std=1.67h, 레벨8~10 비중 46.8%, 사용자 확인 완료).
+# #19 리밸런스: 클릭/타이핑/도구효율 업그레이드 상한을 고정 20에서 min(마을레벨, 10)으로
+# 바꾸고(사용자 확인), 그동안 시뮬레이션에 빠져있던 동물/도구 개별 레벨5 상한(실제 코드
+# SlotData_Tool.ToolLevelUp 기준)을 처음 반영하면서 다시 역산했습니다. 업그레이드 상한이
+# 낮아지며 돈이 마을업그레이드/뽑기로 더 몰려서 완주시간이 78.61h -> 59.95h로 단축됨
+# (레벨9->10 구간만 소폭 상향해서 단조증가 유지, N=1000 검증 완료).
 TOWN_UPGRADE_COSTS = [
     77_000,       # 레벨1->2
     425_000,      # 레벨2->3
@@ -159,7 +164,7 @@ TOWN_UPGRADE_COSTS = [
     15_050_000,   # 레벨6->7
     21_450_000,   # 레벨7->8
     35_700_000,   # 레벨8->9
-    44_300_000,   # 레벨9->10
+    45_200_000,   # 레벨9->10
 ]
 
 # #4: 마을 업그레이드의 "생산 효율 버프" - 마을 레벨당 전체 생산량에 곱해지는 배율
@@ -199,10 +204,24 @@ TYPING_UPGRADE_BASE_COST = 300
 TYPING_UPGRADE_COST_GROWTH = 1.6
 TYPING_CAP_BONUS_PER_LEVEL = 2000  # 코인/시간, 레벨당 시간당 상한 증가분
 
-# 실제 유니티 구현(TownUpgradeManager)과 동일하게 레벨 상한을 둡니다.
-TOOL_EFF_MAX_LEVEL = 20
-CLICK_MAX_LEVEL = 20
-TYPING_MAX_LEVEL = 20
+# #19(신규): 실제 유니티 구현(TownUpgradeManager)과 동일하게 레벨 상한을 둡니다.
+# 기존엔 마을 레벨과 무관하게 고정 20이었으나, 마을 레벨과 나란히 올라가다 10에서 같이
+# 멈추는 구조로 변경(사용자 확인 완료) - 엔드리스 모드 설계의 사전 작업.
+UPGRADE_MAX_LEVEL_CAP = 10   # 절대 상한(일반 모드)
+ENDLESS_MODE = False          # True면 아래 상한들이 전부 해제됨(엔드리스 모드용)
+
+
+def upgrade_max_level(town_level):
+    if ENDLESS_MODE:
+        return float("inf")
+    return min(town_level, UPGRADE_MAX_LEVEL_CAP)
+
+
+# 실제 코드(SlotData_Tool.ToolLevelUp/SlotData_Animal 동일)는 개별 동물/도구 레벨을 5에서
+# 막는데, 이 시뮬레이션은 지금까지 이 상한을 전혀 반영하지 않고 있었음(발견 및 수정, #19).
+# 다만 기존 결과 통계(등급별 평균 최고 도달 레벨 3~5대)를 보면 "효율적 지출" 봇이 애초에
+# 5를 크게 못 넘기고 있어서 78.6h 설계에 미치는 영향은 작을 것으로 예상 - 재검증으로 확인.
+ANIMAL_TOOL_MAX_LEVEL = 5
 
 # ---------------------------------------------------------------
 # #18(신규): 도구 상한(동시에 "동물이 장착된 도구" 슬롯 개수 제한). 실제 게임 생산 로직
@@ -255,9 +274,18 @@ def gacha_cost(level):
     return GACHA_COSTS[min(level, len(GACHA_COSTS)) - 1]
 
 
+# #19(엔드리스 사전 작업): 실제 유니티 구현(TownUpgradeCostConfig.GetCostForTownLevel)과 동일하게,
+# 정의된 표(레벨9까지)를 넘어서면 레벨9->10 구간의 실제 성장률을 그대로 반복해서 계속 늘어나도록 함
+# (사용자 확인: "레벨9->10 배율을 그대로 반복"). 정의된 범위 안에서는 기존과 동일하게 표 값을 그대로 씀.
+POST_MAX_LEVEL_GROWTH_RATE = TOWN_UPGRADE_COSTS[-1] / TOWN_UPGRADE_COSTS[-2]  # ≈ 1.2661
+
+
 def town_upgrade_cost(level, costs=None):
     costs = costs if costs is not None else TOWN_UPGRADE_COSTS
-    return costs[level - 1]
+    if level <= len(costs):
+        return costs[level - 1]
+    extra_levels = level - len(costs)
+    return costs[-1] * (POST_MAX_LEVEL_GROWTH_RATE ** extra_levels)
 
 
 def efficiency_multiplier(town_level):
@@ -444,18 +472,18 @@ def simulate_once(town_upgrade_costs, rng, max_hours=500):
 
     def tool_eff_gain():
         # 도구 효율 업그레이드 1레벨이 늘려주는 생산량 증가분 (현재 배율 기준 marginal)
-        if tool_eff_level >= TOOL_EFF_MAX_LEVEL:
+        if tool_eff_level >= upgrade_max_level(town_level):
             return 0.0
         current_mult = 1 + tool_eff_level * TOOL_EFF_BONUS_PER_LEVEL
         return production_rate() / current_mult * TOOL_EFF_BONUS_PER_LEVEL
 
     def click_gain():
-        if click_level >= CLICK_MAX_LEVEL:
+        if click_level >= upgrade_max_level(town_level):
             return 0.0
         return CLICK_CAP_BONUS_PER_LEVEL / 3600.0 * CLICK_UTILIZATION
 
     def typing_gain():
-        if typing_level >= TYPING_MAX_LEVEL:
+        if typing_level >= upgrade_max_level(town_level):
             return 0.0
         return TYPING_CAP_BONUS_PER_LEVEL / 3600.0 * CLICK_UTILIZATION
 
@@ -491,6 +519,8 @@ def simulate_once(town_upgrade_costs, rng, max_hours=500):
             ):
                 for oid, o in owned_dict.items():
                     if oid not in active_id_set:
+                        continue
+                    if not ENDLESS_MODE and o.level >= ANIMAL_TOOL_MAX_LEVEL:
                         continue
                     req = dup_required(o.level)
                     cost = levelup_cost(o.level)
@@ -682,11 +712,11 @@ if __name__ == "__main__":
     print()
     print("--- #17(이슈 #72): 클릭/타이핑/도구효율 업그레이드 ---")
     print("avg tool_eff level reached:", statistics.mean(r["tool_eff_level"] for r in runs),
-          "/ max", TOOL_EFF_MAX_LEVEL)
+          "/ max", upgrade_max_level(10))
     print("avg click level reached:", statistics.mean(r["click_level"] for r in runs),
-          "/ max", CLICK_MAX_LEVEL)
+          "/ max", upgrade_max_level(10))
     print("avg typing level reached:", statistics.mean(r["typing_level"] for r in runs),
-          "/ max", TYPING_MAX_LEVEL)
+          "/ max", upgrade_max_level(10))
     print("avg tool_eff buys:", statistics.mean(r["total_tool_eff_buys"] for r in runs))
     print("avg click buys:", statistics.mean(r["total_click_buys"] for r in runs))
     print("avg typing buys:", statistics.mean(r["total_typing_buys"] for r in runs))

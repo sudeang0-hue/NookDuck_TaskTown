@@ -1,4 +1,5 @@
 using System;
+using TaskTown.Gacha;
 using UnityEngine;
 
 // 클릭 코인 / 타이핑 코인 / 도구 효율, 세 가지 개별 업그레이드를 관리합니다.
@@ -31,11 +32,22 @@ public class TownUpgradeManager : MonoBehaviour
     {
         [SerializeField] private long baseCost;
         [SerializeField] private float costGrowthRate;
-        [Tooltip("0 이하면 레벨 제한 없음")]
+        [Tooltip("절대 상한(0 이하면 상한 없음). #19: 실제 유효 상한은 Min(마을 레벨, 이 값)로 계산됨")]
         [SerializeField] private int maxLevel;
 
         public int Level { get; private set; }
-        public bool IsMaxLevel => maxLevel > 0 && Level >= maxLevel;
+
+        // #19 리밸런스: 업그레이드 레벨 상한이 고정값이 아니라 마을 레벨과 나란히 올라가다
+        // maxLevel(절대 상한)에서 같이 멈추도록 변경 (사용자 확인, simulate_game.py의
+        // upgrade_max_level()과 동일한 공식). 엔드리스 모드 우회는 이 상한 값 자체를 건드리지 않고,
+        // TownUpgradeManager가 IsEndlessMode()일 때 이 체크를 아예 건너뛰고 ForceLevelUp()을 쓰는
+        // 방식으로 처리합니다(아래 ForceLevelUp 참고).
+        public bool IsMaxLevelAt(int townLevel)
+        {
+            if (maxLevel <= 0) return false;
+            int effectiveMax = Mathf.Min(Mathf.Max(townLevel, 1), maxLevel);
+            return Level >= effectiveMax;
+        }
 
         public UpgradeTrack(long baseCost, float costGrowthRate, int maxLevel)
         {
@@ -49,11 +61,19 @@ public class TownUpgradeManager : MonoBehaviour
             return (long)(baseCost * Mathf.Pow(costGrowthRate, Level));
         }
 
-        public bool TryLevelUp()
+        public bool TryLevelUp(int townLevel)
         {
-            if (IsMaxLevel) return false;
+            if (IsMaxLevelAt(townLevel)) return false;
             Level++;
             return true;
+        }
+
+        /// <summary>
+        /// #19: 엔드리스 모드 전용. 상한 체크 없이 무조건 레벨을 올립니다.
+        /// </summary>
+        public void ForceLevelUp()
+        {
+            Level++;
         }
 
         public void SetLevel(int level)
@@ -62,20 +82,25 @@ public class TownUpgradeManager : MonoBehaviour
         }
     }
 
+    [Tooltip("ITownLevelProvider(+ IEndlessModeProvider)를 구현한 컴포넌트(VillageUpgradeUI_Manager)를 연결합니다. 비워두면 마을 레벨 1/일반 모드로 취급합니다.")]
+    [SerializeField] private MonoBehaviour townLevelProviderSource;
+    private ITownLevelProvider townLevelProvider;
+    private IEndlessModeProvider endlessModeProvider;
+
     [Header("클릭 코인 업그레이드")]
-    [SerializeField] private UpgradeTrack clickUpgrade = new UpgradeTrack(300, 1.6f, 20);
+    [SerializeField] private UpgradeTrack clickUpgrade = new UpgradeTrack(300, 1.6f, 10);
     [Tooltip("레벨당 EarnProcessor.ClickMultiplier 증가량(레벨 x 이 값을 매번 새로 계산해서 적용, 누적 아님)")]
     [SerializeField] private int clickMultiplierPerLevel = 1;
     [Tooltip("레벨당 시간당 획득 상한(maxCoinPerHour) 증가분")]
     [SerializeField] private int clickCapBonusPerLevel = 2000;
 
     [Header("타이핑 코인 업그레이드")]
-    [SerializeField] private UpgradeTrack typingUpgrade = new UpgradeTrack(300, 1.6f, 20);
+    [SerializeField] private UpgradeTrack typingUpgrade = new UpgradeTrack(300, 1.6f, 10);
     [SerializeField] private int typingMultiplierPerLevel = 1;
     [SerializeField] private int typingCapBonusPerLevel = 2000;
 
     [Header("도구 효율 업그레이드 (기존 마을 레벨 자동 생산 보너스를 대체)")]
-    [SerializeField] private UpgradeTrack toolEfficiencyUpgrade = new UpgradeTrack(60000, 1.6f, 20);
+    [SerializeField] private UpgradeTrack toolEfficiencyUpgrade = new UpgradeTrack(60000, 1.6f, 10);
     [Tooltip("레벨당 전체 생산량에 곱해지는 효율 증가분")]
     [SerializeField, Min(0f)] private float toolEfficiencyBonusPerLevel = 0.1f;
 
@@ -91,9 +116,9 @@ public class TownUpgradeManager : MonoBehaviour
     public long TypingUpgradeNextCost => typingUpgrade.GetNextCost();
     public long ToolEfficiencyUpgradeNextCost => toolEfficiencyUpgrade.GetNextCost();
 
-    public bool IsClickUpgradeMaxLevel => clickUpgrade.IsMaxLevel;
-    public bool IsTypingUpgradeMaxLevel => typingUpgrade.IsMaxLevel;
-    public bool IsToolEfficiencyUpgradeMaxLevel => toolEfficiencyUpgrade.IsMaxLevel;
+    public bool IsClickUpgradeMaxLevel => !IsEndlessMode() && clickUpgrade.IsMaxLevelAt(GetCurrentTownLevel());
+    public bool IsTypingUpgradeMaxLevel => !IsEndlessMode() && typingUpgrade.IsMaxLevelAt(GetCurrentTownLevel());
+    public bool IsToolEfficiencyUpgradeMaxLevel => !IsEndlessMode() && toolEfficiencyUpgrade.IsMaxLevelAt(GetCurrentTownLevel());
 
     // RealProductionTicker가 매 틱 참조합니다. 예전에는 마을 레벨이 자동으로 이 배율을 올려줬지만
     // 지금은 이 업그레이드를 구매한 만큼만 오릅니다.
@@ -103,6 +128,21 @@ public class TownUpgradeManager : MonoBehaviour
     {
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
+
+        townLevelProvider = townLevelProviderSource as ITownLevelProvider;
+        endlessModeProvider = townLevelProviderSource as IEndlessModeProvider;
+    }
+
+    private int GetCurrentTownLevel()
+    {
+        return townLevelProvider != null ? townLevelProvider.CurrentTownLevel : 1;
+    }
+
+    // #19: 엔드리스 모드에서는 3종 업그레이드 상한을 전부 해제합니다(UpgradeTrack 자체는 건드리지 않고,
+    // 이 상한 체크를 쓰는 쪽에서 먼저 차단).
+    private bool IsEndlessMode()
+    {
+        return endlessModeProvider != null && endlessModeProvider.IsEndlessMode;
     }
 
     private void Start()
@@ -132,14 +172,17 @@ public class TownUpgradeManager : MonoBehaviour
 
     private bool TryUpgrade(UpgradeTrack track, System.Action onLeveledUp)
     {
-        if (track.IsMaxLevel || CoinManager.Instance == null)
+        int townLevel = GetCurrentTownLevel();
+        bool endless = IsEndlessMode();
+        if ((!endless && track.IsMaxLevelAt(townLevel)) || CoinManager.Instance == null)
             return false;
 
         long cost = track.GetNextCost();
         if (!CoinManager.Instance.TrySpend(cost))
             return false;
 
-        track.TryLevelUp();
+        if (endless) track.ForceLevelUp();
+        else track.TryLevelUp(townLevel);
         onLeveledUp?.Invoke();
 
         // -----------------------------------------------------------------------------
@@ -195,10 +238,13 @@ public class TownUpgradeManager : MonoBehaviour
     }
     private bool DebugForceUpgrade(UpgradeTrack track, System.Action onLeveledUp)
     {
-        // 코인/CoinManager 검사 없음. 최대 레벨만 막음.
-        if (track.IsMaxLevel) return false;
+        // 코인/CoinManager 검사 없음. 최대 레벨만 막음(엔드리스 모드면 그마저도 없음).
+        int townLevel = GetCurrentTownLevel();
+        bool endless = IsEndlessMode();
+        if (!endless && track.IsMaxLevelAt(townLevel)) return false;
 
-        track.TryLevelUp();
+        if (endless) track.ForceLevelUp();
+        else track.TryLevelUp(townLevel);
         onLeveledUp?.Invoke();
         return true;
     }
