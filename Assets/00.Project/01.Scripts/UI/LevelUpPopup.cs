@@ -9,14 +9,14 @@ namespace UI
     public class LevelUpPopup : MonoBehaviour
     {
 
-        [SerializeField] private TMP_Text messageText;  // Ãâ·ÂÇÒ ÅØ½ºÆ®
-        [SerializeField] private TMP_Text expendCoinText;  // ¼Ò¸ğµÇ´Â ÄÚÀÎÀÌ Æ÷ÇÔµÈ ÅØ½ºÆ®
+        [SerializeField] private TMP_Text messageText;  // ì¶œë ¥í•  í…ìŠ¤íŠ¸
+        [SerializeField] private TMP_Text expendCoinText;  // ì†Œëª¨ë˜ëŠ” ì½”ì¸ì´ í¬í•¨ëœ í…ìŠ¤íŠ¸
 
         [SerializeField] private Button yesButton;
         [SerializeField] private Button noButton;
 
-        private Action onSelectYesToConfirm; // Yes ¸¦ ¼±ÅÃÇßÀ»¶§
-        private Action onSelectNoToCancel;   // No ¸¦ ¼±ÅÃÇßÀ»¶§
+        private Action onSelectYesToConfirm; // Yes ë¥¼ ì„ íƒí–ˆì„ë•Œ
+        private Action onSelectNoToCancel;   // No ë¥¼ ì„ íƒí–ˆì„ë•Œ
         private bool isSelecting;
 
         private void Awake()
@@ -34,19 +34,19 @@ namespace UI
         }
 
         /// <summary>
-        /// ·¹º§¾÷ ÆË¾÷ ¿ÀÇÂ
+        /// ë ˆë²¨ì—… íŒì—… ì˜¤í”ˆ
         /// </summary>
         public void OpenLevelUpPopup(string message,string coinMessage, Action confirmAction, Action cancelAction = null)
         {
             if (confirmAction == null)
             {
-                Debug.LogWarning("[LevelUpPopup] È®ÀÎ ÈÄ ½ÇÇàÇÒ ±â´ÉÀÌ ¾ø½À´Ï´Ù.");
+                Debug.LogWarning("[LevelUpPopup] í™•ì¸ í›„ ì‹¤í–‰í•  ê¸°ëŠ¥ì´ ì—†ìŠµë‹ˆë‹¤.");
                 return;
             }
 
             if (messageText == null || expendCoinText == null)
             {
-                Debug.LogWarning("[LevelUpPopup] Ãâ·ÂÇÒ ÅØ½ºÆ®°¡ ¿¬°áµÇÁö ¾Ê¾Ò½À´Ï´Ù.");
+                Debug.LogWarning("[LevelUpPopup] ì¶œë ¥í•  í…ìŠ¤íŠ¸ê°€ ì—°ê²°ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.");
                 return;
             }
 
@@ -56,7 +56,7 @@ namespace UI
             onSelectNoToCancel = cancelAction;
             isSelecting = false;
 
-            // UIPanelWindow °æ·Î·Î ¿­¾î Canvas sortingOrder¸¦ ÃÖ»ó´ÜÀ¸·Î ¿Ã¸²
+            // UIPanelWindow ê²½ë¡œë¡œ ì—´ì–´ Canvas sortingOrderë¥¼ ìµœìƒë‹¨ìœ¼ë¡œ ì˜¬ë¦¼
             if (TryGetComponent(out UIPanelWindow panelWindow))
                 panelWindow.OpenPanelDefaultPosition();
             else
@@ -64,7 +64,7 @@ namespace UI
         }
 
         /// <summary>
-        /// Yes ¸¦ ¼±ÅÃÇßÀ»¶§
+        /// Yes ë¥¼ ì„ íƒí–ˆì„ë•Œ
         /// </summary>
         private void SelectYes()
         {
@@ -80,7 +80,7 @@ namespace UI
         }
 
         /// <summary>
-        /// No ¸¦ ¼±ÅÃÇßÀ»¶§
+        /// No ë¥¼ ì„ íƒí–ˆì„ë•Œ
         /// </summary>
         private void SelectNo()
         {
@@ -96,7 +96,7 @@ namespace UI
         }
 
         /// <summary>
-        /// Ã¢ ´İ±â
+        /// ì°½ ë‹«ê¸°
         /// </summary>
         private void Close()
         {
