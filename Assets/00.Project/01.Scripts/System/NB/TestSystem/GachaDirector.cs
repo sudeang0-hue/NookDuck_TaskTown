@@ -199,12 +199,16 @@ public class GachaDirector : MonoBehaviour
     //GachaEntryData를 받아 각 UI 슬롯에 바인딩
     private void PopulateResultSlots(int drawCount, List<GachaEntryData> resultEntries)
     {
+        // 기존 생성된 슬롯 비활성화
         for (int i = 0; i < _spawnedSlotPool.Count; i++)
         {
             _spawnedSlotPool[i].SetActive(false);
         }
 
-        for (int i = 0; i < drawCount; i++)
+        // 요청 개수(drawCount)와 실제 데이터 개수 중 더 큰 값 기준으로 슬롯 렌더링
+        int targetSlotCount = (resultEntries != null && resultEntries.Count > 0) ? resultEntries.Count : drawCount;
+
+        for (int i = 0; i < targetSlotCount; i++)
         {
             GameObject slotObj;
 
@@ -222,11 +226,9 @@ public class GachaDirector : MonoBehaviour
             GachaItemSlotUI slotUI = slotObj.GetComponent<GachaItemSlotUI>();
             if (slotUI != null && resultEntries != null && i < resultEntries.Count)
             {
-                // Sprite 대신 GachaEntryData 전달!
                 slotUI.SetItem(resultEntries[i]);
             }
 
-            // 시차 팝업 연출 딜레이 공식: T_delay = T_emerge * 0.5 + (0.04 * i)
             slotObj.transform.localScale = Vector3.zero;
             slotObj.transform.DOScale(1.0f, 0.25f)
                    .SetDelay(popupEmergeDuration * 0.5f + (0.04f * i))

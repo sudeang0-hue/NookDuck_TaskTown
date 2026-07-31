@@ -7,14 +7,12 @@ using TaskTown.Gacha;
 using TaskTown.KDH;
 using Tool.Data;
 
-// GachaPool_Tool.asset 데이터 에셋을 직접 연결하여 도구 가챠를 보장하는 스크립트입니다.
 public class GachaSystemBridge : MonoBehaviour
 {
-    [Header("Data Asset Reference ")]
+    [Header("Data Asset Reference")]
     [SerializeField] private GachaPoolData toolGachaPoolData;
 
     [Header("Teammate's System References")]
-    // GachaManagerBase 에서 'ToolGachaManager' 전용 타입으로 직접 지정
     [Tooltip("도구 가챠 전용 매니저 컴포넌트를 할당하세요.")]
     [SerializeField] private ToolGachaManager gachaManager;
 
@@ -48,10 +46,18 @@ public class GachaSystemBridge : MonoBehaviour
     }
 
     private void OnEnable() => InitButtonListeners();
+
+    // Start() 시점에 한 번 더 리스너를 정리하여 타 스크립트의 Start() 중복 바인딩을 방지
+    private void Start()
+    {
+        InitButtonListeners();
+    }
+
     private void OnDisable() => RemoveButtonListeners();
 
     private void InitButtonListeners()
     {
+        // 외부 스크립트에서 C# 코드로 추가했을 수 있는 리스너까지 싹 제거 후 단일 바인딩
         if (btnOpenGachaWindow != null)
         {
             btnOpenGachaWindow.onClick.RemoveAllListeners();
@@ -111,7 +117,6 @@ public class GachaSystemBridge : MonoBehaviour
         if (gachaDirector != null) gachaDirector.CloseGachaUI();
     }
 
-    // GachaPool_Tool 에셋 기반 도구 전용 뽑기 파이프라인
     private void OnClickedDrawGacha(int drawCount)
     {
         if (Time.time - _lastClickTime < CLICK_THRESHOLD) return;
@@ -123,7 +128,6 @@ public class GachaSystemBridge : MonoBehaviour
             return;
         }
 
-        // 1. 비용 계산 및 지갑 검수
         long requiredCost = gachaManager.GetCost(drawCount);
 
         if (CoinWallet != null && CoinWallet.Balance < requiredCost)
@@ -134,11 +138,6 @@ public class GachaSystemBridge : MonoBehaviour
 
         if (CoinWallet != null && !CoinWallet.TrySpend(requiredCost)) return;
 
-        // 가챠 매니저에게 GachaPool_Tool 에셋을 주입/셋팅할 수 있는 프로퍼티가 있다면 주입
-        // 만약 GachaManagerBase에 Pool 변수가 공개되어 있다면 아래 주석 해제:
-        // gachaManager.SetPool(toolGachaPoolData);
-
-        // 2. 가챠 롤 실행
         List<GachaResult> rollResults = gachaManager.RollMulti(drawCount);
         List<GachaEntryData> entryDataList = new List<GachaEntryData>();
 
@@ -148,10 +147,8 @@ public class GachaSystemBridge : MonoBehaviour
             {
                 if (result.Entry == null) continue;
 
-                // 연출 데이터 수집
                 entryDataList.Add(result.Entry);
 
-                // 3. 도구 데이터 판별 및 인벤토리 추가
                 if (result.Entry is ToolDataSO toolData)
                 {
                     if (InventoryManager_Tool.Instance != null)
@@ -167,13 +164,14 @@ public class GachaSystemBridge : MonoBehaviour
             }
         }
 
-        // UI 은폐 및 연출 재생
         _isOpen = false;
         if (teammateInitialWindow != null) teammateInitialWindow.SetActive(false);
 
         if (gachaDirector != null)
         {
-            gachaDirector.StartGachaSequence(drawCount, entryDataList);
+            // 요청한 drawCount 대신, 실제 뽑혀 나온 entryDataList.Count를 전달하여 UI 불일치 차단!
+            int actualCount = entryDataList.Count > 0 ? entryDataList.Count : drawCount;
+            gachaDirector.StartGachaSequence(actualCount, entryDataList);
         }
     }
 }
