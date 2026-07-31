@@ -16,6 +16,11 @@ namespace UI
     {
         private const int RequiredUpgradeTotal = 3;
 
+        // #19(엔드리스 사전 작업): 일반 모드에서는 마을 레벨이 10에서 멈춥니다(완주). 완주 판정 후
+        // "다음 난이도로" vs "엔드리스로 계속" 선택 UI는 별도 작업이라 아직 이 상한을 넘는 방법은
+        // EnableEndlessMode()/DebugSetEndlessMode(true)뿐입니다.
+        private const int NormalModeMaxTownLevel = 10;
+
         /// <summary>
         /// 트랙 완료/마을 레벨/비용 UI 상태가 바뀔 때 발행합니다.
         /// VillageInfo 등 외부 패널 동기화용입니다.
@@ -178,10 +183,20 @@ namespace UI
         }
 
         /// <summary>
+        /// 마을 레벨이 상한(10)에 도달했는지. 엔드리스 모드여도 마을 레벨 자체는 10에서 고정되고,
+        /// 클릭/타이핑/도구효율 3종 업그레이드만 상한이 풀립니다(사용자 확인).
+        /// </summary>
+        public bool IsVillageLevelMaxed => uiTownLevel >= NormalModeMaxTownLevel;
+
+        /// <summary>
         /// 필수 3종 완료 + 비용 지불 가능 시 마을 레벨업을 수행합니다.
+        /// 엔드리스 모드 여부와 무관하게 레벨10(완주)에서 멈춥니다.
         /// </summary>
         public bool TryVillageLevelUp()
         {
+            if (IsVillageLevelMaxed)
+                return false;
+
             if (!IsReadyForVillageLevelUp)
                 return false;
 
@@ -286,7 +301,7 @@ namespace UI
             uiController.SetTrackButtonsInteractable(clickEnabled, typingEnabled, toolEnabled);
 
             long villageCost = GetVillageLevelUpCost();
-            bool villageEnabled = IsReadyForVillageLevelUp && coin >= villageCost;
+            bool villageEnabled = !IsVillageLevelMaxed && IsReadyForVillageLevelUp && coin >= villageCost;
             uiController.SetVillageLevelUpInteractable(villageEnabled);
         }
 
