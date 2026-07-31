@@ -137,10 +137,55 @@ namespace TaskTown.EditorTests.Tutorial
             {
                 bool expected = content.Step == TutorialStep.IntroDialogue ||
                                 content.Step == TutorialStep.CompletionDialogue ||
-                                content.Step == TutorialStep.CollapseAndExpandTown;
+                                content.Step == TutorialStep.CollapseAndExpandTown ||
+                                content.Step == TutorialStep.AnimalDrawExplanation ||
+                                content.Step == TutorialStep.VillagePlacementExplanation ||
+                                content.Step == TutorialStep.UpgradeExplanation;
                 Assert.AreEqual(expected, content.AllowClickAdvance,
                     $"클릭 진행 설정이 잘못되었습니다: {content.Step}");
             }
+        }
+
+        [Test]
+        public void ConfigAsset_동물뽑기결과설명과마을배치안내를포함한다()
+        {
+            TutorialConfigSO config = LoadConfig();
+
+            Assert.IsTrue(config.TryGetStepContent(
+                TutorialStep.AnimalDrawExplanation,
+                out TutorialStepContent animalExplanation));
+            Assert.AreEqual(3, animalExplanation.Messages.Count);
+            Assert.IsTrue(animalExplanation.AllowClickAdvance);
+
+            Assert.IsTrue(config.TryGetStepContent(
+                TutorialStep.VillagePlacementExplanation,
+                out TutorialStepContent villageExplanation));
+            Assert.AreEqual(5, villageExplanation.Messages.Count);
+            CollectionAssert.Contains(
+                villageExplanation.Messages,
+                "찾아온 주민에게 도구를 배정해 주는것은 마치 일자리를 정해주는 기능입니다!");
+            CollectionAssert.Contains(
+                villageExplanation.Messages,
+                "이제 찾아온 주민을 마을에 배치해봅시다!");
+            Assert.IsTrue(villageExplanation.AllowClickAdvance);
+
+            Assert.IsTrue(config.TryGetStepContent(
+                TutorialStep.PlaceAnimalInVillage,
+                out TutorialStepContent villageQuest));
+            Assert.IsFalse(string.IsNullOrWhiteSpace(villageQuest.ObjectiveText));
+            Assert.IsFalse(villageQuest.AllowClickAdvance);
+        }
+
+        [Test]
+        public void ConfigAsset_마을업그레이드설명을행동단계전에표시한다()
+        {
+            TutorialConfigSO config = LoadConfig();
+
+            Assert.IsTrue(config.TryGetStepContent(
+                TutorialStep.UpgradeExplanation,
+                out TutorialStepContent explanation));
+            Assert.AreEqual(6, explanation.Messages.Count);
+            Assert.IsTrue(explanation.AllowClickAdvance);
         }
 
         private static TutorialConfigSO LoadConfig()

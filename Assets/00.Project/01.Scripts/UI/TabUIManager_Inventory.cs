@@ -11,7 +11,7 @@ public enum InventoryTabType
 
 namespace UI
 {
-    public class InventoryTabUI_Manager : MonoBehaviour
+    public class TabUIManager_Inventory : MonoBehaviour
     {
 
         [SerializeField] private Button[] openAnimalInvButtons;
@@ -142,7 +142,7 @@ namespace UI
         }
 
         /// <summary>
-        /// ÅÇ ´Ý±â
+        /// ÅÇ ´Ý±â 
         /// </summary>
         public void CloseAllTabs()
         {

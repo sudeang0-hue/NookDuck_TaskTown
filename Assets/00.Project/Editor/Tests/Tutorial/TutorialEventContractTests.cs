@@ -14,6 +14,7 @@ namespace TaskTown.EditorTests.Tutorial
         [TestCase(typeof(GachaManagerBase), nameof(GachaManagerBase.OnGachaResolved), typeof(Action<GachaResult>))]
         [TestCase(typeof(InventoryManager_Tool), nameof(InventoryManager_Tool.OnToolSlotChanged), typeof(Action<SlotData_Tool>))]
         [TestCase(typeof(RealProductionTicker), nameof(RealProductionTicker.ProductionCoinGranted), typeof(Action<int>))]
+        [TestCase(typeof(VillageAnimalSetUI_Manager), nameof(VillageAnimalSetUI_Manager.OnVillagePlacementChanged), typeof(Action))]
         [TestCase(typeof(VillageInfoUI_Manager), nameof(VillageInfoUI_Manager.PanelOpened), typeof(Action))]
         [TestCase(typeof(TownUpgradeManager), nameof(TownUpgradeManager.UpgradePurchased), typeof(Action))]
         public void TutorialEventBridge가사용하는이벤트_공개계약을유지한다(
