@@ -188,23 +188,31 @@ namespace TaskTown.EditorTests.Tutorial
 
             InvokeLifecycle(view, "OnEnable");
             view.SetVisible(true);
+            int skipOpenedCount = 0;
             int skipCount = 0;
+            int skipCancelledCount = 0;
+            view.SkipConfirmationOpened += () => skipOpenedCount++;
             view.SkipConfirmed += () => skipCount++;
+            view.SkipCancelled += () => skipCancelledCount++;
 
             skipButton.onClick.Invoke();
+            Assert.AreEqual(1, skipOpenedCount);
             Assert.IsTrue(view.IsSkipConfirmationOpen);
             Assert.IsTrue(confirmationPanel.activeSelf);
             Assert.IsFalse(skipButton.interactable);
 
             cancelButton.onClick.Invoke();
+            Assert.AreEqual(1, skipCancelledCount);
             Assert.IsFalse(view.IsSkipConfirmationOpen);
             Assert.IsFalse(confirmationPanel.activeSelf);
             Assert.IsTrue(skipButton.interactable);
 
             skipButton.onClick.Invoke();
+            Assert.AreEqual(2, skipOpenedCount);
             confirmButton.onClick.Invoke();
             confirmButton.onClick.Invoke();
             Assert.AreEqual(1, skipCount);
+            Assert.AreEqual(1, skipCancelledCount);
             Assert.IsFalse(confirmButton.interactable);
             Assert.IsFalse(cancelButton.interactable);
 

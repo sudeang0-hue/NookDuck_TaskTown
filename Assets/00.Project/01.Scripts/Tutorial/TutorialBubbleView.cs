@@ -36,7 +36,9 @@ namespace TaskTown.Tutorial
         private bool isSkipRequestPending;
 
         public event Action AdvanceRequested;
+        public event Action SkipConfirmationOpened;
         public event Action SkipConfirmed;
+        public event Action SkipCancelled;
 
         public bool IsVisible => canvasGroup != null && canvasGroup.alpha > 0f;
         public bool IsSkipConfirmationOpen => isSkipConfirmationOpen;
@@ -175,6 +177,7 @@ namespace TaskTown.Tutorial
             isSkipConfirmationOpen = true;
             skipConfirmationPanel.SetActive(true);
             RefreshSkipUi();
+            SkipConfirmationOpened?.Invoke();
         }
 
         private void HandleConfirmSkipClicked()
@@ -192,14 +195,18 @@ namespace TaskTown.Tutorial
 
         private void HandleCancelSkipClicked()
         {
-            if (isSkipRequestPending)
+            if (!isTutorialVisible || !isSkipConfirmationOpen ||
+                isSkipRequestPending)
+            {
                 return;
+            }
 
             isSkipConfirmationOpen = false;
             if (skipConfirmationPanel != null)
                 skipConfirmationPanel.SetActive(false);
 
             RefreshSkipUi();
+            SkipCancelled?.Invoke();
         }
 
         private void RefreshSkipUi()
