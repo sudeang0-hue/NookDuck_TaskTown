@@ -118,5 +118,29 @@ namespace TaskTown.EditorTests.Tutorial
             Object.DestroyImmediate(tutorialObject);
             Object.DestroyImmediate(coinObject);
         }
+
+        [Test]
+        public void TrySkipTutorial_연속호출에도_완료이벤트를한번호출한다()
+        {
+            GameObject gameObject = new("TutorialManagerSkipTest");
+            TutorialManager manager = gameObject.AddComponent<TutorialManager>();
+            LogAssert.Expect(
+                LogType.Warning,
+                "[TutorialManager] SaveManager가 없어 기본 진행 상태로 시작합니다. " +
+                "현재 진행은 디스크 저장에 포함되지 않습니다.");
+            manager.Initialize(null);
+            int completedCount = 0;
+            manager.TutorialCompleted += () => completedCount++;
+
+            bool first = manager.TrySkipTutorial();
+            bool second = manager.TrySkipTutorial();
+
+            Assert.IsTrue(first);
+            Assert.IsFalse(second);
+            Assert.IsTrue(manager.IsCompleted);
+            Assert.AreEqual(1, completedCount);
+
+            Object.DestroyImmediate(gameObject);
+        }
     }
 }

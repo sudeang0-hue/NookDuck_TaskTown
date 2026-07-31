@@ -118,6 +118,16 @@ namespace TaskTown.Tutorial
             return machine.TryHandleSignal(signalType, amount);
         }
 
+        /// <summary>
+        /// 튜토리얼 전체를 보상 지급 없이 완료합니다.
+        /// 완료 저장과 Overlay 언로드는 기존 TutorialCompleted 흐름에서 처리합니다.
+        /// </summary>
+        public bool TrySkipTutorial()
+        {
+            return TryGetStateMachine(out TutorialStateMachine machine) &&
+                   machine.TrySkipTutorial();
+        }
+
         private bool TryGrantToolDrawCoinReward(
             TutorialStateMachine machine)
         {

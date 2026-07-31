@@ -121,6 +121,19 @@ namespace TaskTown.Tutorial
             }
         }
 
+        /// <summary>
+        /// 현재 진행 위치와 일시정지 여부에 관계없이 튜토리얼 전체를 완료 처리합니다.
+        /// 보상 조건은 처리하지 않으며 기존 완료 이벤트 흐름만 재사용합니다.
+        /// </summary>
+        public bool TrySkipTutorial()
+        {
+            if (IsCompleted)
+                return false;
+
+            AdvanceTo(TutorialStep.Completed);
+            return true;
+        }
+
         private bool TryAddManualCoin(TutorialSignalType signalType, long amount)
         {
             if (signalType != TutorialSignalType.ManualCoinEarned || amount <= 0L)
