@@ -16,6 +16,7 @@ namespace TaskTown.Tutorial
         VillageInfoOpened = 7,
         AnyUpgradePurchased = 8,
         TownWindowMinimized = 9,
-        TownWindowExpanded = 10
+        TownWindowExpanded = 10,
+        VillageAnimalPlaced = 11
     }
 }

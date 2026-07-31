@@ -20,7 +20,13 @@ namespace TaskTown.Tutorial
         Completed = 9,
 
         // 기존 저장 데이터의 enum 숫자를 유지하기 위해 논리적 삽입 단계는 마지막 값으로 추가합니다.
-        CollapseAndExpandTown = 10
+        CollapseAndExpandTown = 10,
+
+        // 기존 저장 데이터의 enum 숫자를 유지하기 위해 신규 단계는 마지막 값부터 추가합니다.
+        AnimalDrawExplanation = 11,
+        VillagePlacementExplanation = 12,
+        PlaceAnimalInVillage = 13,
+        UpgradeExplanation = 14
     }
 
     /// <summary>

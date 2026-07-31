@@ -37,9 +37,12 @@ namespace TaskTown.EditorTests.Tutorial
                 player.GetQuestClearSoundId(TutorialStep.ConfirmAutoProduction));
             Assert.AreEqual(
                 "SFX_Player_Collect_Pop_1",
-                player.GetQuestClearSoundId(TutorialStep.OpenVillageInfo));
+                player.GetQuestClearSoundId(TutorialStep.PlaceAnimalInVillage));
             Assert.AreEqual(
                 "SFX_Player_Collect_Pop_2",
+                player.GetQuestClearSoundId(TutorialStep.OpenVillageInfo));
+            Assert.AreEqual(
+                "SFX_Player_Collect_Pop_3",
                 player.GetQuestClearSoundId(TutorialStep.UpgradeVillage));
             Assert.AreEqual(
                 string.Empty,

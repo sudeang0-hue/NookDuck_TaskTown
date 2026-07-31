@@ -612,8 +612,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+    rgba: 4278190080
+  m_fontColor: {r: 0, g: 0, b: 0, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -1010,12 +1010,14 @@ MonoBehaviour:
   toolGachaManager: {fileID: 0}
   toolInventoryManager: {fileID: 0}
   realProductionTicker: {fileID: 0}
+  villageAnimalSetUIManager: {fileID: 0}
   villageInfoUIManager: {fileID: 0}
   townUpgradeManager: {fileID: 0}
   gameMasterManager: {fileID: 0}
   buttonHighlighter: {fileID: 1038946189}
   menuController: {fileID: 0}
   gachaController: {fileID: 0}
+  villageAnimalSetController: {fileID: 0}
 --- !u!114 &1038946185
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1073,6 +1075,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TaskTown.Tutorial.TutorialBubbleSfxPlayer
   dialogueAdvanceSoundId: SFX_Pop_Bubble_Single_1
+  skipOpenSoundId: SFX_Pop_Bubble_Single_1
+  skipConfirmSoundId: UI_Click
+  skipCancelSoundId: UI_Close
   questClearSoundIds:
   - SFX_Player_Collect_Pop_1
   - SFX_Player_Collect_Pop_2
@@ -1551,7 +1556,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e19747de3f5aca642ab2be37e372fb86, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Outline
-  m_EffectColor: {r: 0.92, g: 0.82, b: 0.58, a: 1}
+  m_EffectColor: {r: 0, g: 0, b: 0, a: 1}
   m_EffectDistance: {x: 3, y: -3}
   m_UseGraphicAlpha: 1
 --- !u!114 &1372050140
@@ -1567,15 +1572,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.075, g: 0.075, b: 0.075, a: 0.98}
+  m_Color: {r: 1, g: 1, b: 1, a: 0.98}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: -1720052558, guid: 3833d3f7c09de0d48b50036c7490237b, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -1735,15 +1740,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.82, g: 0.35, b: 0.22, a: 1}
+  m_Color: {r: 0.7529412, g: 0.22799364, b: 0.21176471, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: -373567985, guid: 3833d3f7c09de0d48b50036c7490237b, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -2860,8 +2865,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: -373567985, guid: 3833d3f7c09de0d48b50036c7490237b, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
