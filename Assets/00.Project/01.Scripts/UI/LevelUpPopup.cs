@@ -56,7 +56,11 @@ namespace UI
             onSelectNoToCancel = cancelAction;
             isSelecting = false;
 
-            gameObject.SetActive(true);
+            // UIPanelWindow 경로로 열어 Canvas sortingOrder를 최상단으로 올림
+            if (TryGetComponent(out UIPanelWindow panelWindow))
+                panelWindow.OpenPanelDefaultPosition();
+            else
+                gameObject.SetActive(true);
         }
 
         /// <summary>

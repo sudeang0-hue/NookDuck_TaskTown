@@ -35,6 +35,15 @@ namespace TaskTown.KDH
 
         private float productionBuffer;
 
+        // -----------------------------------------------------------------------------
+        // [ 2026.07.31 - KAY - 자동 생산 코인 표시 주기 개선 ]
+        // 기능: 자동 생산분은 일정 주기마다 지갑에 일괄 지급해 UI가 프레임 단위로 갱신되지 않게 합니다.
+        // -----------------------------------------------------------------------------
+        [Tooltip("자동 생산 코인을 지갑에 지급하는 주기(초). 타이핑/클릭 코인은 EarnProcessor에서 즉시 반영됩니다.")]
+        [SerializeField] private float grantIntervalSeconds = 1f;
+
+        private float grantTimer;
+
         // 현재 초당 생산량. UIController_Coin 등 시간당 획득량 표시용 UI가 참조합니다.
         public float CurrentCoinPerSecond { get; private set; }
 
@@ -60,21 +69,37 @@ namespace TaskTown.KDH
             CurrentCoinPerSecond = CalculateTotalCoinPerSecond();
             productionBuffer += CurrentCoinPerSecond * Time.deltaTime;
 
-            if (productionBuffer < 1f) return;
-
-            int wholeCoins = Mathf.FloorToInt(productionBuffer);
-            productionBuffer -= wholeCoins;
+            // -----------------------------------------------------------------------------
+            // [ 2026.07.31 - KAY - 자동 생산 코인 표시 주기 개선 ]
+            // 기능: 버퍼가 1 이상일 때마다 즉시 지급하던 방식을 주기 지급으로 변경합니다.
+            // -----------------------------------------------------------------------------
+            // if (productionBuffer < 1f) return;
+            //
+            // int wholeCoins = Mathf.FloorToInt(productionBuffer);
+            // productionBuffer -= wholeCoins;
+            //
+            // // -----------------------------------------------------------------------------
+            // // [ 2026.07.27 - Choi - 튜토리얼 기능 업데이트 ]
+            // // 기능: 유효한 지갑에 정수 코인이 지급된 경우에만 자동 생산 이벤트를 보냅니다.
+            // // -----------------------------------------------------------------------------
+            // ICoinWallet coinWallet = CoinWallet;
+            // if (coinWallet == null)
+            //     return;
+            //
+            // coinWallet.Add(wholeCoins);
+            // ProductionCoinGranted?.Invoke(wholeCoins);
 
             // -----------------------------------------------------------------------------
-            // [ 2026.07.27 - Choi - 튜토리얼 기능 업데이트 ]
-            // 기능: 유효한 지갑에 정수 코인이 지급된 경우에만 자동 생산 이벤트를 보냅니다.
+            // [ 2026.07.31 - KAY - 자동 생산 코인 표시 주기 개선 ]
+            // 기능: grantIntervalSeconds마다 버퍼의 정수 코인만 지갑에 반영합니다.
             // -----------------------------------------------------------------------------
-            ICoinWallet coinWallet = CoinWallet;
-            if (coinWallet == null)
+            float interval = grantIntervalSeconds > 0f ? grantIntervalSeconds : 1f;
+            grantTimer += Time.deltaTime;
+            if (grantTimer < interval)
                 return;
 
-            coinWallet.Add(wholeCoins);
-            ProductionCoinGranted?.Invoke(wholeCoins);
+            grantTimer -= interval;
+            TryGrantBufferedProductionCoins();
         }
 
         // 프레임을 기다리지 않고 즉시 현재 생산량을 계산합니다(오프라인 보상 등 앱 시작 직후에 필요).
@@ -110,6 +135,26 @@ namespace TaskTown.KDH
             }
 
             return total;
+        }
+
+        // -----------------------------------------------------------------------------
+        // [ 2026.07.31 - KAY - 자동 생산 코인 표시 주기 개선 ]
+        // 기능: 생산 버퍼의 정수 코인을 지갑에 지급하고, 성공 시에만 자동 생산 이벤트를 보냅니다.
+        // -----------------------------------------------------------------------------
+        private void TryGrantBufferedProductionCoins()
+        {
+            if (productionBuffer < 1f)
+                return;
+
+            int wholeCoins = Mathf.FloorToInt(productionBuffer);
+            productionBuffer -= wholeCoins;
+
+            ICoinWallet coinWallet = CoinWallet;
+            if (coinWallet == null)
+                return;
+
+            coinWallet.Add(wholeCoins);
+            ProductionCoinGranted?.Invoke(wholeCoins);
         }
     }
 }

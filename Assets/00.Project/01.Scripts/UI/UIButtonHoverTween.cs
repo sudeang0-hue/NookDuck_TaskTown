@@ -4,14 +4,13 @@ using UnityEngine.EventSystems;
 public class UIButtonHoverTween : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
     [Header("Reference")]
-    [SerializeField] private RectTransform moveTarget;
+    private RectTransform moveTarget;
     private Vector2 defaultPosition;
     private readonly object hoverTweenId = new object();
 
     private void Awake()
     {
-        if (moveTarget == null)
-            moveTarget = transform as RectTransform;
+        moveTarget = GetComponent<RectTransform>();
 
         if (moveTarget == null)
         {
