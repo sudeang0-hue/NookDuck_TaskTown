@@ -46,14 +46,17 @@ namespace TaskTown.KDH
 
         /// <summary>
         /// 동물 레벨을 1 증가시킵니다.
+        /// endlessMode가 true면(#19 엔드리스 모드) 레벨 5 상한을 무시하고, 이전에 이미 상한에
+        /// 도달해 있던 슬롯도 다시 풀어줍니다.
         /// </summary>
-        public void AnimalLevelUp()
+        public void AnimalLevelUp(bool endlessMode = false)
         {
-            if (IsMaxLevel) return;
+            if (!endlessMode && IsMaxLevel) return;
 
             level++;
 
-            if (level == 5) isMaxLevel = true;
+            if (endlessMode) isMaxLevel = false;
+            else if (level == 5) isMaxLevel = true;
         }
 
         /// <summary>
@@ -80,10 +83,11 @@ namespace TaskTown.KDH
         /// <summary>
         /// 레벨업 가능 여부.
         /// 본체 1개를 제외한 나머지 개수가 요구 개수 이상인지 확인합니다.
+        /// endlessMode가 true면(#19) 레벨 5 상한 체크를 건너뜁니다.
         /// </summary>
-        public bool CanLevelUp()
+        public bool CanLevelUp(bool endlessMode = false)
         {
-            if (isMaxLevel)
+            if (!endlessMode && isMaxLevel)
                 return false;
 
             if (requiredUpgradeCount <= 0)
@@ -97,9 +101,9 @@ namespace TaskTown.KDH
         /// 레벨업에 필요한 개수를 소비합니다.
         /// 본체 1개는 남기고, 요구 개수만큼만 소모합니다.
         /// </summary>
-        public bool TryConsumeForLevelUp()
+        public bool TryConsumeForLevelUp(bool endlessMode = false)
         {
-            if (!CanLevelUp())
+            if (!CanLevelUp(endlessMode))
                 return false;
 
             currentCount -= requiredUpgradeCount;

@@ -310,6 +310,33 @@ public class DebugTool : MonoBehaviour
         }
         //-----------------------------------------------------------------------------
 
+        //--------------------------26.07.30 KNW--------------------------------------
+        // #19: 완주 판정/선택 UI가 아직 없어서, 엔드리스 모드를 임시로 켜고 끄며 검증하기 위한 버튼입니다.
+        GUILayout.Label($"엔드리스 모드: {(villageUpgradeUIManager != null ? villageUpgradeUIManager.IsEndlessMode.ToString() : "-")}");
+        GUILayout.BeginHorizontal();
+        if (GUILayout.Button("엔드리스 ON"))
+        {
+            if (villageUpgradeUIManager == null)
+                lastUpgradeActionText = "VillageUpgradeUI_Manager 없음";
+            else
+            {
+                villageUpgradeUIManager.DebugSetEndlessMode(true);
+                lastUpgradeActionText = "엔드리스 모드 ON";
+            }
+        }
+        if (GUILayout.Button("엔드리스 OFF"))
+        {
+            if (villageUpgradeUIManager == null)
+                lastUpgradeActionText = "VillageUpgradeUI_Manager 없음";
+            else
+            {
+                villageUpgradeUIManager.DebugSetEndlessMode(false);
+                lastUpgradeActionText = "엔드리스 모드 OFF";
+            }
+        }
+        GUILayout.EndHorizontal();
+        //-----------------------------------------------------------------------------
+
         GUILayout.Space(8f);
         GUI.DragWindow();
         GUILayout.EndScrollView();
