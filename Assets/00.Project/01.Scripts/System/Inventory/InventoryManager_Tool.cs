@@ -17,9 +17,10 @@ namespace TaskTown.KDH
 
         // #18(도구 상한): ITownLevelProvider를 구현한 컴포넌트(VillageUpgradeUI_Manager)를 연결합니다.
         // 비워두면 마을 레벨 1로 취급합니다(GachaManagerBase와 동일한 패턴).
-        [Tooltip("ITownLevelProvider를 구현한 컴포넌트(VillageUpgradeUI_Manager)를 연결합니다. 비워두면 마을 레벨 1로 취급합니다.")]
+        [Tooltip("ITownLevelProvider(+ IEndlessModeProvider)를 구현한 컴포넌트(VillageUpgradeUI_Manager)를 연결합니다. 비워두면 마을 레벨 1/일반 모드로 취급합니다.")]
         [SerializeField] private MonoBehaviour townLevelProviderSource;
         private ITownLevelProvider townLevelProvider;
+        private IEndlessModeProvider endlessModeProvider;
 
         // 도구 상한(동시에 "동물이 장착된 도구" 슬롯 개수 제한). 마을 레벨을 올리면 늘어납니다.
         // 값은 simulate_game.py 인플레이션 밸런스 시뮬레이션(#18 리밸런스)으로 확정했습니다.
@@ -58,6 +59,7 @@ namespace TaskTown.KDH
             DontDestroyOnLoad(gameObject);
 
             townLevelProvider = townLevelProviderSource as ITownLevelProvider;
+            endlessModeProvider = townLevelProviderSource as IEndlessModeProvider;
 
             InitializeDictionary();
         }
@@ -65,6 +67,12 @@ namespace TaskTown.KDH
         private int GetCurrentTownLevel()
         {
             return townLevelProvider != null ? townLevelProvider.CurrentTownLevel : 1;
+        }
+
+        // #19: 엔드리스 모드에서는 도구 개별 레벨 5 상한을 해제합니다.
+        private bool IsEndlessMode()
+        {
+            return endlessModeProvider != null && endlessModeProvider.IsEndlessMode;
         }
 
         /// <summary>
@@ -230,7 +238,7 @@ namespace TaskTown.KDH
         {
             if (!TryGetToolSlot(toolId, out SlotData_Tool slot)) return false;
 
-            if (!slot.CanLevelUp()) return false;
+            if (!slot.CanLevelUp(IsEndlessMode())) return false;
 
             long coinCost = slot.GetLevelUpCoinCost();
 
@@ -254,7 +262,8 @@ namespace TaskTown.KDH
                 return false;
             }
 
-            if (slot.IsMaxLevel)
+            bool endless = IsEndlessMode();
+            if (!endless && slot.IsMaxLevel)
             {
                 Debug.Log($"[InventoryManager_Tool] 이미 최대 레벨인 도구입니다: {toolId}");
                 return false;
@@ -271,13 +280,13 @@ namespace TaskTown.KDH
             }
 
             // 재료 소모 후 레벨업 (본체 1개는 유지)
-            if (!slot.TryConsumeForLevelUp())
+            if (!slot.TryConsumeForLevelUp(endless))
             {
                 Debug.Log($"[InventoryManager_Tool] 재료 소모 실패: {toolId}");
                 return false;
             }
 
-            slot.ToolLevelUp();
+            slot.ToolLevelUp(endless);
 
             // 다음 레벨 요구치 갱신
             RefreshSlotGrowthData(slot);
@@ -500,7 +509,11 @@ namespace TaskTown.KDH
 
             int requiredCount = LevelUpRequirementCalculator.GetRequiredDuplicateCount(slot.Level);
 
-            slot.ApplyGrowthData(requiredCount, slot.LevelUpCost, false);
+            // 기존엔 maxLevel 인자가 항상 false로 고정되어 있어서, ToolLevelUp()이 레벨5에서 설정한
+            // isMaxLevel을 이 호출이 곧바로 다시 풀어버리는 버그가 있었습니다(#19 작업 중 발견).
+            // 실제 레벨 기준으로 다시 계산하도록 수정 - 엔드리스 모드에서는 항상 false(상한 없음).
+            bool isMax = !IsEndlessMode() && slot.Level >= 5;
+            slot.ApplyGrowthData(requiredCount, slot.LevelUpCost, isMax);
         }
 
         /// <summary>

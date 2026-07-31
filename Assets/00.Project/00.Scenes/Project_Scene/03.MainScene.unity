@@ -2168,10 +2168,18 @@ PrefabInstance:
       propertyPath: coinWalletSource
       value: 
       objectReference: {fileID: 1566871428}
+    - target: {fileID: 7183985050904730177, guid: 0c3bc518a8c206045b4251e435e075a6, type: 3}
+      propertyPath: townLevelProviderSource
+      value: 
+      objectReference: {fileID: 1492783272}
     - target: {fileID: 7406306307270272899, guid: 0c3bc518a8c206045b4251e435e075a6, type: 3}
       propertyPath: coinWalletSource
       value: 
       objectReference: {fileID: 1566871428}
+    - target: {fileID: 7406306307270272899, guid: 0c3bc518a8c206045b4251e435e075a6, type: 3}
+      propertyPath: endlessModeProviderSource
+      value: 
+      objectReference: {fileID: 1492783272}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -5453,6 +5461,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: c2f84ff620f0ceb4899508abbf2422e7, type: 3}
   m_PrefabInstance: {fileID: 1114814041}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1492783272 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1283037210515985980, guid: 5a06baf612796c74da0eb2e9fc401b48, type: 3}
+  m_PrefabInstance: {fileID: 1962344192}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e258d1eca156b9f4da752baa1e792622, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::VillageUpgradeUI_Manager
 --- !u!1 &1503079220
 GameObject:
   m_ObjectHideFlags: 0
@@ -5790,6 +5809,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 047d7fb4c92b65648ae3f00cf955f2a1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TownUpgradeManager
+  townLevelProviderSource: {fileID: 1492783272}
   clickUpgrade:
     baseCost: 300
     costGrowthRate: 1.6
