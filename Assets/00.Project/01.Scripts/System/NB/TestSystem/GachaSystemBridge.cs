@@ -13,10 +13,9 @@ public class GachaSystemBridge : MonoBehaviour
     [SerializeField] private GachaPoolData toolGachaPoolData;
 
     [Header("Teammate's System References")]
-    [Tooltip("도구 가챠 전용 매니저 컴포넌트를 할당하세요.")]
     [SerializeField] private ToolGachaManager gachaManager;
 
-    [Tooltip("ICoinWallet을 구현한 코인 관리자 컴포넌트 (예: CoinManager)")]
+    [Tooltip("ICoinWallet을 구현한 코인 관리자 컴포넌트")]
     [SerializeField] private MonoBehaviour coinWalletSource;
     private ICoinWallet CoinWallet => coinWalletSource as ICoinWallet;
 
@@ -35,7 +34,7 @@ public class GachaSystemBridge : MonoBehaviour
 
     private bool _isOpen = false;
     private float _lastClickTime = 0f;
-    private const float CLICK_THRESHOLD = 0.25f;
+    private const float CLICK_THRESHOLD = 0.3f; // 연타 방지 간격 살짝 보정
 
     private void Awake()
     {
@@ -46,18 +45,12 @@ public class GachaSystemBridge : MonoBehaviour
     }
 
     private void OnEnable() => InitButtonListeners();
-
-    // Start() 시점에 한 번 더 리스너를 정리하여 타 스크립트의 Start() 중복 바인딩을 방지
-    private void Start()
-    {
-        InitButtonListeners();
-    }
-
+    private void Start() => InitButtonListeners();
     private void OnDisable() => RemoveButtonListeners();
 
     private void InitButtonListeners()
     {
-        // 외부 스크립트에서 C# 코드로 추가했을 수 있는 리스너까지 싹 제거 후 단일 바인딩
+        // 코드로 이벤트를 묶을 때는 인스펙터 버튼 OnClick 리스트를 비워두는 것이 안전합니다.
         if (btnOpenGachaWindow != null)
         {
             btnOpenGachaWindow.onClick.RemoveAllListeners();
@@ -119,12 +112,13 @@ public class GachaSystemBridge : MonoBehaviour
 
     private void OnClickedDrawGacha(int drawCount)
     {
+        // 중복 클릭 쿨다운 방어
         if (Time.time - _lastClickTime < CLICK_THRESHOLD) return;
         _lastClickTime = Time.time;
 
         if (gachaManager == null)
         {
-            Debug.LogError("<color=red>[GachaBridge]</color> GachaManagerBase 참조가 연결되지 않았습니다!");
+            Debug.LogError("<color=red>[GachaBridge]</color> GachaManager 참조가 연결되지 않았습니다!");
             return;
         }
 
@@ -138,6 +132,7 @@ public class GachaSystemBridge : MonoBehaviour
 
         if (CoinWallet != null && !CoinWallet.TrySpend(requiredCost)) return;
 
+        // 가챠 계산 실행
         List<GachaResult> rollResults = gachaManager.RollMulti(drawCount);
         List<GachaEntryData> entryDataList = new List<GachaEntryData>();
 
@@ -149,17 +144,19 @@ public class GachaSystemBridge : MonoBehaviour
 
                 entryDataList.Add(result.Entry);
 
+     
                 if (result.Entry is ToolDataSO toolData)
                 {
+                    // GachaManager가 '순수 확률 계산'만 하고 지급을 안 하는 구조라면 아래 주석을 해제
+                    // 현재 1+1 버그가 발생한다면 GachaManager가 이미 지급을 하고 있는 상태
+
+                    /*
                     if (InventoryManager_Tool.Instance != null)
                     {
                         InventoryManager_Tool.Instance.AddToolSlot(toolData);
-                        Debug.Log($"<color=cyan>[GachaBridge] 도구 획득 완료:</color> {toolData.DisplayName}");
                     }
-                }
-                else
-                {
-                    Debug.LogWarning($"<color=yellow>[GachaBridge] 경고:</color> 뽑힌 데이터가 ToolDataSO가 아닙니다! ({result.Entry.DisplayName})");
+                    */
+                    Debug.Log($"<color=cyan>[GachaBridge] 도구 결과 확인:</color> {toolData.DisplayName}");
                 }
             }
         }
@@ -169,7 +166,6 @@ public class GachaSystemBridge : MonoBehaviour
 
         if (gachaDirector != null)
         {
-            // 요청한 drawCount 대신, 실제 뽑혀 나온 entryDataList.Count를 전달하여 UI 불일치 차단!
             int actualCount = entryDataList.Count > 0 ? entryDataList.Count : drawCount;
             gachaDirector.StartGachaSequence(actualCount, entryDataList);
         }
