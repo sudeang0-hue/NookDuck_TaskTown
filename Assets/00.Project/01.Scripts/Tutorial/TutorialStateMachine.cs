@@ -88,6 +88,9 @@ namespace TaskTown.Tutorial
             switch (CurrentStep)
             {
                 case TutorialStep.IntroDialogue:
+                case TutorialStep.AnimalDrawExplanation:
+                case TutorialStep.VillagePlacementExplanation:
+                case TutorialStep.UpgradeExplanation:
                 case TutorialStep.CompletionDialogue:
                     return TryAdvance(signalType, TutorialSignalType.DialogueCompleted);
 
@@ -109,6 +112,9 @@ namespace TaskTown.Tutorial
 
                 case TutorialStep.ConfirmAutoProduction:
                     return TryAddAutoProductionCoin(signalType, amount);
+
+                case TutorialStep.PlaceAnimalInVillage:
+                    return TryAdvance(signalType, TutorialSignalType.VillageAnimalPlaced);
 
                 case TutorialStep.OpenVillageInfo:
                     return TryAdvance(signalType, TutorialSignalType.VillageInfoOpened);
@@ -161,7 +167,7 @@ namespace TaskTown.Tutorial
                 amount);
 
             if (progress.autoProductionEarnedCoin >= AutoProductionCoinTarget)
-                AdvanceTo(TutorialStep.OpenVillageInfo);
+                AdvanceTo(TutorialStep.VillagePlacementExplanation);
             else
                 NotifyProgressChanged();
 
@@ -227,7 +233,7 @@ namespace TaskTown.Tutorial
                 return false;
 
             SetFlag(TutorialProgressFlags.ToolDrawCoinRewardGranted);
-            AdvanceTo(TutorialStep.DrawTool);
+            AdvanceTo(TutorialStep.AnimalDrawExplanation);
             return true;
         }
 
@@ -265,11 +271,15 @@ namespace TaskTown.Tutorial
             return currentStep switch
             {
                 TutorialStep.IntroDialogue => TutorialStep.EarnManualCoin,
+                TutorialStep.AnimalDrawExplanation => TutorialStep.DrawTool,
                 TutorialStep.DrawAnimal => TutorialStep.DrawTool,
                 TutorialStep.DrawTool => TutorialStep.AssignAnimal,
                 TutorialStep.AssignAnimal => TutorialStep.ConfirmAutoProduction,
-                TutorialStep.ConfirmAutoProduction => TutorialStep.OpenVillageInfo,
-                TutorialStep.OpenVillageInfo => TutorialStep.UpgradeVillage,
+                TutorialStep.ConfirmAutoProduction => TutorialStep.VillagePlacementExplanation,
+                TutorialStep.VillagePlacementExplanation => TutorialStep.PlaceAnimalInVillage,
+                TutorialStep.PlaceAnimalInVillage => TutorialStep.OpenVillageInfo,
+                TutorialStep.OpenVillageInfo => TutorialStep.UpgradeExplanation,
+                TutorialStep.UpgradeExplanation => TutorialStep.UpgradeVillage,
                 TutorialStep.UpgradeVillage => TutorialStep.CompletionDialogue,
                 TutorialStep.CompletionDialogue => TutorialStep.Completed,
                 _ => currentStep
@@ -279,6 +289,9 @@ namespace TaskTown.Tutorial
         private static bool IsDialogueStep(TutorialStep step)
         {
             return step == TutorialStep.IntroDialogue ||
+                   step == TutorialStep.AnimalDrawExplanation ||
+                   step == TutorialStep.VillagePlacementExplanation ||
+                   step == TutorialStep.UpgradeExplanation ||
                    step == TutorialStep.CompletionDialogue ||
                    step == TutorialStep.CollapseAndExpandTown;
         }

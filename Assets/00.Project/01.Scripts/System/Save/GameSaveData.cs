@@ -47,7 +47,11 @@ namespace TaskTown.KDH
     [Serializable]
     public class TutorialSaveData
     {
-        public const int CurrentVersion = 2;
+        // -----------------------------------------------------------------------------
+        // [ 2026.07.31 - Choi - 튜토리얼 단계 확장 ]
+        // 기능: 동물 뽑기 결과 설명과 마을 배치 단계를 포함한 저장 데이터를 구분합니다.
+        // -----------------------------------------------------------------------------
+        public const int CurrentVersion = 3;
 
         public int version = CurrentVersion;
         public TutorialStep currentStep = TutorialStep.IntroDialogue;
@@ -104,7 +108,7 @@ namespace TaskTown.KDH
             if (currentStep == TutorialStep.DrawAnimal &&
                 HasProgressFlag(TutorialProgressFlags.ToolDrawCoinRewardGranted))
             {
-                currentStep = TutorialStep.DrawTool;
+                currentStep = TutorialStep.AnimalDrawExplanation;
                 dialogueIndex = 0;
             }
         }
