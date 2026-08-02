@@ -15,7 +15,48 @@ namespace UI
         [SerializeField] private UIPanelWindow animalSetPanel;
 
         private GameTabType lastOpenedTab = GameTabType.VillageUpgradeTab;
+        private UIController_Menu menuUI;
 
+        private void Awake()
+        {
+            if (menuUI == null)
+                menuUI = GetComponent<UIController_Menu>();
+
+            if (menuUI == null)
+                menuUI = FindFirstObjectByType<UIController_Menu>();
+
+            EnsurePanelsResolved();
+        }
+
+        private void RequestExclusiveMenu()
+        {
+            menuUI?.CloseOtherExclusiveMenus(GameMenuType.Village);
+        }
+
+        /// <summary>
+        /// Inspector 참조가 비어 있을 때 GameMenuType.Village 패널을 이름으로 보완합니다.
+        /// </summary>
+        private void EnsurePanelsResolved()
+        {
+            if (villageUpgradePanel != null && animalSetPanel != null)
+                return;
+
+            UIPanelWindow[] windows = FindObjectsByType<UIPanelWindow>(
+                FindObjectsInactive.Include, FindObjectsSortMode.None);
+
+            for (int i = 0; i < windows.Length; i++)
+            {
+                UIPanelWindow window = windows[i];
+                if (window == null || window.MenuType != GameMenuType.Village)
+                    continue;
+
+                string key = window.name.ToLowerInvariant();
+                if (villageUpgradePanel == null && key.Contains("upgrade"))
+                    villageUpgradePanel = window;
+                else if (animalSetPanel == null && (key.Contains("animalset") || key.Contains("animal_set")))
+                    animalSetPanel = window;
+            }
+        }
 
         private void OnEnable()
         {
@@ -43,6 +84,8 @@ namespace UI
         public void OpenVillageUpgradeTab()
         {
             lastOpenedTab = GameTabType.VillageUpgradeTab;
+            EnsurePanelsResolved();
+            RequestExclusiveMenu();
 
             animalSetPanel?.ClosePanel();
             villageUpgradePanel?.OpenPanelDefaultPosition();
@@ -65,6 +108,8 @@ namespace UI
         public void OpenAnimalSetTab()
         {
             lastOpenedTab = GameTabType.AnimalSetTab;
+            EnsurePanelsResolved();
+            RequestExclusiveMenu();
 
             villageUpgradePanel?.ClosePanel();
             animalSetPanel?.OpenPanelDefaultPosition();
@@ -121,6 +166,7 @@ namespace UI
         /// </summary>
         public void CloseAllTabs()
         {
+            EnsurePanelsResolved();
             villageUpgradePanel?.ClosePanel();
             animalSetPanel?.ClosePanel();
         }

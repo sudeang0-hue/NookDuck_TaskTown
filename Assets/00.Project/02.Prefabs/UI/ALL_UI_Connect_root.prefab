@@ -1215,6 +1215,30 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2237295517222767558, guid: 67964257c20f8014dab9f2ea910287d1, type: 3}
+      propertyPath: ToolDexPanel
+      value: 
+      objectReference: {fileID: 8466882665668034156}
+    - target: {fileID: 2237295517222767558, guid: 67964257c20f8014dab9f2ea910287d1, type: 3}
+      propertyPath: AnimalDexPanel
+      value: 
+      objectReference: {fileID: 8896284390064386169}
+    - target: {fileID: 2237295517222767558, guid: 67964257c20f8014dab9f2ea910287d1, type: 3}
+      propertyPath: 'openToolDexButtons.Array.data[0]'
+      value: 
+      objectReference: {fileID: 1550484091068613524}
+    - target: {fileID: 2237295517222767558, guid: 67964257c20f8014dab9f2ea910287d1, type: 3}
+      propertyPath: 'openToolDexButtons.Array.data[1]'
+      value: 
+      objectReference: {fileID: 2716820976405764122}
+    - target: {fileID: 2237295517222767558, guid: 67964257c20f8014dab9f2ea910287d1, type: 3}
+      propertyPath: 'openAnimalDexButtons.Array.data[0]'
+      value: 
+      objectReference: {fileID: 6787570688309039501}
+    - target: {fileID: 2237295517222767558, guid: 67964257c20f8014dab9f2ea910287d1, type: 3}
+      propertyPath: 'openAnimalDexButtons.Array.data[1]'
+      value: 
+      objectReference: {fileID: 4815327340463824731}
     - target: {fileID: 2360533619281350898, guid: 67964257c20f8014dab9f2ea910287d1, type: 3}
       propertyPath: gachaUI
       value: 
@@ -1390,6 +1414,50 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a5583c24ca72ae54b81f3e2691062a2e, type: 3}
+--- !u!114 &1550484091068613524 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5309773544959402882, guid: a5583c24ca72ae54b81f3e2691062a2e, type: 3}
+  m_PrefabInstance: {fileID: 6644067260654182422}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
+--- !u!114 &2716820976405764122 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8755105085893556236, guid: a5583c24ca72ae54b81f3e2691062a2e, type: 3}
+  m_PrefabInstance: {fileID: 6644067260654182422}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
+--- !u!114 &4815327340463824731 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2226763164358999885, guid: a5583c24ca72ae54b81f3e2691062a2e, type: 3}
+  m_PrefabInstance: {fileID: 6644067260654182422}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
+--- !u!114 &6787570688309039501 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 145870476577337755, guid: a5583c24ca72ae54b81f3e2691062a2e, type: 3}
+  m_PrefabInstance: {fileID: 6644067260654182422}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
 --- !u!114 &7661110609901942098 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 3919763877993518404, guid: a5583c24ca72ae54b81f3e2691062a2e, type: 3}
@@ -1401,11 +1469,33 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: db7cda429458a0b4bb1bdca91fe75b8c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIController_AnimalDex
+--- !u!114 &8466882665668034156 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3005061022342340218, guid: a5583c24ca72ae54b81f3e2691062a2e, type: 3}
+  m_PrefabInstance: {fileID: 6644067260654182422}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8cff2151963596f4cbfcf5d73400e022, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::KAY.UIPanelWindow
 --- !u!224 &8784769025422267476 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 2728533874802848834, guid: a5583c24ca72ae54b81f3e2691062a2e, type: 3}
   m_PrefabInstance: {fileID: 6644067260654182422}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &8896284390064386169 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2828687710917202031, guid: a5583c24ca72ae54b81f3e2691062a2e, type: 3}
+  m_PrefabInstance: {fileID: 6644067260654182422}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8cff2151963596f4cbfcf5d73400e022, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::KAY.UIPanelWindow
 --- !u!1001 &7405251302266324824
 PrefabInstance:
   m_ObjectHideFlags: 0

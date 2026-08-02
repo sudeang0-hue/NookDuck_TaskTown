@@ -1,79 +1,85 @@
 using System;
 using System.Collections.Generic;
+using TaskTown.Gacha;
 using UnityEngine;
 
 /// <summary>
-/// 마을 관리 탭에서 쓰이는 진행 상태를(마을 레벨, 사이클 업그레이드, 배치 동물 등)
-/// 한곳에서 보관·저장·조회하기 위한 싱글톤 후보입니다.
-/// 다른 스크립트와 연결은 되어있지 않습니다.
-/// 
-/// ■ 왜 두면 협업에 유리한가
-/// - 현재: 마을 레벨·사이클은 VillageUpgradeUI_Manager(UI),
-///         요소 영구 레벨은 TownUpgradeManager,
-///         배치 동물은 VillageAnimalSetUI_Manager(UI),
-///         디스크 IO는 SaveManager가 각각 pull.
-/// - UI / 세이브 / 가챠·도구상한(ITownLevelProvider)이 같은 숫자를 서로 다른 곳에서 읽어
-///   "누가 진실 소스인지" 충돌이 나기 쉽습니다.
-/// - VillageSystemManager를 Runtime 데이터 허브로 두면,
-///   UI는 표시·입력만, SaveManager는 이 매니저만 직렬화하면 되어 담당 경계가 맑아집니다.
+/// 마을 진행 상태(마을 레벨, 사이클 업그레이드 완료, 엔드리스, 배치 동물)의 런타임 진실 소스.
+/// UI는 표시·입력만 담당하고, 이 매니저가 상태를 보관·변경합니다.
 ///
-/// ■ 이 파일의 범위
-/// - 실제 이관 시 권장 순서:
-///   1) 이 클래스에 필드·API 확정
-///   2) VillageUpgradeUI_Manager / VillageAnimalSetUI_Manager가 여기로 위임
-///   3) SaveManager가 Capture/Apply 호출
-///   4) ITownLevelProvider 구현을 이 클래스로 이전(또는 래핑)
+/// ■ 책임 분리
+/// - 클릭/타이핑/도구효율 "영구 레벨·비용·배율" → TownUpgradeManager
+/// - 마을 레벨 / 이번 사이클 게이트 / 엔드리스 / 배치 확정본 → VillageSystemManager
+/// - 패널 표시·버튼·팝업 → VillageUpgradeUI_Manager 등 UI
 ///
-/// ■ TownUpgradeManager와의 관계 (제안)
-/// - 클릭/타이핑/도구효율 "영구 레벨·비용·배율 적용"은 계속 TownUpgradeManager 담당 권장
-///   (EarnProcessor 연동·밸런스 책임이 이미 있음).
-/// - 이 매니저는 "마을 레벨 / 이번 사이클 게이트 / 배치 확정본"만 소유하고,
-///   요소 구매 성공 여부는 TownUpgradeManager.TryUpgrade* 결과를 받아 사이클 플래그만 갱신.
+/// ■ 외부 호환
+/// - SaveManager / TownUpgradeManager 등은 기존처럼 VillageUpgradeUI_Manager
+///   (ITownLevelProvider 파사드)를 참조해도 됩니다. 파사드가 이 매니저로 위임합니다.
+/// - 2026.08.02 - KAY: SaveManager가 Capture/ApplyProgressFromSave로
+///   마을 레벨·사이클·엔드리스를 JSON에 저장·복원합니다. 배치 동물은 보류.
 /// </summary>
-/// 
-
 namespace Manager
 {
-
-    public class VillageSystemManager : MonoBehaviour
+    public class VillageSystemManager : MonoBehaviour, ITownLevelProvider, IEndlessModeProvider
     {
         public static VillageSystemManager Instance { get; private set; }
 
-        // -------------------------------------------------------------------------
-        // [제안] 런타임 상태 — 나중에 세이브 DTO와 1:1 매핑
-        // -------------------------------------------------------------------------
+        private const int RequiredUpgradeTotal = 3;
+        private const int NormalModeMaxTownLevel = 10;
 
-        [Header("마을 레벨 (제안: 세이브 townLevel의 진실 소스)")]
+        [Header("마을 레벨")]
         [SerializeField] private int townLevel = 1;
 
-        [Header("사이클 게이트 (제안: 추후 세이브 대상)")]
-        [Tooltip("이번 마을 레벨 구간에서 Click 요소 업그레이드를 1회 완료했는지")]
+        [Header("사이클 게이트 (해당 마을 레벨 구간에서 요소 1회 완료 여부)")]
         [SerializeField] private bool cycleClickDone;
         [SerializeField] private bool cycleTypingDone;
         [SerializeField] private bool cycleToolDone;
 
-        [Header("배치 동물 확정본 (제안: VillageAnimalSet의 villageAnimalIds 이관 후보)")]
+        [Header("엔드리스 모드 (#19)")]
+        [Tooltip("레벨10 완주 후 '엔드리스로 계속' 선택 시 켜집니다.")]
+        [SerializeField] private bool isEndlessMode;
+
+        [Header("마을 레벨업 비용")]
+        [SerializeField] private TownUpgradeCostConfig townUpgradeCostConfig = new TownUpgradeCostConfig();
+
+        [Header("배치 동물 확정본")]
         [SerializeField] private List<string> placedAnimalIds = new List<string>();
 
-        [Header("배치 용량 규칙 (제안: AnimalSetTab UI의 unlockedByLevel 이관 후보)")]
+        [Header("배치 용량 규칙")]
         [SerializeField] private int maxPlacementCapacity = 20;
         [SerializeField] private int unlockedSlotsAtTownLevel1 = 5;
         [SerializeField]
         private int[] unlockedSlotsByTownLevel =
         {
-        5, 6, 7, 9, 10, 12, 13, 14, 16, 20
-    };
+            5, 6, 7, 9, 10, 12, 13, 14, 16, 20
+        };
 
-        /// <summary>상태가 바뀌면 UI/세이브 구독자가 갱신할 때 사용 (미연동).</summary>
+        /// <summary>마을 상태가 바뀌면 UI/세이브 구독자가 갱신할 때 사용합니다.</summary>
         public event Action OnVillageStateChanged;
 
         public int TownLevel => Mathf.Max(1, townLevel);
+
+        /// <summary>ITownLevelProvider — 도구 상한/뽑기/세이브가 참조.</summary>
+        public int CurrentTownLevel => TownLevel;
+
         public bool CycleClickDone => cycleClickDone;
         public bool CycleTypingDone => cycleTypingDone;
         public bool CycleToolDone => cycleToolDone;
+
         public int CycleCompletedCount =>
             (cycleClickDone ? 1 : 0) + (cycleTypingDone ? 1 : 0) + (cycleToolDone ? 1 : 0);
-        public bool IsReadyForVillageLevelUp => CycleCompletedCount >= 3;
+
+        public bool IsReadyForVillageLevelUp => CycleCompletedCount >= RequiredUpgradeTotal;
+
+        /// <summary>IEndlessModeProvider</summary>
+        public bool IsEndlessMode => isEndlessMode;
+
+        /// <summary>
+        /// 마을 레벨이 상한(10)에 도달했는지.
+        /// 엔드리스여도 마을 레벨 자체는 10에서 고정됩니다.
+        /// </summary>
+        public bool IsVillageLevelMaxed => TownLevel >= NormalModeMaxTownLevel;
+
         public IReadOnlyList<string> PlacedAnimalIds => placedAnimalIds;
 
         private void Awake()
@@ -84,11 +90,43 @@ namespace Manager
                 Destroy(gameObject);
         }
 
+        private void OnDestroy()
+        {
+            if (Instance == this)
+                Instance = null;
+        }
+
         // -------------------------------------------------------------------------
-        // [제안] 조회 API — UI / 가챠 / 도구상한이 읽을 표면
+        // 조회
         // -------------------------------------------------------------------------
 
-        /// <summary>해금된 배치 슬롯 수 (마을 레벨 기반). AnimalSetTab UI GetUnlockedSlotCount 대체 후보.</summary>
+        public bool IsTrackDoneInCycle(VillageElementTrack track)
+        {
+            switch (track)
+            {
+                case VillageElementTrack.Click:
+                    return cycleClickDone;
+                case VillageElementTrack.Typing:
+                    return cycleTypingDone;
+                case VillageElementTrack.ToolEfficiency:
+                    return cycleToolDone;
+                default:
+                    return false;
+            }
+        }
+
+        /// <summary>
+        /// 이번 사이클에서 해당 트랙을 구매할 수 있는지(엔드리스면 사이클 제한 없음).
+        /// </summary>
+        public bool CanPurchaseTrackInCycle(VillageElementTrack track)
+        {
+            if (isEndlessMode)
+                return true;
+
+            return !IsTrackDoneInCycle(track);
+        }
+
+        /// <summary>해금된 배치 슬롯 수 (마을 레벨 기반).</summary>
         public int GetUnlockedPlacementSlotCount()
         {
             int level = TownLevel;
@@ -101,16 +139,29 @@ namespace Manager
             return Mathf.Clamp(unlockedSlotsAtTownLevel1 + (level - 1), 0, maxPlacementCapacity);
         }
 
+        /// <summary>현재 마을 레벨 기준 레벨업 필요 코인.</summary>
+        public long GetVillageLevelUpCost()
+        {
+            if (townUpgradeCostConfig == null)
+                return 0;
+
+            return townUpgradeCostConfig.GetCostForTownLevel(TownLevel);
+        }
+
         // -------------------------------------------------------------------------
-        // [제안] 변경 API — UI 버튼이 호출할 표면 (현재 미사용)
+        // 변경
         // -------------------------------------------------------------------------
 
         /// <summary>
         /// 사이클에서 해당 요소 완료 처리만 기록.
-        /// 실제 코인 차감·영구 레벨업은 TownUpgradeManager.TryUpgrade* 성공 후에만 호출하는 것을 권장.
+        /// 실제 코인 차감·영구 레벨업은 TownUpgradeManager.TryUpgrade* 성공 후에만 호출하세요.
+        /// 엔드리스 모드에서는 사이클 플래그를 세우지 않습니다.
         /// </summary>
         public bool TryMarkCycleTrackDone(VillageElementTrack track)
         {
+            if (isEndlessMode)
+                return true;
+
             switch (track)
             {
                 case VillageElementTrack.Click:
@@ -134,12 +185,19 @@ namespace Manager
         }
 
         /// <summary>
-        /// 마을 레벨업 성공 후 호출. 사이클 플래그 리셋 + townLevel++.
-        /// 비용 차감은 CoinManager / UI에서 선행하는 흐름을 권장 (현 VillageUpgradeUI_Manager와 동일).
+        /// 필수 3종 완료 + 비용 지불 가능 시 마을 레벨업을 수행합니다.
+        /// 엔드리스 여부와 무관하게 레벨10(완주)에서 멈춥니다.
         /// </summary>
-        public bool TryAdvanceTownLevelAfterPaid()
+        public bool TryVillageLevelUp()
         {
+            if (IsVillageLevelMaxed)
+                return false;
+
             if (!IsReadyForVillageLevelUp)
+                return false;
+
+            long cost = GetVillageLevelUpCost();
+            if (CoinManager.Instance == null || !CoinManager.Instance.TrySpend(cost))
                 return false;
 
             townLevel = TownLevel + 1;
@@ -148,7 +206,22 @@ namespace Manager
             return true;
         }
 
-        /// <summary>배치 확정본 교체 (AnimalSetTab Confirm 시).</summary>
+        /// <summary>세이브 townLevel 복원. 사이클 완료 플래그는 건드리지 않습니다.</summary>
+        public void SetTownLevelFromSave(int level)
+        {
+            SetTownLevel(level, resetCycle: false);
+        }
+
+        /// <summary>마을 레벨 강제 설정. resetCycle이면 사이클 플래그도 초기화.</summary>
+        public void SetTownLevel(int level, bool resetCycle = false)
+        {
+            townLevel = Mathf.Max(1, level);
+            if (resetCycle)
+                ResetCycleFlagsOnly();
+            RaiseStateChanged();
+        }
+
+        /// <summary>배치 확정본 교체 (AnimalSet Confirm 시).</summary>
         public void SetPlacedAnimalIds(IReadOnlyList<string> animalIds)
         {
             placedAnimalIds.Clear();
@@ -161,12 +234,36 @@ namespace Manager
             RaiseStateChanged();
         }
 
-        /// <summary>세이브/디버그용 마을 레벨 강제 설정. 사이클은 유지(로드 시) 또는 별도 리셋.</summary>
-        public void SetTownLevel(int level, bool resetCycle = false)
+        /// <summary>레벨10 완주 후 "엔드리스로 계속" 선택 시 호출.</summary>
+        public void EnableEndlessMode()
         {
-            townLevel = Mathf.Max(1, level);
-            if (resetCycle)
-                ResetCycleFlagsOnly();
+            if (isEndlessMode)
+                return;
+
+            isEndlessMode = true;
+            RaiseStateChanged();
+        }
+
+        /// <summary>디버그/테스트 전용. 엔드리스 모드 강제 토글.</summary>
+        public void DebugSetEndlessMode(bool value)
+        {
+            if (isEndlessMode == value)
+                return;
+
+            isEndlessMode = value;
+            RaiseStateChanged();
+        }
+
+        /// <summary>디버그용. 마을 레벨을 지정값으로 두고 사이클을 리셋합니다.</summary>
+        public void DebugSetTownLevel(int level)
+        {
+            SetTownLevel(level, resetCycle: true);
+        }
+
+        /// <summary>사이클 플래그만 리셋(마을 레벨은 유지).</summary>
+        public void ResetCycleFlags()
+        {
+            ResetCycleFlagsOnly();
             RaiseStateChanged();
         }
 
@@ -183,8 +280,7 @@ namespace Manager
         }
 
         // -------------------------------------------------------------------------
-        // [제안] 세이브 DTO — GameSaveData에 넣거나 nested로 직렬화할 후보
-        // (SaveManager 연동은 하지 않음)
+        // 세이브 스냅샷 (SaveManager 연동)
         // -------------------------------------------------------------------------
 
         [Serializable]
@@ -194,12 +290,11 @@ namespace Manager
             public bool cycleClickDone;
             public bool cycleTypingDone;
             public bool cycleToolDone;
-            public List<string> placedAnimalIds = new List<string>();
-            // 요소 영구 레벨은 기존 GameSaveData.clickUpgradeLevel 등을 유지하거나
-            // 여기로 옮길지 팀 합의 필요 (TownUpgradeManager와 중복 저장 주의).
+            public bool isEndlessMode;
+            // null이면 Apply 시 배치 목록을 건드리지 않음 (AnimalSet 세이브 보류)
+            public List<string> placedAnimalIds;
         }
 
-        /// <summary>현재 런타임 → 스냅샷 (SaveManager가 나중에 호출).</summary>
         public VillageSaveSnapshot CaptureSaveSnapshot()
         {
             return new VillageSaveSnapshot
@@ -208,11 +303,16 @@ namespace Manager
                 cycleClickDone = cycleClickDone,
                 cycleTypingDone = cycleTypingDone,
                 cycleToolDone = cycleToolDone,
+                isEndlessMode = isEndlessMode,
+                // 2026.08.02 - KAY - 배치 세이브는 보류. Capture에는 포함하되 GameSaveData에는 아직 쓰지 않음
                 placedAnimalIds = new List<string>(placedAnimalIds)
             };
         }
 
-        /// <summary>스냅샷 → 런타임 (LoadGame 시 호출 후보).</summary>
+        /// <summary>
+        /// 세이브에서 복원한 진행 상태(레벨/사이클/엔드리스)를 적용합니다.
+        /// placedAnimalIds가 null이면 배치 확정본은 유지합니다.
+        /// </summary>
         public void ApplySaveSnapshot(VillageSaveSnapshot snapshot)
         {
             if (snapshot == null)
@@ -222,27 +322,47 @@ namespace Manager
             cycleClickDone = snapshot.cycleClickDone;
             cycleTypingDone = snapshot.cycleTypingDone;
             cycleToolDone = snapshot.cycleToolDone;
+            isEndlessMode = snapshot.isEndlessMode;
 
-            placedAnimalIds.Clear();
+            // 기존: 항상 배치 목록을 비우고 스냅샷으로 교체
+            // placedAnimalIds.Clear();
+            // if (snapshot.placedAnimalIds != null)
+            //     placedAnimalIds.AddRange(snapshot.placedAnimalIds);
+
+            // 2026.08.02 - KAY - 배치 세이브 보류: null이면 런타임/인스펙터 배치를 유지
             if (snapshot.placedAnimalIds != null)
+            {
+                placedAnimalIds.Clear();
                 placedAnimalIds.AddRange(snapshot.placedAnimalIds);
+            }
 
             RaiseStateChanged();
         }
 
-        // -------------------------------------------------------------------------
-        // [제안] 이관 체크리스트 (문서용 — 코드 실행 없음)
-        // -------------------------------------------------------------------------
-        // [ ] VillageUpgradeUI_Manager.uiTownLevel / clickDone* → 이 클래스 필드로 이전
-        // [ ] VillageAnimalSetUI_Manager.villageAnimalIds / unlockedByLevel → 이전
-        // [ ] SaveManager Save/Load가 CaptureSaveSnapshot / ApplySaveSnapshot 사용
-        // [ ] ITownLevelProvider를 이 클래스가 구현 (또는 VillageUpgradeUI가 Instance에 위임)
-        // [ ] InventoryManager_Tool / GachaManagerBase의 townLevelProviderSource를 이 오브젝트로 교체
-        // [ ] DontDestroyOnLoad 여부·씬 배치를 CoinManager/TownUpgradeManager와 맞춤
-        // [ ] 사이클 저장 시점(자동저장 60초 / 레벨업 직후) 팀 합의
+        // 2026.08.02 - KAY - SaveManager가 GameSaveData 필드만으로 진행 상태를 복원할 때 사용
+        /// <summary>
+        /// 마을 레벨·사이클 게이트·엔드리스만 복원합니다. 배치 동물은 변경하지 않습니다.
+        /// </summary>
+        public void ApplyProgressFromSave(
+            int savedTownLevel,
+            bool savedCycleClickDone,
+            bool savedCycleTypingDone,
+            bool savedCycleToolDone,
+            bool savedIsEndlessMode)
+        {
+            ApplySaveSnapshot(new VillageSaveSnapshot
+            {
+                townLevel = savedTownLevel,
+                cycleClickDone = savedCycleClickDone,
+                cycleTypingDone = savedCycleTypingDone,
+                cycleToolDone = savedCycleToolDone,
+                isEndlessMode = savedIsEndlessMode,
+                placedAnimalIds = null
+            });
+        }
     }
 
-    /// <summary>사이클 게이트용 요소 트랙 구분 (제안).</summary>
+    /// <summary>사이클 게이트용 요소 트랙 구분.</summary>
     public enum VillageElementTrack
     {
         Click = 0,

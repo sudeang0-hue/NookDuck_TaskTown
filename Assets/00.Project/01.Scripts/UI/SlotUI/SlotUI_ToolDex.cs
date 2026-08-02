@@ -1,4 +1,3 @@
-
 using TMPro;
 using Tool.Data;
 using UnityEngine;
@@ -8,7 +7,6 @@ namespace UI
 {
     public class SlotUI_ToolDex : SlotUIBase
     {
-
         [Header("미해금 상태 도감 슬롯")]
         [SerializeField] private Sprite unknownToolIcon;
         [SerializeField] private string unknownToolName = "???";
@@ -27,7 +25,6 @@ namespace UI
         public ToolDataSO ToolData => toolData;
         public string ToolId => toolData != null ? toolData.Id : string.Empty;
 
-
         private void Awake()
         {
             if (coverButton == null)
@@ -42,7 +39,6 @@ namespace UI
             }
         }
 
-
         private void OnDisable()
         {
             if (coverButton != null)
@@ -52,19 +48,19 @@ namespace UI
         }
 
         /// <summary>
-        /// 도감 슬롯에 동물 데이터와 상세 페이지 Controller를 연결
+        /// 도감 슬롯에 도구 데이터와 상세 페이지 Controller를 연결
         /// </summary>
         public void Initialize(ToolDataSO data, UIController_ToolDexPage pageController, bool unlocked)
         {
             if (data == null)
             {
-                Debug.LogWarning("[SlotUI_AnimalDex] 연결할 AnimalDataSO가 없습니다.");
+                Debug.LogWarning("[SlotUI_ToolDex] 연결할 ToolDataSO가 없습니다.");
                 return;
             }
 
             if (coverButton == null)
             {
-                Debug.LogWarning("[SlotUI_AnimalDex] coverButton이 연결되지 않았습니다.");
+                Debug.LogWarning("[SlotUI_ToolDex] coverButton이 연결되지 않았습니다.");
                 return;
             }
 
@@ -85,7 +81,7 @@ namespace UI
         }
 
         /// <summary>
-        /// 현재 동물 데이터로 슬롯 비주얼 갱신
+        /// 현재 도구 데이터로 슬롯 비주얼 갱신
         /// </summary>
         private void RefreshView()
         {
@@ -105,11 +101,10 @@ namespace UI
             {
                 coverButton.interactable = isUnlocked;
             }
-
         }
 
         /// <summary>
-        /// 해금되면 보여주는 UIController_AnimalInvPage
+        /// 해금 상태 슬롯 표시
         /// </summary>
         private void ShowUnlockedView()
         {
@@ -126,7 +121,7 @@ namespace UI
         }
 
         /// <summary>
-        /// 미해금 상태에서 보여주는 UIController_AnimalInvPage
+        /// 미해금 상태 슬롯 표시
         /// </summary>
         private void ShowLockedView()
         {
@@ -142,22 +137,21 @@ namespace UI
             }
         }
 
-
         /// <summary>
         /// 슬롯 클릭 시 도감 상세 페이지를 토글합니다.
-        /// 같은 동물이 이미 열려 있으면 Close, 아니면 Open합니다.
+        /// 같은 도구가 이미 열려 있으면 Close, 아니면 Open합니다.
         /// </summary>
         private void HandleSlotClicked()
         {
             if (toolData == null)
             {
-                Debug.LogWarning("[SlotUI_AnimalDex] 현재 슬롯에 동물 데이터가 없습니다.", this);
+                Debug.LogWarning("[SlotUI_ToolDex] 현재 슬롯에 도구 데이터가 없습니다.", this);
                 return;
             }
 
             if (toolPageController == null)
             {
-                Debug.LogWarning("[SlotUI_AnimalDex] UIController_AnimalDexPage 가 연결되지 않았습니다.", this);
+                Debug.LogWarning("[SlotUI_ToolDex] UIController_ToolDexPage 가 연결되지 않았습니다.", this);
                 return;
             }
 
@@ -170,7 +164,5 @@ namespace UI
 
             toolPageController.OpenToolDexPage(toolData);
         }
-
-
     }
 }

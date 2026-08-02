@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System;
 using System.Collections.Generic;
+using Manager;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -11,6 +12,8 @@ namespace UI
     /// <summary>
     /// 마을 패널 출력/닫기 및 정보 연결을 담당합니다.
     /// Input System 클릭(wasPressedThisFrame) 시에만 VillageHouse LayerMask Raycast를 1회 수행합니다.
+    /// 마을 레벨 등 진행 상태는 VillageSystemManager를 우선 읽고,
+    /// 없으면 VillageUpgradeUI_Manager 파사드를 폴백으로 사용합니다.
     /// </summary>
     public class VillageInfoUI_Manager : MonoBehaviour
     {
@@ -32,7 +35,9 @@ namespace UI
         [SerializeField] private GameObject villagePanelContent; // VillageInfo_Root
         [SerializeField] private UIController_VillageInfo uiController;
         [SerializeField] private Canvas villageCanvas;
-        [Tooltip("VillageUpgrade_root 상태 동기화 소스 (마을 레벨 등)")]
+        [Tooltip("마을 진행 상태 진실 소스. 비어 있으면 Instance를 사용합니다.")]
+        [SerializeField] private VillageSystemManager villageSystem;
+        [Tooltip("VillageUpgrade_root UI 동기화/폴백 (마을 레벨 등)")]
         [SerializeField] private VillageUpgradeUI_Manager villageUpgradeUIManager;
 
         [Header("클릭 (Input System + Raycast)")]
@@ -105,19 +110,23 @@ namespace UI
         private void OnEnable()
         {
             TargetSelector.OnTargetSelected += OnCameraTargetSelected;
+            TryResolveVillageSystem();
             TryResolveVillageUpgradeManager();
+            SubscribeVillageState();
             SubscribeVillageUpgradeState();
         }
 
         private void OnDisable()
         {
             TargetSelector.OnTargetSelected -= OnCameraTargetSelected;
+            UnsubscribeVillageState();
             UnsubscribeVillageUpgradeState();
             StopAutoCloseTimer();
         }
 
         private void OnDestroy()
         {
+            UnsubscribeVillageState();
             UnsubscribeVillageUpgradeState();
         }
 
@@ -362,12 +371,44 @@ namespace UI
                 PanelContent.SetActive(false);
         }
 
+        private void TryResolveVillageSystem()
+        {
+            if (villageSystem != null)
+                return;
+
+            if (VillageSystemManager.Instance != null)
+            {
+                villageSystem = VillageSystemManager.Instance;
+                return;
+            }
+
+            villageSystem = FindFirstObjectByType<VillageSystemManager>();
+        }
+
         private void TryResolveVillageUpgradeManager()
         {
             if (villageUpgradeUIManager != null)
                 return;
 
-           // villageUpgradeUIManager = FindObjectOfType<VillageUpgradeUI_Manager>();
+            // villageUpgradeUIManager = FindObjectOfType<VillageUpgradeUI_Manager>();
+        }
+
+        private void SubscribeVillageState()
+        {
+            TryResolveVillageSystem();
+            if (villageSystem == null)
+                return;
+
+            villageSystem.OnVillageStateChanged -= OnVillageSystemStateChanged;
+            villageSystem.OnVillageStateChanged += OnVillageSystemStateChanged;
+        }
+
+        private void UnsubscribeVillageState()
+        {
+            if (villageSystem == null)
+                return;
+
+            villageSystem.OnVillageStateChanged -= OnVillageSystemStateChanged;
         }
 
         private void SubscribeVillageUpgradeState()
@@ -388,6 +429,14 @@ namespace UI
             villageUpgradeUIManager.OnVillageUpgradeStateChanged -= OnVillageUpgradeStateChanged;
         }
 
+        private void OnVillageSystemStateChanged()
+        {
+            if (!isPanelOpen)
+                return;
+
+            PushVillageDataToUI();
+        }
+
         private void OnVillageUpgradeStateChanged()
         {
             if (!isPanelOpen)
@@ -397,7 +446,7 @@ namespace UI
         }
 
         /// <summary>
-        /// VillageUpgrade_root / TownUpgradeManager 현재 상태를 VillageInfo에 반영합니다.
+        /// VillageSystemManager / TownUpgradeManager / EarnProcessor 현재 상태를 VillageInfo에 반영합니다.
         /// 장착 가능 도구 수량은 마을 시스템 미구현이라 placeholder를 사용합니다.
         /// </summary>
         private void PushVillageDataToUI()
@@ -405,10 +454,13 @@ namespace UI
             if (uiController == null)
                 return;
 
+            TryResolveVillageSystem();
             TryResolveVillageUpgradeManager();
 
             int displayTownLevel = fallbackTownLevel;
-            if (villageUpgradeUIManager != null)
+            if (villageSystem != null)
+                displayTownLevel = villageSystem.TownLevel;
+            else if (villageUpgradeUIManager != null)
                 displayTownLevel = villageUpgradeUIManager.UiTownLevel;
 
             int displayClickCoin = fallbackClickCoin;

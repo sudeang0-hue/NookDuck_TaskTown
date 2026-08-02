@@ -1,16 +1,14 @@
 ﻿using Animal.Data;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace UI
 {
     public class UIController_AnimalDexPage : MonoBehaviour
     {
-        [Header("동물 상세 페이지 패널")]
-        [FormerlySerializedAs("animalListPagePanel")]
-        [SerializeField] private GameObject animalDexPagePanel;
+        // Dex_Page 자신에 붙어 있으므로 SerializeField 없이 gameObject를 사용합니다.
+        private GameObject AnimalDexPagePanel => gameObject;
 
         [Header("동물 상세 정보")]
         [SerializeField] private Image animalIconImage;
@@ -26,14 +24,11 @@ namespace UI
         /// <summary>
         /// 상세 페이지 패널이 현재 열려 있는지 여부
         /// </summary>
-        public bool IsOpen => animalDexPagePanel != null && animalDexPagePanel.activeSelf;
+        public bool IsOpen => AnimalDexPagePanel != null && AnimalDexPagePanel.activeSelf;
 
         private void Awake()
         {
-            if (animalDexPagePanel != null)
-            {
-                animalDexPagePanel.SetActive(false);
-            }
+            AnimalDexPagePanel.SetActive(false);
         }
 
         /// <summary>
@@ -47,17 +42,11 @@ namespace UI
                 return;
             }
 
-            if (animalDexPagePanel == null)
-            {
-                Debug.LogWarning("[UIController_AnimalDexPage] animalDexPagePanel이 연결되지 않았습니다.");
-                return;
-            }
-
             currentAnimalData = animalData;
 
             RefreshAnimalDexPage();
 
-            animalDexPagePanel.SetActive(true);
+            AnimalDexPagePanel.SetActive(true);
         }
 
         /// <summary>
@@ -93,10 +82,7 @@ namespace UI
         {
             currentAnimalData = null;
 
-            if (animalDexPagePanel == null)
-                return;
-
-            animalDexPagePanel.SetActive(false);
+            AnimalDexPagePanel.SetActive(false);
         }
     }
 }

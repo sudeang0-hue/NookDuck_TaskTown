@@ -22,6 +22,14 @@ namespace TaskTown.KDH
         public List<AnimalSaveEntry> animals = new List<AnimalSaveEntry>();
         public List<ToolSaveEntry> tools = new List<ToolSaveEntry>();
 
+        // 2026.08.02 - KAY - 마을 사이클 게이트/엔드리스를 JSON에 포함 (VillageSystemManager 연동)
+        // 구버전 세이브에 필드가 없으면 역직렬화 시 false로 유지됩니다.
+        public bool cycleClickDone;
+        public bool cycleTypingDone;
+        public bool cycleToolDone;
+        public bool isEndlessMode;
+        // 배치 동물 ID는 팀원 AnimalSet 흐름 정리 후 추가 예정 (현재 단계 보류)
+
         // -----------------------------------------------------------------------------
         // [ 2026.07.27 - Choi - 튜토리얼 기능 업데이트 ]
         // 기능: 기존 게임 저장 데이터에 튜토리얼 진행 상태를 포함하고 누락 값을 보정합니다.
@@ -37,6 +45,10 @@ namespace TaskTown.KDH
             tools ??= new List<ToolSaveEntry>();
             tutorial ??= TutorialSaveData.CreateDefault();
             tutorial.Normalize();
+
+            // 2026.08.02 - KAY - 마을 레벨 하한 보정 (사이클 bool은 기본 false로 충분)
+            if (townLevel < 1)
+                townLevel = 1;
         }
     }
 
