@@ -1,17 +1,17 @@
+//NB
+
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using TaskTown.Gacha;
 using Tool.Data;
 
-/// <summary>
-/// 도구 가챠 결과물 단일 슬롯 UI 컴포넌트
-/// </summary>
+// 도구 가챠 결과물 단일 슬롯 UI 컴포넌트
 public class GachaItemSlotUI : MonoBehaviour
 {
     [Header("기본 UI 컴포넌트")]
     [SerializeField] private Image iconImage;
-    [SerializeField] private Image gradeImage; // ★ [신규] 등급 스프라이트를 표출할 Image 컴포넌트
+    [SerializeField] private Image gradeImage; //  등급 스프라이트를 표출할 Image 컴포넌트
     [SerializeField] private TextMeshProUGUI nameText;
 
     [Header("★ 등급별 스프라이트 리소스 (5종) ★")]
@@ -48,7 +48,7 @@ public class GachaItemSlotUI : MonoBehaviour
             }
         }
 
-        // 2. ★ [핵심] 등급 스프라이트 바인딩 ($O(1)$ Direct Lookup) ★
+        // 2. 등급 스프라이트 바인딩 ($O(1)$ Direct Lookup) ★
         UpdateGradeUI(entryData);
 
         // 3. 텍스트 정보 바인딩
@@ -70,10 +70,7 @@ public class GachaItemSlotUI : MonoBehaviour
             if (specialBonusBadge != null) specialBonusBadge.SetActive(false);
         }
     }
-
-    /// <summary>
-    /// 등급 Enum 값을 안전하게 인덱싱하여 스프라이트 및 텍스트 업데이트
-    /// </summary>
+    // 등급 Enum 값을 안전하게 인덱싱하여 스프라이트 및 텍스트 업데이트
     private void UpdateGradeUI(GachaEntryData entryData)
     {
         int gradeIndex = (int)entryData.Grade;
