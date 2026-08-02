@@ -1,8 +1,8 @@
+//NB
+
 using UnityEngine;
 
-/// <summary>
-/// 동물의 마우스 호버 이벤트를 감지하고 CameraDirector 포커스 상태에 따라 돋보기 아이콘을 제어합니다.
-/// </summary>
+// 동물의 마우스 호버 이벤트를 감지하고 CameraDirector 포커스 상태에 따라 돋보기 아이콘을 제어합니다.
 public class AnimalHoverHandler : MonoBehaviour
 {
     [Header("머리 위 돋보기 아이콘 오브젝트")]

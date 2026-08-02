@@ -1,16 +1,16 @@
-﻿#if UNITY_EDITOR
+﻿//NB
+
+#if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine;
 
-/// <summary>
-/// 49개 이상의 동물 프리팹에 돋보기 아이콘 및 관련 컴포넌트를 일괄 자동 생성하는 에디터 툴
-/// </summary>
+// 49개 이상의 동물 프리팹에 돋보기 아이콘 및 관련 컴포넌트를 일괄 자동 생성하는 에디터 툴
 public class BatchMagnifierSetup : EditorWindow
 {
     private DefaultAsset targetFolder;   // 프리팹들이 모여있는 폴더
     private Sprite magnifierSprite;       // 머리 위에 띄울 돋보기 이미지
     private float headHeightOffset = 2.0f;// 머리 위 기본 높이 Y축 값
-    private Vector3 iconScale = new Vector3(0.5f, 0.5f, 0.5f); // [추가] 돋보기 아이콘 크기 제어
+    private Vector3 iconScale = new Vector3(0.5f, 0.5f, 0.5f); // 돋보기 아이콘 크기 제어
 
     [MenuItem("Tools/Animal Prefab Setup Tool")]
     public static void ShowWindow()
@@ -74,7 +74,7 @@ public class BatchMagnifierSetup : EditorWindow
                 iconObj = existingIcon.gameObject;
             }
 
-            // [핵심 해결책] 스케일과 로컬 위치를 강제로 정확하게 세팅 (크게 뜨는 버그 완벽 수정!)
+            // 스케일과 로컬 위치를 강제로 정확하게 세팅 (크게 뜨는 버그 완벽 수정!)
             iconObj.transform.localPosition = new Vector3(0, headHeightOffset, 0);
             iconObj.transform.localScale = iconScale;
 
@@ -102,7 +102,7 @@ public class BatchMagnifierSetup : EditorWindow
                 hoverScript = prefabRoot.AddComponent<AnimalHoverHandler>();
             }
 
-            // [자동 연결] SerializedObject를 사용하여 AnimalHoverHandler의 magnifierIcon 필드에 자동 할당
+            //  SerializedObject를 사용하여 AnimalHoverHandler의 magnifierIcon 필드에 자동 할당
             SerializedObject serializedHover = new SerializedObject(hoverScript);
             SerializedProperty propIcon = serializedHover.FindProperty("magnifierIcon");
             if (propIcon != null)

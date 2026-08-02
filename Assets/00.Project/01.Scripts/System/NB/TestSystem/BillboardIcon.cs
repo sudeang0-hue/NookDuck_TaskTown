@@ -1,8 +1,8 @@
+//NB
+
 using UnityEngine;
 
-/// <summary>
-/// 아이콘이 항상 메인 카메라를 바라보게 만들고, 둥실둥실 떠다니는 애니메이션을 부여하는 컴포넌트
-/// </summary>
+// 아이콘이 항상 메인 카메라를 바라보게 만들고, 둥실둥실 떠다니는 애니메이션을 부여하는 컴포넌트
 public class BillboardIcon : MonoBehaviour
 {
     [Header("Hover Animation Settings")]
@@ -16,7 +16,7 @@ public class BillboardIcon : MonoBehaviour
 
     private void Awake()
     {
-        // [성능 최적화] Update에서 Camera.main을 매 프레임 호출하면 GC/Find overhead가 발생하므로 캐싱합니다.
+        // Update에서 Camera.main을 매 프레임 호출하면 GC/Find overhead가 발생하므로 캐싱
         if (Camera.main != null)
         {
             mainCameraTransform = Camera.main.transform;
