@@ -12,8 +12,12 @@ public class CameraDirector : MonoBehaviour
     // 싱글톤
     public static CameraDirector Instance { get; private set; }
 
-    //카메라가 팔로우 모드에 진입할 때 발생하는 이벤트
+    // [이벤트 추가] 카메라가 팔로우 모드에 진입할 때 / 해제될 때 발생하는 이벤트
     public static event Action OnCameraFocusStarted;
+    public static event Action OnCameraFocusEnded; // <--- 추가됨!
+
+    // [프로퍼티 추가] 외부에서 현재 팔로우/포커스 상태인지 즉시 확인할 수 있는 Read-Only 프로퍼티
+    public bool IsFocused => _targetAnimal != null || _isFollowing; // <--- 추가됨!
 
 
     [Header("카메라 기본 설정")]
@@ -58,7 +62,7 @@ public class CameraDirector : MonoBehaviour
 
     private void HandleTargetSelection(Transform target)
     {
-        //섬이 축소일때 클릭하더라도 카메라가 반응하지않게 차단
+        // 섬이 축소일때 클릭하더라도 카메라가 반응하지않게 차단
         if (!_isExpanded) return;
 
         if (target != null)
@@ -97,24 +101,23 @@ public class CameraDirector : MonoBehaviour
     {
         if (_isFollowing && _targetAnimal != null)
         {
-
             // 2.5D/Isometric 카메라의 각도와 오프셋을 유지하는 상대 거리 계산식
             Vector3 targetWorldPos = GetTargetPosition();
             Vector3 targetPos = targetWorldPos + (_camOriginalPos - _originalVillagePos) + followOffset;
 
-            //시네머신처럼 움직임을 위한 SmoothDamp추적 로직
+            // 시네머신처럼 움직임을 위한 SmoothDamp추적 로직
             _mainCamera.transform.position = Vector3.SmoothDamp(
                 _mainCamera.transform.position, targetPos, ref _camVelocity, followSmoothTime
             );
         }
     }
 
-    //타켓의 실제 중심 좌표를 안전하게 계산하는 핼퍼메서드
+    // 타켓의 실제 중심 좌표를 안전하게 계산하는 헬퍼메서드
     private Vector3 GetTargetPosition()
     {
         if (_targetAnimal == null) return Vector3.zero;
 
-        //타겟에 Collider나 Renderer가 있다면 그 중심점(bounds.center)을 활용
+        // 타겟에 Collider나 Renderer가 있다면 그 중심점(bounds.center)을 활용
         if (_targetAnimal.TryGetComponent<Collider>(out var collider))
         {
             return collider.bounds.center;
@@ -141,29 +144,28 @@ public class CameraDirector : MonoBehaviour
     {
         if (!_isExpanded || _mainCamera == null) return;
 
-        //동물을 쫒기 시작하면 열려있는 모든 UI를 닫도록 이벤트 알림
+        // 동물을 쫒기 시작하면 열려있는 모든 UI를 닫고, 호버 아이콘을 차단하도록 이벤트 알림
         OnCameraFocusStarted?.Invoke();
 
         _targetAnimal = animalTransform;
 
-        // [디버깅용] 콘솔창에 찍히는 좌표를 꼭 확인, 만약 (0,0,0) 이라면 TargetSelector가 부모의 Transform을 넘기고 있는 것
         Debug.Log($"[CameraDirector] 타겟 지정됨: {_targetAnimal.name} / 월드 좌표: {GetTargetPosition()}");
 
         // 이전 연출 트윈 완벽 제거 및 추적 속도 값 초기화
         KillAllCameraTweens();
-        _isFollowing = false;        //LateUpdate의 충돌을 막기 위해 추적을 잠시 끔
-        _camVelocity = Vector3.zero; //이전 속도 누적값 초기화
+        _isFollowing = false;        // LateUpdate의 충돌을 막기 위해 추적을 잠시 끔
+        _camVelocity = Vector3.zero; // 이전 속도 누적값 초기화
 
-        //줌 크기 변경
+        // 줌 크기 변경
         _mainCamera.DOOrthoSize(zoomInSize, 0.6f).SetEase(Ease.OutCubic);
 
-        //이동 목표 좌표 계산 시 카메라와 마을 원본 간의 상대 거리 벡터를 그대로 적용
+        // 이동 목표 좌표 계산 시 카메라와 마을 원본 간의 상대 거리 벡터를 그대로 적용
         Vector3 targetWorldPos = GetTargetPosition();
         Vector3 targetPos = targetWorldPos + (_camOriginalPos - _originalVillagePos) + followOffset;
 
         _mainCamera.transform.DOMove(targetPos, 0.5f).SetEase(Ease.OutCubic).OnComplete(() =>
-        {            
-            _isFollowing = true;    //DOTween 연출 완료 후 추적을 활성화
+        {
+            _isFollowing = true;    // DOTween 연출 완료 후 추적을 활성화
         });
 
         if (btnUnfocus != null) btnUnfocus.gameObject.SetActive(true);
@@ -171,17 +173,17 @@ public class CameraDirector : MonoBehaviour
 
     public void UnfocusAnimal()
     {
-
         // 이미 축소 화면 상태면 Unfocus 연출을 실행하지 않기
         if (!_isExpanded) return;
+
+        // [이벤트 호출] 포커스 해제 알림을 모든 구독자(동물 호버 등)에게 전송
+        OnCameraFocusEnded?.Invoke(); // <--- 추가됨!
 
         // Unfocus 진입 시에도 실행 중인 모든 트윈 중단 및 타겟 해제
         KillAllCameraTweens();
         _isFollowing = false;
         _targetAnimal = null;
         _camVelocity = Vector3.zero;
-
-        //if (_mainCamera == null) return;
 
         _mainCamera.DOKill();
         _mainCamera.DOOrthoSize(_camOriginalSize, 0.5f).SetEase(Ease.InOutQuad);
