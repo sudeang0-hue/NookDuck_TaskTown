@@ -58,12 +58,32 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GachaSystemBridge
   toolGachaPoolData: {fileID: 11400000, guid: 21b1defa25af76948a0cb1155911667a, type: 2}
-  gachaManager: {fileID: 0}
+  animalGachaPoolData: {fileID: 11400000, guid: 7bd9ade846da5e243be27a5fd87008e0, type: 2}
+  toolGachaManager: {fileID: 0}
+  animalGachaManager: {fileID: 0}
   coinWalletSource: {fileID: 0}
   teammateInitialWindow: {fileID: 0}
   btnOpenGachaWindow: {fileID: 0}
-  btnDraw1: {fileID: 0}
-  btnDraw10: {fileID: 0}
+  otherMainPanels: []
+  onGachaWindowOpened:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 0}
+        m_TargetAssemblyTypeName: UIController_Menu, Assembly-CSharp
+        m_MethodName: CloseAllPanels
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  btnToolDraw1: {fileID: 0}
+  btnToolDraw10: {fileID: 0}
+  btnAnimalDraw1: {fileID: 0}
+  btnAnimalDraw10: {fileID: 0}
   btnResultDraw1: {fileID: 0}
   btnResultDraw10: {fileID: 0}
   gachaDirector: {fileID: 0}
