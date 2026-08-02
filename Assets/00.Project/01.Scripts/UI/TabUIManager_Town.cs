@@ -2,12 +2,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Events;
 
-public enum TownTabType
-{
-    VillageUpgrade,
-    AnimalSet
-}
-
 namespace UI
 {
     public class TabUIManager_Town : MonoBehaviour
@@ -20,7 +14,7 @@ namespace UI
         [SerializeField] private UIPanelWindow villageUpgradePanel;
         [SerializeField] private UIPanelWindow animalSetPanel;
 
-        private TownTabType lastOpenedTab = TownTabType.VillageUpgrade;
+        private GameTabType lastOpenedTab = GameTabType.VillageUpgradeTab;
 
 
         private void OnEnable()
@@ -48,7 +42,7 @@ namespace UI
         /// </summary>
         public void OpenVillageUpgradeTab()
         {
-            lastOpenedTab = TownTabType.VillageUpgrade;
+            lastOpenedTab = GameTabType.VillageUpgradeTab;
 
             animalSetPanel?.ClosePanel();
             villageUpgradePanel?.OpenPanelDefaultPosition();
@@ -70,7 +64,7 @@ namespace UI
         /// </summary>
         public void OpenAnimalSetTab()
         {
-            lastOpenedTab = TownTabType.AnimalSet;
+            lastOpenedTab = GameTabType.AnimalSetTab;
 
             villageUpgradePanel?.ClosePanel();
             animalSetPanel?.OpenPanelDefaultPosition();
@@ -83,7 +77,7 @@ namespace UI
         {
             switch (lastOpenedTab)
             {
-                case TownTabType.AnimalSet:
+                case GameTabType.AnimalSetTab:
                     OpenAnimalSetTab();
                     break;
 

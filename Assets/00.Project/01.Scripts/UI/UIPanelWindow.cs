@@ -2,28 +2,6 @@ using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public enum GameMenuState
-{
-    Compact,
-    ExpandedTown,
-    Gacha,
-    AnimalDex,
-    ToolPlacement,
-    VillageUpgrade,
-    MiniGame
-}
-public enum GameMenuType
-{
-    None,
-    AnimalInv,
-    ToolInv,
-    Gacha,
-    AnimalDex,
-    Villiage,
-    Option,
-    AnimalSet,
-    LevelUpPopup
-}
 
 namespace UI
 {

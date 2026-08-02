@@ -55,7 +55,7 @@ namespace Manager
         [Header("배치 동물 확정본 (제안: VillageAnimalSet의 villageAnimalIds 이관 후보)")]
         [SerializeField] private List<string> placedAnimalIds = new List<string>();
 
-        [Header("배치 용량 규칙 (제안: AnimalSet UI의 unlockedByLevel 이관 후보)")]
+        [Header("배치 용량 규칙 (제안: AnimalSetTab UI의 unlockedByLevel 이관 후보)")]
         [SerializeField] private int maxPlacementCapacity = 20;
         [SerializeField] private int unlockedSlotsAtTownLevel1 = 5;
         [SerializeField]
@@ -88,7 +88,7 @@ namespace Manager
         // [제안] 조회 API — UI / 가챠 / 도구상한이 읽을 표면
         // -------------------------------------------------------------------------
 
-        /// <summary>해금된 배치 슬롯 수 (마을 레벨 기반). AnimalSet UI GetUnlockedSlotCount 대체 후보.</summary>
+        /// <summary>해금된 배치 슬롯 수 (마을 레벨 기반). AnimalSetTab UI GetUnlockedSlotCount 대체 후보.</summary>
         public int GetUnlockedPlacementSlotCount()
         {
             int level = TownLevel;
@@ -148,7 +148,7 @@ namespace Manager
             return true;
         }
 
-        /// <summary>배치 확정본 교체 (AnimalSet Confirm 시).</summary>
+        /// <summary>배치 확정본 교체 (AnimalSetTab Confirm 시).</summary>
         public void SetPlacedAnimalIds(IReadOnlyList<string> animalIds)
         {
             placedAnimalIds.Clear();
