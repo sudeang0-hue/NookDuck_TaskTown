@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using TaskTown.KDH;
+using TMPro;
 using UnityEngine;
 
 namespace UI
@@ -12,6 +13,12 @@ namespace UI
         [SerializeField] private KAY.SlotUI_ToolInv toolSlotPrefab;
         [SerializeField] private Transform toolSlotContentRoot;
 
+        [SerializeField] private TMP_Text totalCountText;
+        [SerializeField] private TMP_Text toolSetText;
+
+        private int totalconunt;
+        private int currentToolsetconunt;
+        private int maxToolsetconunt;
 
         [Header("도구 상세 페이지 (씬의 Tool_Inv_Page)")]
         [SerializeField] private UIController_ToolInvPage toolInvPageController;
@@ -35,7 +42,7 @@ namespace UI
                 return;
 
             toolInventory.OnToolInventoryChanged += SyncAllSlots;
-            toolInventory.OnToolSlotChanged += RefreshSlot;
+            toolInventory.OnToolSlotChanged += HandleToolSlotChanged;
 
             // 컨트롤러는 상시 활성 매니저에 있으므로, Content가 켜져 있을 때만 즉시 동기화
             SyncAllSlots();
@@ -67,7 +74,56 @@ namespace UI
                 return;
 
             toolInventory.OnToolInventoryChanged -= SyncAllSlots;
-            toolInventory.OnToolSlotChanged -= RefreshSlot;
+            toolInventory.OnToolSlotChanged -= HandleToolSlotChanged;
+        }
+
+        private void HandleToolSlotChanged(SlotData_Tool slotData)
+        {
+            RefreshSlot(slotData);
+
+            if (CanUpdateView())
+                RefreshCountTexts();
+        }
+
+        /// <summary>
+        /// 인벤 보유 종류 수 / 동물 장착 도구 수·상한 텍스트를 갱신합니다.
+        /// </summary>
+        private void RefreshCountTexts()
+        {
+            totalconunt = CountOwnedTools();
+            currentToolsetconunt = toolInventory != null ? toolInventory.GetActiveToolCount() : 0;
+            maxToolsetconunt = toolInventory != null ? toolInventory.GetToolCapacity() : 0;
+
+            if (totalCountText != null)
+                totalCountText.text = "도구 수량: " + totalconunt.ToString();
+
+            if (toolSetText != null)
+                toolSetText.text = "주민에게 배치된 도구: " + currentToolsetconunt + "/" + maxToolsetconunt;
+        }
+
+        /// <summary>
+        /// 인벤토리에 보유 중인 도구 종류(슬롯) 수를 반환합니다.
+        /// </summary>
+        private int CountOwnedTools()
+        {
+            if (toolInventory == null)
+                return 0;
+
+            IReadOnlyList<SlotData_Tool> toolSlots = toolInventory.ToolSlotsList;
+            if (toolSlots == null)
+                return 0;
+
+            int count = 0;
+            for (int i = 0; i < toolSlots.Count; i++)
+            {
+                SlotData_Tool slotData = toolSlots[i];
+                if (slotData == null || string.IsNullOrEmpty(slotData.ToolId))
+                    continue;
+
+                count++;
+            }
+
+            return count;
         }
 
         private bool TryResolveInventory()
@@ -145,6 +201,7 @@ namespace UI
             }
 
             RemoveStaleSlots(activeIds);
+            RefreshCountTexts();
         }
 
         private void RemoveStaleSlots(HashSet<string> activeIds)
