@@ -71,6 +71,57 @@ namespace TaskTown.EditorTests.Tutorial
         }
 
         [Test]
+        public void SetPaused_수동코인단계에서는_축소중획득량을추적한다()
+        {
+            TutorialStateMachine machine = CreateMachine(TutorialStep.EarnManualCoin);
+            machine.SetPaused(true);
+
+            Assert.IsTrue(machine.TryHandleSignal(
+                TutorialSignalType.ManualCoinEarned,
+                40L));
+            Assert.AreEqual(40L, machine.ManualEarnedCoin);
+            Assert.AreEqual(TutorialStep.EarnManualCoin, machine.CurrentStep);
+
+            Assert.IsTrue(machine.TryHandleSignal(
+                TutorialSignalType.ManualCoinEarned,
+                60L));
+            Assert.AreEqual(100L, machine.ManualEarnedCoin);
+            Assert.AreEqual(TutorialStep.CollapseAndExpandTown, machine.CurrentStep);
+        }
+
+        [Test]
+        public void SetPaused_자동생산단계에서는_축소중획득량을추적한다()
+        {
+            TutorialStateMachine machine = CreateMachine(
+                TutorialStep.ConfirmAutoProduction);
+            machine.SetPaused(true);
+
+            Assert.IsTrue(machine.TryHandleSignal(
+                TutorialSignalType.AutoProductionConfirmed,
+                49L));
+            Assert.AreEqual(49L, machine.AutoProductionEarnedCoin);
+            Assert.AreEqual(TutorialStep.ConfirmAutoProduction, machine.CurrentStep);
+
+            Assert.IsTrue(machine.TryHandleSignal(
+                TutorialSignalType.AutoProductionConfirmed,
+                1L));
+            Assert.AreEqual(50L, machine.AutoProductionEarnedCoin);
+            Assert.AreEqual(TutorialStep.VillagePlacementExplanation, machine.CurrentStep);
+        }
+
+        [Test]
+        public void SetPaused_코인외진행신호는_계속차단한다()
+        {
+            TutorialStateMachine machine = CreateMachine(TutorialStep.DrawAnimal);
+            machine.SetPaused(true);
+
+            bool handled = machine.TryHandleSignal(TutorialSignalType.AnimalDrawn);
+
+            Assert.IsFalse(handled);
+            Assert.AreEqual(TutorialStep.DrawAnimal, machine.CurrentStep);
+        }
+
+        [Test]
         public void TrySetDialogueIndex_대화단계에서만저장하고_단계전환시초기화한다()
         {
             TutorialStateMachine machine = CreateMachine(TutorialStep.IntroDialogue);

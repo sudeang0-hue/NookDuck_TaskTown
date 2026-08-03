@@ -85,8 +85,8 @@ namespace TaskTown.Tutorial
             if (IsCompleted)
                 return false;
 
-            // 축소 화면에서 확장 버튼을 누른 신호만 일시정지 중에도 복원할 수 있습니다.
-            if (IsPaused && signalType != TutorialSignalType.TownWindowExpanded)
+            // 축소 화면에서는 확장 신호와 현재 코인 단계의 획득 신호만 처리합니다.
+            if (IsPaused && !CanHandleSignalWhilePaused(signalType))
                 return false;
 
             switch (CurrentStep)
@@ -129,6 +129,18 @@ namespace TaskTown.Tutorial
                 default:
                     return false;
             }
+        }
+
+        private bool CanHandleSignalWhilePaused(TutorialSignalType signalType)
+        {
+            if (signalType == TutorialSignalType.TownWindowExpanded)
+                return true;
+
+            // 축소 중에도 현재 코인 단계에서 실제로 획득한 양은 계속 추적합니다.
+            return (CurrentStep == TutorialStep.EarnManualCoin &&
+                    signalType == TutorialSignalType.ManualCoinEarned) ||
+                   (CurrentStep == TutorialStep.ConfirmAutoProduction &&
+                    signalType == TutorialSignalType.AutoProductionConfirmed);
         }
 
         /// <summary>
