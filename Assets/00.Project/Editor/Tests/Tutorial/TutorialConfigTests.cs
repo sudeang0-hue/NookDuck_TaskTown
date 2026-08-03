@@ -188,6 +188,22 @@ namespace TaskTown.EditorTests.Tutorial
             Assert.IsTrue(explanation.AllowClickAdvance);
         }
 
+        [Test]
+        public void ConfigAsset_모든단계의신사오리배치방향이유효하다()
+        {
+            TutorialConfigSO config = LoadConfig();
+
+            foreach (TutorialStepContent content in config.Steps)
+            {
+                Assert.IsTrue(
+                    Enum.IsDefined(
+                        typeof(TutorialSpeakerSide),
+                        content.SpeakerSide),
+                    $"유효하지 않은 신사 오리 배치 방향입니다: " +
+                    $"{content.Step} / {content.SpeakerSide}");
+            }
+        }
+
         private static TutorialConfigSO LoadConfig()
         {
             TutorialConfigSO config = AssetDatabase.LoadAssetAtPath<TutorialConfigSO>(

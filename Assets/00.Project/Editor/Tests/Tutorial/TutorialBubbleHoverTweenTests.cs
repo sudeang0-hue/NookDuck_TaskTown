@@ -217,6 +217,36 @@ namespace TaskTown.EditorTests.Tutorial
             Object.DestroyImmediate(controllerObject);
         }
 
+        [Test]
+        public void RestoreStableScaleImmediate_Hover상태에맞는크기로복원한다()
+        {
+            GameObject bubble = new(
+                "SpeechBubble",
+                typeof(RectTransform),
+                typeof(TutorialBubbleHoverTween));
+
+            try
+            {
+                RectTransform rectTransform = bubble.GetComponent<RectTransform>();
+                TutorialBubbleHoverTween hoverTween =
+                    bubble.GetComponent<TutorialBubbleHoverTween>();
+
+                hoverTween.OnPointerEnter(null);
+                hoverTween.RestoreStableScaleImmediate();
+                Assert.AreEqual(Vector3.one, rectTransform.localScale);
+                Assert.IsNull(GetScaleTween(hoverTween));
+
+                hoverTween.OnPointerExit(null);
+                hoverTween.RestoreStableScaleImmediate();
+                Assert.AreEqual(Vector3.one * 0.5f, rectTransform.localScale);
+                Assert.IsNull(GetScaleTween(hoverTween));
+            }
+            finally
+            {
+                Object.DestroyImmediate(bubble);
+            }
+        }
+
         private static void InvokeStepChanged(
             TutorialBubbleController controller,
             TutorialStep previousStep,

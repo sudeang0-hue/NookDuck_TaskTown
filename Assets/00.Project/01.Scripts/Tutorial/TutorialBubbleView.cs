@@ -5,6 +5,144 @@ using UnityEngine.UI;
 
 namespace TaskTown.Tutorial
 {
+    [Serializable]
+    public struct TutorialRectTransformLayout
+    {
+        [SerializeField] private Vector2 anchorMin;
+        [SerializeField] private Vector2 anchorMax;
+        [SerializeField] private Vector2 anchoredPosition;
+        [SerializeField] private Vector2 pivot;
+
+        public static TutorialRectTransformLayout Capture(RectTransform target)
+        {
+            if (target == null)
+                return default;
+
+            return new TutorialRectTransformLayout
+            {
+                anchorMin = target.anchorMin,
+                anchorMax = target.anchorMax,
+                anchoredPosition = target.anchoredPosition,
+                pivot = target.pivot
+            };
+        }
+
+        public void Apply(RectTransform target, Vector2 positionOffset = default)
+        {
+            if (target == null)
+                return;
+
+            target.anchorMin = anchorMin;
+            target.anchorMax = anchorMax;
+            target.pivot = pivot;
+            target.anchoredPosition = anchoredPosition + positionOffset;
+        }
+
+        public TutorialRectTransformLayout CreateHorizontalMirror()
+        {
+            return new TutorialRectTransformLayout
+            {
+                anchorMin = new Vector2(1f - anchorMax.x, anchorMin.y),
+                anchorMax = new Vector2(1f - anchorMin.x, anchorMax.y),
+                anchoredPosition = new Vector2(
+                    -anchoredPosition.x,
+                    anchoredPosition.y),
+                pivot = new Vector2(1f - pivot.x, pivot.y)
+            };
+        }
+    }
+
+    [Serializable]
+    public struct TutorialBubbleLayoutPreset
+    {
+        [SerializeField] private bool configured;
+        [SerializeField] private TutorialRectTransformLayout layoutRoot;
+        [SerializeField] private TutorialRectTransformLayout portraitRoot;
+        [SerializeField] private TutorialRectTransformLayout bubbleRoot;
+        [SerializeField] private TutorialRectTransformLayout bubbleBackground;
+        [SerializeField] private Vector3 bubbleBackgroundScale;
+        [SerializeField] private TutorialRectTransformLayout bubbleBorder;
+        [SerializeField] private Vector3 bubbleBorderScale;
+
+        public bool IsConfigured => configured;
+
+        public static TutorialBubbleLayoutPreset Capture(
+            RectTransform layoutRootTarget,
+            RectTransform portraitRootTarget,
+            RectTransform bubbleRootTarget,
+            RectTransform bubbleBackgroundTarget,
+            RectTransform bubbleBorderTarget)
+        {
+            return new TutorialBubbleLayoutPreset
+            {
+                configured = layoutRootTarget != null &&
+                             portraitRootTarget != null &&
+                             bubbleRootTarget != null,
+                layoutRoot = TutorialRectTransformLayout.Capture(
+                    layoutRootTarget),
+                portraitRoot = TutorialRectTransformLayout.Capture(
+                    portraitRootTarget),
+                bubbleRoot = TutorialRectTransformLayout.Capture(
+                    bubbleRootTarget),
+                bubbleBackground = TutorialRectTransformLayout.Capture(
+                    bubbleBackgroundTarget),
+                bubbleBackgroundScale = bubbleBackgroundTarget != null
+                    ? bubbleBackgroundTarget.localScale
+                    : Vector3.one,
+                bubbleBorder = TutorialRectTransformLayout.Capture(
+                    bubbleBorderTarget),
+                bubbleBorderScale = bubbleBorderTarget != null
+                    ? bubbleBorderTarget.localScale
+                    : Vector3.one
+            };
+        }
+
+        public void Apply(
+            RectTransform layoutRootTarget,
+            RectTransform portraitRootTarget,
+            RectTransform bubbleRootTarget,
+            RectTransform bubbleBackgroundTarget,
+            RectTransform bubbleBorderTarget,
+            Vector2 layoutOffset)
+        {
+            if (!configured)
+                return;
+
+            layoutRoot.Apply(layoutRootTarget, layoutOffset);
+            portraitRoot.Apply(portraitRootTarget);
+            bubbleRoot.Apply(bubbleRootTarget);
+            bubbleBackground.Apply(bubbleBackgroundTarget);
+            bubbleBorder.Apply(bubbleBorderTarget);
+
+            if (bubbleBackgroundTarget != null)
+                bubbleBackgroundTarget.localScale = bubbleBackgroundScale;
+
+            if (bubbleBorderTarget != null)
+                bubbleBorderTarget.localScale = bubbleBorderScale;
+        }
+
+        public TutorialBubbleLayoutPreset CreateHorizontalMirror()
+        {
+            Vector3 mirroredBackgroundScale = bubbleBackgroundScale;
+            mirroredBackgroundScale.x = -mirroredBackgroundScale.x;
+
+            Vector3 mirroredBorderScale = bubbleBorderScale;
+            mirroredBorderScale.x = -mirroredBorderScale.x;
+
+            return new TutorialBubbleLayoutPreset
+            {
+                configured = configured,
+                layoutRoot = layoutRoot.CreateHorizontalMirror(),
+                portraitRoot = portraitRoot.CreateHorizontalMirror(),
+                bubbleRoot = bubbleRoot.CreateHorizontalMirror(),
+                bubbleBackground = bubbleBackground.CreateHorizontalMirror(),
+                bubbleBackgroundScale = mirroredBackgroundScale,
+                bubbleBorder = bubbleBorder.CreateHorizontalMirror(),
+                bubbleBorderScale = mirroredBorderScale
+            };
+        }
+    }
+
     /// <summary>
     /// 말풍선 UI 요소를 표시하는 역할만 담당합니다.
     /// 튜토리얼 진행 상태나 완료 조건은 알지 못합니다.
@@ -23,6 +161,15 @@ namespace TaskTown.Tutorial
         [SerializeField] private GameObject advanceIndicator;
         [SerializeField] private TutorialBubbleHoverTween hoverTween;
 
+        [Header("Speaker Layout")]
+        [SerializeField] private RectTransform layoutRoot;
+        [SerializeField] private RectTransform portraitRoot;
+        [SerializeField] private RectTransform bubbleRoot;
+        [SerializeField] private RectTransform bubbleBackground;
+        [SerializeField] private RectTransform bubbleBorder;
+        [SerializeField] private TutorialBubbleLayoutPreset leftLayout;
+        [SerializeField] private TutorialBubbleLayoutPreset rightLayout;
+
         [Header("Tutorial Skip")]
         [SerializeField] private GameObject skipRoot;
         [SerializeField] private Button skipButton;
@@ -34,6 +181,9 @@ namespace TaskTown.Tutorial
         private bool isTutorialVisible;
         private bool isSkipConfirmationOpen;
         private bool isSkipRequestPending;
+        private bool hasAppliedLayout;
+        private TutorialSpeakerSide appliedLayoutSide;
+        private Vector2 appliedLayoutOffset;
 
         public event Action AdvanceRequested;
         public event Action SkipConfirmationOpened;
@@ -50,6 +200,8 @@ namespace TaskTown.Tutorial
 
             if (hoverTween == null && advanceButton != null)
                 advanceButton.TryGetComponent(out hoverTween);
+
+            ResolveLayoutReferences();
         }
 
         private void OnEnable()
@@ -146,6 +298,83 @@ namespace TaskTown.Tutorial
             hoverTween?.PlayPunch();
         }
 
+        public void ApplySpeakerLayout(
+            TutorialSpeakerSide side,
+            Vector2 layoutOffset,
+            bool force = false)
+        {
+            ResolveLayoutReferences();
+
+            if (!force && hasAppliedLayout &&
+                appliedLayoutSide == side &&
+                appliedLayoutOffset == layoutOffset)
+            {
+                return;
+            }
+
+            TutorialBubbleLayoutPreset preset =
+                side == TutorialSpeakerSide.Right
+                    ? rightLayout
+                    : leftLayout;
+            if (!preset.IsConfigured)
+                return;
+
+            if (Application.isPlaying)
+                hoverTween?.RestoreStableScaleImmediate();
+
+            preset.Apply(
+                layoutRoot,
+                portraitRoot,
+                bubbleRoot,
+                bubbleBackground,
+                bubbleBorder,
+                layoutOffset);
+            hasAppliedLayout = true;
+            appliedLayoutSide = side;
+            appliedLayoutOffset = layoutOffset;
+        }
+
+#if UNITY_EDITOR
+        public TutorialBubbleLayoutPreset CaptureCurrentLayoutPreset()
+        {
+            ResolveLayoutReferences();
+            return TutorialBubbleLayoutPreset.Capture(
+                layoutRoot,
+                portraitRoot,
+                bubbleRoot,
+                bubbleBackground,
+                bubbleBorder);
+        }
+
+        public void CaptureCurrentLayout(TutorialSpeakerSide side)
+        {
+            TutorialBubbleLayoutPreset preset = CaptureCurrentLayoutPreset();
+            if (side == TutorialSpeakerSide.Right)
+                rightLayout = preset;
+            else
+                leftLayout = preset;
+        }
+
+        public void ApplyLayoutPreset(TutorialBubbleLayoutPreset preset)
+        {
+            ResolveLayoutReferences();
+            preset.Apply(
+                layoutRoot,
+                portraitRoot,
+                bubbleRoot,
+                bubbleBackground,
+                bubbleBorder,
+                Vector2.zero);
+            hasAppliedLayout = false;
+        }
+
+        public void CreateMirroredRightLayout()
+        {
+            rightLayout = leftLayout.CreateHorizontalMirror();
+            hasAppliedLayout = false;
+        }
+#endif
+
         public void ResetSkipRequest()
         {
             isSkipConfirmationOpen = false;
@@ -228,6 +457,25 @@ namespace TaskTown.Tutorial
                 confirmSkipButton.interactable = canChoose;
             if (cancelSkipButton != null)
                 cancelSkipButton.interactable = canChoose;
+        }
+
+        private void ResolveLayoutReferences()
+        {
+            if (layoutRoot == null)
+                TryGetComponent(out layoutRoot);
+
+            if (bubbleRoot == null && advanceButton != null)
+                bubbleRoot = advanceButton.GetComponent<RectTransform>();
+
+            if (bubbleBackground == null && advanceButton != null &&
+                advanceButton.targetGraphic != null)
+            {
+                bubbleBackground =
+                    advanceButton.targetGraphic.rectTransform;
+            }
+
+            if (portraitRoot == null && speakerPortraitImage != null)
+                portraitRoot = speakerPortraitImage.transform.parent as RectTransform;
         }
 
         private static void SetText(TMP_Text target, string value)

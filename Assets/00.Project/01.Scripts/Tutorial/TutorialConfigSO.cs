@@ -11,6 +11,12 @@ namespace TaskTown.Tutorial
         AutoProductionCoin = 2
     }
 
+    public enum TutorialSpeakerSide
+    {
+        Left = 0,
+        Right = 1
+    }
+
     [Serializable]
     public sealed class TutorialStepContent
     {
@@ -21,6 +27,9 @@ namespace TaskTown.Tutorial
         [SerializeField] private TutorialProgressDisplayType progressDisplayType;
         [SerializeField] private string progressFormat = "{0} / {1}";
         [SerializeField] private bool allowClickAdvance;
+        [SerializeField] private TutorialSpeakerSide speakerSide =
+            TutorialSpeakerSide.Left;
+        [SerializeField] private Vector2 layoutOffset;
 
         public TutorialStep Step => step;
         public IReadOnlyList<string> Messages => messages;
@@ -29,6 +38,8 @@ namespace TaskTown.Tutorial
         public TutorialProgressDisplayType ProgressDisplayType => progressDisplayType;
         public string ProgressFormat => progressFormat;
         public bool AllowClickAdvance => allowClickAdvance;
+        public TutorialSpeakerSide SpeakerSide => speakerSide;
+        public Vector2 LayoutOffset => layoutOffset;
     }
 
     /// <summary>

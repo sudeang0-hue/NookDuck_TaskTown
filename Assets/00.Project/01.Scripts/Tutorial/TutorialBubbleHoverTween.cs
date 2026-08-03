@@ -122,6 +122,18 @@ namespace TaskTown.Tutorial
                 scaleTarget.localScale = Vector3.one * collapsedScale;
         }
 
+        /// <summary>
+        /// 진행 중인 Tween을 종료하고 현재 Hover 여부에 맞는 안정적인 크기로 복원합니다.
+        /// 배치 방향이 바뀔 때 확대 상태를 잃지 않도록 사용합니다.
+        /// </summary>
+        public void RestoreStableScaleImmediate()
+        {
+            KillScaleTween();
+
+            if (TryResolveTarget())
+                scaleTarget.localScale = GetStableScale();
+        }
+
         private void PlayScale(float targetScale, float duration, float delay)
         {
             if (!TryResolveTarget())

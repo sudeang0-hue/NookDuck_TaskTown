@@ -393,6 +393,15 @@ namespace TaskTown.Tutorial
             string progress,
             bool allowClickAdvance)
         {
+            if (config.TryGetStepContent(
+                    step,
+                    out TutorialStepContent layoutContent))
+            {
+                view.ApplySpeakerLayout(
+                    layoutContent.SpeakerSide,
+                    layoutContent.LayoutOffset);
+            }
+
             view.Render(
                 config.SpeakerName,
                 config.SpeakerPortrait,
