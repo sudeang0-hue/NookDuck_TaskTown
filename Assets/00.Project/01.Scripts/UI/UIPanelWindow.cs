@@ -2,28 +2,6 @@ using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public enum GameMenuState
-{
-    Compact,
-    ExpandedTown,
-    Gacha,
-    AnimalDex,
-    ToolPlacement,
-    VillageUpgrade,
-    MiniGame
-}
-public enum GameMenuType
-{
-    None,
-    AnimalInv,
-    ToolInv,
-    Gacha,
-    AnimalDex,
-    Villiage,
-    Option,
-    AnimalSet,
-    LevelUpPopup
-}
 
 namespace UI
 {
@@ -46,7 +24,6 @@ namespace UI
         /// <summary>ClosePanel 호출로 비활성화되기 직전. (Edit 취소 등 정리용)</summary>
         public event Action OnPanelClosed;
 
-        private Canvas rootCanvas;
         private Vector2 defaultUIPanelPosition; // UIController_AnimalInvPage 패널의 초기 위치
         private Vector2 dragOffset; // 드래그 비활성 (복구 시 주석 해제)
 
@@ -75,8 +52,6 @@ namespace UI
             if (panelRect == null) panelRect = GetComponent<RectTransform>();
 
             if (panelCanvas == null) panelCanvas = GetComponentInParent<Canvas>();
-
-            if (panelCanvas != null) rootCanvas = panelCanvas.rootCanvas;
 
             if (panelRect == null)
             {

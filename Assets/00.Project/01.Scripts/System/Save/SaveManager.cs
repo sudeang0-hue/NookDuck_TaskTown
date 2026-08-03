@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Manager;
 using TaskTown.Gacha;
 using TaskTown.Gacha.Demo;
 using UI;
@@ -95,11 +96,14 @@ namespace TaskTown.KDH
                 data.coins = coinManager.Balance;
 
             // 마을 레벨: 관리 패널이 있으면 그쪽을 진실 소스로 저장
-            VillageUpgradeUI_Manager villageUpgradeForSave = FindFirstObjectByType<VillageUpgradeUI_Manager>();
-            if (villageUpgradeForSave != null)
-                data.townLevel = villageUpgradeForSave.UiTownLevel;
-            else if (TownLevelProvider != null)
-                data.townLevel = TownLevelProvider.CurrentTownLevel;
+            // VillageUpgradeUI_Manager villageUpgradeForSave = FindFirstObjectByType<VillageUpgradeUI_Manager>();
+            // if (villageUpgradeForSave != null)
+            //     data.townLevel = villageUpgradeForSave.UiTownLevel;
+            // else if (TownLevelProvider != null)
+            //     data.townLevel = TownLevelProvider.CurrentTownLevel;
+
+            // 2026.08.02 - KAY - VillageSystemManager 스냅샷으로 마을 레벨/사이클/엔드리스 저장
+            WriteVillageProgressToSaveData(data);
 
             if (RealProductionTicker.Instance != null)
                 data.productionRatePerSecond = RealProductionTicker.Instance.CalculateTotalCoinPerSecond();
@@ -198,7 +202,10 @@ namespace TaskTown.KDH
             }
 
             // 마을 레벨 복원: 요소 레벨 적용 후 UI에 townLevel 반영 (사이클 플래그는 추후 세이브)
-            ApplyTownLevelFromSave(data.townLevel);
+            // ApplyTownLevelFromSave(data.townLevel);
+
+            // 2026.08.02 - KAY - 마을 레벨+사이클+엔드리스를 VillageSystemManager에 복원 후 UI Refresh
+            ApplyVillageProgressFromSave(data);
 
             // 동물 인벤토리: 저장된 ID로 SO를 다시 조회해서 복원
             InventoryManager_Animal animalManager = InventoryManager_Animal.Instance;
@@ -265,20 +272,83 @@ namespace TaskTown.KDH
         /// <summary>
         /// 세이브 townLevel을 마을 관리 패널(및 하위 호환 Demo)에 적용합니다.
         /// </summary>
-        private void ApplyTownLevelFromSave(int townLevel)
+        
+        // 2026.08.02 - KAY - VillageSystemManager → GameSaveData 진행 상태 기록
+        private void WriteVillageProgressToSaveData(GameSaveData data)
         {
-            int level = Mathf.Max(1, townLevel);
+            if (data == null)
+                return;
 
-            if (townLevelProviderSource is VillageUpgradeUI_Manager villageFromInspector)
+            VillageSystemManager villageSystem = VillageSystemManager.Instance;
+            if (villageSystem == null)
+                villageSystem = FindFirstObjectByType<VillageSystemManager>();
+
+            if (villageSystem != null)
             {
-                villageFromInspector.SetTownLevelFromSave(level);
+                VillageSystemManager.VillageSaveSnapshot snapshot = villageSystem.CaptureSaveSnapshot();
+                data.townLevel = snapshot.townLevel;
+                data.cycleClickDone = snapshot.cycleClickDone;
+                data.cycleTypingDone = snapshot.cycleTypingDone;
+                data.cycleToolDone = snapshot.cycleToolDone;
+                data.isEndlessMode = snapshot.isEndlessMode;
+                return;
+            }
+
+            // System이 없을 때만 UI/Inspector 폴백 (구경로와 동일)
+            VillageUpgradeUI_Manager villageUpgradeForSave = FindFirstObjectByType<VillageUpgradeUI_Manager>();
+            if (villageUpgradeForSave != null)
+                data.townLevel = villageUpgradeForSave.UiTownLevel;
+            else if (TownLevelProvider != null)
+                data.townLevel = TownLevelProvider.CurrentTownLevel;
+        }
+
+        // 2026.08.02 - KAY - GameSaveData → VillageSystemManager 복원 후 UI Refresh
+        private void ApplyVillageProgressFromSave(GameSaveData data)
+        {
+            if (data == null)
+                return;
+
+            int level = Mathf.Max(1, data.townLevel);
+
+            VillageSystemManager villageSystem = VillageSystemManager.Instance;
+            if (villageSystem == null)
+                villageSystem = FindFirstObjectByType<VillageSystemManager>();
+
+            if (villageSystem != null)
+            {
+                villageSystem.ApplyProgressFromSave(
+                    level,
+                    data.cycleClickDone,
+                    data.cycleTypingDone,
+                    data.cycleToolDone,
+                    data.isEndlessMode);
             }
             else
             {
-                VillageUpgradeUI_Manager villageUpgrade = FindFirstObjectByType<VillageUpgradeUI_Manager>();
-                if (villageUpgrade != null)
-                    villageUpgrade.SetTownLevelFromSave(level);
+                Debug.LogWarning(
+                    "[SaveManager] VillageSystemManager가 없어 마을 사이클/엔드리스를 복원할 수 없습니다. townLevel만 UI에 시도합니다.");
+
+                if (townLevelProviderSource is VillageUpgradeUI_Manager villageFromInspector)
+                    villageFromInspector.SetTownLevelFromSave(level);
+                else
+                {
+                    VillageUpgradeUI_Manager villageUpgradeFallback =
+                        FindFirstObjectByType<VillageUpgradeUI_Manager>();
+                    if (villageUpgradeFallback != null)
+                        villageUpgradeFallback.SetTownLevelFromSave(level);
+                }
             }
+
+            // 로드 직후 UI는 SaveManager 기준으로 한 번 강제 Refresh
+            // (OnVillageStateChanged 구독 전에 Load가 끝날 수 있음)
+            VillageUpgradeUI_Manager villageUpgradeUi = null;
+            if (townLevelProviderSource is VillageUpgradeUI_Manager fromInspector)
+                villageUpgradeUi = fromInspector;
+            else
+                villageUpgradeUi = FindFirstObjectByType<VillageUpgradeUI_Manager>();
+
+            if (villageUpgradeUi != null)
+                villageUpgradeUi.RefreshUIAfterSaveRestore();
 
             // DemoTownLevelProvider가 따로 있으면 동기화 (가챠 등 기존 연결 유지)
             if (townLevelProviderSource is DemoTownLevelProvider demoProvider)

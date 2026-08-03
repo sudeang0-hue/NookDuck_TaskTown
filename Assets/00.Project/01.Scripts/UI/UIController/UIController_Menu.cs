@@ -1,7 +1,12 @@
+using System.Collections.Generic;
 using UI;
 using UnityEngine;
 using UnityEngine.UI;
 
+/// <summary>
+/// 메인 메뉴 버튼 허브. GameMenuType 기준으로 한 번에 하나의 메인 메뉴만 엽니다.
+/// LevelUpPopup / None은 배타 대상에서 제외합니다.
+/// </summary>
 public class UIController_Menu : MonoBehaviour
 {
     [Header("메뉴 목록 버튼")]
@@ -9,7 +14,7 @@ public class UIController_Menu : MonoBehaviour
     [SerializeField] private Button inventoryButton;
     [Tooltip("뽑기 패널 오픈")]
     [SerializeField] private Button gachaButton;
-    [Tooltip("동물 도감 오픈")]
+    [Tooltip("도감 오픈")]
     [SerializeField] private Button animalDexButton;
     [Tooltip("마을 업그레이드 오픈")]
     [SerializeField] private Button villageButton;
@@ -18,33 +23,27 @@ public class UIController_Menu : MonoBehaviour
     [Tooltip("화면 축소 버튼")]
     [SerializeField] private Button minimizeButton;
 
-    [Header("오픈할 UI 패널")]
-    private UIPanelWindow animalInventoryPanel;
-    private UIPanelWindow toolInventoryPanel;
-    private UIPanelWindow gachaPanel;
-    private UIPanelWindow animalDexPanel;
-    private UIPanelWindow optionPanel;
-
     [Header("UI 동기화")]
-    [Tooltip("동물 Inv 패널 오픈/닫기 시 상세 닫기 + SyncAllSlots 호출 대상")]
-    private UIController_AnimalInv animalInvUI;
-    [Tooltip("도구 Inv 패널 오픈/닫기 시 상세 닫기 + SyncAllSlots 호출 대상")]
-    private UIController_ToolInv toolInvUI;
-    [Tooltip("동물 도감 패널 오픈 시 상세 닫기 등 오픈 처리 호출 대상")]
-    private UIController_AnimalDex animalDexUI;
     [Tooltip("뽑기 패널 오픈 시 가격 텍스트 갱신 호출 대상")]
     private UIController_Gacha gachaUI;
+    [Tooltip("도감 패널 오픈 시 처리 호출 대상")]
+    private UIController_AnimalDex animalDexUI;
 
     [Header("탭 전환 Manager")]
     private TabUIManager_Inventory inventoryTabManager;
     private TabUIManager_Town townTabManager;
+    private TabUIManager_Dex dexTabManager;
 
     [Header("패널 오픈시 초기 위치 고정")]
     private bool usePanelOpenDefaultPosition = true;
 
     [Header("패널 배타 오픈")]
-    [Tooltip("true면 한 번에 하나의 패널만 열고, false면 기존처럼 독립 토글")]
+    [Tooltip("true면 한 번에 하나의 메인 메뉴(GameMenuType)만 엽니다.")]
     private bool useTradeOffSetting = true;
+
+    private readonly List<UIPanelWindow> registeredWindows = new List<UIPanelWindow>();
+    private UIPanelWindow gachaPanel;
+    private UIPanelWindow optionPanel;
 
     // -----------------------------------------------------------------------------
     // [ 2026.07.28 - Choi - 튜토리얼 축소·확장 단계 연동 ]
@@ -55,45 +54,26 @@ public class UIController_Menu : MonoBehaviour
     private void Awake()
     {
         UIControllerNullRefrerenceBind();
+        CachePanelWindows();
 
-        if(inventoryButton != null)
-        { 
+        if (inventoryButton != null)
             inventoryButton.onClick.AddListener(OnInventoryButtonClicked);
-        }
 
-        gachaButton.onClick.AddListener(() => TogglePanel(gachaPanel));
-        animalDexButton.onClick.AddListener(() => TogglePanel(animalDexPanel));
-        optionButton.onClick.AddListener(() => TogglePanel(optionPanel));
+        if (gachaButton != null)
+            gachaButton.onClick.AddListener(OnGachaButtonClicked);
+
+        if (animalDexButton != null)
+            animalDexButton.onClick.AddListener(OnDexButtonClicked);
+
+        if (optionButton != null)
+            optionButton.onClick.AddListener(OnOptionButtonClicked);
 
         if (villageButton != null)
-        {
             villageButton.onClick.AddListener(OnVillageButtonClicked);
-        }
 
-        // GameMasterManager의 축소와 별개로, 같은 Minimize 버튼에 메뉴 패널 닫기를 추가 연결
         if (minimizeButton != null)
-        {
             minimizeButton.onClick.AddListener(CloseAllPanels);
-        }
-
-        var windows = FindObjectsByType<UIPanelWindow>(
-    FindObjectsInactive.Include, FindObjectsSortMode.None);
-
-        foreach (var w in windows)
-        {
-            
-            if (gachaPanel == null && w.MenuType == GameMenuType.Gacha)
-                gachaPanel = w;
-
-            if (animalDexPanel == null && w.MenuType == GameMenuType.AnimalDex)
-                animalDexPanel = w;
-
-            if (optionPanel == null && w.MenuType == GameMenuType.Option)
-                optionPanel = w;
-            
-        }
     }
-
 
     private void OnEnable()
     {
@@ -106,46 +86,131 @@ public class UIController_Menu : MonoBehaviour
     }
 
     /// <summary>
-    /// UIController 자동 할당
+    /// UIController / TabManager 자동 할당
     /// </summary>
     private void UIControllerNullRefrerenceBind()
     {
-        // 부모 오브젝트가 없을 경우를 대비한 예외 처리
-        if (transform.parent == null)
-        {
-            Debug.LogWarning($"{name}의 부모 오브젝트를 찾을 수 없어 자동 바인딩을 실패했습니다.");
-            return;
-        }
-
-        Transform parentTransform = transform.parent;
-
-        if (animalInvUI == null)
-            animalInvUI = parentTransform.GetComponentInChildren<UIController_AnimalInv>(true);
-
-        if (toolInvUI == null)
-            toolInvUI = parentTransform.GetComponentInChildren<UIController_ToolInv>(true);
-
-        if (animalDexUI == null)
-            animalDexUI = parentTransform.GetComponentInChildren<UIController_AnimalDex>(true);
-
-        if (gachaUI == null)
-            gachaUI = parentTransform.GetComponentInChildren<UIController_Gacha>(true);
-
-
-        // 같은 자식1 오브젝트 본인에게 붙어있는 컴포넌트라면 기존대로 유지
+        // TabManager는 같은 GO에 붙는 경우가 많아 parent와 무관하게 먼저 연결합니다.
         if (inventoryTabManager == null)
             inventoryTabManager = GetComponent<TabUIManager_Inventory>();
 
         if (townTabManager == null)
             townTabManager = GetComponent<TabUIManager_Town>();
 
+        if (dexTabManager == null)
+            dexTabManager = GetComponent<TabUIManager_Dex>();
+
+        if (transform.parent == null)
+        {
+            Debug.LogWarning($"{name}의 부모 오브젝트를 찾을 수 없어 자식 UI 자동 바인딩을 건너뜁니다.");
+        }
+        else
+        {
+            Transform parentTransform = transform.parent;
+
+            if (gachaUI == null)
+                gachaUI = parentTransform.GetComponentInChildren<UIController_Gacha>(true);
+
+            if (animalDexUI == null)
+                animalDexUI = parentTransform.GetComponentInChildren<UIController_AnimalDex>(true);
+
+            if (dexTabManager == null)
+                dexTabManager = parentTransform.GetComponentInChildren<TabUIManager_Dex>(true);
+        }
+
+        if (inventoryTabManager == null)
+            inventoryTabManager = FindFirstObjectByType<TabUIManager_Inventory>(FindObjectsInactive.Include);
+
+        if (townTabManager == null)
+            townTabManager = FindFirstObjectByType<TabUIManager_Town>(FindObjectsInactive.Include);
+
+        if (dexTabManager == null)
+            dexTabManager = FindFirstObjectByType<TabUIManager_Dex>(FindObjectsInactive.Include);
+
+        if (gachaUI == null)
+            gachaUI = FindFirstObjectByType<UIController_Gacha>(FindObjectsInactive.Include);
+
+        if (animalDexUI == null)
+            animalDexUI = FindFirstObjectByType<UIController_AnimalDex>(FindObjectsInactive.Include);
     }
 
+    /// <summary>
+    /// 씬의 UIPanelWindow를 캐시하고 Gacha/Option 대표 패널을 연결합니다.
+    /// </summary>
+    private void CachePanelWindows()
+    {
+        registeredWindows.Clear();
+        gachaPanel = null;
+        optionPanel = null;
+
+        UIPanelWindow[] windows = FindObjectsByType<UIPanelWindow>(
+            FindObjectsInactive.Include, FindObjectsSortMode.None);
+
+        for (int i = 0; i < windows.Length; i++)
+        {
+            UIPanelWindow window = windows[i];
+            if (window == null)
+                continue;
+
+            registeredWindows.Add(window);
+
+            if (gachaPanel == null && window.MenuType == GameMenuType.Gacha)
+                gachaPanel = window;
+
+            if (optionPanel == null && window.MenuType == GameMenuType.Option)
+                optionPanel = window;
+        }
+    }
 
     /// <summary>
-    /// 카메라 타겟 선택(시점 전환) 시 열린 메뉴 패널을 닫습니다.
-    /// 빈 공간 클릭(null)은 무시합니다.
+    /// 배타 대상 메인 메뉴인지 판별합니다.
     /// </summary>
+    public static bool IsExclusiveMainMenu(GameMenuType menuType)
+    {
+        return menuType == GameMenuType.Inventory
+            || menuType == GameMenuType.Gacha
+            || menuType == GameMenuType.Dex
+            || menuType == GameMenuType.Village
+            || menuType == GameMenuType.Option;
+    }
+
+    /// <summary>
+    /// keepType을 제외한 메인 메뉴를 모두 닫습니다.
+    /// 1) TabManager CloseAllTabs 2) GameMenuType 기준 UIPanelWindow Close
+    /// </summary>
+    public void CloseOtherExclusiveMenus(GameMenuType keepType)
+    {
+        if (!useTradeOffSetting)
+            return;
+
+        if (keepType != GameMenuType.Inventory)
+            inventoryTabManager?.CloseAllTabs();
+
+        if (keepType != GameMenuType.Village)
+            townTabManager?.CloseAllTabs();
+
+        if (keepType != GameMenuType.Dex)
+            dexTabManager?.CloseAllTabs();
+
+        for (int i = 0; i < registeredWindows.Count; i++)
+        {
+            UIPanelWindow window = registeredWindows[i];
+            if (window == null)
+                continue;
+
+            if (!IsExclusiveMainMenu(window.MenuType))
+                continue;
+
+            if (window.MenuType == keepType)
+                continue;
+
+            if (!window.gameObject.activeSelf)
+                continue;
+
+            window.ClosePanel();
+        }
+    }
+
     private void OnCameraTargetSelected(Transform target)
     {
         if (target == null)
@@ -153,140 +218,142 @@ public class UIController_Menu : MonoBehaviour
 
         CloseAllPanels();
     }
-   
 
     /// <summary>
-    /// 화면 축소 등에서 열린 메뉴 패널(UIPanelWindow)을 모두 닫습니다.
+    /// 화면 축소 등에서 열린 메인 메뉴 패널을 모두 닫습니다.
     /// </summary>
     public void CloseAllPanels()
     {
-        CloseAllExcept(null);
         inventoryTabManager?.CloseAllTabs();
         townTabManager?.CloseAllTabs();
-    }
+        dexTabManager?.CloseAllTabs();
 
-    private void TogglePanel(UIPanelWindow panel)
-    {
-        if (panel == null)
+        for (int i = 0; i < registeredWindows.Count; i++)
         {
-            Debug.LogWarning("[UIController_Menu] 연결되지 않은 패널이 있습니다.");
-            return;
+            UIPanelWindow window = registeredWindows[i];
+            if (window == null)
+                continue;
+
+            if (!IsExclusiveMainMenu(window.MenuType))
+                continue;
+
+            if (!window.gameObject.activeSelf)
+                continue;
+
+            window.ClosePanel();
         }
-
-        bool willOpen = !panel.gameObject.activeSelf;
-
-        // 다른 메뉴 패널을 열면 마을 관련 패널을 모두 닫음
-        if (willOpen)
-            townTabManager?.CloseAllTabs();
-
-        if (willOpen)
-            inventoryTabManager?.CloseAllTabs();
-
-        // 배타 모드: 닫힌 패널을 열 때만 다른 패널을 닫음 (같은 버튼 재클릭은 토글 유지)
-        if (useTradeOffSetting && willOpen)
-            CloseAllExcept(panel);
-
-        if (usePanelOpenDefaultPosition)
-            panel.TogglePanelDefaultPosition();
-        else
-            panel.TogglePanelSetPosition();
-
-        // Inv 패널이 열린 직후, 비활성 중 누적된 인벤 데이터를 UI에 반영
-        // 닫힌 경우(동물 Inv)에는 상세 페이지도 함께 닫음
-        if (panel.gameObject.activeSelf)
-            SyncInventoryIfNeeded(panel);
-        else
-            NotifyPanelClosedIfNeeded(panel);
-    }
-
-    private void SyncInventoryIfNeeded(UIPanelWindow panel)
-    {
-        if (panel == animalInventoryPanel)
-            animalInvUI?.NotifyPanelOpened();
-        else if (panel == toolInventoryPanel)
-            toolInvUI?.NotifyPanelOpened();
-        else if (panel == animalDexPanel)
-            animalDexUI?.NotifyPanelOpened();
-        else if (panel == gachaPanel)
-            gachaUI?.NotifyPanelOpened();
-    }
-
-    /// <summary>
-    /// 패널이 닫힌 뒤 필요한 UI 정리. Dex는 현재 유지(호출하지 않음).
-    /// Animal / Tool Inv는 상세 페이지(Animal_Inv_Page / Tool_Inv_Page)도 함께 닫습니다.
-    /// </summary>
-    private void NotifyPanelClosedIfNeeded(UIPanelWindow panel)
-    {
-        if (panel == animalInventoryPanel)
-            animalInvUI?.NotifyPanelClosed();
-        else if (panel == toolInventoryPanel)
-            toolInvUI?.NotifyPanelClosed();
-    }
-
-    private void CloseAllExcept(UIPanelWindow keepOpen)
-    {
-        
-        CloseIfOther(gachaPanel, keepOpen);
-        CloseIfOther(animalDexPanel, keepOpen);
-        CloseIfOther(optionPanel, keepOpen);
-    }
-
-    private void CloseIfOther(UIPanelWindow panel, UIPanelWindow keepOpen)
-    {
-        if (panel == null || panel == keepOpen)
-            return;
-
-        if (!panel.gameObject.activeSelf)
-            return;
-
-        panel.ClosePanel();
-        NotifyPanelClosedIfNeeded(panel);
-    }
-
-
-    private void OnVillageButtonClicked()
-    {
-        if (townTabManager == null)
-        {
-            Debug.LogWarning("[UIController_Menu] TownTabManager가 연결되지 않았습니다.");
-
-            return;
-        }
-
-        // 닫힌 상태에서 새로 열 때만 다른 메뉴를 닫음 (같은 버튼 재클릭은 토글 유지)
-        bool willOpen = !townTabManager.IsAnyTabOpen;
-        if (willOpen)
-        {
-            inventoryTabManager?.CloseAllTabs();
-
-            if (useTradeOffSetting)
-                CloseAllExcept(null);
-        }
-
-        townTabManager.ToggleTownTabs();
     }
 
     private void OnInventoryButtonClicked()
     {
         if (inventoryTabManager == null)
         {
-            Debug.LogWarning("[UIController_Menu] InventoryTabManager 연결되지 않았습니다.");
-
+            Debug.LogWarning("[UIController_Menu] InventoryTabManager가 연결되지 않았습니다.");
             return;
         }
 
-        // 닫힌 상태에서 새로 열 때만 다른 메뉴를 닫음 (같은 버튼 재클릭은 토글 유지)
         bool willOpen = !inventoryTabManager.IsAnyTabOpen;
         if (willOpen)
-        {
-            townTabManager?.CloseAllTabs();
-
-            if (useTradeOffSetting)
-                CloseAllExcept(null);
-        }
+            CloseOtherExclusiveMenus(GameMenuType.Inventory);
 
         inventoryTabManager.ToggleInventoryTabs();
     }
 
+    private void OnVillageButtonClicked()
+    {
+        if (townTabManager == null)
+        {
+            Debug.LogWarning("[UIController_Menu] TownTabManager가 연결되지 않았습니다.");
+            return;
+        }
 
+        bool willOpen = !townTabManager.IsAnyTabOpen;
+        if (willOpen)
+            CloseOtherExclusiveMenus(GameMenuType.Village);
+
+        townTabManager.ToggleTownTabs();
+    }
+
+    private void OnDexButtonClicked()
+    {
+        if (dexTabManager != null)
+        {
+            bool willOpen = !dexTabManager.IsAnyTabOpen;
+            if (willOpen)
+                CloseOtherExclusiveMenus(GameMenuType.Dex);
+
+            dexTabManager.ToggleDexTabs();
+
+            if (dexTabManager.IsAnyTabOpen)
+                animalDexUI?.NotifyPanelOpened();
+            return;
+        }
+
+        ToggleSinglePanelMenu(GameMenuType.Dex, () => animalDexUI?.NotifyPanelOpened());
+    }
+
+    private void OnGachaButtonClicked()
+    {
+        ToggleSinglePanelMenu(GameMenuType.Gacha, () => gachaUI?.NotifyPanelOpened());
+    }
+
+    private void OnOptionButtonClicked()
+    {
+        ToggleSinglePanelMenu(GameMenuType.Option);
+    }
+
+    /// <summary>
+    /// Gacha / Option처럼 단일 UIPanelWindow 메뉴를 토글합니다.
+    /// </summary>
+    private void ToggleSinglePanelMenu(GameMenuType menuType, System.Action onOpened = null)
+    {
+        UIPanelWindow panel = FindPrimaryPanel(menuType);
+        if (panel == null)
+        {
+            Debug.LogWarning($"[UIController_Menu] GameMenuType.{menuType} 패널을 찾지 못했습니다.");
+            return;
+        }
+
+        bool willOpen = !panel.gameObject.activeSelf;
+        if (willOpen)
+            CloseOtherExclusiveMenus(menuType);
+
+        if (usePanelOpenDefaultPosition)
+            panel.TogglePanelDefaultPosition();
+        else
+            panel.TogglePanelSetPosition();
+
+        if (panel.gameObject.activeSelf)
+            onOpened?.Invoke();
+    }
+
+    private UIPanelWindow FindPrimaryPanel(GameMenuType menuType)
+    {
+        if (menuType == GameMenuType.Gacha && gachaPanel != null)
+            return gachaPanel;
+
+        if (menuType == GameMenuType.Option && optionPanel != null)
+            return optionPanel;
+
+        UIPanelWindow active = null;
+        UIPanelWindow first = null;
+
+        for (int i = 0; i < registeredWindows.Count; i++)
+        {
+            UIPanelWindow window = registeredWindows[i];
+            if (window == null || window.MenuType != menuType)
+                continue;
+
+            if (first == null)
+                first = window;
+
+            if (window.gameObject.activeSelf)
+            {
+                active = window;
+                break;
+            }
+        }
+
+        return active != null ? active : first;
+    }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Manager;
 using TaskTown.KDH;
 using UnityEngine;
 using UnityEngine.UI;
@@ -138,9 +139,9 @@ namespace UI
             int unlocked;
 
             //if (unlockedByLevel != null && unlockedByLevel.Length > level)   기존코드
-            if (unlockedByLevel != null && unlockedByLevel.Length > level-1) // 26.07.28 KDH 수정
+            if (unlockedByLevel != null && unlockedByLevel.Length > level - 1) // 26.07.28 KDH 수정
                 //unlocked = unlockedByLevel[level];                          기존코드
-                unlocked = unlockedByLevel[level-1];                      // 26.07.28 KDH 수정
+                unlocked = unlockedByLevel[level - 1];                      // 26.07.28 KDH 수정
             else
                 //unlocked = Mathf.Max(0, unlockedAtLevel1) + (level - 1);  기존코드
                 unlocked = unlockedAtLevel1;                              // 26.07.28 KDH 수정
@@ -203,6 +204,9 @@ namespace UI
 
         public int GetCurrentTownLevel()
         {
+            if (VillageSystemManager.Instance != null)
+                return VillageSystemManager.Instance.TownLevel;
+
             if (villageUpgradeUIManager != null)
                 return Mathf.Max(1, villageUpgradeUIManager.UiTownLevel);
 
@@ -365,9 +369,9 @@ namespace UI
 
             if (committed)
                 OnVillagePlacementChanged?.Invoke();
-            
+
             ClosePanel();
-            Debug.Log("[VillageAnimalSetUI.OnClickConfirmAnimalSet] Confirm 완료 — RefreshUI 반영, 창 닫기",this);
+            Debug.Log("[VillageAnimalSetUI.OnClickConfirmAnimalSet] Confirm 완료 — RefreshUI 반영, 창 닫기", this);
         }
 
         public void OnClickSetAnimal(int slotIndex)

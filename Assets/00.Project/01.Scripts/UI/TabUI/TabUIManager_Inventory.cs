@@ -22,28 +22,64 @@ namespace UI
         [SerializeField] private UIPanelWindow AnimalInvPanel;
         [SerializeField] private UIPanelWindow ToolInvPanel;
 
-        [Header("UI 동기화")]
-        [Tooltip("동물 Inv 패널 오픈/닫기 시 상세 닫기 + SyncAllSlots 호출 대상")]
+        [Header("UI ?????")]
+        [Tooltip("???? Inv ?г? ????/??? ?? ?? ??? + SyncAllSlots ??? ???")]
         private UIController_AnimalInv animalInvUI;
-        [Tooltip("도구 Inv 패널 오픈/닫기 시 상세 닫기 + SyncAllSlots 호출 대상")]
+        [Tooltip("???? Inv ?г? ????/??? ?? ?? ??? + SyncAllSlots ??? ???")]
         private UIController_ToolInv toolInvUI;
 
         private InventoryTabType lastOpenedTab = InventoryTabType.AnimalInv;
-
+        private UIController_Menu menuUI;
 
         private void Awake()
         {
             if (animalInvUI == null)
-            {
                 animalInvUI = FindFirstObjectByType<UIController_AnimalInv>();
-            }
 
             if (toolInvUI == null)
-            {
                 toolInvUI = FindFirstObjectByType<UIController_ToolInv>();
-            }
 
+            if (menuUI == null)
+                menuUI = GetComponent<UIController_Menu>();
+
+            if (menuUI == null)
+                menuUI = FindFirstObjectByType<UIController_Menu>();
+
+            EnsurePanelsResolved();
         }
+
+        private void RequestExclusiveMenu()
+        {
+            menuUI?.CloseOtherExclusiveMenus(GameMenuType.Inventory);
+        }
+
+        /// <summary>
+        /// Inspector ?????? ??? ???? ?? GameMenuType.Inventory ?г??? ??????? ????????.
+        /// </summary>
+        private void EnsurePanelsResolved()
+        {
+            if (AnimalInvPanel != null && ToolInvPanel != null)
+                return;
+
+            UIPanelWindow[] windows = FindObjectsByType<UIPanelWindow>(
+                FindObjectsInactive.Include, FindObjectsSortMode.None);
+
+            for (int i = 0; i < windows.Length; i++)
+            {
+                UIPanelWindow window = windows[i];
+                if (window == null || window.MenuType != GameMenuType.Inventory)
+                    continue;
+
+                string key = window.name.ToLowerInvariant();
+                // Aniaml_Inv_root 오타 이름도 동물 인벤으로 인식
+                bool isAnimalName = key.Contains("animal") || key.Contains("aniaml");
+                if (ToolInvPanel == null && key.Contains("tool") && key.Contains("inv"))
+                    ToolInvPanel = window;
+                else if (AnimalInvPanel == null && isAnimalName && key.Contains("inv"))
+                    AnimalInvPanel = window;
+            }
+        }
+
         private void OnEnable()
         {
             RegisterButtonListeners(openAnimalInvButtons, OpenAnimalInvTab);
@@ -57,7 +93,7 @@ namespace UI
         }
 
         /// <summary>
-        /// 기본으로 오픈할 패널
+        /// ?????? ?????? ?г?
         /// </summary>
         public void OpenDefaultTab()
         {
@@ -65,40 +101,37 @@ namespace UI
         }
 
         /// <summary>
-        /// 동물 인벤토리 탭 열기
+        /// ???? ?κ??? ?? ????
         /// </summary>
         public void OpenAnimalInvTab()
         {
             lastOpenedTab = InventoryTabType.AnimalInv;
+            EnsurePanelsResolved();
+            RequestExclusiveMenu();
 
-            // 도구 탭이 닫힐 때 상세 페이지도 함께 정리
             ToolInvPanel?.ClosePanel();
             toolInvUI?.NotifyPanelClosed();
 
             AnimalInvPanel?.OpenPanelDefaultPosition();
-            // 패널이 켜진 뒤 슬롯 동기화 (CanUpdateView 통과 필요)
             animalInvUI?.NotifyPanelOpened();
         }
 
         /// <summary>
-        /// 도구 인벤토리 탭 열기
+        /// ???? ?κ??? ?? ????
         /// </summary>
         public void OpenToolInvTab()
         {
             lastOpenedTab = InventoryTabType.ToolInv;
+            EnsurePanelsResolved();
+            RequestExclusiveMenu();
 
-            // 동물 탭이 닫힐 때 상세 페이지도 함께 정리
             AnimalInvPanel?.ClosePanel();
             animalInvUI?.NotifyPanelClosed();
 
             ToolInvPanel?.OpenPanelDefaultPosition();
-            // 패널이 켜진 뒤 슬롯 동기화 (CanUpdateView 통과 필요)
             toolInvUI?.NotifyPanelOpened();
         }
 
-        /// <summary>
-        /// 마지막으로 열었던 탭 다시 열기
-        /// </summary>
         private void OpenLastTab()
         {
             switch (lastOpenedTab)
@@ -113,9 +146,6 @@ namespace UI
             }
         }
 
-        /// <summary>
-        /// 메뉴 버튼에서 호출할 Toggle 메서드
-        /// </summary>
         public void ToggleInventoryTabs()
         {
             if (IsAnyTabOpen)
@@ -127,9 +157,6 @@ namespace UI
             OpenLastTab();
         }
 
-        /// <summary>
-        /// 패널 활성화 상태를 확인하는 메서드
-        /// </summary>
         public bool IsAnyTabOpen
         {
             get
@@ -141,11 +168,10 @@ namespace UI
             }
         }
 
-        /// <summary>
-        /// 탭 닫기 
-        /// </summary>
         public void CloseAllTabs()
         {
+            EnsurePanelsResolved();
+
             AnimalInvPanel?.ClosePanel();
             animalInvUI?.NotifyPanelClosed();
 
@@ -176,7 +202,5 @@ namespace UI
                     button.onClick.RemoveListener(action);
             }
         }
-
-
     }
 }
