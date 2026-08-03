@@ -1,0 +1,281 @@
+using System.Collections.Generic;
+using DG.Tweening;
+using UnityEngine;
+using UnityEngine.UI;
+
+namespace TaskTown.Tutorial
+{
+    /// <summary>
+    /// 버튼 Scale과 독립적으로 도넛 및 손가락 클릭 Flow를 반복 재생합니다.
+    /// 표시 중인 후보 버튼이 바뀌면 Overlay Canvas 좌표로 다시 맞춥니다.
+    /// </summary>
+    public sealed class TutorialPointerIndicator : MonoBehaviour
+    {
+        [Header("Overlay UI")]
+        [SerializeField] private Canvas overlayCanvas;
+        [SerializeField] private RectTransform indicatorRoot;
+        [SerializeField] private CanvasGroup indicatorCanvasGroup;
+        [SerializeField] private RectTransform ringTransform;
+        [SerializeField] private RectTransform handTransform;
+
+        [Header("손가락 이동")]
+        [SerializeField] private Vector2 approachOffset = new(80f, -80f);
+        [SerializeField, Min(0.01f)] private float fadeInDuration = 0.12f;
+        [SerializeField, Min(0.01f)] private float approachDuration = 0.45f;
+        [SerializeField, Min(0.01f)] private float pressDuration = 0.12f;
+        [SerializeField, Min(0.01f)] private float fadeOutDuration = 0.15f;
+        [SerializeField, Min(0f)] private float loopInterval = 0.45f;
+        [SerializeField] private Ease approachEase = Ease.OutCubic;
+
+        [Header("클릭 표현")]
+        [SerializeField, Range(0.1f, 1f)] private float handPressScale = 0.82f;
+        [SerializeField, Range(0.1f, 1f)] private float ringStartScale = 0.78f;
+        [SerializeField, Min(1f)] private float ringClickScale = 1.16f;
+
+        private readonly List<Button> targetCandidates = new();
+        private readonly Vector3[] targetWorldCorners = new Vector3[4];
+
+        private TutorialPointerPositionMode positionMode;
+        private Vector2 pointerOffset;
+        private Vector2 canvasPosition;
+        private float fixedRingSize;
+        private float ringPadding;
+        private Button activeTarget;
+        private Sequence flowSequence;
+        private bool isRequested;
+        private bool isVisualActive;
+
+        private void LateUpdate()
+        {
+            if (!isRequested)
+                return;
+
+            if (positionMode == TutorialPointerPositionMode.CanvasPosition)
+            {
+                ApplyFixedPosition();
+                EnsureVisualActive();
+                return;
+            }
+
+            Button nextTarget = FindFirstActiveTarget();
+            if (nextTarget != activeTarget)
+            {
+                activeTarget = nextTarget;
+                if (activeTarget == null)
+                {
+                    StopVisual();
+                    return;
+                }
+
+                ApplyTargetLayout(activeTarget, true);
+                EnsureVisualActive();
+                return;
+            }
+
+            if (activeTarget != null)
+                ApplyTargetLayout(activeTarget, false);
+        }
+
+        private void OnDisable()
+        {
+            Hide();
+        }
+
+        private void OnDestroy()
+        {
+            KillFlowSequence();
+        }
+
+        public void Show(TutorialStepContent content, params Button[] candidates)
+        {
+            Hide();
+
+            if (content == null || overlayCanvas == null || indicatorRoot == null ||
+                indicatorCanvasGroup == null || ringTransform == null ||
+                handTransform == null)
+            {
+                return;
+            }
+
+            positionMode = content.PointerPositionMode;
+            pointerOffset = content.PointerOffset;
+            canvasPosition = content.PointerCanvasPosition;
+            fixedRingSize = Mathf.Max(16f, content.PointerRingSize);
+            ringPadding = Mathf.Max(0f, content.PointerRingPadding);
+
+            if (candidates != null)
+            {
+                HashSet<Button> uniqueTargets = new();
+                foreach (Button candidate in candidates)
+                {
+                    if (candidate != null && uniqueTargets.Add(candidate))
+                        targetCandidates.Add(candidate);
+                }
+            }
+
+            isRequested = true;
+
+            if (positionMode == TutorialPointerPositionMode.CanvasPosition)
+            {
+                ApplyFixedPosition();
+                EnsureVisualActive();
+                return;
+            }
+
+            activeTarget = FindFirstActiveTarget();
+            if (activeTarget == null)
+                return;
+
+            ApplyTargetLayout(activeTarget, true);
+            EnsureVisualActive();
+        }
+
+        public void Hide()
+        {
+            isRequested = false;
+            activeTarget = null;
+            targetCandidates.Clear();
+            StopVisual();
+        }
+
+        private Button FindFirstActiveTarget()
+        {
+            foreach (Button candidate in targetCandidates)
+            {
+                if (candidate != null && candidate.isActiveAndEnabled &&
+                    candidate.gameObject.activeInHierarchy)
+                {
+                    return candidate;
+                }
+            }
+
+            return null;
+        }
+
+        private void ApplyFixedPosition()
+        {
+            indicatorRoot.anchoredPosition = canvasPosition + pointerOffset;
+            ringTransform.sizeDelta = Vector2.one * fixedRingSize;
+        }
+
+        private void ApplyTargetLayout(Button target, bool updateRingSize)
+        {
+            if (target == null || indicatorRoot == null || overlayCanvas == null ||
+                indicatorRoot.parent is not RectTransform overlayParent ||
+                target.transform is not RectTransform targetRect)
+            {
+                return;
+            }
+
+            Canvas targetCanvas = targetRect.GetComponentInParent<Canvas>();
+            Camera targetCamera = targetCanvas != null &&
+                                  targetCanvas.renderMode != RenderMode.ScreenSpaceOverlay
+                ? targetCanvas.worldCamera
+                : null;
+            Camera overlayCamera = overlayCanvas.renderMode != RenderMode.ScreenSpaceOverlay
+                ? overlayCanvas.worldCamera
+                : null;
+
+            Vector3 targetWorldCenter = targetRect.TransformPoint(targetRect.rect.center);
+            Vector2 targetScreenCenter = RectTransformUtility.WorldToScreenPoint(
+                targetCamera,
+                targetWorldCenter);
+
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    overlayParent,
+                    targetScreenCenter,
+                    overlayCamera,
+                    out Vector2 localCenter))
+            {
+                indicatorRoot.anchoredPosition = localCenter + pointerOffset;
+            }
+
+            if (!updateRingSize)
+                return;
+
+            targetRect.GetWorldCorners(targetWorldCorners);
+            Vector2 min = new(float.PositiveInfinity, float.PositiveInfinity);
+            Vector2 max = new(float.NegativeInfinity, float.NegativeInfinity);
+
+            foreach (Vector3 worldCorner in targetWorldCorners)
+            {
+                Vector2 screenCorner = RectTransformUtility.WorldToScreenPoint(
+                    targetCamera,
+                    worldCorner);
+                if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                        overlayParent,
+                        screenCorner,
+                        overlayCamera,
+                        out Vector2 localCorner))
+                {
+                    continue;
+                }
+
+                min = Vector2.Min(min, localCorner);
+                max = Vector2.Max(max, localCorner);
+            }
+
+            if (float.IsInfinity(min.x) || float.IsInfinity(max.x))
+                return;
+
+            float diameter = Mathf.Max(max.x - min.x, max.y - min.y) +
+                             ringPadding * 2f;
+            ringTransform.sizeDelta = Vector2.one * Mathf.Max(16f, diameter);
+        }
+
+        private void EnsureVisualActive()
+        {
+            if (isVisualActive)
+                return;
+
+            indicatorRoot.gameObject.SetActive(true);
+            isVisualActive = true;
+            PlayFlowSequence();
+        }
+
+        private void StopVisual()
+        {
+            KillFlowSequence();
+            isVisualActive = false;
+
+            if (indicatorRoot != null)
+                indicatorRoot.gameObject.SetActive(false);
+        }
+
+        private void PlayFlowSequence()
+        {
+            KillFlowSequence();
+
+            indicatorCanvasGroup.alpha = 0f;
+            handTransform.anchoredPosition = approachOffset;
+            handTransform.localScale = Vector3.one;
+            ringTransform.localScale = Vector3.one * ringStartScale;
+
+            flowSequence = DOTween.Sequence()
+                .SetUpdate(true)
+                .SetLink(indicatorRoot.gameObject, LinkBehaviour.KillOnDestroy)
+                .Append(indicatorCanvasGroup.DOFade(1f, fadeInDuration))
+                .Join(ringTransform.DOScale(1f, fadeInDuration))
+                .Append(handTransform
+                    .DOAnchorPos(Vector2.zero, approachDuration)
+                    .SetEase(approachEase))
+                .Append(handTransform
+                    .DOScale(handPressScale, pressDuration)
+                    .SetEase(Ease.InQuad))
+                .Join(ringTransform
+                    .DOScale(ringClickScale, pressDuration)
+                    .SetEase(Ease.OutQuad))
+                .Append(indicatorCanvasGroup.DOFade(0f, fadeOutDuration))
+                .AppendInterval(loopInterval)
+                .SetLoops(-1, LoopType.Restart);
+        }
+
+        private void KillFlowSequence()
+        {
+            if (flowSequence != null && flowSequence.IsActive())
+                flowSequence.Kill();
+
+            flowSequence = null;
+        }
+    }
+}

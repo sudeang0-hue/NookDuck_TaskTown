@@ -204,6 +204,25 @@ namespace TaskTown.EditorTests.Tutorial
             }
         }
 
+        [TestCase(TutorialStep.CollapseAndExpandTown)]
+        [TestCase(TutorialStep.DrawAnimal)]
+        [TestCase(TutorialStep.DrawTool)]
+        [TestCase(TutorialStep.PlaceAnimalInVillage)]
+        public void ConfigAsset_행동강조단계는_Scale과Pointer를독립조합한다(
+            TutorialStep step)
+        {
+            TutorialConfigSO config = LoadConfig();
+
+            Assert.IsTrue(config.TryGetStepContent(step, out TutorialStepContent content));
+            Assert.IsTrue(content.UsesHighlightEffect(
+                TutorialHighlightEffect.ScalePulse));
+            Assert.IsTrue(content.UsesHighlightEffect(
+                TutorialHighlightEffect.Pointer));
+            Assert.AreEqual(
+                TutorialPointerPositionMode.FollowHighlightedButton,
+                content.PointerPositionMode);
+        }
+
         private static TutorialConfigSO LoadConfig()
         {
             TutorialConfigSO config = AssetDatabase.LoadAssetAtPath<TutorialConfigSO>(

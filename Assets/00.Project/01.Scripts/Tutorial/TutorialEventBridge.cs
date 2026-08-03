@@ -4,6 +4,7 @@ using TaskTown.Gacha;
 using TaskTown.KDH;
 using UI;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace TaskTown.Tutorial
 {
@@ -30,6 +31,7 @@ namespace TaskTown.Tutorial
 
         [Header("튜토리얼 버튼 강조")]
         [SerializeField] private TutorialButtonHighlighter buttonHighlighter;
+        [SerializeField] private TutorialHighlightCoordinator highlightCoordinator;
         [SerializeField] private UIController_Menu menuController;
         [SerializeField] private UIController_Gacha gachaController;
         [SerializeField] private UIController_VillageAnimalSet villageAnimalSetController;
@@ -146,6 +148,8 @@ namespace TaskTown.Tutorial
                 gameMasterManager = FindAnyObjectByType<GameMasterManager>();
             if (buttonHighlighter == null)
                 TryGetComponent(out buttonHighlighter);
+            if (highlightCoordinator == null)
+                TryGetComponent(out highlightCoordinator);
             if (menuController == null)
                 menuController = FindAnyObjectByType<UIController_Menu>();
             if (gachaController == null)
@@ -354,7 +358,7 @@ namespace TaskTown.Tutorial
 
         private void UnsubscribeCurrentStep()
         {
-            buttonHighlighter?.Clear();
+            ClearHighlights();
 
             if (!subscribedStep.HasValue)
                 return;
@@ -523,7 +527,8 @@ namespace TaskTown.Tutorial
 
         private void RefreshButtonHighlight()
         {
-            if (buttonHighlighter == null || tutorialManager == null)
+            if (tutorialManager == null ||
+                (highlightCoordinator == null && buttonHighlighter == null))
                 return;
 
             switch (tutorialManager.CurrentStep)
@@ -531,44 +536,107 @@ namespace TaskTown.Tutorial
                 case TutorialStep.CollapseAndExpandTown:
                     if (!tutorialManager.IsTownWindowGuideCompleted)
                     {
-                        buttonHighlighter.Clear();
+                        ClearHighlights();
                     }
                     else if (!tutorialManager.IsTownWindowMinimized)
                     {
-                        buttonHighlighter.Highlight(gameMasterManager?.btnMinimize);
+                        Button minimizeButton = gameMasterManager?.btnMinimize;
+                        ApplyHighlight(
+                            TutorialStep.CollapseAndExpandTown,
+                            new[] { minimizeButton },
+                            new[] { minimizeButton });
                     }
                     else if (!tutorialManager.IsTownWindowExpanded)
                     {
-                        buttonHighlighter.Highlight(gameMasterManager?.btnMaximize);
+                        Button maximizeButton = gameMasterManager?.btnMaximize;
+                        ApplyHighlight(
+                            TutorialStep.CollapseAndExpandTown,
+                            new[] { maximizeButton },
+                            new[] { maximizeButton });
                     }
                     else
                     {
-                        buttonHighlighter.Clear();
+                        ClearHighlights();
                     }
                     break;
 
                 case TutorialStep.DrawAnimal:
-                    buttonHighlighter.Highlight(
-                        menuController?.GachaButton,
-                        gachaController?.AnimalOnePickButton);
+                    ApplyHighlight(
+                        TutorialStep.DrawAnimal,
+                        new[]
+                        {
+                            menuController?.GachaButton,
+                            gachaController?.AnimalOnePickButton
+                        },
+                        new[]
+                        {
+                            gachaController?.AnimalOnePickButton,
+                            menuController?.GachaButton
+                        });
                     break;
 
                 case TutorialStep.DrawTool:
-                    buttonHighlighter.Highlight(
-                        menuController?.GachaButton,
-                        gachaController?.ToolOnePickButton);
+                    ApplyHighlight(
+                        TutorialStep.DrawTool,
+                        new[]
+                        {
+                            menuController?.GachaButton,
+                            gachaController?.ToolOnePickButton
+                        },
+                        new[]
+                        {
+                            gachaController?.ToolOnePickButton,
+                            menuController?.GachaButton
+                        });
                     break;
 
                 case TutorialStep.PlaceAnimalInVillage:
-                    buttonHighlighter.Highlight(
-                        villageAnimalSetController?.EditSetAnimalButton,
-                        villageAnimalSetController?.ConfirmSetAnimalButton);
+                    ApplyHighlight(
+                        TutorialStep.PlaceAnimalInVillage,
+                        new[]
+                        {
+                            villageAnimalSetController?.EditSetAnimalButton,
+                            villageAnimalSetController?.ConfirmSetAnimalButton
+                        },
+                        new[]
+                        {
+                            villageAnimalSetController?.ConfirmSetAnimalButton,
+                            villageAnimalSetController?.EditSetAnimalButton
+                        });
                     break;
 
                 default:
-                    buttonHighlighter.Clear();
+                    ApplyHighlight(
+                        tutorialManager.CurrentStep,
+                        System.Array.Empty<Button>(),
+                        System.Array.Empty<Button>());
                     break;
             }
+        }
+
+        private void ApplyHighlight(
+            TutorialStep step,
+            Button[] scaleTargets,
+            Button[] pointerTargets)
+        {
+            if (highlightCoordinator != null)
+            {
+                highlightCoordinator.Highlight(step, scaleTargets, pointerTargets);
+                return;
+            }
+
+            buttonHighlighter?.Highlight(scaleTargets);
+        }
+
+        private void ClearHighlights()
+        {
+            if (highlightCoordinator != null)
+            {
+                highlightCoordinator.ClearAllHighlights();
+                return;
+            }
+
+            buttonHighlighter?.Clear();
         }
 
         private void HandleVillageInfoOpened()
