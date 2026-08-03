@@ -6,6 +6,7 @@
 
 using System.Collections.Generic;
 using TaskTown.KDH;
+using TMPro;
 using UnityEngine;
 
 namespace UI
@@ -17,6 +18,17 @@ namespace UI
 
         [SerializeField] private SlotUI_AnimalInv animalSlotPrefab;
         [SerializeField] private Transform animalSlotContentRoot;
+
+        [SerializeField] private TMP_Text totalCountText;
+        [SerializeField] private TMP_Text toolSetText;
+        [SerializeField] private TMP_Text villageSetText;
+
+        private int totalconunt;
+        private int currentToolsetconunt;
+        private int maxToolsetconunt;
+        private int currentVillageSetconunt;
+        private int maxVillageSetconunt;
+
 
         [Header("동물 상세 페이지 (씬의 Animal_Inv_Page)")]
         [SerializeField] private UIController_AnimalInvPage animalInvPageController;
@@ -181,7 +193,7 @@ namespace UI
         }
 
         /// <summary>
-        /// 도구 장착/마을 배치 변경 시 슬롯 상태 아이콘만 갱신합니다.
+        /// 도구 장착/마을 배치 변경 시 슬롯 상태 아이콘과 상단 카운트 텍스트를 갱신합니다.
         /// </summary>
         private void RefreshAllStatusIcons()
         {
@@ -193,6 +205,84 @@ namespace UI
                 if (pair.Value != null)
                     pair.Value.RefreshStatusIcons();
             }
+
+            RefreshCountTexts();
+        }
+
+        /// <summary>
+        /// 인벤 보유 수 / 도구 장착 수·상한 / 마을 배치 수·상한 텍스트를 갱신합니다.
+        /// </summary>
+        private void RefreshCountTexts()
+        {
+            totalconunt = CountOwnedAnimals();
+
+            ResolveToolInventory();
+            currentToolsetconunt = toolInventory != null ? toolInventory.GetActiveToolCount() : 0;
+            maxToolsetconunt = toolInventory != null ? toolInventory.GetToolCapacity() : 0;
+
+            ResolveVillageAnimalSet();
+            currentVillageSetconunt = CountConfirmedVillageSet();
+            maxVillageSetconunt = villageAnimalSet != null ? villageAnimalSet.GetUnlockedSlotCount() : 0;
+
+            if (totalCountText != null)
+                totalCountText.text = "입주민: " + totalconunt.ToString();
+
+            if (toolSetText != null)
+                toolSetText.text = "도구를 사용중인 주민: " + currentToolsetconunt + "/" + maxToolsetconunt;
+
+            if (villageSetText != null)
+                villageSetText.text = "마을에 배치된 주민: " + currentVillageSetconunt + "/" + maxVillageSetconunt;
+        }
+
+        /// <summary>
+        /// 인벤토리에 보유 중인 동물 종류(슬롯) 수를 반환합니다.
+        /// </summary>
+        private int CountOwnedAnimals()
+        {
+            if (animalInventory == null)
+                return 0;
+
+            IReadOnlyList<SlotData_Animal> animalSlots = animalInventory.AnimalSlotsList;
+            if (animalSlots == null)
+                return 0;
+
+            int count = 0;
+            for (int i = 0; i < animalSlots.Count; i++)
+            {
+                SlotData_Animal slotData = animalSlots[i];
+                if (slotData == null || string.IsNullOrEmpty(slotData.AnimalId))
+                    continue;
+
+                count++;
+            }
+
+            return count;
+        }
+
+        /// <summary>
+        /// 확정 배치된 동물 수를 반환합니다. (Edit 드래프트는 제외)
+        /// </summary>
+        private int CountConfirmedVillageSet()
+        {
+            if (villageAnimalSet == null || animalInventory == null)
+                return 0;
+
+            IReadOnlyList<SlotData_Animal> animalSlots = animalInventory.AnimalSlotsList;
+            if (animalSlots == null)
+                return 0;
+
+            int count = 0;
+            for (int i = 0; i < animalSlots.Count; i++)
+            {
+                SlotData_Animal slotData = animalSlots[i];
+                if (slotData == null || string.IsNullOrEmpty(slotData.AnimalId))
+                    continue;
+
+                if (villageAnimalSet.IsConfirmedPlaced(slotData.AnimalId))
+                    count++;
+            }
+
+            return count;
         }
 
         /// <summary>
@@ -233,6 +323,7 @@ namespace UI
             }
 
             RemoveStaleSlots(activeIds);
+            RefreshCountTexts();
         }
 
         public void RemoveStaleSlots(HashSet<string> activeIds)

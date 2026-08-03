@@ -1,6 +1,6 @@
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.Events;
+using UnityEngine.UI;
 
 namespace UI
 {
@@ -9,8 +9,7 @@ namespace UI
         [SerializeField] private Button[] openVillageUpgradeButtons;
         [SerializeField] private Button[] openAnimalSetButtons;
 
-
-        [Header("Tab Panels")]
+        [Header("Tab Panels (비어 있으면 MenuType+TabType으로 자동 보완)")]
         [SerializeField] private UIPanelWindow villageUpgradePanel;
         [SerializeField] private UIPanelWindow animalSetPanel;
 
@@ -33,29 +32,10 @@ namespace UI
             menuUI?.CloseOtherExclusiveMenus(GameMenuType.Village);
         }
 
-        /// <summary>
-        /// Inspector 참조가 비어 있을 때 GameMenuType.Village 패널을 이름으로 보완합니다.
-        /// </summary>
         private void EnsurePanelsResolved()
         {
-            if (villageUpgradePanel != null && animalSetPanel != null)
-                return;
-
-            UIPanelWindow[] windows = FindObjectsByType<UIPanelWindow>(
-                FindObjectsInactive.Include, FindObjectsSortMode.None);
-
-            for (int i = 0; i < windows.Length; i++)
-            {
-                UIPanelWindow window = windows[i];
-                if (window == null || window.MenuType != GameMenuType.Village)
-                    continue;
-
-                string key = window.name.ToLowerInvariant();
-                if (villageUpgradePanel == null && key.Contains("upgrade"))
-                    villageUpgradePanel = window;
-                else if (animalSetPanel == null && (key.Contains("animalset") || key.Contains("animal_set")))
-                    animalSetPanel = window;
-            }
+            UIPanelTabUtility.ResolveTabPanel(ref villageUpgradePanel, GameMenuType.Village, GameTabType.VillageUpgradeTab);
+            UIPanelTabUtility.ResolveTabPanel(ref animalSetPanel, GameMenuType.Village, GameTabType.AnimalSetTab);
         }
 
         private void OnEnable()
@@ -84,17 +64,19 @@ namespace UI
         public void OpenVillageUpgradeTab()
         {
             lastOpenedTab = GameTabType.VillageUpgradeTab;
-            EnsurePanelsResolved();
             RequestExclusiveMenu();
 
-            animalSetPanel?.ClosePanel();
-            villageUpgradePanel?.OpenPanelDefaultPosition();
+            UIPanelWindow opened = UIPanelTabUtility.OpenTab(GameMenuType.Village, GameTabType.VillageUpgradeTab);
+            EnsurePanelsResolved();
 
             // 오픈 시 세이브 반영된 요소 업그레이드/마을 레벨을 UI에 다시 그림
             VillageUpgradeUI_Manager upgradeManager =
-                villageUpgradePanel != null
-                    ? villageUpgradePanel.GetComponentInParent<VillageUpgradeUI_Manager>()
+                opened != null
+                    ? opened.GetComponentInParent<VillageUpgradeUI_Manager>()
                     : null;
+
+            if (upgradeManager == null && villageUpgradePanel != null)
+                upgradeManager = villageUpgradePanel.GetComponentInParent<VillageUpgradeUI_Manager>();
 
             if (upgradeManager == null)
                 upgradeManager = FindFirstObjectByType<VillageUpgradeUI_Manager>();
@@ -108,16 +90,11 @@ namespace UI
         public void OpenAnimalSetTab()
         {
             lastOpenedTab = GameTabType.AnimalSetTab;
-            EnsurePanelsResolved();
             RequestExclusiveMenu();
-
-            villageUpgradePanel?.ClosePanel();
-            animalSetPanel?.OpenPanelDefaultPosition();
+            UIPanelTabUtility.OpenTab(GameMenuType.Village, GameTabType.AnimalSetTab);
+            EnsurePanelsResolved();
         }
 
-        /// <summary>
-        /// 마지막으로 열었던 탭 열기
-        /// </summary>
         private void OpenLastTab()
         {
             switch (lastOpenedTab)
@@ -146,29 +123,14 @@ namespace UI
             OpenLastTab();
         }
 
-        /// <summary>
-        /// 열려있는 탭이 있는지 판단
-        /// </summary>
-        public bool IsAnyTabOpen
-        {
-            get
-            {
-                bool isVillageUpgradeOpen = villageUpgradePanel != null && villageUpgradePanel.gameObject.activeSelf;
-
-                bool isAnimalSetOpen = animalSetPanel != null && animalSetPanel.gameObject.activeSelf;
-
-                return isVillageUpgradeOpen || isAnimalSetOpen;
-            }
-        }
+        public bool IsAnyTabOpen => UIPanelTabUtility.IsAnyTabOpen(GameMenuType.Village);
 
         /// <summary>
         /// 모든 탭 닫기
         /// </summary>
         public void CloseAllTabs()
         {
-            EnsurePanelsResolved();
-            villageUpgradePanel?.ClosePanel();
-            animalSetPanel?.ClosePanel();
+            UIPanelTabUtility.CloseAllTabs(GameMenuType.Village);
         }
 
         private void RegisterButtonListeners(Button[] buttons, UnityAction action)
@@ -194,9 +156,5 @@ namespace UI
                     button.onClick.RemoveListener(action);
             }
         }
-
-
     }
-
-
 }

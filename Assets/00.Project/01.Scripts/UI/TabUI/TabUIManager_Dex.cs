@@ -14,7 +14,7 @@ namespace UI
         [SerializeField] private Button[] openAnimalDexButtons;
         [SerializeField] private Button[] openToolDexButtons;
 
-        [Header("Tab Panels")]
+        [Header("Tab Panels (비어 있으면 MenuType+TabType으로 자동 보완)")]
         [SerializeField] private UIPanelWindow AnimalDexPanel;
         [SerializeField] private UIPanelWindow ToolDexPanel;
 
@@ -46,29 +46,10 @@ namespace UI
             menuUI?.CloseOtherExclusiveMenus(GameMenuType.Dex);
         }
 
-        /// <summary>
-        /// Inspector 참조가 비어 있을 때 GameMenuType.Dex 패널을 이름으로 보완합니다.
-        /// </summary>
         private void EnsurePanelsResolved()
         {
-            if (AnimalDexPanel != null && ToolDexPanel != null)
-                return;
-
-            UIPanelWindow[] windows = FindObjectsByType<UIPanelWindow>(
-                FindObjectsInactive.Include, FindObjectsSortMode.None);
-
-            for (int i = 0; i < windows.Length; i++)
-            {
-                UIPanelWindow window = windows[i];
-                if (window == null || window.MenuType != GameMenuType.Dex)
-                    continue;
-
-                string key = window.name.ToLowerInvariant();
-                if (AnimalDexPanel == null && key.Contains("animal") && key.Contains("dex"))
-                    AnimalDexPanel = window;
-                else if (ToolDexPanel == null && key.Contains("tool") && key.Contains("dex"))
-                    ToolDexPanel = window;
-            }
+            UIPanelTabUtility.ResolveTabPanel(ref AnimalDexPanel, GameMenuType.Dex, GameTabType.AnimalDexTab);
+            UIPanelTabUtility.ResolveTabPanel(ref ToolDexPanel, GameMenuType.Dex, GameTabType.ToolDexTab);
         }
 
         private void OnEnable()
@@ -97,15 +78,13 @@ namespace UI
         public void OpenAnimalDexTab()
         {
             lastOpenedTab = GameTabType.AnimalDexTab;
-            EnsurePanelsResolved();
             RequestExclusiveMenu();
 
-            ToolDexPanel?.ClosePanel();
             // Dex에는 NotifyPanelClosed가 없어, 상세 페이지 정리는 NotifyPanelOpened로 처리
             toolDexUI?.NotifyPanelOpened();
-
-            AnimalDexPanel?.OpenPanelDefaultPosition();
+            UIPanelTabUtility.OpenTab(GameMenuType.Dex, GameTabType.AnimalDexTab);
             animalDexUI?.NotifyPanelOpened();
+            EnsurePanelsResolved();
         }
 
         /// <summary>
@@ -114,19 +93,14 @@ namespace UI
         public void OpenToolDexTab()
         {
             lastOpenedTab = GameTabType.ToolDexTab;
-            EnsurePanelsResolved();
             RequestExclusiveMenu();
 
-            AnimalDexPanel?.ClosePanel();
             animalDexUI?.NotifyPanelOpened();
-
-            ToolDexPanel?.OpenPanelDefaultPosition();
+            UIPanelTabUtility.OpenTab(GameMenuType.Dex, GameTabType.ToolDexTab);
             toolDexUI?.NotifyPanelOpened();
+            EnsurePanelsResolved();
         }
 
-        /// <summary>
-        /// 마지막으로 열었던 탭 다시 열기
-        /// </summary>
         private void OpenLastTab()
         {
             switch (lastOpenedTab)
@@ -155,31 +129,15 @@ namespace UI
             OpenLastTab();
         }
 
-        /// <summary>
-        /// 패널 활성화 상태를 확인하는 메서드
-        /// </summary>
-        public bool IsAnyTabOpen
-        {
-            get
-            {
-                bool isAnimalDexOpen = AnimalDexPanel != null && AnimalDexPanel.gameObject.activeSelf;
-                bool isToolDexOpen = ToolDexPanel != null && ToolDexPanel.gameObject.activeSelf;
-
-                return isAnimalDexOpen || isToolDexOpen;
-            }
-        }
+        public bool IsAnyTabOpen => UIPanelTabUtility.IsAnyTabOpen(GameMenuType.Dex);
 
         /// <summary>
         /// 탭 닫기
         /// </summary>
         public void CloseAllTabs()
         {
-            EnsurePanelsResolved();
-
-            AnimalDexPanel?.ClosePanel();
+            UIPanelTabUtility.CloseAllTabs(GameMenuType.Dex);
             animalDexUI?.NotifyPanelOpened();
-
-            ToolDexPanel?.ClosePanel();
             toolDexUI?.NotifyPanelOpened();
         }
 
