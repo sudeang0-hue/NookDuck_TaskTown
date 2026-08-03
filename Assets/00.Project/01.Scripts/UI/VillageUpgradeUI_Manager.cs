@@ -56,6 +56,12 @@ namespace UI
         public bool IsVillageLevelMaxed =>
             System != null && System.IsVillageLevelMaxed;
 
+        //-----------------------26.08.03.KDH------------------------------
+        // 필드 추가
+        [Header("엔딩 선택")]
+        [SerializeField] private VillageCompletionPopup completionPopup;
+        //-----------------------------------------------------------------
+
         private void Awake()
         {
             if (uiController == null)
@@ -311,9 +317,23 @@ namespace UI
                 return false;
 
             bool ok = system.TryVillageLevelUp();
-            if (ok)
-                RefreshAllUI();
-            return ok;
+            //-----------------------26.08.03 KDH---------------------------
+            ///Before
+            //if (ok)
+            //    RefreshAllUI();
+            //return ok;
+            ///After
+            if (!ok)
+                return false;
+
+            RefreshAllUI();
+
+            // 방금 상한에 도달했고, 아직 엔드리스가 아니면 선택지 제공
+            if (system.IsVillageLevelMaxed && !system.IsEndlessMode)
+                OpenCompletionChoicePopup();
+
+            return true;
+            //------------------------------------------------------------
         }
 
         /// <summary>현재 마을 레벨 기준 레벨업 필요 코인.</summary>
@@ -621,6 +641,24 @@ namespace UI
 
             RefreshAllUI();
             return true;
+        }
+
+        //-------------------------------26.08.03 KDH-----------------------------------
+        private void OpenCompletionChoicePopup()
+        {
+            if (completionPopup == null)
+            {
+                Debug.LogWarning("[VillageUpgradeUI_Manager] VillageCompletionPopup이 연결되지 않았습니다.");
+                return;
+            }
+            completionPopup.Open(
+                resetAction: () => TaskTown.GameResetService.ResetProgressAndGoToTeamLogo(),
+                endlessAction: () =>
+                {
+                    EnableEndlessMode();
+                    if (TaskTown.KDH.SaveManager.Instance != null)
+                        TaskTown.KDH.SaveManager.Instance.SaveGame();
+                });
         }
     }
 }
