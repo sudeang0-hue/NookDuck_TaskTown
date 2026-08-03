@@ -20,6 +20,10 @@ public class UIController_Coin : MonoBehaviour
     private bool isSubscribed;
     private Coroutine subscribeRoutine;
 
+    // [ 2026.08.03 - Choi - 튜토리얼 수동 코인 피드백 연동 ]
+    // 튜토리얼 Overlay가 전체 코인 텍스트의 위치와 Scale만 참조할 수 있도록 읽기 전용으로 공개합니다.
+    public TMP_Text AllCoinText => allCoinText;
+
     // 직전에 표시한 초당 생산량. 변경 시에만 autoCoinText를 갱신한다.
     private float lastDisplayedCoinPerSecond = float.NaN;
 

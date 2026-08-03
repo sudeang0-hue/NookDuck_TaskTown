@@ -39,6 +39,7 @@ namespace TaskTown.EditorTests.Save
                     dialogueIndex = -1,
                     manualEarnedCoin = -100,
                     autoProductionEarnedCoin = -50,
+                    progressFlags = -1,
                     rewardFlags = -1
                 }
             };
@@ -52,6 +53,7 @@ namespace TaskTown.EditorTests.Save
             Assert.AreEqual(0, data.tutorial.dialogueIndex);
             Assert.AreEqual(0L, data.tutorial.manualEarnedCoin);
             Assert.AreEqual(0L, data.tutorial.autoProductionEarnedCoin);
+            Assert.AreEqual(0, data.tutorial.progressFlags);
             Assert.AreEqual(0, data.tutorial.rewardFlags);
         }
 
@@ -91,6 +93,7 @@ namespace TaskTown.EditorTests.Save
         {
             TutorialSaveData progress = new TutorialSaveData
             {
+                version = 3,
                 currentStep = TutorialStep.CollapseAndExpandTown,
                 dialogueIndex = 3,
                 rewardFlags =
@@ -108,6 +111,7 @@ namespace TaskTown.EditorTests.Save
         {
             TutorialSaveData progress = new TutorialSaveData
             {
+                version = 3,
                 currentStep = TutorialStep.DrawAnimal,
                 dialogueIndex = 2,
                 rewardFlags =
@@ -116,8 +120,63 @@ namespace TaskTown.EditorTests.Save
 
             progress.Normalize();
 
-            Assert.AreEqual(TutorialStep.DrawTool, progress.currentStep);
+            Assert.AreEqual(TutorialStep.AnimalDrawExplanation, progress.currentStep);
             Assert.AreEqual(0, progress.dialogueIndex);
+        }
+
+        [Test]
+        public void Normalize_버전3혼합플래그_진행플래그와일회성보상으로분리한다()
+        {
+            TutorialSaveData progress = new TutorialSaveData
+            {
+                version = 3,
+                currentStep = TutorialStep.Completed,
+                rewardFlags =
+                    (int)TutorialProgressFlags.TownWindowMinimized |
+                    (int)TutorialProgressFlags.TownWindowRewardGranted
+            };
+
+            progress.Normalize();
+
+            Assert.AreEqual(TutorialSaveData.CurrentVersion, progress.version);
+            Assert.AreEqual(
+                (int)TutorialProgressFlags.TownWindowMinimized,
+                progress.progressFlags);
+            Assert.AreEqual(
+                (int)TutorialProgressFlags.TownWindowRewardGranted,
+                progress.rewardFlags);
+        }
+
+        [Test]
+        public void CreateReplayProgress_현재진행은초기화하고_일회성보상은보존한다()
+        {
+            TutorialSaveData completed = new TutorialSaveData
+            {
+                currentStep = TutorialStep.Completed,
+                dialogueIndex = 4,
+                manualEarnedCoin = 125L,
+                autoProductionEarnedCoin = 60L,
+                progressFlags =
+                    (int)TutorialProgressFlags.TownWindowGuideCompleted |
+                    (int)TutorialProgressFlags.TownWindowMinimized |
+                    (int)TutorialProgressFlags.TownWindowExpanded,
+                rewardFlags =
+                    (int)TutorialProgressFlags.TownWindowRewardGranted |
+                    (int)TutorialProgressFlags.ToolDrawCoinRewardGranted
+            };
+
+            TutorialSaveData replay = completed.CreateReplayProgress();
+
+            Assert.AreEqual(TutorialStep.IntroDialogue, replay.currentStep);
+            Assert.AreEqual(0, replay.dialogueIndex);
+            Assert.AreEqual(0L, replay.manualEarnedCoin);
+            Assert.AreEqual(0L, replay.autoProductionEarnedCoin);
+            Assert.AreEqual(0, replay.progressFlags);
+            Assert.AreEqual(completed.rewardFlags, replay.rewardFlags);
+            Assert.IsTrue(replay.HasProgressFlag(
+                TutorialProgressFlags.TownWindowRewardGranted));
+            Assert.IsTrue(replay.HasProgressFlag(
+                TutorialProgressFlags.ToolDrawCoinRewardGranted));
         }
     }
 }

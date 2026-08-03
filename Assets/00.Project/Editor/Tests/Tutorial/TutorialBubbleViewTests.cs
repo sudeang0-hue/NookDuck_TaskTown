@@ -92,6 +92,7 @@ namespace TaskTown.EditorTests.Tutorial
                 "TutorialCompletedProgressTest",
                 typeof(CanvasGroup),
                 typeof(TutorialBubbleView),
+                typeof(TutorialManager),
                 typeof(TutorialBubbleController));
             GameObject progressObject = new(
                 "ProgressText",
@@ -102,6 +103,7 @@ namespace TaskTown.EditorTests.Tutorial
             try
             {
                 TutorialBubbleView view = root.GetComponent<TutorialBubbleView>();
+                TutorialManager manager = root.GetComponent<TutorialManager>();
                 TutorialBubbleController controller =
                     root.GetComponent<TutorialBubbleController>();
                 TMP_Text progressText = progressObject.GetComponent<TMP_Text>();
@@ -119,9 +121,19 @@ namespace TaskTown.EditorTests.Tutorial
                 viewSerialized.ApplyModifiedPropertiesWithoutUndo();
 
                 SerializedObject controllerSerialized = new(controller);
+                controllerSerialized.FindProperty("tutorialManager").objectReferenceValue =
+                    manager;
                 controllerSerialized.FindProperty("config").objectReferenceValue = config;
                 controllerSerialized.FindProperty("view").objectReferenceValue = view;
                 controllerSerialized.ApplyModifiedPropertiesWithoutUndo();
+
+                SetPrivateField(
+                    manager,
+                    "stateMachine",
+                    new TutorialStateMachine(new TutorialSaveData
+                    {
+                        currentStep = nextStep
+                    }));
 
                 SetPrivateField(controller, "presentedStep", presentedStep);
                 SetPrivateField(controller, "hasPresentedStep", true);
@@ -143,6 +155,67 @@ namespace TaskTown.EditorTests.Tutorial
                 Assert.AreEqual(expectedProgress, progressText.text);
                 Assert.IsTrue(progressText.gameObject.activeSelf);
                 Assert.IsTrue(view.IsVisible);
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void ProgressChanged_축소중수동코인목표를달성해도_완료UI를표시하지않는다()
+        {
+            GameObject root = new(
+                "TutorialPausedCompletedProgressTest",
+                typeof(CanvasGroup),
+                typeof(TutorialBubbleView),
+                typeof(TutorialManager),
+                typeof(TutorialBubbleController));
+
+            try
+            {
+                TutorialBubbleView view = root.GetComponent<TutorialBubbleView>();
+                TutorialManager manager = root.GetComponent<TutorialManager>();
+                TutorialBubbleController controller =
+                    root.GetComponent<TutorialBubbleController>();
+                TutorialConfigSO config =
+                    AssetDatabase.LoadAssetAtPath<TutorialConfigSO>(
+                        "Assets/00.Project/03.ScriptableObjects/Tutorial/" +
+                        "TutorialConfig.asset");
+                Assert.IsNotNull(config);
+
+                SerializedObject viewSerialized = new(view);
+                viewSerialized.FindProperty("canvasGroup").objectReferenceValue =
+                    root.GetComponent<CanvasGroup>();
+                viewSerialized.ApplyModifiedPropertiesWithoutUndo();
+
+                SerializedObject controllerSerialized = new(controller);
+                controllerSerialized.FindProperty("tutorialManager").objectReferenceValue =
+                    manager;
+                controllerSerialized.FindProperty("config").objectReferenceValue = config;
+                controllerSerialized.FindProperty("view").objectReferenceValue = view;
+                controllerSerialized.ApplyModifiedPropertiesWithoutUndo();
+
+                SetPrivateField(
+                    manager,
+                    "stateMachine",
+                    new TutorialStateMachine(new TutorialSaveData
+                    {
+                        currentStep = TutorialStep.CollapseAndExpandTown,
+                        manualEarnedCoin = TutorialStateMachine.ManualCoinTarget
+                    }));
+                manager.SetPaused(true);
+                SetPrivateField(controller, "presentedStep", TutorialStep.EarnManualCoin);
+                SetPrivateField(controller, "hasPresentedStep", true);
+                view.SetVisible(true);
+
+                InvokeProgressChanged(controller, new TutorialSaveData
+                {
+                    currentStep = TutorialStep.CollapseAndExpandTown,
+                    manualEarnedCoin = TutorialStateMachine.ManualCoinTarget
+                });
+
+                Assert.IsFalse(view.IsVisible);
             }
             finally
             {
@@ -257,15 +330,15 @@ namespace TaskTown.EditorTests.Tutorial
         }
 
         private static void SetPrivateField(
-            TutorialBubbleController controller,
+            object target,
             string fieldName,
             object value)
         {
-            FieldInfo field = typeof(TutorialBubbleController).GetField(
+            FieldInfo field = target.GetType().GetField(
                 fieldName,
                 BindingFlags.Instance | BindingFlags.NonPublic);
             Assert.IsNotNull(field);
-            field.SetValue(controller, value);
+            field.SetValue(target, value);
         }
     }
 }

@@ -71,6 +71,57 @@ namespace TaskTown.EditorTests.Tutorial
         }
 
         [Test]
+        public void SetPaused_수동코인단계에서는_축소중획득량을추적한다()
+        {
+            TutorialStateMachine machine = CreateMachine(TutorialStep.EarnManualCoin);
+            machine.SetPaused(true);
+
+            Assert.IsTrue(machine.TryHandleSignal(
+                TutorialSignalType.ManualCoinEarned,
+                40L));
+            Assert.AreEqual(40L, machine.ManualEarnedCoin);
+            Assert.AreEqual(TutorialStep.EarnManualCoin, machine.CurrentStep);
+
+            Assert.IsTrue(machine.TryHandleSignal(
+                TutorialSignalType.ManualCoinEarned,
+                60L));
+            Assert.AreEqual(100L, machine.ManualEarnedCoin);
+            Assert.AreEqual(TutorialStep.CollapseAndExpandTown, machine.CurrentStep);
+        }
+
+        [Test]
+        public void SetPaused_자동생산단계에서는_축소중획득량을추적한다()
+        {
+            TutorialStateMachine machine = CreateMachine(
+                TutorialStep.ConfirmAutoProduction);
+            machine.SetPaused(true);
+
+            Assert.IsTrue(machine.TryHandleSignal(
+                TutorialSignalType.AutoProductionConfirmed,
+                49L));
+            Assert.AreEqual(49L, machine.AutoProductionEarnedCoin);
+            Assert.AreEqual(TutorialStep.ConfirmAutoProduction, machine.CurrentStep);
+
+            Assert.IsTrue(machine.TryHandleSignal(
+                TutorialSignalType.AutoProductionConfirmed,
+                1L));
+            Assert.AreEqual(50L, machine.AutoProductionEarnedCoin);
+            Assert.AreEqual(TutorialStep.VillagePlacementExplanation, machine.CurrentStep);
+        }
+
+        [Test]
+        public void SetPaused_코인외진행신호는_계속차단한다()
+        {
+            TutorialStateMachine machine = CreateMachine(TutorialStep.DrawAnimal);
+            machine.SetPaused(true);
+
+            bool handled = machine.TryHandleSignal(TutorialSignalType.AnimalDrawn);
+
+            Assert.IsFalse(handled);
+            Assert.AreEqual(TutorialStep.DrawAnimal, machine.CurrentStep);
+        }
+
+        [Test]
         public void TrySetDialogueIndex_대화단계에서만저장하고_단계전환시초기화한다()
         {
             TutorialStateMachine machine = CreateMachine(TutorialStep.IntroDialogue);
@@ -130,7 +181,7 @@ namespace TaskTown.EditorTests.Tutorial
             TutorialSaveData progress = new TutorialSaveData
             {
                 currentStep = TutorialStep.CollapseAndExpandTown,
-                rewardFlags =
+                progressFlags =
                     (int)TutorialProgressFlags.TownWindowGuideCompleted |
                     (int)TutorialProgressFlags.TownWindowMinimized |
                     (int)TutorialProgressFlags.TownWindowExpanded
@@ -250,7 +301,7 @@ namespace TaskTown.EditorTests.Tutorial
             {
                 currentStep = TutorialStep.CollapseAndExpandTown,
                 manualEarnedCoin = 75L,
-                rewardFlags =
+                progressFlags =
                     (int)TutorialProgressFlags.TownWindowGuideCompleted |
                     (int)TutorialProgressFlags.TownWindowMinimized |
                     (int)TutorialProgressFlags.TownWindowExpanded
@@ -292,6 +343,34 @@ namespace TaskTown.EditorTests.Tutorial
             Assert.AreEqual(TutorialSaveData.CurrentVersion, progress.version);
             Assert.AreEqual(TutorialStep.AnimalDrawExplanation, progress.currentStep);
             Assert.AreEqual(0, progress.dialogueIndex);
+        }
+
+        [Test]
+        public void 다시보기_이미받은보상단계는_보상플래그를유지하고정상진행한다()
+        {
+            TutorialStateMachine machine = new(new TutorialSaveData
+            {
+                currentStep = TutorialStep.CollapseAndExpandTown,
+                progressFlags =
+                    (int)TutorialProgressFlags.TownWindowGuideCompleted |
+                    (int)TutorialProgressFlags.TownWindowMinimized |
+                    (int)TutorialProgressFlags.TownWindowExpanded,
+                rewardFlags =
+                    (int)TutorialProgressFlags.TownWindowRewardGranted |
+                    (int)TutorialProgressFlags.ToolDrawCoinRewardGranted
+            });
+
+            Assert.IsTrue(machine.IsTownWindowStepCompletionReady);
+            Assert.IsFalse(machine.IsTownWindowRewardReady);
+            Assert.IsTrue(machine.TryCompleteTownWindowReward());
+            Assert.AreEqual(TutorialStep.DrawAnimal, machine.CurrentStep);
+
+            Assert.IsTrue(machine.IsAnimalDrawStepCompletionReady);
+            Assert.IsFalse(machine.IsToolDrawCoinRewardReady);
+            Assert.IsTrue(machine.TryHandleSignal(TutorialSignalType.AnimalDrawn));
+            Assert.AreEqual(TutorialStep.AnimalDrawExplanation, machine.CurrentStep);
+            Assert.IsTrue(machine.IsTownWindowRewardGranted);
+            Assert.IsTrue(machine.IsToolDrawCoinRewardGranted);
         }
 
         private static TutorialStateMachine CreateMachine(TutorialStep step)

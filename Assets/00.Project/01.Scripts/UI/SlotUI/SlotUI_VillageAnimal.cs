@@ -47,6 +47,13 @@ namespace UI
         public int SlotIndex => slotIndex;
         public bool IsEmpty => string.IsNullOrEmpty(currentId);
 
+        // -----------------------------------------------------------------------------
+        // [ 2026.08.03 - Choi - 튜토리얼 단계별 강조 연동 ]
+        // 기능: Edit 모드에서 표시되는 빈 슬롯의 '+' 버튼을 튜토리얼 손가락 강조
+        //       대상으로 사용할 수 있도록 읽기 전용 참조만 공개합니다.
+        // -----------------------------------------------------------------------------
+        public Button SetAnimalButton => setAnimalButton;
+
         private void Awake()
         {
             CacheEmptyVisualDefaults();

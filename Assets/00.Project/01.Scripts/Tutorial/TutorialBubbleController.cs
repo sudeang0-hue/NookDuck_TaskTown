@@ -72,6 +72,7 @@ namespace TaskTown.Tutorial
             tutorialManager.ProgressChanged += HandleProgressChanged;
             tutorialManager.StepChanged += HandleStepChanged;
             tutorialManager.PauseChanged += HandlePauseChanged;
+            tutorialManager.TutorialRestarted += HandleTutorialRestarted;
             view.AdvanceRequested += HandleAdvanceRequested;
             view.SkipConfirmationOpened += HandleSkipConfirmationOpened;
             view.SkipConfirmed += HandleSkipConfirmed;
@@ -89,6 +90,7 @@ namespace TaskTown.Tutorial
                 tutorialManager.ProgressChanged -= HandleProgressChanged;
                 tutorialManager.StepChanged -= HandleStepChanged;
                 tutorialManager.PauseChanged -= HandlePauseChanged;
+                tutorialManager.TutorialRestarted -= HandleTutorialRestarted;
             }
 
             if (view != null)
@@ -104,6 +106,12 @@ namespace TaskTown.Tutorial
 
         private void HandleProgressChanged(TutorialSaveData progress)
         {
+            if (!CanDisplayTutorial())
+            {
+                view?.SetVisible(false);
+                return;
+            }
+
             // 상태 머신은 목표치를 달성한 ProgressChanged를 다음 단계 값으로 전달합니다.
             // 기존 퀘스트를 유지하는 완료 연출 동안에는 최종 목표 수치를 먼저 확정 표시합니다.
             if (hasPresentedStep &&
@@ -122,6 +130,14 @@ namespace TaskTown.Tutorial
             if (isPaused)
                 StopPendingStepPresentation();
 
+            RefreshView();
+        }
+
+        private void HandleTutorialRestarted()
+        {
+            StopPendingStepPresentation();
+            hasPresentedStep = false;
+            view?.ResetSkipRequest();
             RefreshView();
         }
 
@@ -383,6 +399,15 @@ namespace TaskTown.Tutorial
             string progress,
             bool allowClickAdvance)
         {
+            if (config.TryGetStepContent(
+                    step,
+                    out TutorialStepContent layoutContent))
+            {
+                view.ApplySpeakerLayout(
+                    layoutContent.SpeakerSide,
+                    layoutContent.LayoutOffset);
+            }
+
             view.Render(
                 config.SpeakerName,
                 config.SpeakerPortrait,

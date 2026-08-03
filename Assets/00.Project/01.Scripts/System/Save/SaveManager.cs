@@ -269,6 +269,16 @@ namespace TaskTown.KDH
             return tutorialProgress.Copy();
         }
 
+        // -----------------------------------------------------------------------------
+        // [ 2026.08.03 - Choi - 튜토리얼 다시 보기 ]
+        // 기능: 게임 저장은 유지하면서 튜토리얼 진행만 초기화하고 일회성 보상 기록은 보존합니다.
+        // -----------------------------------------------------------------------------
+        public TutorialSaveData ResetTutorialProgressForReplay()
+        {
+            tutorialProgress = tutorialProgress.CreateReplayProgress();
+            return tutorialProgress.Copy();
+        }
+
         /// <summary>
         /// 세이브 townLevel을 마을 관리 패널(및 하위 호환 Demo)에 적용합니다.
         /// </summary>

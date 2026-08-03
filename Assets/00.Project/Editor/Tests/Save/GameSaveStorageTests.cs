@@ -52,7 +52,10 @@ namespace TaskTown.EditorTests.Save
                     currentStep = TutorialStep.EarnManualCoin,
                     dialogueIndex = 3,
                     manualEarnedCoin = 75,
-                    rewardFlags = 2
+                    progressFlags =
+                        (int)TutorialProgressFlags.TownWindowMinimized,
+                    rewardFlags =
+                        (int)TutorialProgressFlags.TownWindowRewardGranted
                 }
             };
 
@@ -71,7 +74,12 @@ namespace TaskTown.EditorTests.Save
             Assert.AreEqual(TutorialStep.EarnManualCoin, loaded.tutorial.currentStep);
             Assert.AreEqual(3, loaded.tutorial.dialogueIndex);
             Assert.AreEqual(75L, loaded.tutorial.manualEarnedCoin);
-            Assert.AreEqual(2, loaded.tutorial.rewardFlags);
+            Assert.AreEqual(
+                (int)TutorialProgressFlags.TownWindowMinimized,
+                loaded.tutorial.progressFlags);
+            Assert.AreEqual(
+                (int)TutorialProgressFlags.TownWindowRewardGranted,
+                loaded.tutorial.rewardFlags);
             Assert.IsFalse(loaded.tutorial.IsCompleted);
         }
 

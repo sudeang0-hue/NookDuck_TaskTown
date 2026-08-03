@@ -188,6 +188,53 @@ namespace TaskTown.EditorTests.Tutorial
             Assert.IsTrue(explanation.AllowClickAdvance);
         }
 
+        [Test]
+        public void ConfigAsset_모든단계의신사오리배치방향이유효하다()
+        {
+            TutorialConfigSO config = LoadConfig();
+
+            foreach (TutorialStepContent content in config.Steps)
+            {
+                Assert.IsTrue(
+                    Enum.IsDefined(
+                        typeof(TutorialSpeakerSide),
+                        content.SpeakerSide),
+                    $"유효하지 않은 신사 오리 배치 방향입니다: " +
+                    $"{content.Step} / {content.SpeakerSide}");
+            }
+        }
+
+        [TestCase(TutorialStep.EarnManualCoin, false, false, true)]
+        [TestCase(TutorialStep.CollapseAndExpandTown, true, true, true)]
+        [TestCase(TutorialStep.DrawAnimal, true, true, false)]
+        [TestCase(TutorialStep.DrawTool, true, true, false)]
+        [TestCase(TutorialStep.AssignAnimal, true, true, false)]
+        [TestCase(TutorialStep.PlaceAnimalInVillage, true, true, false)]
+        [TestCase(TutorialStep.OpenVillageInfo, false, true, false)]
+        [TestCase(TutorialStep.UpgradeVillage, true, true, false)]
+        public void ConfigAsset_행동강조단계는_Scale과Pointer를독립조합한다(
+            TutorialStep step,
+            bool expectsScale,
+            bool expectsPointer,
+            bool expectsFocusRing)
+        {
+            TutorialConfigSO config = LoadConfig();
+
+            Assert.IsTrue(config.TryGetStepContent(step, out TutorialStepContent content));
+            Assert.AreEqual(
+                expectsScale,
+                content.UsesHighlightEffect(TutorialHighlightEffect.ScalePulse));
+            Assert.AreEqual(
+                expectsPointer,
+                content.UsesHighlightEffect(TutorialHighlightEffect.Pointer));
+            Assert.AreEqual(
+                expectsFocusRing,
+                content.UsesHighlightEffect(TutorialHighlightEffect.FocusRing));
+            Assert.AreEqual(
+                TutorialPointerPositionMode.FollowHighlightedButton,
+                content.PointerPositionMode);
+        }
+
         private static TutorialConfigSO LoadConfig()
         {
             TutorialConfigSO config = AssetDatabase.LoadAssetAtPath<TutorialConfigSO>(

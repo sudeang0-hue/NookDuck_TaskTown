@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -15,6 +16,24 @@ namespace UI
 
         private GameTabType lastOpenedTab = GameTabType.VillageUpgradeTab;
         private UIController_Menu menuUI;
+
+        // -----------------------------------------------------------------------------
+        // [ 2026.08.03 - Choi - 튜토리얼 단계별 강조 연동 ]
+        // 기능: 현재 열려 있는 마을 패널에 따라 활성 버튼이 달라지는 동물 배치 탭을
+        //       튜토리얼이 후보 목록으로 사용할 수 있도록 읽기 전용으로 공개합니다.
+        // -----------------------------------------------------------------------------
+        public IReadOnlyList<Button> OpenAnimalSetButtons => openAnimalSetButtons;
+
+        // -----------------------------------------------------------------------------
+        // [ 2026.08.03 - Choi - 마을 업그레이드 튜토리얼 강조 연동 ]
+        // 기능: 업그레이드 탭 후보 버튼과 실제 패널 활성 상태를 읽기 전용으로 제공해
+        //       튜토리얼이 화면 진입 시 강조를 종료할 수 있게 합니다.
+        // -----------------------------------------------------------------------------
+        public IReadOnlyList<Button> OpenVillageUpgradeButtons =>
+            openVillageUpgradeButtons;
+        public bool IsVillageUpgradeTabOpen =>
+            villageUpgradePanel != null &&
+            villageUpgradePanel.gameObject.activeInHierarchy;
 
         private void Awake()
         {

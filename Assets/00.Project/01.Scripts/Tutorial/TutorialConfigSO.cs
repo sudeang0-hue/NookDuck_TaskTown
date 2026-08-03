@@ -11,6 +11,27 @@ namespace TaskTown.Tutorial
         AutoProductionCoin = 2
     }
 
+    public enum TutorialSpeakerSide
+    {
+        Left = 0,
+        Right = 1
+    }
+
+    [Flags]
+    public enum TutorialHighlightEffect
+    {
+        None = 0,
+        ScalePulse = 1 << 0,
+        Pointer = 1 << 1,
+        FocusRing = 1 << 2
+    }
+
+    public enum TutorialPointerPositionMode
+    {
+        FollowHighlightedButton = 0,
+        CanvasPosition = 1
+    }
+
     [Serializable]
     public sealed class TutorialStepContent
     {
@@ -21,6 +42,17 @@ namespace TaskTown.Tutorial
         [SerializeField] private TutorialProgressDisplayType progressDisplayType;
         [SerializeField] private string progressFormat = "{0} / {1}";
         [SerializeField] private bool allowClickAdvance;
+        [SerializeField] private TutorialSpeakerSide speakerSide =
+            TutorialSpeakerSide.Left;
+        [SerializeField] private Vector2 layoutOffset;
+        [SerializeField] private TutorialHighlightEffect highlightEffects =
+            TutorialHighlightEffect.None;
+        [SerializeField] private TutorialPointerPositionMode pointerPositionMode =
+            TutorialPointerPositionMode.FollowHighlightedButton;
+        [SerializeField] private Vector2 pointerOffset;
+        [SerializeField] private Vector2 pointerCanvasPosition;
+        [SerializeField, Min(16f)] private float pointerRingSize = 120f;
+        [SerializeField, Min(0f)] private float pointerRingPadding = 24f;
 
         public TutorialStep Step => step;
         public IReadOnlyList<string> Messages => messages;
@@ -29,6 +61,19 @@ namespace TaskTown.Tutorial
         public TutorialProgressDisplayType ProgressDisplayType => progressDisplayType;
         public string ProgressFormat => progressFormat;
         public bool AllowClickAdvance => allowClickAdvance;
+        public TutorialSpeakerSide SpeakerSide => speakerSide;
+        public Vector2 LayoutOffset => layoutOffset;
+        public TutorialHighlightEffect HighlightEffects => highlightEffects;
+        public TutorialPointerPositionMode PointerPositionMode => pointerPositionMode;
+        public Vector2 PointerOffset => pointerOffset;
+        public Vector2 PointerCanvasPosition => pointerCanvasPosition;
+        public float PointerRingSize => pointerRingSize;
+        public float PointerRingPadding => pointerRingPadding;
+
+        public bool UsesHighlightEffect(TutorialHighlightEffect effect)
+        {
+            return (highlightEffects & effect) != 0;
+        }
     }
 
     /// <summary>

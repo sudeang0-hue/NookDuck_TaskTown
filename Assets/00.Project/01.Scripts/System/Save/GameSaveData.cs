@@ -59,17 +59,31 @@ namespace TaskTown.KDH
     [Serializable]
     public class TutorialSaveData
     {
+        private const int RunProgressFlagMask =
+            (int)TutorialProgressFlags.TownWindowGuideCompleted |
+            (int)TutorialProgressFlags.TownWindowMinimized |
+            (int)TutorialProgressFlags.TownWindowExpanded;
+        private const int OneTimeRewardFlagMask =
+            (int)TutorialProgressFlags.TownWindowRewardGranted |
+            (int)TutorialProgressFlags.ToolDrawCoinRewardGranted;
+
         // -----------------------------------------------------------------------------
         // [ 2026.07.31 - Choi - 튜토리얼 단계 확장 ]
         // 기능: 동물 뽑기 결과 설명과 마을 배치 단계를 포함한 저장 데이터를 구분합니다.
         // -----------------------------------------------------------------------------
-        public const int CurrentVersion = 3;
+        public const int CurrentVersion = 4;
 
         public int version = CurrentVersion;
         public TutorialStep currentStep = TutorialStep.IntroDialogue;
         public int dialogueIndex;
         public long manualEarnedCoin;
         public long autoProductionEarnedCoin;
+
+        // -----------------------------------------------------------------------------
+        // [ 2026.08.03 - Choi - 튜토리얼 다시 보기 저장 분리 ]
+        // 기능: 현재 실행의 세부 진행은 초기화할 수 있게 분리하고, 일회성 보상 기록은 보존합니다.
+        // -----------------------------------------------------------------------------
+        public int progressFlags;
         public int rewardFlags;
 
         public bool IsCompleted => currentStep == TutorialStep.Completed;
@@ -88,6 +102,7 @@ namespace TaskTown.KDH
                 dialogueIndex = dialogueIndex,
                 manualEarnedCoin = manualEarnedCoin,
                 autoProductionEarnedCoin = autoProductionEarnedCoin,
+                progressFlags = progressFlags,
                 rewardFlags = rewardFlags
             };
 
@@ -97,8 +112,7 @@ namespace TaskTown.KDH
 
         public void Normalize()
         {
-            if (version < CurrentVersion)
-                version = CurrentVersion;
+            bool requiresLegacyRecovery = version < CurrentVersion;
 
             if (!Enum.IsDefined(typeof(TutorialStep), currentStep))
                 currentStep = TutorialStep.IntroDialogue;
@@ -106,33 +120,66 @@ namespace TaskTown.KDH
             dialogueIndex = Math.Max(0, dialogueIndex);
             manualEarnedCoin = Math.Max(0L, manualEarnedCoin);
             autoProductionEarnedCoin = Math.Max(0L, autoProductionEarnedCoin);
-            rewardFlags = Math.Max(0, rewardFlags);
+            int normalizedFlags = Math.Max(0, progressFlags) |
+                                  Math.Max(0, rewardFlags);
+            progressFlags = normalizedFlags & RunProgressFlagMask;
+            rewardFlags = normalizedFlags & OneTimeRewardFlagMask;
 
-            // 보상 지급 직후 비정상 종료된 저장도 동물 뽑기 단계에서 안전하게 재개합니다.
-            if (currentStep == TutorialStep.CollapseAndExpandTown &&
+            // v3 이하 저장은 진행/보상 플래그가 하나의 필드에 섞여 있었습니다.
+            // 이미 지급된 보상 플래그와 이전 단계가 함께 남은 경우에만 한 번 복구합니다.
+            if (requiresLegacyRecovery &&
+                currentStep == TutorialStep.CollapseAndExpandTown &&
                 HasProgressFlag(TutorialProgressFlags.TownWindowRewardGranted))
             {
                 currentStep = TutorialStep.DrawAnimal;
                 dialogueIndex = 0;
             }
 
-            // 도구 뽑기용 보상 플래그가 저장된 비정상 종료 상태는 다음 단계에서 재개합니다.
-            if (currentStep == TutorialStep.DrawAnimal &&
+            if (requiresLegacyRecovery &&
+                currentStep == TutorialStep.DrawAnimal &&
                 HasProgressFlag(TutorialProgressFlags.ToolDrawCoinRewardGranted))
             {
                 currentStep = TutorialStep.AnimalDrawExplanation;
                 dialogueIndex = 0;
             }
+
+            version = Math.Max(version, CurrentVersion);
         }
 
         public bool HasProgressFlag(TutorialProgressFlags flag)
         {
-            return (rewardFlags & (int)flag) != 0;
+            int flagValue = (int)flag;
+            if (flagValue == 0)
+                return false;
+
+            int allFlags = progressFlags | rewardFlags;
+            return (allFlags & flagValue) == flagValue;
         }
 
         public void SetProgressFlag(TutorialProgressFlags flag)
         {
-            rewardFlags |= (int)flag;
+            int flagValue = (int)flag;
+            progressFlags |= flagValue & RunProgressFlagMask;
+            rewardFlags |= flagValue & OneTimeRewardFlagMask;
+        }
+
+        /// <summary>
+        /// 현재 튜토리얼 진행만 처음으로 되돌리고 이미 받은 일회성 보상 기록은 유지합니다.
+        /// 설정의 '튜토리얼 다시 보기'에서 사용하는 저장 복사본입니다.
+        /// </summary>
+        public TutorialSaveData CreateReplayProgress()
+        {
+            TutorialSaveData normalized = Copy();
+            return new TutorialSaveData
+            {
+                version = CurrentVersion,
+                currentStep = TutorialStep.IntroDialogue,
+                dialogueIndex = 0,
+                manualEarnedCoin = 0L,
+                autoProductionEarnedCoin = 0L,
+                progressFlags = 0,
+                rewardFlags = normalized.rewardFlags & OneTimeRewardFlagMask
+            };
         }
     }
 

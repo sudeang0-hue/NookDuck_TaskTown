@@ -44,6 +44,20 @@ namespace UI
         private bool subscribedToToolInventory;
         private bool subscribedToVillagePlacement;
 
+        // -----------------------------------------------------------------------------
+        // [ 2026.08.03 - Choi - 튜토리얼 단계별 강조 연동 ]
+        // 기능: 기획상 첫 번째 동물 슬롯을 튜토리얼 강조 대상으로 안전하게 조회합니다.
+        //       슬롯 목록 자체는 외부에 노출하지 않습니다.
+        // -----------------------------------------------------------------------------
+        public UnityEngine.UI.Button GetSlotButtonAt(int index)
+        {
+            if (index < 0 || index >= slotMaplist.Count)
+                return null;
+
+            SlotUI_AnimalInv slot = slotMaplist[index];
+            return slot != null ? slot.CoverButton : null;
+        }
+
         private void Awake()
         {
             if (animalInventory == null)
