@@ -1811,6 +1811,10 @@ PrefabInstance:
       propertyPath: upgradePanel
       value: 
       objectReference: {fileID: 979288216}
+    - target: {fileID: 1283037210515985980, guid: 5a06baf612796c74da0eb2e9fc401b48, type: 3}
+      propertyPath: villageSystem
+      value: 
+      objectReference: {fileID: 887628112}
     - target: {fileID: 1742663660588252291, guid: 5a06baf612796c74da0eb2e9fc401b48, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -2155,22 +2159,6 @@ PrefabInstance:
       propertyPath: m_text
       value: 60,000
       objectReference: {fileID: 0}
-    - target: {fileID: 6158438537513035841, guid: 5a06baf612796c74da0eb2e9fc401b48, type: 3}
-      propertyPath: m_text
-      value: "\uB3C4\uAD6C \uC0DD\uC0B0 \uD6A8\uC728\uC744 \uC5C5\uADF8\uB808\uC774\uB4DC\uD558\uC2DC\uACA0\uC2B5\uB2C8\uAE4C?"
-      objectReference: {fileID: 0}
-    - target: {fileID: 6158438537513035841, guid: 5a06baf612796c74da0eb2e9fc401b48, type: 3}
-      propertyPath: m_fontAsset
-      value: 
-      objectReference: {fileID: 11400000, guid: 02abcf0967aa6e0499394da00ad1dd27, type: 2}
-    - target: {fileID: 6158438537513035841, guid: 5a06baf612796c74da0eb2e9fc401b48, type: 3}
-      propertyPath: m_sharedMaterial
-      value: 
-      objectReference: {fileID: -3334129492857309275, guid: 02abcf0967aa6e0499394da00ad1dd27, type: 2}
-    - target: {fileID: 6158438537513035841, guid: 5a06baf612796c74da0eb2e9fc401b48, type: 3}
-      propertyPath: m_hasFontAssetChanged
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 6163618726532594660, guid: 5a06baf612796c74da0eb2e9fc401b48, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -2290,18 +2278,6 @@ PrefabInstance:
     - target: {fileID: 6764927123445431939, guid: 5a06baf612796c74da0eb2e9fc401b48, type: 3}
       propertyPath: m_IsActive
       value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6789898742385809537, guid: 5a06baf612796c74da0eb2e9fc401b48, type: 3}
-      propertyPath: m_fontAsset
-      value: 
-      objectReference: {fileID: 11400000, guid: 02abcf0967aa6e0499394da00ad1dd27, type: 2}
-    - target: {fileID: 6789898742385809537, guid: 5a06baf612796c74da0eb2e9fc401b48, type: 3}
-      propertyPath: m_sharedMaterial
-      value: 
-      objectReference: {fileID: -3334129492857309275, guid: 02abcf0967aa6e0499394da00ad1dd27, type: 2}
-    - target: {fileID: 6789898742385809537, guid: 5a06baf612796c74da0eb2e9fc401b48, type: 3}
-      propertyPath: m_hasFontAssetChanged
-      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6922301955304698215, guid: 5a06baf612796c74da0eb2e9fc401b48, type: 3}
       propertyPath: m_AnchorMax.y
@@ -3713,6 +3689,63 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 04911905a17ba8d4990edcd8f3fb0bb3, type: 3}
+--- !u!1001 &766857062
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 3012922826822980576, guid: 73aa10689d363d640829a667eb6536b4, type: 3}
+      propertyPath: m_Name
+      value: VillageSystemManager
+      objectReference: {fileID: 0}
+    - target: {fileID: 8628172424912724896, guid: 73aa10689d363d640829a667eb6536b4, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 1277.0997
+      objectReference: {fileID: 0}
+    - target: {fileID: 8628172424912724896, guid: 73aa10689d363d640829a667eb6536b4, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 498.8472
+      objectReference: {fileID: 0}
+    - target: {fileID: 8628172424912724896, guid: 73aa10689d363d640829a667eb6536b4, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8628172424912724896, guid: 73aa10689d363d640829a667eb6536b4, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8628172424912724896, guid: 73aa10689d363d640829a667eb6536b4, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8628172424912724896, guid: 73aa10689d363d640829a667eb6536b4, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8628172424912724896, guid: 73aa10689d363d640829a667eb6536b4, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8628172424912724896, guid: 73aa10689d363d640829a667eb6536b4, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8628172424912724896, guid: 73aa10689d363d640829a667eb6536b4, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8628172424912724896, guid: 73aa10689d363d640829a667eb6536b4, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 73aa10689d363d640829a667eb6536b4, type: 3}
 --- !u!1 &773190229
 GameObject:
   m_ObjectHideFlags: 0
@@ -4638,6 +4671,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIWindowLayerManager
   baseSortingOrder: 10
+--- !u!114 &887628112 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1597964003665372925, guid: 73aa10689d363d640829a667eb6536b4, type: 3}
+  m_PrefabInstance: {fileID: 766857062}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a41cd27fa0c2f904d80d26aa23c4f1c7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Manager.VillageSystemManager
 --- !u!4 &892511606 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 7d0a410b67efc644ab2c757a0f00f570, type: 3}
@@ -8101,7 +8145,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 047d7fb4c92b65648ae3f00cf955f2a1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TownUpgradeManager
-  townLevelProviderSource: {fileID: 0}
+  townLevelProviderSource: {fileID: 887628112}
   clickUpgrade:
     baseCost: 300
     costGrowthRate: 1.6
@@ -9209,10 +9253,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: WorldHoverOutlineDetector
       objectReference: {fileID: 0}
-    - target: {fileID: 8607759990912595250, guid: 1572e31ffe5a1e8438b2e4d102901980, type: 3}
-      propertyPath: targetCamera
-      value: 
-      objectReference: {fileID: 504027391}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -9250,3 +9290,4 @@ SceneRoots:
   - {fileID: 555801519}
   - {fileID: 1946033994}
   - {fileID: 7616234064409143806}
+  - {fileID: 766857062}

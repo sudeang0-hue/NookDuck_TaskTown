@@ -1,0 +1,76 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &3012922826822980576
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8628172424912724896}
+  - component: {fileID: 1597964003665372925}
+  m_Layer: 0
+  m_Name: VillageSystemManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8628172424912724896
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3012922826822980576}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1277.0997, y: 498.8472, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1597964003665372925
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3012922826822980576}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a41cd27fa0c2f904d80d26aa23c4f1c7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Manager.VillageSystemManager
+  townLevel: 1
+  cycleClickDone: 0
+  cycleTypingDone: 0
+  cycleToolDone: 0
+  isEndlessMode: 0
+  townUpgradeCostConfig:
+    levelCosts:
+    - townLevelThreshold: 1
+      cost: 77000
+    - townLevelThreshold: 2
+      cost: 425000
+    - townLevelThreshold: 3
+      cost: 1220000
+    - townLevelThreshold: 4
+      cost: 2610000
+    - townLevelThreshold: 5
+      cost: 7820000
+    - townLevelThreshold: 6
+      cost: 15050000
+    - townLevelThreshold: 7
+      cost: 21450000
+    - townLevelThreshold: 8
+      cost: 35700000
+    - townLevelThreshold: 9
+      cost: 45200000
+    postMaxLevelGrowthRate: 1.2661
+  placedAnimalIds: []
+  maxPlacementCapacity: 20
+  unlockedSlotsAtTownLevel1: 5
+  unlockedSlotsByTownLevel: 050000000600000007000000090000000a0000000c0000000d0000000e0000001000000014000000
