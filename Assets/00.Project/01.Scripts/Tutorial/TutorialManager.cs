@@ -20,6 +20,7 @@ namespace TaskTown.Tutorial
         public event Action<TutorialSaveData> ProgressChanged;
         public event Action<TutorialStep, TutorialStep> StepChanged;
         public event Action<bool> PauseChanged;
+        public event Action TutorialRestarted;
         public event Action TutorialCompleted;
 
         public bool IsInitialized => stateMachine != null;
@@ -66,10 +67,7 @@ namespace TaskTown.Tutorial
                 ? saveManager.GetTutorialProgressCopy()
                 : TutorialSaveData.CreateDefault();
 
-            stateMachine = new TutorialStateMachine(initialProgress);
-            stateMachine.ProgressChanged += HandleProgressChanged;
-            stateMachine.StepChanged += HandleStepChanged;
-            stateMachine.Completed += HandleCompleted;
+            ReplaceStateMachine(initialProgress);
 
             if (saveManager == null)
             {
@@ -104,15 +102,15 @@ namespace TaskTown.Tutorial
                 return false;
 
             if (signalType == TutorialSignalType.AnimalDrawn &&
-                machine.IsToolDrawCoinRewardReady)
+                machine.IsAnimalDrawStepCompletionReady)
             {
-                return TryGrantToolDrawCoinReward(machine);
+                return TryCompleteAnimalDrawStep(machine);
             }
 
             if (signalType == TutorialSignalType.DialogueCompleted &&
-                machine.IsTownWindowRewardReady)
+                machine.IsTownWindowStepCompletionReady)
             {
-                return TryGrantTownWindowCompletionReward(machine);
+                return TryCompleteTownWindowStep(machine);
             }
 
             return machine.TryHandleSignal(signalType, amount);
@@ -128,11 +126,35 @@ namespace TaskTown.Tutorial
                    machine.TrySkipTutorial();
         }
 
-        private bool TryGrantToolDrawCoinReward(
+        /// <summary>
+        /// 이미 받은 일회성 보상 기록을 보존한 진행 데이터로 현재 Overlay를 처음부터 다시 시작합니다.
+        /// 설정 UI는 SaveManager를 직접 초기화하지 않고 TutorialOverlayLoader의 재보기 API를 호출해야 합니다.
+        /// </summary>
+        public bool TryRestartTutorial(TutorialSaveData replayProgress)
+        {
+            if (!IsInitialized || replayProgress == null)
+                return false;
+
+            bool wasPaused = IsPaused;
+            ReplaceStateMachine(replayProgress);
+
+            TutorialSaveData restartedProgress = Progress;
+            saveManager?.SetTutorialProgress(restartedProgress);
+            TutorialRestarted?.Invoke();
+            ProgressChanged?.Invoke(restartedProgress.Copy());
+
+            if (wasPaused)
+                PauseChanged?.Invoke(false);
+
+            return true;
+        }
+
+        private bool TryCompleteAnimalDrawStep(
             TutorialStateMachine machine)
         {
-            CoinManager coinManager = CoinManager.Instance;
-            if (coinManager == null)
+            bool shouldGrantReward = machine.IsToolDrawCoinRewardReady;
+            CoinManager coinManager = shouldGrantReward ? CoinManager.Instance : null;
+            if (shouldGrantReward && coinManager == null)
             {
                 Debug.LogWarning(
                     "[TutorialManager] CoinManager가 없어 도구 뽑기용 보상을 " +
@@ -141,20 +163,23 @@ namespace TaskTown.Tutorial
                 return false;
             }
 
-            // 동물 뽑기 완료 플래그와 도구 뽑기 단계를 먼저 확정해 중복 지급을 차단합니다.
+            // 단계와 보상 플래그를 먼저 확정해 빠른 연속 신호의 중복 처리를 차단합니다.
             if (!machine.TryCompleteAnimalDrawReward())
                 return false;
 
-            coinManager.Add(ToolDrawCoinReward);
+            if (shouldGrantReward)
+                coinManager.Add(ToolDrawCoinReward);
+
             saveManager?.SaveGame();
             return true;
         }
 
-        private bool TryGrantTownWindowCompletionReward(
+        private bool TryCompleteTownWindowStep(
             TutorialStateMachine machine)
         {
-            CoinManager coinManager = CoinManager.Instance;
-            if (coinManager == null)
+            bool shouldGrantReward = machine.IsTownWindowRewardReady;
+            CoinManager coinManager = shouldGrantReward ? CoinManager.Instance : null;
+            if (shouldGrantReward && coinManager == null)
             {
                 Debug.LogWarning(
                     "[TutorialManager] CoinManager가 없어 축소·확장 완료 보상을 " +
@@ -163,11 +188,13 @@ namespace TaskTown.Tutorial
                 return false;
             }
 
-            // 상태 머신이 보상 플래그와 다음 단계를 먼저 확정하므로 빠른 연속 클릭도 중복 지급되지 않습니다.
+            // 이미 지급된 다시 보기라면 단계만 진행하고, 최초 진행일 때만 실제 코인을 추가합니다.
             if (!machine.TryCompleteTownWindowReward())
                 return false;
 
-            coinManager.Add(TownWindowCompletionReward);
+            if (shouldGrantReward)
+                coinManager.Add(TownWindowCompletionReward);
+
             saveManager?.SaveGame();
             return true;
         }
@@ -209,6 +236,15 @@ namespace TaskTown.Tutorial
             stateMachine.ProgressChanged -= HandleProgressChanged;
             stateMachine.StepChanged -= HandleStepChanged;
             stateMachine.Completed -= HandleCompleted;
+        }
+
+        private void ReplaceStateMachine(TutorialSaveData progress)
+        {
+            UnsubscribeStateMachine();
+            stateMachine = new TutorialStateMachine(progress);
+            stateMachine.ProgressChanged += HandleProgressChanged;
+            stateMachine.StepChanged += HandleStepChanged;
+            stateMachine.Completed += HandleCompleted;
         }
     }
 }

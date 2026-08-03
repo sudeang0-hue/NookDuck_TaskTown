@@ -72,6 +72,7 @@ namespace TaskTown.Tutorial
             tutorialManager.ProgressChanged += HandleProgressChanged;
             tutorialManager.StepChanged += HandleStepChanged;
             tutorialManager.PauseChanged += HandlePauseChanged;
+            tutorialManager.TutorialRestarted += HandleTutorialRestarted;
             view.AdvanceRequested += HandleAdvanceRequested;
             view.SkipConfirmationOpened += HandleSkipConfirmationOpened;
             view.SkipConfirmed += HandleSkipConfirmed;
@@ -89,6 +90,7 @@ namespace TaskTown.Tutorial
                 tutorialManager.ProgressChanged -= HandleProgressChanged;
                 tutorialManager.StepChanged -= HandleStepChanged;
                 tutorialManager.PauseChanged -= HandlePauseChanged;
+                tutorialManager.TutorialRestarted -= HandleTutorialRestarted;
             }
 
             if (view != null)
@@ -122,6 +124,14 @@ namespace TaskTown.Tutorial
             if (isPaused)
                 StopPendingStepPresentation();
 
+            RefreshView();
+        }
+
+        private void HandleTutorialRestarted()
+        {
+            StopPendingStepPresentation();
+            hasPresentedStep = false;
+            view?.ResetSkipRequest();
             RefreshView();
         }
 

@@ -86,6 +86,8 @@ namespace TaskTown.Tutorial
             tutorialManager.StepChanged += HandleStepChanged;
             tutorialManager.ProgressChanged -= HandleProgressChanged;
             tutorialManager.ProgressChanged += HandleProgressChanged;
+            tutorialManager.TutorialRestarted -= HandleTutorialRestarted;
+            tutorialManager.TutorialRestarted += HandleTutorialRestarted;
             tutorialManager.TutorialCompleted -= HandleTutorialCompleted;
             tutorialManager.TutorialCompleted += HandleTutorialCompleted;
 
@@ -105,6 +107,7 @@ namespace TaskTown.Tutorial
             {
                 tutorialManager.StepChanged -= HandleStepChanged;
                 tutorialManager.ProgressChanged -= HandleProgressChanged;
+                tutorialManager.TutorialRestarted -= HandleTutorialRestarted;
                 tutorialManager.TutorialCompleted -= HandleTutorialCompleted;
             }
 
@@ -164,6 +167,16 @@ namespace TaskTown.Tutorial
 
         private void HandleProgressChanged(TutorialSaveData progress)
         {
+            RefreshButtonHighlight();
+        }
+
+        private void HandleTutorialRestarted()
+        {
+            UnsubscribeCurrentStep();
+
+            if (tutorialManager != null && !tutorialManager.IsCompleted)
+                SubscribeCurrentStep(tutorialManager.CurrentStep);
+
             RefreshButtonHighlight();
         }
 

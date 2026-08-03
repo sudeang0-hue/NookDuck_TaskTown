@@ -150,6 +150,57 @@ namespace TaskTown.Tutorial
             return true;
         }
 
+        /// <summary>
+        /// 설정의 '튜토리얼 다시 보기' 확인 버튼에서 호출할 진입점입니다.
+        /// 게임 데이터는 유지하고 튜토리얼 진행만 초기화한 뒤, 이미 받은 일회성 보상 없이
+        /// 현재 Overlay를 재시작하거나 언로드 상태라면 다시 Additive 로드합니다.
+        /// </summary>
+        public void StartTutorialReplay()
+        {
+            TryStartTutorialReplay();
+        }
+
+        public bool TryStartTutorialReplay()
+        {
+            if (IsBusy)
+                return false;
+
+            saveManager = SaveManager.Instance;
+            if (saveManager == null)
+            {
+                SetFailure("SaveManager가 준비되지 않아 튜토리얼 다시 보기를 시작할 수 없습니다.");
+                return false;
+            }
+
+            TutorialSaveData replayProgress =
+                saveManager.ResetTutorialProgressForReplay();
+            saveManager.SaveGame();
+
+            if (State == TutorialOverlayLoadState.Active)
+            {
+                if (activeTutorialManager == null)
+                {
+                    SetFailure("활성화된 튜토리얼 Overlay에서 TutorialManager를 찾을 수 없습니다.");
+                    return false;
+                }
+
+                if (!activeTutorialManager.IsInitialized)
+                    activeTutorialManager.Initialize(saveManager);
+
+                if (!activeTutorialManager.TryRestartTutorial(replayProgress))
+                {
+                    SetFailure("활성화된 튜토리얼 Overlay를 처음부터 다시 시작하지 못했습니다.");
+                    return false;
+                }
+
+                LastError = string.Empty;
+                SetProgress(1f);
+                return true;
+            }
+
+            return TryLoadIfRequired();
+        }
+
         private IEnumerator LoadOverlayRoutine()
         {
             while (!sceneOperation.isDone)
