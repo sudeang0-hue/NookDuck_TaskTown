@@ -27,6 +27,8 @@ namespace TaskTown.Tutorial
         private const float SceneReadyProgress = 0.9f;
         private const string InputGateOwner = "TutorialOverlayLoader";
 
+        public static TutorialOverlayLoader Instance { get; private set; }
+
         [Header("튜토리얼 오버레이")]
         [SerializeField] private string tutorialSceneName = "tutorial_Overlay";
         [SerializeField] private bool loadOnStart = true;
@@ -48,6 +50,23 @@ namespace TaskTown.Tutorial
         public event Action OverlayUnloaded;
         public event Action<string> LoadFailed;
 
+        private void Awake()
+        {
+            if (Instance == null)
+            {
+                Instance = this;
+                return;
+            }
+
+            if (Instance != this)
+            {
+                Debug.LogWarning(
+                    "[TutorialOverlayLoader] Scene에 Loader가 둘 이상 존재합니다. " +
+                    "처음 등록된 인스턴스를 유지합니다.",
+                    this);
+            }
+        }
+
         private void Start()
         {
             if (loadOnStart)
@@ -58,6 +77,9 @@ namespace TaskTown.Tutorial
         {
             UnsubscribeTutorialManager();
             ReleaseInputGate();
+
+            if (Instance == this)
+                Instance = null;
         }
 
         /// <summary>
