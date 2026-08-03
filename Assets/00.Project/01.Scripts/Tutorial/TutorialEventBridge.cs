@@ -32,6 +32,8 @@ namespace TaskTown.Tutorial
         [Header("튜토리얼 버튼 강조")]
         [SerializeField] private TutorialButtonHighlighter buttonHighlighter;
         [SerializeField] private TutorialHighlightCoordinator highlightCoordinator;
+        [SerializeField] private TutorialManualCoinFeedback manualCoinFeedback;
+        [SerializeField] private UIController_Coin coinController;
         [SerializeField] private UIController_Menu menuController;
         [SerializeField] private UIController_Gacha gachaController;
         [SerializeField] private UIController_AnimalInv animalInventoryController;
@@ -153,6 +155,7 @@ namespace TaskTown.Tutorial
         {
             UnsubscribeCurrentStep();
             UnsubscribeWindowState();
+            manualCoinFeedback?.StopAndRestore();
 
             if (tutorialManager != null)
             {
@@ -199,6 +202,13 @@ namespace TaskTown.Tutorial
                 TryGetComponent(out buttonHighlighter);
             if (highlightCoordinator == null)
                 TryGetComponent(out highlightCoordinator);
+            if (manualCoinFeedback == null)
+                TryGetComponent(out manualCoinFeedback);
+            if (coinController == null)
+            {
+                coinController = FindFirstObjectByType<UIController_Coin>(
+                    FindObjectsInactive.Include);
+            }
             if (menuController == null)
                 menuController = FindAnyObjectByType<UIController_Menu>();
             if (gachaController == null)
@@ -236,6 +246,11 @@ namespace TaskTown.Tutorial
 
         private void HandleProgressChanged(TutorialSaveData progress)
         {
+            // 수동 코인 진행도는 입력마다 갱신됩니다. 이 단계의 도넛 강조는 단계 진입 시
+            // 한 번만 시작하고 독립적으로 Loop해야 하므로 코인 Punch마다 재생성하지 않습니다.
+            if (subscribedStep == TutorialStep.EarnManualCoin)
+                return;
+
             RefreshButtonHighlight();
         }
 
@@ -347,6 +362,7 @@ namespace TaskTown.Tutorial
             switch (step)
             {
                 case TutorialStep.EarnManualCoin:
+                    BindManualCoinFeedbackTarget();
                     if (earnProcessor != null)
                         earnProcessor.ManualCoinGranted += HandleManualCoinGranted;
                     else
@@ -506,7 +522,13 @@ namespace TaskTown.Tutorial
 
         private void HandleManualCoinGranted(int amount)
         {
+            manualCoinFeedback?.Play();
             tutorialManager?.ReportSignal(TutorialSignalType.ManualCoinEarned, amount);
+        }
+
+        private void BindManualCoinFeedbackTarget()
+        {
+            manualCoinFeedback?.Bind(coinController?.AllCoinText?.rectTransform);
         }
 
         private void HandleAnimalDrawn(GachaResult result)
@@ -1004,6 +1026,10 @@ namespace TaskTown.Tutorial
 
             switch (tutorialManager.CurrentStep)
             {
+                case TutorialStep.EarnManualCoin:
+                    RefreshManualCoinHighlight();
+                    break;
+
                 case TutorialStep.CollapseAndExpandTown:
                     if (!tutorialManager.IsTownWindowGuideCompleted)
                     {
@@ -1084,6 +1110,21 @@ namespace TaskTown.Tutorial
                         System.Array.Empty<Button>());
                     break;
             }
+        }
+
+        private void RefreshManualCoinHighlight()
+        {
+            BindManualCoinFeedbackTarget();
+            RectTransform target = coinController?.AllCoinText?.rectTransform;
+            if (highlightCoordinator == null || target == null)
+            {
+                ClearHighlights();
+                return;
+            }
+
+            highlightCoordinator.HighlightUiTarget(
+                TutorialStep.EarnManualCoin,
+                target);
         }
 
         private void RefreshAssignAnimalHighlight()

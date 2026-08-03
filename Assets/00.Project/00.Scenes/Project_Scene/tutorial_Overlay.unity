@@ -1167,6 +1167,7 @@ GameObject:
   - component: {fileID: 1038946189}
   - component: {fileID: 1038946191}
   - component: {fileID: 1038946190}
+  - component: {fileID: 1038946192}
   m_Layer: 0
   m_Name: '[TutorialOverlay]'
   m_TagString: Untagged
@@ -1198,6 +1199,8 @@ MonoBehaviour:
   gameMasterManager: {fileID: 0}
   buttonHighlighter: {fileID: 1038946189}
   highlightCoordinator: {fileID: 1038946190}
+  manualCoinFeedback: {fileID: 1038946192}
+  coinController: {fileID: 0}
   menuController: {fileID: 0}
   gachaController: {fileID: 0}
   animalInventoryController: {fileID: 0}
@@ -1331,6 +1334,22 @@ MonoBehaviour:
   handPressScale: 0.82
   ringStartScale: 0.78
   ringClickScale: 1.16
+--- !u!114 &1038946192
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1038946183}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a176f0e38d096d4ea6d80ef3472f47b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TaskTown.Tutorial.TutorialManualCoinFeedback
+  punchScale: {x: 0.14, y: 0.14, z: 0}
+  duration: 0.22
+  vibrato: 4
+  elasticity: 0.65
 --- !u!1 &1053466073
 GameObject:
   m_ObjectHideFlags: 0

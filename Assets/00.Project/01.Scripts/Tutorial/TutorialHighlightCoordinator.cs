@@ -51,7 +51,7 @@ namespace TaskTown.Tutorial
                 return;
             }
 
-            if (content.UsesHighlightEffect(TutorialHighlightEffect.Pointer))
+            if (UsesPointerVisual(content))
             {
                 pointerIndicator?.Show(
                     content,
@@ -72,10 +72,46 @@ namespace TaskTown.Tutorial
         public void HighlightPointer(TutorialStep step, params Button[] targets)
         {
             if (config != null &&
-                config.TryGetStepContent(step, out TutorialStepContent content))
+                config.TryGetStepContent(step, out TutorialStepContent content) &&
+                UsesPointerVisual(content))
             {
                 pointerIndicator?.Show(content, targets);
             }
+        }
+
+        /// <summary>
+        /// Button이 아닌 TMP_Text 같은 일반 UI RectTransform을 강조합니다.
+        /// Pointer와 FocusRing은 Config 플래그에 따라 서로 독립적으로 표시됩니다.
+        /// </summary>
+        public void HighlightUiTarget(
+            TutorialStep step,
+            RectTransform target,
+            Vector2 targetAnchor,
+            Vector2 additionalOffset)
+        {
+            ClearAllHighlights();
+
+            if (config == null || target == null ||
+                !config.TryGetStepContent(step, out TutorialStepContent content) ||
+                !UsesPointerVisual(content))
+            {
+                return;
+            }
+
+            pointerIndicator?.Show(
+                content,
+                target,
+                targetAnchor,
+                additionalOffset);
+        }
+
+        public void HighlightUiTarget(TutorialStep step, RectTransform target)
+        {
+            HighlightUiTarget(
+                step,
+                target,
+                new Vector2(0.5f, 0.5f),
+                Vector2.zero);
         }
 
         /// <summary>
@@ -91,7 +127,7 @@ namespace TaskTown.Tutorial
 
             if (config == null || targetCollider == null ||
                 !config.TryGetStepContent(step, out TutorialStepContent content) ||
-                !content.UsesHighlightEffect(TutorialHighlightEffect.Pointer))
+                !UsesPointerVisual(content))
             {
                 return;
             }
@@ -113,6 +149,12 @@ namespace TaskTown.Tutorial
         {
             ClearScaleHighlight();
             HidePointerHighlight();
+        }
+
+        private static bool UsesPointerVisual(TutorialStepContent content)
+        {
+            return content.UsesHighlightEffect(TutorialHighlightEffect.Pointer) ||
+                   content.UsesHighlightEffect(TutorialHighlightEffect.FocusRing);
         }
     }
 }

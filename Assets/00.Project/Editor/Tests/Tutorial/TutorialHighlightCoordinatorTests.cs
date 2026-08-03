@@ -138,6 +138,29 @@ namespace TaskTown.EditorTests.Tutorial
         }
 
         [Test]
+        public void HighlightUiTarget_FocusRingOnly_HidesHandAndShowsRing()
+        {
+            TestContext context = CreateContext(
+                TutorialHighlightEffect.FocusRing,
+                TutorialPointerPositionMode.FollowHighlightedButton);
+
+            try
+            {
+                context.Coordinator.HighlightUiTarget(
+                    TutorialStep.DrawAnimal,
+                    context.Button.GetComponent<RectTransform>());
+
+                Assert.IsTrue(context.PointerRoot.activeSelf);
+                Assert.IsTrue(context.RingObject.activeSelf);
+                Assert.IsFalse(context.HandObject.activeSelf);
+            }
+            finally
+            {
+                context.Dispose();
+            }
+        }
+
+        [Test]
         public void FocusRingGraphic_도넛Mesh를생성하고입력을가리지않는다()
         {
             GameObject ringObject = new(
@@ -240,6 +263,7 @@ namespace TaskTown.EditorTests.Tutorial
                 buttonObject,
                 pointerRoot,
                 ringObject,
+                handObject,
                 config,
                 coordinator);
         }
@@ -273,6 +297,7 @@ namespace TaskTown.EditorTests.Tutorial
                 GameObject buttonObject,
                 GameObject pointerRoot,
                 GameObject ringObject,
+                GameObject handObject,
                 TutorialConfigSO config,
                 TutorialHighlightCoordinator coordinator)
             {
@@ -281,6 +306,7 @@ namespace TaskTown.EditorTests.Tutorial
                 ButtonObject = buttonObject;
                 PointerRoot = pointerRoot;
                 RingObject = ringObject;
+                HandObject = handObject;
                 Config = config;
                 Coordinator = coordinator;
             }
@@ -290,6 +316,7 @@ namespace TaskTown.EditorTests.Tutorial
             public GameObject ButtonObject { get; }
             public GameObject PointerRoot { get; }
             public GameObject RingObject { get; }
+            public GameObject HandObject { get; }
             public TutorialConfigSO Config { get; }
             public TutorialHighlightCoordinator Coordinator { get; }
             public Button Button => ButtonObject.GetComponent<Button>();

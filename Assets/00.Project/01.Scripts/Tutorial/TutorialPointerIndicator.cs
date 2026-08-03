@@ -42,9 +42,11 @@ namespace TaskTown.Tutorial
         private float fixedRingSize;
         private float ringPadding;
         private Button activeTarget;
+        private RectTransform directTarget;
         private Sequence flowSequence;
         private bool isRequested;
         private bool isVisualActive;
+        private bool showHand;
         private bool showFocusRing;
         private Collider worldTargetCollider;
         private Camera worldTargetCamera;
@@ -74,6 +76,19 @@ namespace TaskTown.Tutorial
                 return;
             }
 
+            if (directTarget != null)
+            {
+                if (!directTarget.gameObject.activeInHierarchy)
+                {
+                    StopVisual();
+                    return;
+                }
+
+                ApplyTargetLayout(directTarget, !isVisualActive);
+                EnsureVisualActive();
+                return;
+            }
+
             Button nextTarget = FindFirstActiveTarget();
             if (nextTarget != activeTarget)
             {
@@ -84,13 +99,13 @@ namespace TaskTown.Tutorial
                     return;
                 }
 
-                ApplyTargetLayout(activeTarget, true);
+                ApplyTargetLayout(activeTarget.transform as RectTransform, true);
                 EnsureVisualActive();
                 return;
             }
 
             if (activeTarget != null)
-                ApplyTargetLayout(activeTarget, false);
+                ApplyTargetLayout(activeTarget.transform as RectTransform, false);
         }
 
         private void OnDisable()
@@ -122,26 +137,11 @@ namespace TaskTown.Tutorial
             Vector2 additionalPointerOffset,
             params Button[] candidates)
         {
-            Hide();
-
-            if (content == null || overlayCanvas == null || indicatorRoot == null ||
-                indicatorCanvasGroup == null || ringTransform == null ||
-                handTransform == null)
-            {
+            if (!PrepareVisual(
+                    content,
+                    targetAnchorNormalized,
+                    additionalPointerOffset))
                 return;
-            }
-
-            positionMode = content.PointerPositionMode;
-            pointerOffset = content.PointerOffset + additionalPointerOffset;
-            canvasPosition = content.PointerCanvasPosition;
-            targetAnchor = new Vector2(
-                Mathf.Clamp01(targetAnchorNormalized.x),
-                Mathf.Clamp01(targetAnchorNormalized.y));
-            fixedRingSize = Mathf.Max(16f, content.PointerRingSize);
-            ringPadding = Mathf.Max(0f, content.PointerRingPadding);
-            showFocusRing = content.UsesHighlightEffect(
-                TutorialHighlightEffect.FocusRing);
-            ringTransform.gameObject.SetActive(showFocusRing);
 
             if (candidates != null)
             {
@@ -166,7 +166,35 @@ namespace TaskTown.Tutorial
             if (activeTarget == null)
                 return;
 
-            ApplyTargetLayout(activeTarget, true);
+            ApplyTargetLayout(activeTarget.transform as RectTransform, true);
+            EnsureVisualActive();
+        }
+
+        /// <summary>
+        /// Button 컴포넌트가 없는 일반 UI도 동일한 손가락/도넛 강조 대상으로 사용합니다.
+        /// </summary>
+        public void Show(
+            TutorialStepContent content,
+            RectTransform target,
+            Vector2 targetAnchorNormalized,
+            Vector2 additionalPointerOffset)
+        {
+            if (target == null ||
+                !PrepareVisual(
+                    content,
+                    targetAnchorNormalized,
+                    additionalPointerOffset))
+            {
+                return;
+            }
+
+            directTarget = target;
+            isRequested = true;
+
+            if (!directTarget.gameObject.activeInHierarchy)
+                return;
+
+            ApplyTargetLayout(directTarget, true);
             EnsureVisualActive();
         }
 
@@ -179,23 +207,12 @@ namespace TaskTown.Tutorial
             Collider targetCollider,
             Camera targetCamera = null)
         {
-            Hide();
-
-            if (content == null || targetCollider == null || overlayCanvas == null ||
-                indicatorRoot == null || indicatorCanvasGroup == null ||
-                ringTransform == null || handTransform == null)
+            if (targetCollider == null ||
+                !PrepareVisual(content, new Vector2(0.5f, 0.5f), Vector2.zero))
             {
                 return;
             }
 
-            positionMode = content.PointerPositionMode;
-            pointerOffset = content.PointerOffset;
-            canvasPosition = content.PointerCanvasPosition;
-            fixedRingSize = Mathf.Max(16f, content.PointerRingSize);
-            ringPadding = Mathf.Max(0f, content.PointerRingPadding);
-            showFocusRing = content.UsesHighlightEffect(
-                TutorialHighlightEffect.FocusRing);
-            ringTransform.gameObject.SetActive(showFocusRing);
             worldTargetCollider = targetCollider;
             worldTargetCamera = targetCamera != null ? targetCamera : Camera.main;
             isRequested = true;
@@ -211,11 +228,46 @@ namespace TaskTown.Tutorial
         {
             isRequested = false;
             activeTarget = null;
+            directTarget = null;
             targetCandidates.Clear();
             worldTargetCollider = null;
             worldTargetCamera = null;
             StopVisual();
+            showHand = false;
             showFocusRing = false;
+        }
+
+        private bool PrepareVisual(
+            TutorialStepContent content,
+            Vector2 targetAnchorNormalized,
+            Vector2 additionalPointerOffset)
+        {
+            Hide();
+
+            if (content == null || overlayCanvas == null || indicatorRoot == null ||
+                indicatorCanvasGroup == null || ringTransform == null ||
+                handTransform == null)
+            {
+                return false;
+            }
+
+            showHand = content.UsesHighlightEffect(TutorialHighlightEffect.Pointer);
+            showFocusRing = content.UsesHighlightEffect(
+                TutorialHighlightEffect.FocusRing);
+            if (!showHand && !showFocusRing)
+                return false;
+
+            positionMode = content.PointerPositionMode;
+            pointerOffset = content.PointerOffset + additionalPointerOffset;
+            canvasPosition = content.PointerCanvasPosition;
+            targetAnchor = new Vector2(
+                Mathf.Clamp01(targetAnchorNormalized.x),
+                Mathf.Clamp01(targetAnchorNormalized.y));
+            fixedRingSize = Mathf.Max(16f, content.PointerRingSize);
+            ringPadding = Mathf.Max(0f, content.PointerRingPadding);
+            handTransform.gameObject.SetActive(showHand);
+            ringTransform.gameObject.SetActive(showFocusRing);
+            return true;
         }
 
         private Button FindFirstActiveTarget()
@@ -239,11 +291,10 @@ namespace TaskTown.Tutorial
                 ringTransform.sizeDelta = Vector2.one * fixedRingSize;
         }
 
-        private void ApplyTargetLayout(Button target, bool updateRingSize)
+        private void ApplyTargetLayout(RectTransform targetRect, bool updateRingSize)
         {
-            if (target == null || indicatorRoot == null || overlayCanvas == null ||
-                indicatorRoot.parent is not RectTransform overlayParent ||
-                target.transform is not RectTransform targetRect)
+            if (targetRect == null || indicatorRoot == null || overlayCanvas == null ||
+                indicatorRoot.parent is not RectTransform overlayParent)
             {
                 return;
             }
@@ -374,8 +425,11 @@ namespace TaskTown.Tutorial
             KillFlowSequence();
 
             indicatorCanvasGroup.alpha = 0f;
-            handTransform.anchoredPosition = approachOffset;
-            handTransform.localScale = Vector3.one;
+            if (showHand)
+            {
+                handTransform.anchoredPosition = approachOffset;
+                handTransform.localScale = Vector3.one;
+            }
             if (showFocusRing)
                 ringTransform.localScale = Vector3.one * ringStartScale;
 
@@ -387,15 +441,24 @@ namespace TaskTown.Tutorial
             if (showFocusRing)
                 flowSequence.Join(ringTransform.DOScale(1f, fadeInDuration));
 
-            flowSequence
-                .Append(handTransform
-                    .DOAnchorPos(Vector2.zero, approachDuration)
-                    .SetEase(approachEase))
-                .Append(handTransform
-                    .DOScale(handPressScale, pressDuration)
-                    .SetEase(Ease.InQuad));
+            if (showHand)
+            {
+                flowSequence
+                    .Append(handTransform
+                        .DOAnchorPos(Vector2.zero, approachDuration)
+                        .SetEase(approachEase))
+                    .Append(handTransform
+                        .DOScale(handPressScale, pressDuration)
+                        .SetEase(Ease.InQuad));
+            }
+            else if (showFocusRing)
+            {
+                flowSequence.Append(ringTransform
+                    .DOScale(ringClickScale, pressDuration)
+                    .SetEase(Ease.OutQuad));
+            }
 
-            if (showFocusRing)
+            if (showHand && showFocusRing)
             {
                 flowSequence.Join(ringTransform
                     .DOScale(ringClickScale, pressDuration)

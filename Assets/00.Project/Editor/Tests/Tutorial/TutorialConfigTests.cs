@@ -204,16 +204,18 @@ namespace TaskTown.EditorTests.Tutorial
             }
         }
 
-        [TestCase(TutorialStep.CollapseAndExpandTown, true, true)]
-        [TestCase(TutorialStep.DrawAnimal, true, false)]
-        [TestCase(TutorialStep.DrawTool, true, false)]
-        [TestCase(TutorialStep.AssignAnimal, true, false)]
-        [TestCase(TutorialStep.PlaceAnimalInVillage, true, false)]
-        [TestCase(TutorialStep.OpenVillageInfo, false, false)]
-        [TestCase(TutorialStep.UpgradeVillage, true, false)]
+        [TestCase(TutorialStep.EarnManualCoin, false, false, true)]
+        [TestCase(TutorialStep.CollapseAndExpandTown, true, true, true)]
+        [TestCase(TutorialStep.DrawAnimal, true, true, false)]
+        [TestCase(TutorialStep.DrawTool, true, true, false)]
+        [TestCase(TutorialStep.AssignAnimal, true, true, false)]
+        [TestCase(TutorialStep.PlaceAnimalInVillage, true, true, false)]
+        [TestCase(TutorialStep.OpenVillageInfo, false, true, false)]
+        [TestCase(TutorialStep.UpgradeVillage, true, true, false)]
         public void ConfigAsset_행동강조단계는_Scale과Pointer를독립조합한다(
             TutorialStep step,
             bool expectsScale,
+            bool expectsPointer,
             bool expectsFocusRing)
         {
             TutorialConfigSO config = LoadConfig();
@@ -222,8 +224,9 @@ namespace TaskTown.EditorTests.Tutorial
             Assert.AreEqual(
                 expectsScale,
                 content.UsesHighlightEffect(TutorialHighlightEffect.ScalePulse));
-            Assert.IsTrue(content.UsesHighlightEffect(
-                TutorialHighlightEffect.Pointer));
+            Assert.AreEqual(
+                expectsPointer,
+                content.UsesHighlightEffect(TutorialHighlightEffect.Pointer));
             Assert.AreEqual(
                 expectsFocusRing,
                 content.UsesHighlightEffect(TutorialHighlightEffect.FocusRing));

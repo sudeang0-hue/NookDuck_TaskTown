@@ -59,6 +59,10 @@ namespace TaskTown.EditorTools
 
             SetHighlightDefaults(
                 steps,
+                TutorialStep.EarnManualCoin,
+                TutorialHighlightEffect.FocusRing);
+            SetHighlightDefaults(
+                steps,
                 TutorialStep.CollapseAndExpandTown,
                 TutorialHighlightEffect.ScalePulse |
                 TutorialHighlightEffect.Pointer |
@@ -150,6 +154,8 @@ namespace TaskTown.EditorTools
                 GetOrAddComponent<TutorialPointerIndicator>(bridge.gameObject);
             TutorialHighlightCoordinator coordinator =
                 GetOrAddComponent<TutorialHighlightCoordinator>(bridge.gameObject);
+            TutorialManualCoinFeedback manualCoinFeedback =
+                GetOrAddComponent<TutorialManualCoinFeedback>(bridge.gameObject);
 
             RectTransform pointerRoot = GetOrCreateRectChild(
                 tutorialCanvas.transform,
@@ -222,11 +228,14 @@ namespace TaskTown.EditorTools
                 scaleHighlighter;
             bridgeSerialized.FindProperty("highlightCoordinator").objectReferenceValue =
                 coordinator;
+            bridgeSerialized.FindProperty("manualCoinFeedback").objectReferenceValue =
+                manualCoinFeedback;
             bridgeSerialized.ApplyModifiedProperties();
 
             pointerRoot.gameObject.SetActive(false);
             EditorUtility.SetDirty(pointerIndicator);
             EditorUtility.SetDirty(coordinator);
+            EditorUtility.SetDirty(manualCoinFeedback);
             EditorUtility.SetDirty(bridge);
             Undo.CollapseUndoOperations(undoGroup);
             EditorSceneManager.MarkSceneDirty(scene);
