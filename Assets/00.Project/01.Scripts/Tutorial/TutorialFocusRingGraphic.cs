@@ -6,6 +6,7 @@ namespace TaskTown.Tutorial
     /// <summary>
     /// 별도 Texture 없이 튜토리얼 강조용 도넛 형태를 그립니다.
     /// </summary>
+    [RequireComponent(typeof(CanvasRenderer))]
     public sealed class TutorialFocusRingGraphic : MaskableGraphic
     {
         [SerializeField, Range(8, 128)] private int segments = 64;

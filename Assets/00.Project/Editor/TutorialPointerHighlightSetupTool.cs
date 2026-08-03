@@ -60,7 +60,9 @@ namespace TaskTown.EditorTools
             SetHighlightDefaults(
                 steps,
                 TutorialStep.CollapseAndExpandTown,
-                TutorialHighlightEffect.ScalePulse | TutorialHighlightEffect.Pointer);
+                TutorialHighlightEffect.ScalePulse |
+                TutorialHighlightEffect.Pointer |
+                TutorialHighlightEffect.FocusRing);
             SetHighlightDefaults(
                 steps,
                 TutorialStep.DrawAnimal,
@@ -71,7 +73,19 @@ namespace TaskTown.EditorTools
                 TutorialHighlightEffect.ScalePulse | TutorialHighlightEffect.Pointer);
             SetHighlightDefaults(
                 steps,
+                TutorialStep.AssignAnimal,
+                TutorialHighlightEffect.ScalePulse | TutorialHighlightEffect.Pointer);
+            SetHighlightDefaults(
+                steps,
                 TutorialStep.PlaceAnimalInVillage,
+                TutorialHighlightEffect.ScalePulse | TutorialHighlightEffect.Pointer);
+            SetHighlightDefaults(
+                steps,
+                TutorialStep.OpenVillageInfo,
+                TutorialHighlightEffect.Pointer);
+            SetHighlightDefaults(
+                steps,
+                TutorialStep.UpgradeVillage,
                 TutorialHighlightEffect.ScalePulse | TutorialHighlightEffect.Pointer);
 
             serialized.ApplyModifiedProperties();
@@ -164,6 +178,7 @@ namespace TaskTown.EditorTools
 
             TutorialFocusRingGraphic ringGraphic =
                 GetOrAddComponent<TutorialFocusRingGraphic>(ringTransform.gameObject);
+            GetOrAddComponent<CanvasRenderer>(ringTransform.gameObject);
             ringGraphic.color = new Color(1f, 0.72f, 0.18f, 0.9f);
             ringGraphic.raycastTarget = false;
 

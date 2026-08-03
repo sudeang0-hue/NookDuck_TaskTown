@@ -22,7 +22,8 @@ namespace TaskTown.Tutorial
     {
         None = 0,
         ScalePulse = 1 << 0,
-        Pointer = 1 << 1
+        Pointer = 1 << 1,
+        FocusRing = 1 << 2
     }
 
     public enum TutorialPointerPositionMode

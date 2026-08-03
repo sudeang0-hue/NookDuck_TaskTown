@@ -38,17 +38,34 @@ namespace TaskTown.Tutorial
         private TutorialPointerPositionMode positionMode;
         private Vector2 pointerOffset;
         private Vector2 canvasPosition;
+        private Vector2 targetAnchor = new(0.5f, 0.5f);
         private float fixedRingSize;
         private float ringPadding;
         private Button activeTarget;
         private Sequence flowSequence;
         private bool isRequested;
         private bool isVisualActive;
+        private bool showFocusRing;
+        private Collider worldTargetCollider;
+        private Camera worldTargetCamera;
 
         private void LateUpdate()
         {
             if (!isRequested)
                 return;
+
+            if (worldTargetCollider != null)
+            {
+                if (!IsWorldTargetAvailable())
+                {
+                    StopVisual();
+                    return;
+                }
+
+                ApplyWorldTargetLayout();
+                EnsureVisualActive();
+                return;
+            }
 
             if (positionMode == TutorialPointerPositionMode.CanvasPosition)
             {
@@ -88,6 +105,23 @@ namespace TaskTown.Tutorial
 
         public void Show(TutorialStepContent content, params Button[] candidates)
         {
+            Show(
+                content,
+                new Vector2(0.5f, 0.5f),
+                Vector2.zero,
+                candidates);
+        }
+
+        /// <summary>
+        /// 버튼 내부의 정규화 기준점과 추가 픽셀 오프셋을 사용하여 손가락 위치를
+        /// 단계 내부 구간별로 조정합니다.
+        /// </summary>
+        public void Show(
+            TutorialStepContent content,
+            Vector2 targetAnchorNormalized,
+            Vector2 additionalPointerOffset,
+            params Button[] candidates)
+        {
             Hide();
 
             if (content == null || overlayCanvas == null || indicatorRoot == null ||
@@ -98,10 +132,16 @@ namespace TaskTown.Tutorial
             }
 
             positionMode = content.PointerPositionMode;
-            pointerOffset = content.PointerOffset;
+            pointerOffset = content.PointerOffset + additionalPointerOffset;
             canvasPosition = content.PointerCanvasPosition;
+            targetAnchor = new Vector2(
+                Mathf.Clamp01(targetAnchorNormalized.x),
+                Mathf.Clamp01(targetAnchorNormalized.y));
             fixedRingSize = Mathf.Max(16f, content.PointerRingSize);
             ringPadding = Mathf.Max(0f, content.PointerRingPadding);
+            showFocusRing = content.UsesHighlightEffect(
+                TutorialHighlightEffect.FocusRing);
+            ringTransform.gameObject.SetActive(showFocusRing);
 
             if (candidates != null)
             {
@@ -130,12 +170,52 @@ namespace TaskTown.Tutorial
             EnsureVisualActive();
         }
 
+        /// <summary>
+        /// UI Button이 아닌 월드 오브젝트의 Collider 중심을 Overlay Canvas 좌표로
+        /// 변환하여 손가락 강조를 표시합니다.
+        /// </summary>
+        public void ShowWorld(
+            TutorialStepContent content,
+            Collider targetCollider,
+            Camera targetCamera = null)
+        {
+            Hide();
+
+            if (content == null || targetCollider == null || overlayCanvas == null ||
+                indicatorRoot == null || indicatorCanvasGroup == null ||
+                ringTransform == null || handTransform == null)
+            {
+                return;
+            }
+
+            positionMode = content.PointerPositionMode;
+            pointerOffset = content.PointerOffset;
+            canvasPosition = content.PointerCanvasPosition;
+            fixedRingSize = Mathf.Max(16f, content.PointerRingSize);
+            ringPadding = Mathf.Max(0f, content.PointerRingPadding);
+            showFocusRing = content.UsesHighlightEffect(
+                TutorialHighlightEffect.FocusRing);
+            ringTransform.gameObject.SetActive(showFocusRing);
+            worldTargetCollider = targetCollider;
+            worldTargetCamera = targetCamera != null ? targetCamera : Camera.main;
+            isRequested = true;
+
+            if (!IsWorldTargetAvailable())
+                return;
+
+            ApplyWorldTargetLayout();
+            EnsureVisualActive();
+        }
+
         public void Hide()
         {
             isRequested = false;
             activeTarget = null;
             targetCandidates.Clear();
+            worldTargetCollider = null;
+            worldTargetCamera = null;
             StopVisual();
+            showFocusRing = false;
         }
 
         private Button FindFirstActiveTarget()
@@ -155,7 +235,8 @@ namespace TaskTown.Tutorial
         private void ApplyFixedPosition()
         {
             indicatorRoot.anchoredPosition = canvasPosition + pointerOffset;
-            ringTransform.sizeDelta = Vector2.one * fixedRingSize;
+            if (showFocusRing)
+                ringTransform.sizeDelta = Vector2.one * fixedRingSize;
         }
 
         private void ApplyTargetLayout(Button target, bool updateRingSize)
@@ -176,7 +257,11 @@ namespace TaskTown.Tutorial
                 ? overlayCanvas.worldCamera
                 : null;
 
-            Vector3 targetWorldCenter = targetRect.TransformPoint(targetRect.rect.center);
+            Rect targetLocalRect = targetRect.rect;
+            Vector2 targetLocalPoint = new(
+                Mathf.Lerp(targetLocalRect.xMin, targetLocalRect.xMax, targetAnchor.x),
+                Mathf.Lerp(targetLocalRect.yMin, targetLocalRect.yMax, targetAnchor.y));
+            Vector3 targetWorldCenter = targetRect.TransformPoint(targetLocalPoint);
             Vector2 targetScreenCenter = RectTransformUtility.WorldToScreenPoint(
                 targetCamera,
                 targetWorldCenter);
@@ -190,7 +275,7 @@ namespace TaskTown.Tutorial
                 indicatorRoot.anchoredPosition = localCenter + pointerOffset;
             }
 
-            if (!updateRingSize)
+            if (!updateRingSize || !showFocusRing)
                 return;
 
             targetRect.GetWorldCorners(targetWorldCorners);
@@ -223,6 +308,48 @@ namespace TaskTown.Tutorial
             ringTransform.sizeDelta = Vector2.one * Mathf.Max(16f, diameter);
         }
 
+        private bool IsWorldTargetAvailable()
+        {
+            return worldTargetCollider != null &&
+                   worldTargetCollider.enabled &&
+                   worldTargetCollider.gameObject.activeInHierarchy &&
+                   worldTargetCamera != null;
+        }
+
+        private void ApplyWorldTargetLayout()
+        {
+            if (!IsWorldTargetAvailable() || indicatorRoot == null ||
+                overlayCanvas == null ||
+                indicatorRoot.parent is not RectTransform overlayParent)
+            {
+                return;
+            }
+
+            Vector3 screenPoint = worldTargetCamera.WorldToScreenPoint(
+                worldTargetCollider.bounds.center);
+            if (screenPoint.z <= 0f)
+            {
+                StopVisual();
+                return;
+            }
+
+            Camera overlayCamera = overlayCanvas.renderMode != RenderMode.ScreenSpaceOverlay
+                ? overlayCanvas.worldCamera
+                : null;
+
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    overlayParent,
+                    screenPoint,
+                    overlayCamera,
+                    out Vector2 localCenter))
+            {
+                indicatorRoot.anchoredPosition = localCenter + pointerOffset;
+            }
+
+            if (showFocusRing)
+                ringTransform.sizeDelta = Vector2.one * fixedRingSize;
+        }
+
         private void EnsureVisualActive()
         {
             if (isVisualActive)
@@ -249,22 +376,33 @@ namespace TaskTown.Tutorial
             indicatorCanvasGroup.alpha = 0f;
             handTransform.anchoredPosition = approachOffset;
             handTransform.localScale = Vector3.one;
-            ringTransform.localScale = Vector3.one * ringStartScale;
+            if (showFocusRing)
+                ringTransform.localScale = Vector3.one * ringStartScale;
 
             flowSequence = DOTween.Sequence()
                 .SetUpdate(true)
                 .SetLink(indicatorRoot.gameObject, LinkBehaviour.KillOnDestroy)
-                .Append(indicatorCanvasGroup.DOFade(1f, fadeInDuration))
-                .Join(ringTransform.DOScale(1f, fadeInDuration))
+                .Append(indicatorCanvasGroup.DOFade(1f, fadeInDuration));
+
+            if (showFocusRing)
+                flowSequence.Join(ringTransform.DOScale(1f, fadeInDuration));
+
+            flowSequence
                 .Append(handTransform
                     .DOAnchorPos(Vector2.zero, approachDuration)
                     .SetEase(approachEase))
                 .Append(handTransform
                     .DOScale(handPressScale, pressDuration)
-                    .SetEase(Ease.InQuad))
-                .Join(ringTransform
+                    .SetEase(Ease.InQuad));
+
+            if (showFocusRing)
+            {
+                flowSequence.Join(ringTransform
                     .DOScale(ringClickScale, pressDuration)
-                    .SetEase(Ease.OutQuad))
+                    .SetEase(Ease.OutQuad));
+            }
+
+            flowSequence
                 .Append(indicatorCanvasGroup.DOFade(0f, fadeOutDuration))
                 .AppendInterval(loopInterval)
                 .SetLoops(-1, LoopType.Restart);

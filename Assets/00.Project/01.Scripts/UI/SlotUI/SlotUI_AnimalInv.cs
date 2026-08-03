@@ -65,6 +65,13 @@ public class SlotUI_AnimalInv : SlotUIBase
     // 마을 확정 배치 조회용 캐시
     private VillageAnimalSetUI_Manager cachedVillageAnimalSet;
 
+    // -----------------------------------------------------------------------------
+    // [ 2026.08.03 - Choi - 튜토리얼 단계별 강조 연동 ]
+    // 기능: 동물 인벤토리의 특정 슬롯을 손가락 강조 대상으로 사용할 수 있도록
+    //       슬롯의 클릭 버튼을 읽기 전용으로 공개합니다.
+    // -----------------------------------------------------------------------------
+    public Button CoverButton => coverButton;
+
     private void Awake()
     {
         ResolveInventoryReference();

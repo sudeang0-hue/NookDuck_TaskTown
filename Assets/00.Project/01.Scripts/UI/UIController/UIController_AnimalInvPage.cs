@@ -63,6 +63,13 @@ namespace UI
 
         public string CurrentAnimalId => currentAnimalId;
 
+        // -----------------------------------------------------------------------------
+        // [ 2026.08.03 - Choi - 튜토리얼 단계별 강조 연동 ]
+        // 기능: Additive 튜토리얼 Scene에서 Set Tool 버튼을 강조 대상으로 사용할 수
+        //       있도록 읽기 전용 참조만 공개합니다.
+        // -----------------------------------------------------------------------------
+        public Button SettingToolButton => settingToolButton;
+
         /// <summary>
         /// 상세 페이지 패널이 현재 열려 있는지 여부
         /// </summary>

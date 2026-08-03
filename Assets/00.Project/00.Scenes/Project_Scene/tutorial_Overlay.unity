@@ -1094,6 +1094,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1023206379}
   - component: {fileID: 1023206380}
+  - component: {fileID: 1023206381}
   m_Layer: 5
   m_Name: FocusRing
   m_TagString: Untagged
@@ -1142,6 +1143,14 @@ MonoBehaviour:
       m_Calls: []
   segments: 64
   thickness: 0.18
+--- !u!222 &1023206381
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1023206378}
+  m_CullTransparentMesh: 1
 --- !u!1 &1038946183
 GameObject:
   m_ObjectHideFlags: 0
@@ -1191,7 +1200,15 @@ MonoBehaviour:
   highlightCoordinator: {fileID: 1038946190}
   menuController: {fileID: 0}
   gachaController: {fileID: 0}
+  animalInventoryController: {fileID: 0}
+  animalInventoryPageController: {fileID: 0}
+  townTabController: {fileID: 0}
   villageAnimalSetController: {fileID: 0}
+  animalInventorySlotIndex: 0
+  villagePlacementSlotIndex: 0
+  animalPlacementTabPointerOffset: {x: 40, y: 0}
+  townUpgradeTabPointerAnchor: {x: 0.9, y: 0.5}
+  townUpgradeTabPointerOffset: {x: 0, y: 0}
 --- !u!114 &1038946185
 MonoBehaviour:
   m_ObjectHideFlags: 0

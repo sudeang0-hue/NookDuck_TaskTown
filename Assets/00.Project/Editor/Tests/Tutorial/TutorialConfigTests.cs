@@ -204,20 +204,29 @@ namespace TaskTown.EditorTests.Tutorial
             }
         }
 
-        [TestCase(TutorialStep.CollapseAndExpandTown)]
-        [TestCase(TutorialStep.DrawAnimal)]
-        [TestCase(TutorialStep.DrawTool)]
-        [TestCase(TutorialStep.PlaceAnimalInVillage)]
+        [TestCase(TutorialStep.CollapseAndExpandTown, true, true)]
+        [TestCase(TutorialStep.DrawAnimal, true, false)]
+        [TestCase(TutorialStep.DrawTool, true, false)]
+        [TestCase(TutorialStep.AssignAnimal, true, false)]
+        [TestCase(TutorialStep.PlaceAnimalInVillage, true, false)]
+        [TestCase(TutorialStep.OpenVillageInfo, false, false)]
+        [TestCase(TutorialStep.UpgradeVillage, true, false)]
         public void ConfigAsset_행동강조단계는_Scale과Pointer를독립조합한다(
-            TutorialStep step)
+            TutorialStep step,
+            bool expectsScale,
+            bool expectsFocusRing)
         {
             TutorialConfigSO config = LoadConfig();
 
             Assert.IsTrue(config.TryGetStepContent(step, out TutorialStepContent content));
-            Assert.IsTrue(content.UsesHighlightEffect(
-                TutorialHighlightEffect.ScalePulse));
+            Assert.AreEqual(
+                expectsScale,
+                content.UsesHighlightEffect(TutorialHighlightEffect.ScalePulse));
             Assert.IsTrue(content.UsesHighlightEffect(
                 TutorialHighlightEffect.Pointer));
+            Assert.AreEqual(
+                expectsFocusRing,
+                content.UsesHighlightEffect(TutorialHighlightEffect.FocusRing));
             Assert.AreEqual(
                 TutorialPointerPositionMode.FollowHighlightedButton,
                 content.PointerPositionMode);

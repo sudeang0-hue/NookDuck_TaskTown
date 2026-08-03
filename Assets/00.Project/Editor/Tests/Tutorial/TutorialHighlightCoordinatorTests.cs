@@ -24,6 +24,7 @@ namespace TaskTown.EditorTests.Tutorial
 
                 Assert.IsNull(DOTween.TweensByTarget(context.Button.transform));
                 Assert.IsTrue(context.PointerRoot.activeSelf);
+                Assert.IsFalse(context.RingObject.activeSelf);
             }
             finally
             {
@@ -55,6 +56,88 @@ namespace TaskTown.EditorTests.Tutorial
         }
 
         [Test]
+        public void HighlightWorldPointer_월드Collider중심에_손가락을표시한다()
+        {
+            TestContext context = CreateContext(TutorialHighlightEffect.Pointer);
+            GameObject cameraObject = new("WorldPointerCamera", typeof(Camera));
+            GameObject targetObject = new("village_house", typeof(BoxCollider));
+            targetObject.transform.position = new Vector3(0f, 0f, 5f);
+
+            try
+            {
+                context.Coordinator.HighlightWorldPointer(
+                    TutorialStep.DrawAnimal,
+                    targetObject.GetComponent<BoxCollider>(),
+                    cameraObject.GetComponent<Camera>());
+
+                Assert.IsTrue(context.PointerRoot.activeSelf);
+                Assert.IsFalse(context.RingObject.activeSelf);
+                Assert.IsNull(DOTween.TweensByTarget(targetObject.transform));
+            }
+            finally
+            {
+                Object.DestroyImmediate(targetObject);
+                Object.DestroyImmediate(cameraObject);
+                context.Dispose();
+            }
+        }
+
+        [Test]
+        public void Highlight_버튼내부기준점과추가오프셋을_구간별로적용한다()
+        {
+            TestContext context = CreateContext(
+                TutorialHighlightEffect.Pointer,
+                TutorialPointerPositionMode.FollowHighlightedButton);
+
+            try
+            {
+                RectTransform buttonRect =
+                    context.Button.GetComponent<RectTransform>();
+                buttonRect.sizeDelta = new Vector2(200f, 100f);
+
+                context.Coordinator.Highlight(
+                    TutorialStep.DrawAnimal,
+                    System.Array.Empty<Button>(),
+                    new[] { context.Button },
+                    new Vector2(1f, 0.5f),
+                    new Vector2(-10f, 0f));
+
+                RectTransform pointerRect =
+                    context.PointerRoot.GetComponent<RectTransform>();
+                Assert.AreEqual(90f, pointerRect.anchoredPosition.x, 0.01f);
+                Assert.AreEqual(0f, pointerRect.anchoredPosition.y, 0.01f);
+            }
+            finally
+            {
+                context.Dispose();
+            }
+        }
+
+        [Test]
+        public void Highlight_FocusRing설정은_손가락과도넛을함께표시한다()
+        {
+            TestContext context = CreateContext(
+                TutorialHighlightEffect.Pointer |
+                TutorialHighlightEffect.FocusRing);
+
+            try
+            {
+                context.Coordinator.Highlight(
+                    TutorialStep.DrawAnimal,
+                    new[] { context.Button },
+                    new[] { context.Button });
+
+                Assert.IsTrue(context.PointerRoot.activeSelf);
+                Assert.IsTrue(context.RingObject.activeSelf);
+                Assert.IsNotNull(context.RingObject.GetComponent<CanvasRenderer>());
+            }
+            finally
+            {
+                context.Dispose();
+            }
+        }
+
+        [Test]
         public void FocusRingGraphic_도넛Mesh를생성하고입력을가리지않는다()
         {
             GameObject ringObject = new(
@@ -78,12 +161,16 @@ namespace TaskTown.EditorTests.Tutorial
             Assert.Greater(helper.currentVertCount, 0);
             Assert.Greater(helper.currentIndexCount, 0);
             Assert.IsFalse(graphic.raycastTarget);
+            Assert.IsNotNull(ringObject.GetComponent<CanvasRenderer>());
 
             helper.Dispose();
             Object.DestroyImmediate(ringObject);
         }
 
-        private static TestContext CreateContext(TutorialHighlightEffect effects)
+        private static TestContext CreateContext(
+            TutorialHighlightEffect effects,
+            TutorialPointerPositionMode pointerMode =
+                TutorialPointerPositionMode.CanvasPosition)
         {
             GameObject canvasObject = new(
                 "TutorialHighlightCanvasTest",
@@ -103,7 +190,10 @@ namespace TaskTown.EditorTests.Tutorial
                 typeof(RectTransform),
                 typeof(CanvasGroup));
             pointerRoot.transform.SetParent(canvasObject.transform, false);
-            GameObject ringObject = new("FocusRing", typeof(RectTransform));
+            GameObject ringObject = new(
+                "FocusRing",
+                typeof(RectTransform),
+                typeof(TutorialFocusRingGraphic));
             ringObject.transform.SetParent(pointerRoot.transform, false);
             GameObject handObject = new("Hand", typeof(RectTransform));
             handObject.transform.SetParent(pointerRoot.transform, false);
@@ -115,7 +205,7 @@ namespace TaskTown.EditorTests.Tutorial
                 typeof(Button));
             buttonObject.transform.SetParent(canvasObject.transform, false);
 
-            TutorialConfigSO config = CreateConfig(effects);
+            TutorialConfigSO config = CreateConfig(effects, pointerMode);
             TutorialPointerIndicator pointerIndicator =
                 systemObject.GetComponent<TutorialPointerIndicator>();
             TutorialButtonHighlighter scaleHighlighter =
@@ -149,11 +239,14 @@ namespace TaskTown.EditorTests.Tutorial
                 systemObject,
                 buttonObject,
                 pointerRoot,
+                ringObject,
                 config,
                 coordinator);
         }
 
-        private static TutorialConfigSO CreateConfig(TutorialHighlightEffect effects)
+        private static TutorialConfigSO CreateConfig(
+            TutorialHighlightEffect effects,
+            TutorialPointerPositionMode pointerMode)
         {
             TutorialConfigSO config = ScriptableObject.CreateInstance<TutorialConfigSO>();
             SerializedObject serialized = new(config);
@@ -163,7 +256,7 @@ namespace TaskTown.EditorTests.Tutorial
             content.FindPropertyRelative("step").intValue = (int)TutorialStep.DrawAnimal;
             content.FindPropertyRelative("highlightEffects").intValue = (int)effects;
             content.FindPropertyRelative("pointerPositionMode").intValue =
-                (int)TutorialPointerPositionMode.CanvasPosition;
+                (int)pointerMode;
             content.FindPropertyRelative("pointerCanvasPosition").vector2Value =
                 new Vector2(100f, 50f);
             content.FindPropertyRelative("pointerRingSize").floatValue = 120f;
@@ -179,6 +272,7 @@ namespace TaskTown.EditorTests.Tutorial
                 GameObject systemObject,
                 GameObject buttonObject,
                 GameObject pointerRoot,
+                GameObject ringObject,
                 TutorialConfigSO config,
                 TutorialHighlightCoordinator coordinator)
             {
@@ -186,6 +280,7 @@ namespace TaskTown.EditorTests.Tutorial
                 SystemObject = systemObject;
                 ButtonObject = buttonObject;
                 PointerRoot = pointerRoot;
+                RingObject = ringObject;
                 Config = config;
                 Coordinator = coordinator;
             }
@@ -194,6 +289,7 @@ namespace TaskTown.EditorTests.Tutorial
             public GameObject SystemObject { get; }
             public GameObject ButtonObject { get; }
             public GameObject PointerRoot { get; }
+            public GameObject RingObject { get; }
             public TutorialConfigSO Config { get; }
             public TutorialHighlightCoordinator Coordinator { get; }
             public Button Button => ButtonObject.GetComponent<Button>();

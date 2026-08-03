@@ -41,6 +41,20 @@ namespace UI
         public Button EditSetAnimalButton => editSetAnimalButton;
         public Button ConfirmSetAnimalButton => confirmSetAnimalButton;
 
+        // -----------------------------------------------------------------------------
+        // [ 2026.08.03 - Choi - 튜토리얼 단계별 강조 연동 ]
+        // 기능: 지정한 마을 배치 슬롯의 '+' 버튼을 튜토리얼 강조 대상으로 조회합니다.
+        //       슬롯 목록 자체는 외부에 노출하지 않습니다.
+        // -----------------------------------------------------------------------------
+        public Button GetSetAnimalButtonAt(int index)
+        {
+            if (index < 0 || index >= activeSlots.Count)
+                return null;
+
+            SlotUI_VillageAnimal slot = activeSlots[index];
+            return slot != null ? slot.SetAnimalButton : null;
+        }
+
         private void Awake()
         {
             ResolveInventory();
