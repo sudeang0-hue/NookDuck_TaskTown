@@ -15,8 +15,10 @@ namespace UI
         [Header("Panel")]
         [SerializeField] private RectTransform panelRect;
         [SerializeField] private GameMenuType gameMenuType;
+        [SerializeField] private GameTabType gameTabType;
 
         public GameMenuType MenuType => gameMenuType;
+        public GameTabType TabType => gameTabType;
 
         /// <summary>OpenPanel* 호출로 패널이 활성화된 직후.</summary>
         public event Action OnPanelOpened;

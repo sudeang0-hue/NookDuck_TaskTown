@@ -1,34 +1,25 @@
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.Events;
-
-
-public enum InventoryTabType
-{
-    AnimalInv,
-    ToolInv
-}
+using UnityEngine.UI;
 
 namespace UI
 {
     public class TabUIManager_Inventory : MonoBehaviour
     {
-
         [SerializeField] private Button[] openAnimalInvButtons;
         [SerializeField] private Button[] openToolInvButtons;
 
-
-        [Header("Tab Panels")]
+        [Header("Tab Panels (ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ MenuType+TabTypeï¿½ï¿½ï¿½ï¿½ ï¿½Úµï¿½ ï¿½ï¿½ï¿½ï¿½)")]
         [SerializeField] private UIPanelWindow AnimalInvPanel;
         [SerializeField] private UIPanelWindow ToolInvPanel;
 
-        [Header("UI ?????")]
-        [Tooltip("???? Inv ?¬Ô? ????/??? ?? ?? ??? + SyncAllSlots ??? ???")]
+        [Header("UI ï¿½ï¿½ï¿½ï¿½È­")]
+        [Tooltip("ï¿½ï¿½ï¿½ï¿½ Inv ï¿½Ð³ï¿½ ï¿½ï¿½ï¿½ï¿½/Å¬ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Sync È£ï¿½ï¿½ ï¿½ï¿½ï¿½")]
         private UIController_AnimalInv animalInvUI;
-        [Tooltip("???? Inv ?¬Ô? ????/??? ?? ?? ??? + SyncAllSlots ??? ???")]
+        [Tooltip("ï¿½ï¿½ï¿½ï¿½ Inv ï¿½Ð³ï¿½ ï¿½ï¿½ï¿½ï¿½/Å¬ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Sync È£ï¿½ï¿½ ï¿½ï¿½ï¿½")]
         private UIController_ToolInv toolInvUI;
 
-        private InventoryTabType lastOpenedTab = InventoryTabType.AnimalInv;
+        private GameTabType lastOpenedTab = GameTabType.AnimalInvTab;
         private UIController_Menu menuUI;
 
         private void Awake()
@@ -53,31 +44,10 @@ namespace UI
             menuUI?.CloseOtherExclusiveMenus(GameMenuType.Inventory);
         }
 
-        /// <summary>
-        /// Inspector ?????? ??? ???? ?? GameMenuType.Inventory ?¬Ô??? ??????? ????????.
-        /// </summary>
         private void EnsurePanelsResolved()
         {
-            if (AnimalInvPanel != null && ToolInvPanel != null)
-                return;
-
-            UIPanelWindow[] windows = FindObjectsByType<UIPanelWindow>(
-                FindObjectsInactive.Include, FindObjectsSortMode.None);
-
-            for (int i = 0; i < windows.Length; i++)
-            {
-                UIPanelWindow window = windows[i];
-                if (window == null || window.MenuType != GameMenuType.Inventory)
-                    continue;
-
-                string key = window.name.ToLowerInvariant();
-                // Aniaml_Inv_root ¿ÀÅ¸ ÀÌ¸§µµ µ¿¹° ÀÎº¥À¸·Î ÀÎ½Ä
-                bool isAnimalName = key.Contains("animal") || key.Contains("aniaml");
-                if (ToolInvPanel == null && key.Contains("tool") && key.Contains("inv"))
-                    ToolInvPanel = window;
-                else if (AnimalInvPanel == null && isAnimalName && key.Contains("inv"))
-                    AnimalInvPanel = window;
-            }
+            UIPanelTabUtility.ResolveTabPanel(ref AnimalInvPanel, GameMenuType.Inventory, GameTabType.AnimalInvTab);
+            UIPanelTabUtility.ResolveTabPanel(ref ToolInvPanel, GameMenuType.Inventory, GameTabType.ToolInvTab);
         }
 
         private void OnEnable()
@@ -93,7 +63,7 @@ namespace UI
         }
 
         /// <summary>
-        /// ?????? ?????? ?¬Ô?
+        /// ï¿½âº»ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ð³ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½Îºï¿½)
         /// </summary>
         public void OpenDefaultTab()
         {
@@ -101,42 +71,38 @@ namespace UI
         }
 
         /// <summary>
-        /// ???? ?¥ê??? ?? ????
+        /// ï¿½ï¿½ï¿½ï¿½ ï¿½Îºï¿½ï¿½ä¸® ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public void OpenAnimalInvTab()
         {
-            lastOpenedTab = InventoryTabType.AnimalInv;
-            EnsurePanelsResolved();
+            lastOpenedTab = GameTabType.AnimalInvTab;
             RequestExclusiveMenu();
 
-            ToolInvPanel?.ClosePanel();
             toolInvUI?.NotifyPanelClosed();
-
-            AnimalInvPanel?.OpenPanelDefaultPosition();
+            UIPanelTabUtility.OpenTab(GameMenuType.Inventory, GameTabType.AnimalInvTab);
             animalInvUI?.NotifyPanelOpened();
+            EnsurePanelsResolved();
         }
 
         /// <summary>
-        /// ???? ?¥ê??? ?? ????
+        /// ï¿½ï¿½ï¿½ï¿½ ï¿½Îºï¿½ï¿½ä¸® ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public void OpenToolInvTab()
         {
-            lastOpenedTab = InventoryTabType.ToolInv;
-            EnsurePanelsResolved();
+            lastOpenedTab = GameTabType.ToolInvTab;
             RequestExclusiveMenu();
 
-            AnimalInvPanel?.ClosePanel();
             animalInvUI?.NotifyPanelClosed();
-
-            ToolInvPanel?.OpenPanelDefaultPosition();
+            UIPanelTabUtility.OpenTab(GameMenuType.Inventory, GameTabType.ToolInvTab);
             toolInvUI?.NotifyPanelOpened();
+            EnsurePanelsResolved();
         }
 
         private void OpenLastTab()
         {
             switch (lastOpenedTab)
             {
-                case InventoryTabType.ToolInv:
+                case GameTabType.ToolInvTab:
                     OpenToolInvTab();
                     break;
 
@@ -157,25 +123,12 @@ namespace UI
             OpenLastTab();
         }
 
-        public bool IsAnyTabOpen
-        {
-            get
-            {
-                bool isAnimalInvOpen = AnimalInvPanel != null && AnimalInvPanel.gameObject.activeSelf;
-                bool isToolInvOpen = ToolInvPanel != null && ToolInvPanel.gameObject.activeSelf;
-
-                return isAnimalInvOpen || isToolInvOpen;
-            }
-        }
+        public bool IsAnyTabOpen => UIPanelTabUtility.IsAnyTabOpen(GameMenuType.Inventory);
 
         public void CloseAllTabs()
         {
-            EnsurePanelsResolved();
-
-            AnimalInvPanel?.ClosePanel();
+            UIPanelTabUtility.CloseAllTabs(GameMenuType.Inventory);
             animalInvUI?.NotifyPanelClosed();
-
-            ToolInvPanel?.ClosePanel();
             toolInvUI?.NotifyPanelClosed();
         }
 

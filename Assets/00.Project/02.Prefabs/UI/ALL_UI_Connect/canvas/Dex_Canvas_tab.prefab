@@ -281,7 +281,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 0}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -313,6 +313,7 @@ MonoBehaviour:
   panelCanvas: {fileID: 0}
   panelRect: {fileID: 0}
   gameMenuType: 3
+  gameTabType: 4
   isDragging: 0
 --- !u!1 &2436022000949379145
 GameObject:
@@ -503,7 +504,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 0}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -535,6 +536,7 @@ MonoBehaviour:
   panelCanvas: {fileID: 0}
   panelRect: {fileID: 0}
   gameMenuType: 3
+  gameTabType: 3
   isDragging: 0
 --- !u!1 &5559632811888156350
 GameObject:
@@ -856,7 +858,7 @@ GameObject:
   - component: {fileID: 1565119476091420727}
   - component: {fileID: 7587468434037288056}
   m_Layer: 5
-  m_Name: Text (TMP)
+  m_Name: Title_txt_animalDex
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -993,7 +995,7 @@ GameObject:
   - component: {fileID: 4227506760329573680}
   - component: {fileID: 276247123944004558}
   m_Layer: 5
-  m_Name: Text (TMP)
+  m_Name: Title_txt_ToolDex
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1622,10 +1624,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 4454454551502177149}
     m_Modifications:
-    - target: {fileID: 256005954320740162, guid: cb2cc463566aea4428bc7f6de8de412b, type: 3}
-      propertyPath: m_AnchoredPosition.y
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 1391640052111020979, guid: cb2cc463566aea4428bc7f6de8de412b, type: 3}
       propertyPath: m_Name
       value: Dex_Page

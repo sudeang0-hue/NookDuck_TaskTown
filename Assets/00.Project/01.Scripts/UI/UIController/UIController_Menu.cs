@@ -33,6 +33,7 @@ public class UIController_Menu : MonoBehaviour
     private TabUIManager_Inventory inventoryTabManager;
     private TabUIManager_Town townTabManager;
     private TabUIManager_Dex dexTabManager;
+    private TabUIManager_Option optionTabManager;
 
     [Header("패널 오픈시 초기 위치 고정")]
     private bool usePanelOpenDefaultPosition = true;
@@ -100,6 +101,9 @@ public class UIController_Menu : MonoBehaviour
         if (dexTabManager == null)
             dexTabManager = GetComponent<TabUIManager_Dex>();
 
+        if (optionTabManager == null)
+            optionTabManager = GetComponent<TabUIManager_Option>();
+
         if (transform.parent == null)
         {
             Debug.LogWarning($"{name}의 부모 오브젝트를 찾을 수 없어 자식 UI 자동 바인딩을 건너뜁니다.");
@@ -116,6 +120,9 @@ public class UIController_Menu : MonoBehaviour
 
             if (dexTabManager == null)
                 dexTabManager = parentTransform.GetComponentInChildren<TabUIManager_Dex>(true);
+
+            if (optionTabManager == null)
+                optionTabManager = parentTransform.GetComponentInChildren<TabUIManager_Option>(true);
         }
 
         if (inventoryTabManager == null)
@@ -126,6 +133,9 @@ public class UIController_Menu : MonoBehaviour
 
         if (dexTabManager == null)
             dexTabManager = FindFirstObjectByType<TabUIManager_Dex>(FindObjectsInactive.Include);
+
+        if (optionTabManager == null)
+            optionTabManager = FindFirstObjectByType<TabUIManager_Option>(FindObjectsInactive.Include);
 
         if (gachaUI == null)
             gachaUI = FindFirstObjectByType<UIController_Gacha>(FindObjectsInactive.Include);
@@ -192,6 +202,9 @@ public class UIController_Menu : MonoBehaviour
         if (keepType != GameMenuType.Dex)
             dexTabManager?.CloseAllTabs();
 
+        if (keepType != GameMenuType.Option)
+            optionTabManager?.CloseAllTabs();
+
         for (int i = 0; i < registeredWindows.Count; i++)
         {
             UIPanelWindow window = registeredWindows[i];
@@ -227,6 +240,7 @@ public class UIController_Menu : MonoBehaviour
         inventoryTabManager?.CloseAllTabs();
         townTabManager?.CloseAllTabs();
         dexTabManager?.CloseAllTabs();
+        optionTabManager?.CloseAllTabs();
 
         for (int i = 0; i < registeredWindows.Count; i++)
         {
@@ -299,11 +313,21 @@ public class UIController_Menu : MonoBehaviour
 
     private void OnOptionButtonClicked()
     {
-        ToggleSinglePanelMenu(GameMenuType.Option);
+        if (optionTabManager == null)
+        {
+            Debug.LogWarning("[UIController_Menu] OptionTabManager가 연결되지 않았습니다.");
+            return;
+        }
+
+        bool willOpen = !optionTabManager.IsAnyTabOpen;
+        if (willOpen)
+            CloseOtherExclusiveMenus(GameMenuType.Option);
+
+        optionTabManager.ToggleOptionTabs();
     }
 
     /// <summary>
-    /// Gacha / Option처럼 단일 UIPanelWindow 메뉴를 토글합니다.
+    /// Gacha처럼 단일 UIPanelWindow 메뉴를 토글합니다.
     /// </summary>
     private void ToggleSinglePanelMenu(GameMenuType menuType, System.Action onOpened = null)
     {
