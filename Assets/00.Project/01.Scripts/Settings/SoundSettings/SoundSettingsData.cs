@@ -4,6 +4,7 @@
  *
  * 주요 기능:
  * - Master, BGM, UIController_AnimalInvPage, Environment 볼륨 percent를 보관합니다.
+ * - BGM 플레이리스트의 재생 모드를 보관합니다.
  * - 채널별 마지막 0 초과 볼륨을 보관해 음소거 해제 시 복원값으로 사용합니다.
  * - 채널별 Get/Set, Clamp, Clone을 제공합니다.
  */
@@ -28,6 +29,7 @@ public class SoundSettingsData
     public float bgmVolume = 100f;
     public float uiVolume = 100f;
     [FormerlySerializedAs("animalVolume")] public float environmentVolume = 100f;
+    public BGMPlaybackMode bgmPlaybackMode = BGMPlaybackMode.SequentialLoop;
 
     public float masterLastNonZeroVolume;
     public float bgmLastNonZeroVolume;
@@ -40,6 +42,7 @@ public class SoundSettingsData
         bgmVolume = ClampPercent(bgmVolume);
         uiVolume = ClampPercent(uiVolume);
         environmentVolume = ClampPercent(environmentVolume);
+        bgmPlaybackMode = NormalizeBGMPlaybackMode(bgmPlaybackMode);
 
         masterLastNonZeroVolume = NormalizeLastNonZeroVolume(masterLastNonZeroVolume, masterVolume);
         bgmLastNonZeroVolume = NormalizeLastNonZeroVolume(bgmLastNonZeroVolume, bgmVolume);
@@ -96,6 +99,16 @@ public class SoundSettingsData
         };
     }
 
+    public BGMPlaybackMode GetBGMPlaybackMode()
+    {
+        return NormalizeBGMPlaybackMode(bgmPlaybackMode);
+    }
+
+    public void SetBGMPlaybackMode(BGMPlaybackMode mode)
+    {
+        bgmPlaybackMode = NormalizeBGMPlaybackMode(mode);
+    }
+
     public SoundSettingsData Clone()
     {
         return new SoundSettingsData
@@ -104,6 +117,7 @@ public class SoundSettingsData
             bgmVolume = bgmVolume,
             uiVolume = uiVolume,
             environmentVolume = environmentVolume,
+            bgmPlaybackMode = GetBGMPlaybackMode(),
             masterLastNonZeroVolume = masterLastNonZeroVolume,
             bgmLastNonZeroVolume = bgmLastNonZeroVolume,
             uiLastNonZeroVolume = uiLastNonZeroVolume,
@@ -127,6 +141,13 @@ public class SoundSettingsData
         }
 
         return currentVolume > 0f ? currentVolume : DefaultVolumePercent;
+    }
+
+    private static BGMPlaybackMode NormalizeBGMPlaybackMode(BGMPlaybackMode mode)
+    {
+        return Enum.IsDefined(typeof(BGMPlaybackMode), mode)
+            ? mode
+            : BGMPlaybackMode.SequentialLoop;
     }
 
     private static float ClampPercent(float percent)
