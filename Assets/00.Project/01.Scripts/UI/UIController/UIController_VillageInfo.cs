@@ -84,13 +84,13 @@ namespace UI
             int toolCapacity,
             float autoProductBonus)
         {
-            SetText(townLevelText, "TownLevel : " + townLevel);
-            SetText(clickCoinText, "Click : " + clickCoin.ToString("N0"));
-            SetText(typingCoinText, "Typing : " + typingCoin.ToString("N0"));
+            SetText(townLevelText, "마을 레벨: " + townLevel + ".Lv");
+            SetText(clickCoinText, "클릭 코인: " + clickCoin.ToString("N0"));
+            SetText(typingCoinText, "타이핑 코인: " + typingCoin.ToString("N0"));
             // 현재 마을 레벨의 도구 상한 (InventoryManager_Tool.GetToolCapacity)
-            SetText(toolCapacityText, "Tool : " + toolCapacity.ToString("N0"));
+            SetText(toolCapacityText, "도구 상한: " + toolCapacity.ToString("N0"));
             // VillageUpgrade의 toolProductValue 표기와 동일 (도구 효율 배율)
-            SetText(autoProductBonusText, "Bonus : " + autoProductBonus.ToString("0.#") + " %");
+            SetText(autoProductBonusText, "생산 효율: " + autoProductBonus.ToString("0.#") + " %");
         }
 
         private static void SetText(TMP_Text target, string value)
