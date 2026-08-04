@@ -15,7 +15,11 @@ namespace TaskTown.Gacha
         [Tooltip("ITownLevelProvider를 구현한 컴포넌트를 연결합니다. 비워두면 마을 레벨 1로 취급합니다.")]
         [SerializeField] private MonoBehaviour townLevelProviderSource;
 
+        [Tooltip("IDifficultyProvider를 구현한 컴포넌트를 연결합니다. 비워두면 Normal 난이도로 취급합니다.")]
+        [SerializeField] private MonoBehaviour difficultyProviderSource;
+
         private ITownLevelProvider townLevelProvider;
+        private IDifficultyProvider difficultyProvider;
         private GachaSystem gachaSystem;
 
         public event Action<GachaResult> OnGachaResolved;
@@ -26,6 +30,7 @@ namespace TaskTown.Gacha
         {
             gachaSystem = new GachaSystem();
             townLevelProvider = townLevelProviderSource as ITownLevelProvider;
+            difficultyProvider = difficultyProviderSource as IDifficultyProvider;
         }
 
         // rollCount번 뽑을 때 필요한 총 비용입니다. 10연뽑기 버튼 등에서 사용합니다.
@@ -39,7 +44,7 @@ namespace TaskTown.Gacha
         // 재화 차감 여부 판단은 UI/저장 담당 쪽에서 CurrentCost를 확인해 처리합니다.
         public virtual GachaResult Roll()
         {
-            GachaResult result = gachaSystem.Roll(pool, GetTownLevel());
+            GachaResult result = gachaSystem.Roll(pool, GetTownLevel(), GetDifficulty());
             OnGachaResolved?.Invoke(result);
             return result;
         }
@@ -59,6 +64,11 @@ namespace TaskTown.Gacha
         private int GetTownLevel()
         {
             return townLevelProvider != null ? townLevelProvider.CurrentTownLevel : 1;
+        }
+
+        private DifficultyType GetDifficulty()
+        {
+            return difficultyProvider != null ? difficultyProvider.CurrentDifficulty : DifficultyType.Normal;
         }
     }
 }
