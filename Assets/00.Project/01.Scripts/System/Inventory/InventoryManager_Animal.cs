@@ -56,6 +56,7 @@ namespace TaskTown.KDH
             endlessModeProvider = endlessModeProviderSource as IEndlessModeProvider;
 
             InitializeDictionary();
+            SortAnimalSlots();
         }
 
         // #19: 엔드리스 모드에서는 동물 개별 레벨 5 상한을 해제합니다.
@@ -156,6 +157,7 @@ namespace TaskTown.KDH
             animalSlotsList.Add(newSlot);
             animalSlotsDic.Add(animalData.Id, newSlot);
 
+            SortAnimalSlots();
             NotifySlotChanged(newSlot);
 
             Debug.Log($"[InventoryManager_Animal] 신규 동물 획득: {animalData.DisplayName}");
@@ -319,7 +321,32 @@ namespace TaskTown.KDH
                 animalSlotsDic.Add(runtimeSlot.AnimalId, runtimeSlot);
             }
 
+            SortAnimalSlots();
             NotifyInventoryChanged();
+        }
+
+        /// <summary>
+        /// 등급 높은 순 → 동일 등급이면 DexIndex 작은 순으로 정렬합니다.
+        /// </summary>
+        private void SortAnimalSlots()
+        {
+            animalSlotsList.Sort(CompareAnimalSlots);
+        }
+
+        private static int CompareAnimalSlots(SlotData_Animal a, SlotData_Animal b)
+        {
+            AnimalDataSO dataA = a != null ? a.AnimalData : null;
+            AnimalDataSO dataB = b != null ? b.AnimalData : null;
+
+            if (dataA == null && dataB == null) return 0;
+            if (dataA == null) return 1;
+            if (dataB == null) return -1;
+
+            int gradeCompare = ((int)dataB.Grade).CompareTo((int)dataA.Grade);
+            if (gradeCompare != 0)
+                return gradeCompare;
+
+            return dataA.DexIndex.CompareTo(dataB.DexIndex);
         }
 
         /// <summary>

@@ -320,7 +320,7 @@ namespace UI
             if (confirmAction == null)
                 return;
 
-            levelUpPopup.OpenLevelUpPopup(message, $"Expend Coin : <color=#4F2002><b>{cost:N0}</b></color>", confirmAction);
+            levelUpPopup.OpenLevelUpPopup(message, $"소모 코인 : <color=#4F2002><b>{cost:N0}</b></color>", confirmAction);
         }
 
         /// <summary>
