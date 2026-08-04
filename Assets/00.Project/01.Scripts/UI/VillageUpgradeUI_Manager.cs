@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using Manager;
 using TaskTown.Gacha;
+using TaskTown.KDH;
 using UnityEngine;
 
 /// <summary>
@@ -158,6 +159,15 @@ namespace UI
             ResolveVillageSystem();
             TrySubscribeVillageState();
             RefreshAllUI();
+
+            //-------------------------26.08.04 KDH-----------------------------------
+            VillageSystemManager system = ResolveVillageSystem();
+            if (system != null && system.IsVillageLevelMaxed && !system.IsEndlessMode)
+            {
+                EnableEndlessMode(); // 내부에서 RefreshAllUI 한 번 더 함
+                SaveManager.Instance?.SaveGame();
+            }
+            //-----------------------------------------------------------------------
         }
 
         private void BindButtons()
@@ -331,7 +341,7 @@ namespace UI
             // 방금 상한에 도달했고, 아직 엔드리스가 아니면 선택지 제공
             if (system.IsVillageLevelMaxed && !system.IsEndlessMode)
                 OpenCompletionChoicePopup();
-
+            
             return true;
             //------------------------------------------------------------
         }
@@ -651,6 +661,7 @@ namespace UI
                 Debug.LogWarning("[VillageUpgradeUI_Manager] VillageCompletionPopup이 연결되지 않았습니다.");
                 return;
             }
+
             completionPopup.Open(
                 resetAction: () => TaskTown.GameResetService.ResetProgressAndGoToTeamLogo(),
                 endlessAction: () =>
