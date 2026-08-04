@@ -321,6 +321,7 @@ namespace UI
 
             IReadOnlyList<SlotData_Animal> animalSlots = animalInventory.AnimalSlotsList;
             var activeIds = new HashSet<string>();
+            int siblingIndex = 0;
 
             foreach (SlotData_Animal slotData in animalSlots)
             {
@@ -334,6 +335,10 @@ namespace UI
 
                 activeIds.Add(animalId);
                 RefreshSlot(slotData);
+
+                // 매니저 정렬 순서를 UI 형제 순서에 반영
+                if (slotMap.TryGetValue(animalId, out SlotUI_AnimalInv slotView) && slotView != null)
+                    slotView.transform.SetSiblingIndex(siblingIndex++);
             }
 
             RemoveStaleSlots(activeIds);

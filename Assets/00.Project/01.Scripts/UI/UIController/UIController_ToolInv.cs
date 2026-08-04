@@ -185,6 +185,7 @@ namespace UI
                 return;
 
             var activeIds = new HashSet<string>();
+            int siblingIndex = 0;
 
             foreach (SlotData_Tool slotData in toolSlots)
             {
@@ -198,6 +199,10 @@ namespace UI
 
                 activeIds.Add(toolId);
                 RefreshSlot(slotData);
+
+                // 매니저 정렬 순서를 UI 형제 순서에 반영
+                if (slotMap.TryGetValue(toolId, out KAY.SlotUI_ToolInv slotView) && slotView != null)
+                    slotView.transform.SetSiblingIndex(siblingIndex++);
             }
 
             RemoveStaleSlots(activeIds);

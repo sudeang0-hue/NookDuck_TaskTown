@@ -37,6 +37,7 @@ namespace UI
         [SerializeField] private Image usingToolIcon;  // 장착하고있는 도구 아이콘
         [Tooltip("장착 도구 이름. 현재 한글 폰트 깨짐으로 ToolDataSO.Id를 표시합니다.")]
         [SerializeField] private TMP_Text equipToolText;
+        [SerializeField] private TMP_Text equipToolValeText;
 
         [Header("레벨 이미지")]
         [Tooltip("1성 ~ 5성 이미지. SlotUI_AnimalInv 와 동일한 배열 사용")]
@@ -316,10 +317,10 @@ namespace UI
         {
             // 본체 1마리를 제외한 재료 수량 표시 (SlotUI_AnimalInv 와 동일 규칙)
             if (currentCountText != null)
-                currentCountText.text = "currentCount :" + Mathf.Max(0, slotData.CurrentCount - 1).ToString();
+                currentCountText.text = "현재 수량: " + Mathf.Max(0, slotData.CurrentCount - 1).ToString();
 
             if (requireCountText != null)
-                requireCountText.text = "requireCount :" + $" {slotData.RequiredUpgradeCount}";
+                requireCountText.text = "레벨업 필요 수량: " + $" {slotData.RequiredUpgradeCount}";
 
             ApplyLevelImage(slotData.Level);
 
@@ -327,14 +328,15 @@ namespace UI
             if (currentProductCoin != null)
             {
                 float coinPerSecond = data.BaseCoinPerSecond * data.CalculateLevelMultiplier(slotData.Level);
-                currentProductCoin.text = "ProductCoin :" + $"{coinPerSecond:0.#}/s";
+                currentProductCoin.text = "초당 생산량: " + $"{coinPerSecond:0.#}/s";
             }
+
 
             ApplyUsingToolIcon(slotData.AnimalId);
         }
 
         /// <summary>
-        /// 현재 동물이 장착되어 있는 도구가 있으면 아이콘·이름을 표시하고, 없으면 숨깁니다.
+        /// 현재 동물이 장착되어 있는 도구가 있으면 아이콘·이름·초당 생산량을 표시하고, 없으면 숨깁니다.
         /// 장착 여부에 따라 Set Tool / Change / SetOff 버튼 상태도 갱신합니다.
         /// </summary>
         private void ApplyUsingToolIcon(string animalId)
@@ -356,11 +358,27 @@ namespace UI
             if (equipToolText != null)
             {
                 if (hasEquippedTool && equippedTool.ToolData != null)
-                    equipToolText.text = equippedTool.ToolData.Id;
+                    equipToolText.text = equippedTool.ToolData.DisplayName;
                 else if (hasEquippedTool)
                     equipToolText.text = equippedTool.ToolId;
                 else
-                    equipToolText.text = "equipTool";//string.Empty;
+                    equipToolText.text = "배치된 도구가 없어요.";//string.Empty;
+            }
+
+            // 장착 도구 초당 생산량 표시. 미장착이면 숨김
+            if (equipToolValeText != null)
+            {
+                if (hasEquippedTool && equippedTool.ToolData != null)
+                {
+                    float toolCoinPerSecond = equippedTool.ToolData.BaseCoinPerSecond
+                        * equippedTool.ToolData.CalculateLevelMultiplier(equippedTool.Level);
+                    equipToolValeText.text = $"+ {toolCoinPerSecond:0.#}/s";
+                    equipToolValeText.gameObject.SetActive(true);
+                }
+                else
+                {
+                    equipToolValeText.gameObject.SetActive(false);
+                }
             }
 
             UpdateToolEquipButtons(hasEquippedTool);
@@ -406,6 +424,7 @@ namespace UI
                 if (toolSlot != null && toolSlot.CurrentAnimalSet && toolSlot.CurrentAnimalId == animalId)
                     return toolSlot;
             }
+
 
             return null;
         }
