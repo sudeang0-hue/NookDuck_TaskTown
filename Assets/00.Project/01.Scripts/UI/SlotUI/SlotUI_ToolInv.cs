@@ -223,7 +223,7 @@ namespace KAY
             }
 
             if (toolNameText != null)
-                toolNameText.text = data.Id;
+                toolNameText.text = data.DisplayName;
         }
 
         // ------------------------------------------------------------------------------------------

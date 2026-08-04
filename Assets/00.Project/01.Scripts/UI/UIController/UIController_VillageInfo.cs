@@ -75,6 +75,7 @@ namespace UI
 
         /// <summary>
         /// VillageUpgrade / TownUpgrade 현재 상태를 VillageInfo 텍스트에 반영합니다.
+        /// toolCapacity는 현재 마을 레벨 기준 도구 상한입니다.
         /// </summary>
         public void Refresh(
             int townLevel,
@@ -86,6 +87,7 @@ namespace UI
             SetText(townLevelText, "TownLevel : " + townLevel);
             SetText(clickCoinText, "Click : " + clickCoin.ToString("N0"));
             SetText(typingCoinText, "Typing : " + typingCoin.ToString("N0"));
+            // 현재 마을 레벨의 도구 상한 (InventoryManager_Tool.GetToolCapacity)
             SetText(toolCapacityText, "Tool : " + toolCapacity.ToString("N0"));
             // VillageUpgrade의 toolProductValue 표기와 동일 (도구 효율 배율)
             SetText(autoProductBonusText, "Bonus : " + autoProductBonus.ToString("0.#") + " %");

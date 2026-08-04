@@ -84,6 +84,10 @@ public class UIController_Menu : MonoBehaviour
             minimizeButton.onClick.AddListener(CloseAllPanels);
     }
 
+    private void Start()
+    {
+        CloseAllPanels();
+    }
     private void OnEnable()
     {
         TargetSelector.OnTargetSelected += OnCameraTargetSelected;
