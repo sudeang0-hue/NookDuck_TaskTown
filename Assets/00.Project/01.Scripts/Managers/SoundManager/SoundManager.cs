@@ -212,25 +212,43 @@ public class SoundManager : MonoBehaviour
             return false;
         }
 
-        if (!soundData.TryGetClip(startIndex, out _))
+        return StartBGMPlaylist(soundId, soundData, startIndex, restartIfSame);
+    }
+
+    public bool PlayBGMPlaylistFromRandomTrack(string soundId, bool restartIfSame = false)
+    {
+        EnsureSettingsAppliedBeforePlayback();
+
+        if (!TryGetSound(soundId, SoundCategory.BGM, out SoundClipData soundData))
         {
-            Debug.LogWarning($"BGM playlist clip is missing. Sound ID: {soundId}, Index: {startIndex}");
             return false;
         }
 
-        if (!restartIfSame &&
-            activeBgmPlaylist == soundData &&
-            currentBgmSoundId == soundId &&
-            bgmSource != null &&
-            (bgmSource.isPlaying || isBgmPaused))
+        if (soundData.ClipCount == 0)
+        {
+            Debug.LogWarning($"BGM playlist is empty. Sound ID: {soundId}");
+            return false;
+        }
+
+        if (!restartIfSame && IsSameBGMPlaylistActive(soundId, soundData))
         {
             return true;
         }
 
-        ExitPlaylistMode();
-        activeBgmPlaylist = soundData;
-        currentBgmSoundId = soundId;
-        return PlayPlaylistTrack(startIndex);
+        int randomStartIndex = UnityEngine.Random.Range(0, soundData.ClipCount);
+
+        for (int offset = 0; offset < soundData.ClipCount; offset++)
+        {
+            int candidateIndex = (randomStartIndex + offset) % soundData.ClipCount;
+
+            if (soundData.TryGetClip(candidateIndex, out _))
+            {
+                return StartBGMPlaylist(soundId, soundData, candidateIndex, restartIfSame);
+            }
+        }
+
+        Debug.LogWarning($"BGM playlist has no playable clip. Sound ID: {soundId}");
+        return false;
     }
 
     public bool PlayNextBGM()
@@ -465,6 +483,37 @@ public class SoundManager : MonoBehaviour
 
         NotifyBGMStateChanged();
         return true;
+    }
+
+    private bool StartBGMPlaylist(
+        string soundId,
+        SoundClipData soundData,
+        int startIndex,
+        bool restartIfSame)
+    {
+        if (!soundData.TryGetClip(startIndex, out _))
+        {
+            Debug.LogWarning($"BGM playlist clip is missing. Sound ID: {soundId}, Index: {startIndex}");
+            return false;
+        }
+
+        if (!restartIfSame && IsSameBGMPlaylistActive(soundId, soundData))
+        {
+            return true;
+        }
+
+        ExitPlaylistMode();
+        activeBgmPlaylist = soundData;
+        currentBgmSoundId = soundId;
+        return PlayPlaylistTrack(startIndex);
+    }
+
+    private bool IsSameBGMPlaylistActive(string soundId, SoundClipData soundData)
+    {
+        return activeBgmPlaylist == soundData &&
+               currentBgmSoundId == soundId &&
+               bgmSource != null &&
+               (bgmSource.isPlaying || isBgmPaused);
     }
 
     private IEnumerator WatchForPlaylistTrackEnd(int expectedRevision, AudioClip expectedClip)

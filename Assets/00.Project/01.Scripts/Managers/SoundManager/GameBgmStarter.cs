@@ -2,7 +2,8 @@ using UnityEngine;
 
 /// <summary>
 /// MainScene 진입 시 인게임 BGM 플레이리스트를 재생합니다.
-/// SoundClipData에 등록된 순서대로 재생하며, 마지막 곡 이후에는 첫 곡으로 돌아갑니다.
+/// 첫 곡은 무작위로 선택하고 이후에는 등록된 순서대로 재생합니다.
+/// 마지막 곡 이후에는 첫 곡으로 돌아갑니다.
 /// </summary>
 [DisallowMultipleComponent]
 public sealed class GameBgmStarter : MonoBehaviour
@@ -25,7 +26,7 @@ public sealed class GameBgmStarter : MonoBehaviour
             return;
         }
 
-        if (!manager.PlayBGMPlaylist(gameBgmSoundId))
+        if (!manager.PlayBGMPlaylistFromRandomTrack(gameBgmSoundId))
         {
             Debug.LogWarning($"[GameBgmStarter] 인게임 BGM 재생에 실패했습니다: {gameBgmSoundId}", this);
         }
