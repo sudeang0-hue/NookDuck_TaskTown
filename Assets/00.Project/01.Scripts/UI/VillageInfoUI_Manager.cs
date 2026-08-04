@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using Manager;
+using TaskTown.KDH;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -60,7 +61,7 @@ namespace UI
         [SerializeField] private int fallbackTypingCoin = 5;
         [SerializeField] private float fallbackAutoProductBonus = 1f;
 
-        [Header("장착 가능 도구 수량 (마을 시스템 미구현 — 임시 표시값)")]
+        [Header("장착 가능 도구 수량 폴백 (InventoryManager_Tool 미연결 시)")]
         [SerializeField] private int toolCapacityPlaceholder = 0;
 
         private bool isPanelOpen;
@@ -447,7 +448,7 @@ namespace UI
 
         /// <summary>
         /// VillageSystemManager / TownUpgradeManager / EarnProcessor 현재 상태를 VillageInfo에 반영합니다.
-        /// 장착 가능 도구 수량은 마을 시스템 미구현이라 placeholder를 사용합니다.
+        /// 장착 가능 도구 수량은 현재 마을 레벨 기준 InventoryManager_Tool 상한을 사용합니다.
         /// </summary>
         private void PushVillageDataToUI()
         {
@@ -476,11 +477,16 @@ namespace UI
             if (TownUpgradeManager.Instance != null)
                 displayBonus = TownUpgradeManager.Instance.ToolEfficiencyMultiplier;
 
+            // 현재 마을 레벨 기준 도구 상한
+            int displayToolCapacity = toolCapacityPlaceholder;
+            if (InventoryManager_Tool.Instance != null)
+                displayToolCapacity = InventoryManager_Tool.Instance.GetToolCapacity();
+
             uiController.Refresh(
                 displayTownLevel,
                 displayClickCoin,
                 displayTypingCoin,
-                toolCapacityPlaceholder,
+                displayToolCapacity,
                 displayBonus);
         }
 

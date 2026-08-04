@@ -37,9 +37,6 @@ namespace UI
         public Button AnimalOnePickButton => animalOnePickButton;
         public Button ToolOnePickButton => toolOnePickButton;
 
-        private void Awake()
-        {
-        }
         private void Start()
         {
             if (animalGachaManager == null)
@@ -58,6 +55,7 @@ namespace UI
             }
 
             Subscribe();
+            RefreshCostTexts();
         }
 
         private void OnDestroy()

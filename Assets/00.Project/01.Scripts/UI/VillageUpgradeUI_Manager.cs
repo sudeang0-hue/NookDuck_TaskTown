@@ -176,6 +176,9 @@ namespace UI
 
             if (uiController.VillageLevelUpButton != null)
                 uiController.VillageLevelUpButton.onClick.AddListener(OnClickVillageLevelUp);
+
+            if (uiController.WindowClose != null)
+                uiController.WindowClose.onClick.AddListener(OnClickWindowClose);
         }
 
         private void UnbindButtons()
@@ -194,6 +197,19 @@ namespace UI
 
             if (uiController.VillageLevelUpButton != null)
                 uiController.VillageLevelUpButton.onClick.RemoveListener(OnClickVillageLevelUp);
+
+            if (uiController.WindowClose != null)
+                uiController.WindowClose.onClick.RemoveListener(OnClickWindowClose);
+        }
+
+        /// <summary>열려 있는 VillageUpgrade 창을 닫습니다.</summary>
+        private void OnClickWindowClose()
+        {
+            if (upgradePanel == null)
+                upgradePanel = GetComponentInChildren<UIPanelWindow>(true);
+
+            if (upgradePanel != null)
+                upgradePanel.ClosePanel();
         }
 
         private void OnClickUpgradeClick()
@@ -394,15 +410,25 @@ namespace UI
 
                 int completedCount = system != null ? system.CycleCompletedCount : 0;
                 int townLevel = system != null ? system.TownLevel : 1;
-                bool readyForLevelUp = system != null && system.IsReadyForVillageLevelUp;
                 bool levelMaxed = system != null && system.IsVillageLevelMaxed;
 
                 uiController.RefreshRequiredUpgrade(completedCount);
                 uiController.RefreshVillageLevel(townLevel);
+                // 다음 레벨업 보상 미리보기 (최대 레벨이면 RewardTexts 숨김, RewardEnd_txt 표시)
+                int nextTownLevel = townLevel + 1;
+                string decoBuildingName = system != null
+                    ? system.GetVillageDecoBuildingName(nextTownLevel)
+                    : null;
+                uiController.RefreshReward(townLevel, !levelMaxed, decoBuildingName);
 
                 long villageCost = GetVillageLevelUpCost();
                 uiController.RefreshVillageLevelUpCost(villageCost);
-                uiController.SetVillageLevelUpVisible(!levelMaxed && readyForLevelUp);
+                // 버튼 오브젝트는 항상 표시. 클릭 가능 여부는 RefreshInteractableStates에서 처리.
+                uiController.SetVillageLevelUpVisible(true);
+
+                // checkImg[3] 보유 코인 — CompleteImg와 같은 Refresh 시점에 갱신
+                long coin = CoinManager.Instance != null ? CoinManager.Instance.totalCoin : 0;
+                uiController.SetCoinCheckImg(coin >= villageCost);
 
                 RefreshInteractableStates();
                 OnVillageUpgradeStateChanged?.Invoke();
@@ -514,6 +540,9 @@ namespace UI
                 && system.IsReadyForVillageLevelUp
                 && coin >= villageCost;
             uiController.SetVillageLevelUpInteractable(villageEnabled);
+
+            // 코인 변동 시 checkImg[3]도 즉시 반영
+            uiController.SetCoinCheckImg(coin >= villageCost);
         }
 
         private IEnumerator SubscribeWhenDependenciesReady()

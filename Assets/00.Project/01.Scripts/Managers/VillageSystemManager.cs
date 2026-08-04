@@ -54,6 +54,10 @@ namespace Manager
             5, 6, 7, 9, 10, 12, 13, 14, 16, 20
         };
 
+        [Header("마을 레벨업 장식 보상")]
+        [Tooltip("인덱스 = (마을 레벨 - 1). 해당 레벨 도달 시 추가되는 장식명. 비어 있으면 UI에서 숨김")]
+        [SerializeField] private string[] villageDecoBuilding;
+
         /// <summary>마을 상태가 바뀌면 UI/세이브 구독자가 갱신할 때 사용합니다.</summary>
         public event Action OnVillageStateChanged;
 
@@ -137,6 +141,23 @@ namespace Manager
             }
 
             return Mathf.Clamp(unlockedSlotsAtTownLevel1 + (level - 1), 0, maxPlacementCapacity);
+        }
+
+        /// <summary>
+        /// 지정 마을 레벨에 추가되는 장식명.
+        /// 비어 있거나 인덱스가 없으면 null을 반환합니다. (UI는 해당 RewardText를 숨김)
+        /// </summary>
+        public string GetVillageDecoBuildingName(int townLevel)
+        {
+            if (villageDecoBuilding == null || villageDecoBuilding.Length == 0)
+                return null;
+
+            int index = Mathf.Max(1, townLevel) - 1;
+            if (index < 0 || index >= villageDecoBuilding.Length)
+                return null;
+
+            string name = villageDecoBuilding[index];
+            return string.IsNullOrWhiteSpace(name) ? null : name;
         }
 
         /// <summary>현재 마을 레벨 기준 레벨업 필요 코인.</summary>
