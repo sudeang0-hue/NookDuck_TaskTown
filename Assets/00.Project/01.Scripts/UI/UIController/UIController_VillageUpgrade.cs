@@ -59,6 +59,9 @@ namespace UI
         [Tooltip("10레벨 도달 후 보상없음 텍스트")]
         [SerializeField] private TMP_Text RewardEnd_txt;
 
+        [Tooltip("최대 레벨 도달 후 출력할 마을 재건 버튼")]
+        [SerializeField] private Button complteVillageEndButton;
+
 
         [Header("창 닫기 버튼")]
         [SerializeField] private Button windowClose;
@@ -83,6 +86,7 @@ namespace UI
         public Button TypingCoinUpButton => typingCoinUpButton;
         public Button ToolProductUpButton => toolProductUpButton;
         public Button VillageLevelUpButton => villageLevelUpButton;
+        public Button ComplteVillageEndButton => complteVillageEndButton;
         public Button WindowClose => windowClose;
 
         public void RefreshTrackLevels(int clickLevel, int typingLevel, int toolLevel)
@@ -205,7 +209,7 @@ namespace UI
 
         private static bool IsIslandChangeNextLevel(int nextLevel)
         {
-            return nextLevel == 4 || nextLevel == 7 || nextLevel == 10;
+            return nextLevel == 5 || nextLevel == 10;
         }
 
         private void SetRewardText(int index, string value, bool visible)
@@ -292,6 +296,33 @@ namespace UI
         {
             SetButtonInteractable(villageLevelUpButton, enabled);
         }
+
+        //------------------26.08.05 KAY 추가 (최대 레벨 엔드 버튼)---------------------------------
+        /// <summary>
+        /// 최대 레벨 도달 시 레벨업 버튼/엔드 버튼을 서로 배타적으로 표시합니다.
+        /// showEndButton=true → 엔드 버튼만, false → 레벨업 버튼만.
+        /// </summary>
+        public void SetMaxLevelEndButtons(bool showEndButton)
+        {
+            if (villageLevelUpButton != null)
+            {
+                bool showLevelUp = !showEndButton;
+                if (villageLevelUpButton.gameObject.activeSelf != showLevelUp)
+                    villageLevelUpButton.gameObject.SetActive(showLevelUp);
+            }
+
+            if (complteVillageEndButton != null)
+            {
+                if (complteVillageEndButton.gameObject.activeSelf != showEndButton)
+                    complteVillageEndButton.gameObject.SetActive(showEndButton);
+            }
+        }
+
+        public void SetCompleteVillageEndInteractable(bool enabled)
+        {
+            SetButtonInteractable(complteVillageEndButton, enabled);
+        }
+        //-----------------------------------------------------------------------------
 
         private static void SetButtonInteractable(Button button, bool enabled)
         {

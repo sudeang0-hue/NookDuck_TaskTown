@@ -1,13 +1,13 @@
 using UnityEngine;
 
 /// <summary>
-/// ¼­·Î ´Ù¸¥ Canvas¿¡ ¹èÄ¡µÈ UIController_AnimalInvPage Ã¢ÀÇ Ç¥½Ã ¼ø¼­¸¦ °ü¸®ÇÕ´Ï´Ù.
+/// ï¿½ï¿½ï¿½ï¿½ ï¿½Ù¸ï¿½ Canvasï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ UI Ã¢(ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½)ï¿½ï¿½ Ç¥ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.
 /// </summary>
 public class UIWindowLayerManager : MonoBehaviour
 {
     public static UIWindowLayerManager Instance { get; private set; }
 
-    [Header("Ã¢ Á¤·Ä ¼ø¼­")]
+    [Header("Ã¢ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½")]
     [SerializeField] private int baseSortingOrder = 10;
 
     private int currentSortingOrder;
@@ -16,7 +16,7 @@ public class UIWindowLayerManager : MonoBehaviour
     {
         if (Instance != null && Instance != this)
         {
-            Debug.LogWarning("[UIWindowLayerManager] Áßº¹µÈ ·¹ÀÌ¾î °ü¸®ÀÚ°¡ Á¸ÀçÇÏ¿© Á¦°ÅÇÕ´Ï´Ù.");
+            Debug.LogWarning("[UIWindowLayerManager] ï¿½ßºï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ì¾ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ú°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï¿ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.");
 
             Destroy(gameObject);
             return;
@@ -27,13 +27,13 @@ public class UIWindowLayerManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Àü´Þ¹ÞÀº Canvas¸¦ ÇöÀç UIController_AnimalInvPage Ã¢ Áß °¡Àå ¾ÕÀ¸·Î ÀÌµ¿ÇÕ´Ï´Ù.
+    /// ï¿½ï¿½ï¿½Þ¹ï¿½ï¿½ï¿½ Canvasï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ UI Ã¢ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ìµï¿½ï¿½Õ´Ï´ï¿½.
     /// </summary>
     public void BringToFront(Canvas targetCanvas)
     {
         if (targetCanvas == null)
         {
-            Debug.LogWarning("[UIWindowLayerManager] ¾ÕÀ¸·Î ÀÌµ¿ÇÒ Canvas°¡ ¾ø½À´Ï´Ù.");
+            Debug.LogWarning("[UIWindowLayerManager] ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ìµï¿½ï¿½ï¿½ Canvasï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.");
 
             return;
         }

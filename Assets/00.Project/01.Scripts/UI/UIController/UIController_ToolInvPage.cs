@@ -43,6 +43,7 @@ namespace UI
         [SerializeField] private Button levelupButton;
         [Tooltip("이 도구의 특화 동물 이름")]
         [SerializeField] private TMP_Text specialAnimal;
+        [SerializeField] private TMP_Text equipAnimalValeText;
 
         [Header("레벨 이미지")]
         [Tooltip("1성 ~ 5성 이미지. SlotUI_ToolInv 와 동일한 배열 사용")]
@@ -80,18 +81,21 @@ namespace UI
         {
             ResolveInventoryReference();
 
-            if (toolInventory == null)
-                return;
+            if (toolInventory != null)
+                toolInventory.OnToolSlotChanged += HandleToolSlotChanged;
 
-            toolInventory.OnToolSlotChanged += HandleToolSlotChanged;
+            // 장착 동물의 레벨/수량 변경 시 equipAnimalValeText 등도 갱신
+            if (InventoryManager_Animal.Instance != null)
+                InventoryManager_Animal.Instance.OnAnimalSlotChanged += HandleAnimalSlotChanged;
         }
 
         private void OnDisable()
         {
-            if (toolInventory == null)
-                return;
+            if (toolInventory != null)
+                toolInventory.OnToolSlotChanged -= HandleToolSlotChanged;
 
-            toolInventory.OnToolSlotChanged -= HandleToolSlotChanged;
+            if (InventoryManager_Animal.Instance != null)
+                InventoryManager_Animal.Instance.OnAnimalSlotChanged -= HandleAnimalSlotChanged;
         }
 
         private void OnDestroy()
@@ -126,6 +130,24 @@ namespace UI
                 return;
 
             if (slotData.ToolId != currentToolId)
+                return;
+
+            RefreshToolInvPage();
+        }
+
+        /// <summary>
+        /// 동물 슬롯(레벨업 등)이 변경되면, 열려 있는 도구 상세의 장착 동물 생산량을 갱신합니다.
+        /// UIController_AnimalInvPage.HandleToolSlotChanged와 대칭되는 흐름입니다.
+        /// </summary>
+        private void HandleAnimalSlotChanged(SlotData_Animal slotData)
+        {
+            if (slotData == null)
+                return;
+
+            if (toolInvPagePanel == null || !toolInvPagePanel.activeSelf)
+                return;
+
+            if (string.IsNullOrEmpty(currentToolId))
                 return;
 
             RefreshToolInvPage();
@@ -168,6 +190,28 @@ namespace UI
 
             RefreshToolInvPage();
             toolInvPagePanel.SetActive(true);
+            BringPanelCanvasToFront(toolInvPagePanel);
+        }
+
+        /// <summary>
+        /// 상세 페이지 Canvas를 UIWindowLayerManager로 최상단 sortingOrder에 올립니다.
+        /// </summary>
+        private static void BringPanelCanvasToFront(GameObject panel)
+        {
+            if (panel == null)
+                return;
+
+            if (panel.TryGetComponent(out UIPanelWindow panelWindow))
+            {
+                panelWindow.BringCanvasToFront();
+                return;
+            }
+
+            Canvas canvas = panel.GetComponentInParent<Canvas>();
+            if (canvas == null || UIWindowLayerManager.Instance == null)
+                return;
+
+            UIWindowLayerManager.Instance.BringToFront(canvas);
         }
 
         /// <summary>
@@ -268,7 +312,7 @@ namespace UI
 
             if (slotData == null || !slotData.HasRevealedSpecialAnimal)
             {
-                specialAnimal.text = "Special Animal : ???";
+                specialAnimal.text = "특화 동물: ???";
                 return;
             }
 
@@ -280,7 +324,7 @@ namespace UI
                 ? animalData.DisplayName
                 : specialId;
 
-            specialAnimal.text = $"Special Animal : {animalName}";
+            specialAnimal.text = $"특화 동물: {animalName}";
         }
 
         /// <summary>
@@ -315,17 +359,17 @@ namespace UI
         {
             // 본체 1개 제외한 재료 수량 표시 (SlotUI_ToolInv 와 동일 규칙)
             if (currentCountText != null)
-                currentCountText.text = "currentCount :" + Mathf.Max(0, slotData.CurrentCount - 1).ToString();
+                currentCountText.text = "현재 수량: " + Mathf.Max(0, slotData.CurrentCount - 1).ToString();
 
             if (requireCountText != null)
-                requireCountText.text = "requireCount :" + $"{slotData.RequiredUpgradeCount}";
+                requireCountText.text = "레벨업 필요 수량:" + $"{slotData.RequiredUpgradeCount}";
 
             ApplyLevelImage(slotData.Level);
 
             if (currentProductCoin != null)
             {
                 float coinPerSecond = data.BaseCoinPerSecond * data.CalculateLevelMultiplier(slotData.Level);
-                currentProductCoin.text = "ProductCoin :" + $"{coinPerSecond:0.#}/s";
+                currentProductCoin.text = "초당 생산량:" + $"{coinPerSecond:0.#}/s";
             }
 
             // 장착 동물 아이콘은 CurrentAnimalId로 조회해 표시, 없으면 숨김
@@ -333,21 +377,31 @@ namespace UI
         }
 
         /// <summary>
-        /// 이 도구에 장착된 동물 아이콘·이름을 표시합니다.
+        /// 이 도구에 장착된 동물 아이콘·이름·초당 생산량을 표시합니다.
         /// CurrentAnimalSet / CurrentAnimalId가 채워지면(동물 Inv에서 도구 장착 후) 갱신됩니다.
+        /// 생산량 표시는 UIController_AnimalInvPage.ApplyUsingToolIcon의 equipToolValeText와 동일 규칙입니다.
         /// </summary>
         private void ApplyUsingAnimalIcon(SlotData_Tool slotData)
         {
             Sprite animalIcon = null;
-            string animalDisplayName = "equipAnimal";//string.Empty;
+            string animalDisplayName = string.Empty;
+            AnimalDataSO animalData = null;
+            SlotData_Animal animalSlot = null;
 
-            if (slotData != null &&
+            bool hasEquippedAnimal = slotData != null &&
                 slotData.CurrentAnimalSet &&
                 !string.IsNullOrEmpty(slotData.CurrentAnimalId) &&
-                InventoryManager_Animal.Instance != null)
+                InventoryManager_Animal.Instance != null;
+
+            if (hasEquippedAnimal)
             {
-                AnimalDataSO animalData =
-                    InventoryManager_Animal.Instance.GetAnimalData(slotData.CurrentAnimalId);
+                InventoryManager_Animal.Instance.TryGetAnimalSlot(
+                    slotData.CurrentAnimalId, out animalSlot);
+
+                animalData = animalSlot != null
+                    ? animalSlot.AnimalData
+                    : InventoryManager_Animal.Instance.GetAnimalData(slotData.CurrentAnimalId);
+
                 if (animalData != null)
                 {
                     animalIcon = animalData.Icon;
@@ -365,9 +419,29 @@ namespace UI
                 usingAnimalIcon.enabled = animalIcon != null;
             }
 
-
             if (equipAnimalText != null)
-                equipAnimalText.text = animalDisplayName;
+            {
+                equipAnimalText.text = hasEquippedAnimal
+                    ? "배치된 주민: " + animalDisplayName
+                    : "도구를 사용중인 주민이 없어요";
+            }
+
+
+            // 장착 동물 초당 생산량 표시. 미장착이면 숨김 (equipToolValeText와 동일)
+            if (equipAnimalValeText != null)
+            {
+                if (hasEquippedAnimal && animalData != null && animalSlot != null)
+                {
+                    float animalCoinPerSecond = animalData.BaseCoinPerSecond
+                        * animalData.CalculateLevelMultiplier(animalSlot.Level);
+                    equipAnimalValeText.text = $"+ {animalCoinPerSecond:0.#}/s";
+                    equipAnimalValeText.gameObject.SetActive(true);
+                }
+                else
+                {
+                    equipAnimalValeText.gameObject.SetActive(false);
+                }
+            }
         }
 
         private void ApplyLevelImage(int level)

@@ -2,6 +2,7 @@
  * - Open/Close: Set Tool / Change Tool에서 "목록 표시"만 담당 (animalId를 pending으로 보관)
  * - 목록 필터: CurrentAnimalSet인 도구 제외
  *   (미장착 동물 Set Tool → 타인 장착 도구 숨김 / 장착 동물 Change Tool → 본인 도구 숨김)
+ * - 장착 불가 안내: 보유 0 → hasZeroTool / 상한 도달(신규 장착) → maxToolCount (슬롯 미생성)
  * - 실제 장착: tool_set_slot의 cover_btn 클릭 → HandleToolSlotSelected → TryAssignAnimalToTool
  * - 패널 바깥 클릭 시 패널 닫기
  */
@@ -24,8 +25,13 @@ public class UIController_ToolSetList : MonoBehaviour
     [SerializeField] private SlotUI_ToolSet toolSetPrefab;
     [SerializeField] private Transform toolSetSlotContentRoot;
 
-    [Tooltip("보유한 도구가 없을 때 대신 표시할 텍스트")]
+    [Tooltip("도구를 장착할 수 없을때 표시할 텍스트")]
     [SerializeField] private TMP_Text noAvaliableToolText;
+
+    [SerializeField, TextArea(2, 4)]
+    private string hasZeroTool = "갖고 있는 도구가 없어요\n뽑기에서 도구를 얻어보세요";
+    [SerializeField, TextArea(2, 4)]
+    private string maxToolCount = "더이상 도구를 배치할 수 없어요\n마을을 성장시켜서 제한을 늘려보세요";
 
     private readonly List<RaycastResult> raycastResults = new List<RaycastResult>();
     private readonly List<SlotUI_ToolSet> spawnedSlots = new List<SlotUI_ToolSet>();
@@ -110,6 +116,7 @@ public class UIController_ToolSetList : MonoBehaviour
     /// - Set Tool(미장착 동물): 다른 동물이 장착한 도구는 제외
     /// - Change Tool(장착 동물): 자신이 장착 중인 도구도 제외
     /// → CurrentAnimalSet == true 인 도구는 목록에 넣지 않습니다.
+    /// - 보유 도구 0 / 상한 도달(신규 장착)이면 슬롯을 만들지 않고 noAvaliableToolText를 표시합니다.
     /// </summary>
     private void PopulateSlots()
     {
@@ -120,32 +127,97 @@ public class UIController_ToolSetList : MonoBehaviour
             return;
 
         ClearSlots();
+        HideNoAvailableToolText();
 
         IReadOnlyList<SlotData_Tool> toolSlots = toolInventory.ToolSlotsList;
+        int ownedToolCount = toolSlots != null ? toolSlots.Count : 0;
+
+        // 보유 도구가 없으면 슬롯 없이 안내 문구만 표시
+        if (ownedToolCount == 0)
+        {
+            ShowNoAvailableToolText(hasZeroTool);
+            return;
+        }
+
+        int activeToolCount = toolInventory.GetActiveToolCount();
+        int toolCapacity = toolInventory.GetToolCapacity();
+
+        // 상한 도달 + 신규 장착(미장착 동물)이면 슬롯 생성 없이 안내만 표시
+        // Change Tool(이미 장착된 동물)은 교체 가능하므로 목록을 계속 채웁니다.
+        if (activeToolCount >= toolCapacity && !IsPendingAnimalAlreadyEquipped())
+        {
+            ShowNoAvailableToolText(maxToolCount);
+            return;
+        }
+
         int createdCount = 0;
 
-        if (toolSlots != null && toolSlots.Count > 0)
+        for (int i = 0; i < toolSlots.Count; i++)
         {
-            for (int i = 0; i < toolSlots.Count; i++)
+            SlotData_Tool slotData = toolSlots[i];
+
+            if (slotData == null || string.IsNullOrEmpty(slotData.ToolId) || slotData.ToolData == null)
+                continue;
+
+            // 이미 장착된 도구는 Set Tool / Change Tool 목록에서 제외
+            if (!IsToolAvailableForPendingAnimal(slotData))
+                continue;
+
+            SlotUI_ToolSet createdSlot = Instantiate(toolSetPrefab, toolSetSlotContentRoot);
+            createdSlot.Initialize(slotData, HandleToolSlotSelected);
+            spawnedSlots.Add(createdSlot);
+            createdCount++;
+        }
+
+        // 선택 가능한 도구가 없으면 안내 텍스트만 표시
+        if (createdCount == 0)
+            ShowNoAvailableToolText(null);
+    }
+
+    /// <summary>
+    /// pending 동물이 이미 어떤 도구에 장착되어 있는지 여부 (Change Tool 경로)
+    /// </summary>
+    private bool IsPendingAnimalAlreadyEquipped()
+    {
+        if (string.IsNullOrEmpty(pendingAnimalId) || toolInventory == null)
+            return false;
+
+        IReadOnlyList<SlotData_Tool> toolSlots = toolInventory.ToolSlotsList;
+        if (toolSlots == null)
+            return false;
+
+        for (int i = 0; i < toolSlots.Count; i++)
+        {
+            SlotData_Tool toolSlot = toolSlots[i];
+            if (toolSlot != null &&
+                toolSlot.CurrentAnimalSet &&
+                toolSlot.CurrentAnimalId == pendingAnimalId)
             {
-                SlotData_Tool slotData = toolSlots[i];
-
-                if (slotData == null || string.IsNullOrEmpty(slotData.ToolId) || slotData.ToolData == null)
-                    continue;
-
-                // 이미 장착된 도구는 Set Tool / Change Tool 목록에서 제외
-                if (!IsToolAvailableForPendingAnimal(slotData))
-                    continue;
-
-                SlotUI_ToolSet createdSlot = Instantiate(toolSetPrefab, toolSetSlotContentRoot);
-                createdSlot.Initialize(slotData, HandleToolSlotSelected);
-                spawnedSlots.Add(createdSlot);
-                createdCount++;
+                return true;
             }
         }
 
+        return false;
+    }
+
+    /// <summary>
+    /// 장착 불가 안내 텍스트를 표시합니다. message가 null이면 기존 문구를 유지합니다.
+    /// </summary>
+    private void ShowNoAvailableToolText(string message)
+    {
+        if (noAvaliableToolText == null)
+            return;
+
+        if (message != null)
+            noAvaliableToolText.text = message;
+
+        noAvaliableToolText.gameObject.SetActive(true);
+    }
+
+    private void HideNoAvailableToolText()
+    {
         if (noAvaliableToolText != null)
-            noAvaliableToolText.gameObject.SetActive(createdCount == 0);
+            noAvaliableToolText.gameObject.SetActive(false);
     }
 
     /// <summary>
