@@ -43,6 +43,11 @@ public class DebugTool : MonoBehaviour
     private VillageUpgradeUI_Manager villageUpgradeUIManager;
     //---------------------------------------------------------------------
 
+    //------------------26.08.05 KAY 추가 (마을 레벨 설정)---------------------------------
+    private string townLevelInput = "1";
+    private const int DebugTownLevelMax = 39; // 40은 설정 불가
+    //-----------------------------------------------------------------------------
+
     //-----------------26.08.04 KNW: 난이도 전환 디버그(시크릿 동물 난이도 해금 테스트용)-------
     private RealProductionTicker realProductionTicker;
     private string lastDifficultyActionText = "(없음)";
@@ -326,6 +331,28 @@ public class DebugTool : MonoBehaviour
             else
                 lastUpgradeActionText = $"마을 레벨업 완료 → Lv.{villageUpgradeUIManager.UiTownLevel}";
         }
+        //-----------------------------------------------------------------------------
+
+        //------------------26.08.05 KAY 추가 (마을 레벨 설정)---------------------------------
+        GUILayout.BeginHorizontal();
+        GUILayout.Label("마을 레벨 설정 (1~39)", GUILayout.Width(140f));
+        townLevelInput = GUILayout.TextField(townLevelInput, GUILayout.Width(80f));
+        if (GUILayout.Button("적용", GUILayout.Width(60f)))
+        {
+            if (villageUpgradeUIManager == null)
+                lastUpgradeActionText = "VillageUpgradeUI_Manager 없음";
+            else if (!int.TryParse(townLevelInput, out int level))
+                lastUpgradeActionText = "마을 레벨 값이 숫자가 아님";
+            else if (level >= 40)
+                lastUpgradeActionText = "마을 레벨 40 이상은 설정 불가 (최대 39)";
+            else
+            {
+                int clamped = Mathf.Clamp(level, 1, DebugTownLevelMax);
+                villageUpgradeUIManager.DebugSetTownLevel(clamped);
+                lastUpgradeActionText = $"마을 레벨 설정 → Lv.{villageUpgradeUIManager.UiTownLevel}";
+            }
+        }
+        GUILayout.EndHorizontal();
         //-----------------------------------------------------------------------------
 
         //--------------------------26.07.30 KNW--------------------------------------

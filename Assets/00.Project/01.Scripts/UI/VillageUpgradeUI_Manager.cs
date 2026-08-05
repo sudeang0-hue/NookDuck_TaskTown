@@ -615,6 +615,20 @@ namespace UI
                 return;
 
             system.DebugSetTownLevel(level);
+
+            //------------------26.08.05 KAY 추가 (마을 레벨 설정 연동)---------------------------------
+            // 정식 진행은 사이클마다 요소 1회 → 현재 마을 Lv면 요소 영구 레벨은 보통 Lv-1.
+            // 요소 다음 비용·상한(IsMaxLevelAt)이 마을 레벨과 맞게 보이도록 동기화합니다.
+            int elementLevel = Mathf.Max(0, system.TownLevel - 1);
+            if (TownUpgradeManager.Instance != null)
+                TownUpgradeManager.Instance.LoadLevels(elementLevel, elementLevel, elementLevel);
+
+            // UIController_Gacha는 팀원 편집 중이므로 해당 파일은 수정하지 않음.
+            // 기존 공개 API(NotifyPanelOpened)로 뽑기 가격 텍스트만 갱신합니다.
+            UIController_Gacha gachaUI = FindAnyObjectByType<UIController_Gacha>(FindObjectsInactive.Include);
+            gachaUI?.NotifyPanelOpened();
+            //-----------------------------------------------------------------------------
+
             RefreshAllUI();
         }
 

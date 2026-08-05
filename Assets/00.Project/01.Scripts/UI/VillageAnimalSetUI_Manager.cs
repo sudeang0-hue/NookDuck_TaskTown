@@ -130,6 +130,12 @@ namespace UI
 
         public int GetUnlockedSlotCount()
         {
+            //------------------26.08.05 KAY 추가 (마을 레벨 설정 연동)---------------------------------
+            // 배치 상한 진실 소스는 VillageSystemManager. 로컬 배열은 폴백으로만 사용.
+            if (VillageSystemManager.Instance != null)
+                return Mathf.Clamp(VillageSystemManager.Instance.GetUnlockedPlacementSlotCount(), 0, MaxCapacity);
+            //-----------------------------------------------------------------------------
+
             return GetUnlockedSlotCount(GetCurrentTownLevel());
         }
 

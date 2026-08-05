@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Manager;
 using TaskTown.KDH;
 using TMPro;
 using UnityEngine;
@@ -27,6 +28,10 @@ namespace UI
         [SerializeField] private List<KAY.SlotUI_ToolInv> slotMaplist = new List<KAY.SlotUI_ToolInv>();
         private readonly Dictionary<string, KAY.SlotUI_ToolInv> slotMap = new Dictionary<string, KAY.SlotUI_ToolInv>();
 
+        //------------------26.08.05 KAY 추가 (마을 레벨 설정 연동)---------------------------------
+        private VillageSystemManager subscribedVillageSystem;
+        //-----------------------------------------------------------------------------
+
         private void Awake()
         {
             if (toolInventory == null)
@@ -37,6 +42,10 @@ namespace UI
         {
             // Inv 패널/컨트롤러 활성화 시 상세 페이지는 항상 닫힌 상태로 시작 (Animal Inv와 동일)
             toolInvPageController?.CloseToolInvPage();
+
+            //------------------26.08.05 KAY 추가 (마을 레벨 설정 연동)---------------------------------
+            TrySubscribeVillageState();
+            //-----------------------------------------------------------------------------
 
             if (!TryResolveInventory())
                 return;
@@ -70,12 +79,46 @@ namespace UI
 
         private void OnDisable()
         {
+            //------------------26.08.05 KAY 추가 (마을 레벨 설정 연동)---------------------------------
+            UnsubscribeVillageState();
+            //-----------------------------------------------------------------------------
+
             if (toolInventory == null)
                 return;
 
             toolInventory.OnToolInventoryChanged -= SyncAllSlots;
             toolInventory.OnToolSlotChanged -= HandleToolSlotChanged;
         }
+
+        //------------------26.08.05 KAY 추가 (마을 레벨 설정 연동)---------------------------------
+        private void TrySubscribeVillageState()
+        {
+            if (VillageSystemManager.Instance == null)
+                return;
+
+            if (subscribedVillageSystem == VillageSystemManager.Instance)
+                return;
+
+            UnsubscribeVillageState();
+            subscribedVillageSystem = VillageSystemManager.Instance;
+            subscribedVillageSystem.OnVillageStateChanged += OnVillageStateChanged;
+        }
+
+        private void UnsubscribeVillageState()
+        {
+            if (subscribedVillageSystem == null)
+                return;
+
+            subscribedVillageSystem.OnVillageStateChanged -= OnVillageStateChanged;
+            subscribedVillageSystem = null;
+        }
+
+        private void OnVillageStateChanged()
+        {
+            // 도구 상한 텍스트만 갱신 (슬롯 전체 재생성은 불필요)
+            RefreshCountTexts();
+        }
+        //-----------------------------------------------------------------------------
 
         private void HandleToolSlotChanged(SlotData_Tool slotData)
         {
