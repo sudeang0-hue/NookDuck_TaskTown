@@ -8,6 +8,7 @@ using UnityEngine.UI;
 public static class BGMPlayerSettingsPrefabBuilder
 {
     private const string MenuPath = "Tools/TaskTown/UI/Build BGM Player Settings Panel";
+    private const string ApplyIconsMenuPath = "Tools/TaskTown/UI/Apply BGM Player Button Icons";
     private const string PreviewMenuPath = "Tools/TaskTown/UI/Preview BGM Player Sound Tab";
     private const string OptionPrefabPath =
         "Assets/00.Project/02.Prefabs/UI/ALL_UI_Connect/canvas/Option_Canvas_tab.prefab";
@@ -15,7 +16,17 @@ public static class BGMPlayerSettingsPrefabBuilder
         "SoundOption_root/SoundScroll_Root/Scroll View/Viewport/Content";
     private const string FontAssetPath =
         "Assets/00.Project/06.UI/Fonts/Griun_Fromsol-Rg_BGMPlayer.asset";
+    private const string CommonIconAssetPath =
+        "Assets/00.Project/06.UI/icon_btn/btn_and_icon.png";
+    private const string SoundPlayerIconAssetPath =
+        "Assets/00.Project/06.UI/icon_btn/btn_SoundPlayer.png";
+    private const string PlaySpriteName = "버튼 및 아이콘_39";
+    private const string PauseSpriteName = "버튼 및 아이콘_40";
+    private const string SkipSpriteName = "버튼 및 아이콘_41";
+    private const string SequentialLoopSpriteName = "btn_SoundPlayer_0";
+    private const string RepeatCurrentSpriteName = "btn_SoundPlayer_1";
     private const string UndoName = "Build BGM Player Settings Panel";
+    private const string ApplyIconsUndoName = "Apply BGM Player Button Icons";
 
     private static readonly Color PanelColor = new(0.9569f, 0.8824f, 0.7451f, 0.58f);
     private static readonly Color TextColor = new(0.22f, 0.15f, 0.10f, 1f);
@@ -53,13 +64,23 @@ public static class BGMPlayerSettingsPrefabBuilder
             return;
         }
 
+        TMP_FontAsset fontAsset = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(FontAssetPath);
+        fontAsset ??= TMP_Settings.defaultFontAsset;
+
+        if (!TryLoadButtonSprites(
+                out Sprite playSprite,
+                out Sprite pauseSprite,
+                out Sprite skipSprite,
+                out Sprite sequentialLoopSprite,
+                out Sprite repeatCurrentSprite))
+        {
+            return;
+        }
+
         int undoGroup = Undo.GetCurrentGroup();
         Undo.SetCurrentGroupName(UndoName);
 
         RemoveScrollTestPlaceholders(content);
-
-        TMP_FontAsset fontAsset = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(FontAssetPath);
-        fontAsset ??= TMP_Settings.defaultFontAsset;
 
         GameObject rootObject = CreateUIObject("BGMPlayerRoot", content);
         RectTransform rootRect = rootObject.GetComponent<RectTransform>();
@@ -98,6 +119,7 @@ public static class BGMPlayerSettingsPrefabBuilder
             fontAsset,
             new Vector2(150f, 40f));
         SetTopRightRect(modeButton.GetComponent<RectTransform>(), new Vector2(-20f, -14f), new Vector2(150f, 40f));
+        ConfigureIconButton(modeButton, modeButtonText, sequentialLoopSprite);
 
         TextMeshProUGUI trackNameText = CreateText(
             "TrackNameText",
@@ -128,6 +150,7 @@ public static class BGMPlayerSettingsPrefabBuilder
             fontAsset,
             new Vector2(108f, 54f));
         SetTopCenterRect(previousButton.GetComponent<RectTransform>(), new Vector2(-126f, -108f), new Vector2(108f, 54f));
+        ConfigureIconButton(previousButton, previousButton.transform.Find("Label")?.GetComponent<TMP_Text>(), skipSprite, true);
 
         (Button playPauseButton, TextMeshProUGUI playPauseButtonText) = CreateButton(
             "PlayPauseButton",
@@ -136,6 +159,7 @@ public static class BGMPlayerSettingsPrefabBuilder
             fontAsset,
             new Vector2(144f, 54f));
         SetTopCenterRect(playPauseButton.GetComponent<RectTransform>(), new Vector2(0f, -108f), new Vector2(144f, 54f));
+        ConfigureIconButton(playPauseButton, playPauseButtonText, playSprite);
 
         (Button nextButton, _) = CreateButton(
             "NextButton",
@@ -144,6 +168,7 @@ public static class BGMPlayerSettingsPrefabBuilder
             fontAsset,
             new Vector2(108f, 54f));
         SetTopCenterRect(nextButton.GetComponent<RectTransform>(), new Vector2(126f, -108f), new Vector2(108f, 54f));
+        ConfigureIconButton(nextButton, nextButton.transform.Find("Label")?.GetComponent<TMP_Text>(), skipSprite);
 
         TextMeshProUGUI currentTimeText = CreateText(
             "CurrentTimeText",
@@ -198,6 +223,12 @@ public static class BGMPlayerSettingsPrefabBuilder
         SetReference(serializedPanel, "playPauseButtonText", playPauseButtonText);
         SetReference(serializedPanel, "playbackModeButtonText", modeButtonText);
         SetReference(serializedPanel, "progressFillImage", progressFill);
+        SetReference(serializedPanel, "playPauseButtonImage", playPauseButton.GetComponent<Image>());
+        SetReference(serializedPanel, "playbackModeButtonImage", modeButton.GetComponent<Image>());
+        SetReference(serializedPanel, "playSprite", playSprite);
+        SetReference(serializedPanel, "pauseSprite", pauseSprite);
+        SetReference(serializedPanel, "sequentialLoopSprite", sequentialLoopSprite);
+        SetReference(serializedPanel, "repeatCurrentSprite", repeatCurrentSprite);
         serializedPanel.ApplyModifiedProperties();
 
         EditorSceneManager.MarkSceneDirty(prefabStage.scene);
@@ -205,6 +236,66 @@ public static class BGMPlayerSettingsPrefabBuilder
         Undo.CollapseUndoOperations(undoGroup);
 
         Debug.Log("[BGMPlayerSettingsPrefabBuilder] BGM Player 설정 UI를 구성했습니다. Prefab 저장 전 Undo할 수 있습니다.");
+    }
+
+    [MenuItem(ApplyIconsMenuPath)]
+    public static void ApplyButtonIcons()
+    {
+        PrefabStage prefabStage = PrefabStageUtility.GetCurrentPrefabStage();
+
+        if (prefabStage == null || prefabStage.assetPath != OptionPrefabPath)
+        {
+            Debug.LogError($"[BGMPlayerSettingsPrefabBuilder] Prefab Stage에서 {OptionPrefabPath}을 먼저 열어주세요.");
+            return;
+        }
+
+        Transform root = prefabStage.prefabContentsRoot.transform.Find($"{ContentPath}/BGMPlayerRoot");
+
+        if (root == null || !TryLoadButtonSprites(
+                out Sprite playSprite,
+                out Sprite pauseSprite,
+                out Sprite skipSprite,
+                out Sprite sequentialLoopSprite,
+                out Sprite repeatCurrentSprite))
+        {
+            Debug.LogError("[BGMPlayerSettingsPrefabBuilder] BGMPlayerRoot 또는 버튼 Sprite를 찾지 못했습니다.");
+            return;
+        }
+
+        Button previousButton = FindButton(root, "PreviousButton");
+        Button playPauseButton = FindButton(root, "PlayPauseButton");
+        Button nextButton = FindButton(root, "NextButton");
+        Button modeButton = FindButton(root, "PlaybackModeButton");
+        BGMPlaylistPanel panel = root.GetComponent<BGMPlaylistPanel>();
+
+        if (previousButton == null || playPauseButton == null || nextButton == null || modeButton == null || panel == null)
+        {
+            Debug.LogError("[BGMPlayerSettingsPrefabBuilder] 버튼 또는 BGMPlaylistPanel 참조를 찾지 못했습니다.");
+            return;
+        }
+
+        int undoGroup = Undo.GetCurrentGroup();
+        Undo.SetCurrentGroupName(ApplyIconsUndoName);
+
+        ConfigureIconButton(previousButton, FindButtonLabel(previousButton), skipSprite, true);
+        ConfigureIconButton(playPauseButton, FindButtonLabel(playPauseButton), playSprite);
+        ConfigureIconButton(nextButton, FindButtonLabel(nextButton), skipSprite);
+        ConfigureIconButton(modeButton, FindButtonLabel(modeButton), sequentialLoopSprite);
+
+        SerializedObject serializedPanel = new(panel);
+        SetReference(serializedPanel, "playPauseButtonImage", playPauseButton.GetComponent<Image>());
+        SetReference(serializedPanel, "playbackModeButtonImage", modeButton.GetComponent<Image>());
+        SetReference(serializedPanel, "playSprite", playSprite);
+        SetReference(serializedPanel, "pauseSprite", pauseSprite);
+        SetReference(serializedPanel, "sequentialLoopSprite", sequentialLoopSprite);
+        SetReference(serializedPanel, "repeatCurrentSprite", repeatCurrentSprite);
+        serializedPanel.ApplyModifiedProperties();
+
+        EditorSceneManager.MarkSceneDirty(prefabStage.scene);
+        Selection.activeGameObject = root.gameObject;
+        Undo.CollapseUndoOperations(undoGroup);
+
+        Debug.Log("[BGMPlayerSettingsPrefabBuilder] BGM Player 버튼 아이콘과 상태별 Sprite 참조를 적용했습니다.");
     }
 
     [MenuItem(PreviewMenuPath)]
@@ -325,6 +416,91 @@ public static class BGMPlayerSettingsPrefabBuilder
             TextAlignmentOptions.Center);
         SetStretchRect(label.rectTransform, 6f, 6f, 4f, 4f);
         return (button, label);
+    }
+
+    private static bool TryLoadButtonSprites(
+        out Sprite playSprite,
+        out Sprite pauseSprite,
+        out Sprite skipSprite,
+        out Sprite sequentialLoopSprite,
+        out Sprite repeatCurrentSprite)
+    {
+        playSprite = LoadSprite(CommonIconAssetPath, PlaySpriteName);
+        pauseSprite = LoadSprite(CommonIconAssetPath, PauseSpriteName);
+        skipSprite = LoadSprite(CommonIconAssetPath, SkipSpriteName);
+        sequentialLoopSprite = LoadSprite(SoundPlayerIconAssetPath, SequentialLoopSpriteName);
+        repeatCurrentSprite = LoadSprite(SoundPlayerIconAssetPath, RepeatCurrentSpriteName);
+
+        bool hasAllSprites = playSprite != null &&
+                             pauseSprite != null &&
+                             skipSprite != null &&
+                             sequentialLoopSprite != null &&
+                             repeatCurrentSprite != null;
+
+        if (!hasAllSprites)
+        {
+            Debug.LogError("[BGMPlayerSettingsPrefabBuilder] 지정된 BGM Player 버튼 Sprite를 모두 불러오지 못했습니다.");
+        }
+
+        return hasAllSprites;
+    }
+
+    private static Sprite LoadSprite(string assetPath, string spriteName)
+    {
+        return AssetDatabase
+            .LoadAllAssetsAtPath(assetPath)
+            .OfType<Sprite>()
+            .FirstOrDefault(sprite => sprite.name == spriteName);
+    }
+
+    private static Button FindButton(Transform root, string buttonName)
+    {
+        return root.Find(buttonName)?.GetComponent<Button>();
+    }
+
+    private static TMP_Text FindButtonLabel(Button button)
+    {
+        return button.transform.Find("Label")?.GetComponent<TMP_Text>();
+    }
+
+    private static void ConfigureIconButton(Button button, TMP_Text label, Sprite sprite, bool flipHorizontally = false)
+    {
+        if (button == null || sprite == null || !button.TryGetComponent(out Image buttonImage))
+        {
+            return;
+        }
+
+        RectTransform buttonRect = button.GetComponent<RectTransform>();
+        Undo.RecordObjects(new Object[] { button, buttonImage, buttonRect }, ApplyIconsUndoName);
+
+        buttonImage.sprite = sprite;
+        buttonImage.type = Image.Type.Simple;
+        buttonImage.preserveAspect = true;
+        buttonImage.color = Color.white;
+        button.targetGraphic = buttonImage;
+
+        ColorBlock colors = button.colors;
+        colors.normalColor = Color.white;
+        colors.highlightedColor = Color.white;
+        colors.selectedColor = Color.white;
+        colors.pressedColor = new Color(0.82f, 0.82f, 0.82f, 1f);
+        colors.disabledColor = new Color(1f, 1f, 1f, 0.45f);
+        colors.colorMultiplier = 1f;
+        button.colors = colors;
+
+        Vector3 localScale = buttonRect.localScale;
+        localScale.x = flipHorizontally ? -Mathf.Abs(localScale.x) : Mathf.Abs(localScale.x);
+        buttonRect.localScale = localScale;
+
+        if (label != null)
+        {
+            Undo.RecordObject(label.gameObject, ApplyIconsUndoName);
+            label.gameObject.SetActive(false);
+        }
+
+        EditorUtility.SetDirty(button);
+        EditorUtility.SetDirty(buttonImage);
+        EditorUtility.SetDirty(buttonRect);
     }
 
     private static void SetReference(SerializedObject serializedObject, string propertyName, Object value)

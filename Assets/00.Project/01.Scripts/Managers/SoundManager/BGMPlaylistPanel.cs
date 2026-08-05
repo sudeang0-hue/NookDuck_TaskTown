@@ -28,6 +28,14 @@ public class BGMPlaylistPanel : MonoBehaviour
     [Header("Optional Progress")]
     [SerializeField] private Image progressFillImage;
 
+    [Header("Optional State Icons")]
+    [SerializeField] private Image playPauseButtonImage;
+    [SerializeField] private Image playbackModeButtonImage;
+    [SerializeField] private Sprite playSprite;
+    [SerializeField] private Sprite pauseSprite;
+    [SerializeField] private Sprite sequentialLoopSprite;
+    [SerializeField] private Sprite repeatCurrentSprite;
+
     private SoundManager soundManager;
     private Coroutine progressRefreshCoroutine;
     private WaitForSecondsRealtime progressRefreshWait;
@@ -171,6 +179,7 @@ public class BGMPlaylistPanel : MonoBehaviour
             SetText(trackIndexText, "- / -");
             SetText(playPauseButtonText, "재생");
             SetText(playbackModeButtonText, "순차 반복");
+            RefreshStateIcons(false, BGMPlaybackMode.SequentialLoop);
             SetPlaylistButtonsInteractable(false);
 
             if (playbackModeButton != null)
@@ -197,8 +206,10 @@ public class BGMPlaylistPanel : MonoBehaviour
             SetText(trackIndexText, "- / -");
         }
 
-        SetText(playPauseButtonText, soundManager.IsBGMPaused || !soundManager.IsBGMPlaying ? "재생" : "일시정지");
+        bool isPlaying = soundManager.IsBGMPlaying && !soundManager.IsBGMPaused;
+        SetText(playPauseButtonText, isPlaying ? "일시정지" : "재생");
         SetText(playbackModeButtonText, GetPlaybackModeLabel(soundManager.PlaybackMode));
+        RefreshStateIcons(isPlaying, soundManager.PlaybackMode);
         SetPlaylistButtonsInteractable(hasPlaylist);
 
         if (playbackModeButton != null)
@@ -288,6 +299,14 @@ public class BGMPlaylistPanel : MonoBehaviour
         }
     }
 
+    private void RefreshStateIcons(bool isPlaying, BGMPlaybackMode playbackMode)
+    {
+        SetSprite(playPauseButtonImage, isPlaying ? pauseSprite : playSprite);
+        SetSprite(
+            playbackModeButtonImage,
+            playbackMode == BGMPlaybackMode.RepeatCurrent ? repeatCurrentSprite : sequentialLoopSprite);
+    }
+
     private static string GetPlaybackModeLabel(BGMPlaybackMode mode)
     {
         return mode == BGMPlaybackMode.RepeatCurrent ? "현재 곡 반복" : "순차 반복";
@@ -306,6 +325,14 @@ public class BGMPlaylistPanel : MonoBehaviour
         if (target != null)
         {
             target.text = value;
+        }
+    }
+
+    private static void SetSprite(Image target, Sprite sprite)
+    {
+        if (target != null && sprite != null && target.sprite != sprite)
+        {
+            target.sprite = sprite;
         }
     }
 }
