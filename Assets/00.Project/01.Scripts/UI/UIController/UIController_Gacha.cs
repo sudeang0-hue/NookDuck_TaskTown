@@ -1,4 +1,5 @@
 
+using Manager;
 using TaskTown.Gacha;
 using TMPro;
 using UnityEngine;
@@ -15,6 +16,10 @@ namespace UI
         [Tooltip("ICoinWallet을 구현한 컴포넌트(CoinManager)를 연결합니다. 비워두면 코인 확인 없이 뽑기를 진행합니다.")]
         private MonoBehaviour coinWalletSource;
         private ICoinWallet CoinWallet => coinWalletSource as ICoinWallet;
+
+        [Tooltip("VillageSystemManager를 연결합니다. 비워두면 VillageSystemManager.Instance를 사용합니다.")]
+        [SerializeField] private VillageSystemManager villageSystem;
+        private bool isVillageStateSubscribed;
 
         private const int MultiRollCount = 10;
 
@@ -55,18 +60,59 @@ namespace UI
             }
 
             Subscribe();
+            TrySubscribeVillageState();
             RefreshCostTexts();
         }
 
         private void OnDestroy()
         {
             Unsubscribe();
+            UnsubscribeVillageState();
         }
 
         /// <summary>
         /// 가챠 패널이 열릴 때 호출합니다. 현재 뽑기 가격 텍스트를 갱신합니다.
         /// </summary>
         public void NotifyPanelOpened()
+        {
+            TrySubscribeVillageState();
+            RefreshCostTexts();
+        }
+
+        /// <summary>
+        /// 마을 레벨이 바뀔 때(레벨업/디버그 설정 등) 뽑기 가격 텍스트를 즉시 갱신합니다.
+        /// 패널이 닫혀있어도 구독되어 있으면 다음에 열 때 최신값이 보입니다.
+        /// </summary>
+        private void TrySubscribeVillageState()
+        {
+            if (isVillageStateSubscribed)
+                return;
+
+            if (villageSystem == null)
+                villageSystem = VillageSystemManager.Instance != null
+                    ? VillageSystemManager.Instance
+                    : FindAnyObjectByType<VillageSystemManager>();
+
+            if (villageSystem == null)
+                return;
+
+            villageSystem.OnVillageStateChanged -= OnVillageStateChanged;
+            villageSystem.OnVillageStateChanged += OnVillageStateChanged;
+            isVillageStateSubscribed = true;
+        }
+
+        private void UnsubscribeVillageState()
+        {
+            if (!isVillageStateSubscribed)
+                return;
+
+            if (villageSystem != null)
+                villageSystem.OnVillageStateChanged -= OnVillageStateChanged;
+
+            isVillageStateSubscribed = false;
+        }
+
+        private void OnVillageStateChanged()
         {
             RefreshCostTexts();
         }
