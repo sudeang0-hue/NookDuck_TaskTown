@@ -130,7 +130,7 @@ namespace UI
             if (setAnimalText == null)
                 return;
 
-            setAnimalText.text = Mathf.Max(0, setCount).ToString();
+            setAnimalText.text = "배치된 주민: "+ Mathf.Max(0, setCount).ToString();
         }
 
         /// <summary>현재 마을 레벨 기준 배치 가능 최대 수(= unlockedCount). 레벨업 시 갱신.</summary>

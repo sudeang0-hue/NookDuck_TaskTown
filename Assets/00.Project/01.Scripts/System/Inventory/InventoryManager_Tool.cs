@@ -62,6 +62,7 @@ namespace TaskTown.KDH
             endlessModeProvider = townLevelProviderSource as IEndlessModeProvider;
 
             InitializeDictionary();
+            SortToolSlots();
         }
 
         private int GetCurrentTownLevel()
@@ -196,6 +197,7 @@ namespace TaskTown.KDH
             toolSlotsList.Add(newSlot);
             toolSlotsDic.Add(toolData.Id, newSlot);
 
+            SortToolSlots();
             NotifySlotChanged(newSlot);
 
             Debug.Log($"[InventoryManager_Tool] 신규 도구 획득: {toolData.DisplayName}");
@@ -495,7 +497,28 @@ namespace TaskTown.KDH
                 toolSlotsDic.Add(runtimeSlot.ToolId, runtimeSlot);
             }
 
+            SortToolSlots();
             NotifyInventoryChanged();
+        }
+
+        /// <summary>
+        /// 등급 높은 순으로만 정렬합니다. (동일 등급 내 Index 정렬은 추후 단계)
+        /// </summary>
+        private void SortToolSlots()
+        {
+            toolSlotsList.Sort(CompareToolSlots);
+        }
+
+        private static int CompareToolSlots(SlotData_Tool a, SlotData_Tool b)
+        {
+            ToolDataSO dataA = a != null ? a.ToolData : null;
+            ToolDataSO dataB = b != null ? b.ToolData : null;
+
+            if (dataA == null && dataB == null) return 0;
+            if (dataA == null) return 1;
+            if (dataB == null) return -1;
+
+            return ((int)dataB.Grade).CompareTo((int)dataA.Grade);
         }
 
         /// <summary>
