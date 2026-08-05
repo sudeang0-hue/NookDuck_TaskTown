@@ -64,8 +64,12 @@ namespace UI
         [SerializeField] private Button windowClose;
 
         [Header("보상 수치 (시스템 값과 동기화 유지)")]
-        [Tooltip("InventoryManager_Tool.toolCapacityPerLevel와 동일")]
-        [SerializeField] private int toolCapacityPerLevel = 2;
+        [Tooltip("InventoryManager_Tool.toolCapacityBase와 동일")]
+        [SerializeField] private int toolCapacityBase = 5;
+        [Tooltip("InventoryManager_Tool.toolCapacityAsymptoteRange와 동일")]
+        [SerializeField] private float toolCapacityAsymptoteRange = 26.01f;
+        [Tooltip("InventoryManager_Tool.toolCapacityDecayLevels와 동일")]
+        [SerializeField] private float toolCapacityDecayLevels = 12f;
         [Tooltip("VillageSystemManager.maxPlacementCapacity와 동일")]
         [SerializeField] private int maxPlacementCapacity = 20;
         [Tooltip("VillageSystemManager.unlockedSlotsByTownLevel와 동일")]
@@ -164,7 +168,7 @@ namespace UI
                 return;
 
             int nextLevel = Mathf.Max(1, currentTownLevel) + 1;
-            int toolIncrease = Mathf.Max(0, toolCapacityPerLevel);
+            int toolIncrease = Mathf.Max(0, GetToolCapacity(nextLevel) - GetToolCapacity(currentTownLevel));
             int animalIncrease = Mathf.Max(
                 0,
                 GetUnlockedPlacementSlotCount(nextLevel) - GetUnlockedPlacementSlotCount(currentTownLevel));
@@ -178,6 +182,13 @@ namespace UI
                 showDecoBuilding ? $"마을 장식 추가 : {decoBuildingName}" : string.Empty,
                 showDecoBuilding);
             SetRewardText(3, "섬 모양 변경", showIslandChange);
+        }
+
+        private int GetToolCapacity(int townLevel)
+        {
+            float value = toolCapacityBase + toolCapacityAsymptoteRange
+                * (1f - Mathf.Exp(-(Mathf.Max(1, townLevel) - 1) / toolCapacityDecayLevels));
+            return Mathf.RoundToInt(value);
         }
 
         private int GetUnlockedPlacementSlotCount(int townLevel)
