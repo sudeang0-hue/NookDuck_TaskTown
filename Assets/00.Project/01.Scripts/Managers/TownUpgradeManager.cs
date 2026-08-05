@@ -14,13 +14,6 @@ using UnityEngine;
 // 기본값은 simulate_game.py의 N=1000 시뮬레이션으로 검증한 값입니다(완주 58~60h대, 레벨8~10
 // 비중 48.5%, 레벨별 비중 단조증가 확인. 셋 다 성장률을 1.6으로 통일했을 때만 단조증가가
 // 안정적으로 유지됨).
-//
-// 3종 업그레이드 10->20 세분화(사용자 확인): 마을레벨은 그대로 10이 상한이지만, 3종 업그레이드는
-// 마을레벨 1회 상승마다 2회씩 사야 하도록 세분화했습니다. 총 지출/총 효과는 옛 10단계와 정확히
-// 동일하게 유지됩니다 - 비용은 growthRate_new=sqrt(growthRate_old), baseCost_new=
-// baseCost_old/(1+growthRate_new)로 유도(페어 합이 옛 1회 비용과 정확히 같음이 수학적으로
-// 보장됨), 레벨당 효과(capBonus/multiplier/efficiency)는 절반으로 나눠 20레벨 도달 시
-// 누적 효과가 옛 10레벨 도달 시와 같도록 맞췄습니다.
 public class TownUpgradeManager : MonoBehaviour
 {
     public static TownUpgradeManager Instance { get; private set; }
@@ -94,25 +87,22 @@ public class TownUpgradeManager : MonoBehaviour
     private ITownLevelProvider townLevelProvider;
     private IEndlessModeProvider endlessModeProvider;
 
-    // 3종 업그레이드 10->20 세분화: 마을레벨 1회 상승마다 업그레이드 2회씩 필요.
-    private const int UpgradesPerTownLevel = 2;
-
     [Header("클릭 코인 업그레이드")]
-    [SerializeField] private UpgradeTrack clickUpgrade = new UpgradeTrack(132, 1.2649f, 20);
-    [Tooltip("레벨당 EarnProcessor.ClickMultiplier 증가량(레벨 x 이 값을 매번 새로 계산해서 적용, 누적 아님). 세분화로 0.5 - 반올림해서 적용")]
-    [SerializeField] private float clickMultiplierPerLevel = 0.5f;
+    [SerializeField] private UpgradeTrack clickUpgrade = new UpgradeTrack(300, 1.6f, 10);
+    [Tooltip("레벨당 EarnProcessor.ClickMultiplier 증가량(레벨 x 이 값을 매번 새로 계산해서 적용, 누적 아님)")]
+    [SerializeField] private int clickMultiplierPerLevel = 1;
     [Tooltip("레벨당 시간당 획득 상한(maxCoinPerHour) 증가분")]
-    [SerializeField] private int clickCapBonusPerLevel = 1000;
+    [SerializeField] private int clickCapBonusPerLevel = 2000;
 
     [Header("타이핑 코인 업그레이드")]
-    [SerializeField] private UpgradeTrack typingUpgrade = new UpgradeTrack(132, 1.2649f, 20);
-    [SerializeField] private float typingMultiplierPerLevel = 0.5f;
-    [SerializeField] private int typingCapBonusPerLevel = 1000;
+    [SerializeField] private UpgradeTrack typingUpgrade = new UpgradeTrack(300, 1.6f, 10);
+    [SerializeField] private int typingMultiplierPerLevel = 1;
+    [SerializeField] private int typingCapBonusPerLevel = 2000;
 
     [Header("도구 효율 업그레이드 (기존 마을 레벨 자동 생산 보너스를 대체)")]
-    [SerializeField] private UpgradeTrack toolEfficiencyUpgrade = new UpgradeTrack(26490, 1.2649f, 20);
+    [SerializeField] private UpgradeTrack toolEfficiencyUpgrade = new UpgradeTrack(60000, 1.6f, 10);
     [Tooltip("레벨당 전체 생산량에 곱해지는 효율 증가분")]
-    [SerializeField, Min(0f)] private float toolEfficiencyBonusPerLevel = 0.05f;
+    [SerializeField, Min(0f)] private float toolEfficiencyBonusPerLevel = 0.1f;
 
     // EarnProcessor의 원래(업그레이드 반영 전) 시간당 획득 상한. Start에서 한 번만 캐시해서,
     // 매번 이 값 기준으로 클릭/타이핑 레벨의 상한 보너스를 더해 재계산합니다.
@@ -126,9 +116,9 @@ public class TownUpgradeManager : MonoBehaviour
     public long TypingUpgradeNextCost => typingUpgrade.GetNextCost();
     public long ToolEfficiencyUpgradeNextCost => toolEfficiencyUpgrade.GetNextCost();
 
-    public bool IsClickUpgradeMaxLevel => !IsEndlessMode() && clickUpgrade.IsMaxLevelAt(GetEffectiveTownLevelForUpgrades());
-    public bool IsTypingUpgradeMaxLevel => !IsEndlessMode() && typingUpgrade.IsMaxLevelAt(GetEffectiveTownLevelForUpgrades());
-    public bool IsToolEfficiencyUpgradeMaxLevel => !IsEndlessMode() && toolEfficiencyUpgrade.IsMaxLevelAt(GetEffectiveTownLevelForUpgrades());
+    public bool IsClickUpgradeMaxLevel => !IsEndlessMode() && clickUpgrade.IsMaxLevelAt(GetCurrentTownLevel());
+    public bool IsTypingUpgradeMaxLevel => !IsEndlessMode() && typingUpgrade.IsMaxLevelAt(GetCurrentTownLevel());
+    public bool IsToolEfficiencyUpgradeMaxLevel => !IsEndlessMode() && toolEfficiencyUpgrade.IsMaxLevelAt(GetCurrentTownLevel());
 
     // RealProductionTicker가 매 틱 참조합니다. 예전에는 마을 레벨이 자동으로 이 배율을 올려줬지만
     // 지금은 이 업그레이드를 구매한 만큼만 오릅니다.
@@ -146,15 +136,6 @@ public class TownUpgradeManager : MonoBehaviour
     private int GetCurrentTownLevel()
     {
         return townLevelProvider != null ? townLevelProvider.CurrentTownLevel : 1;
-    }
-
-    // UpgradeTrack.IsMaxLevelAt(townLevel)은 Min(townLevel, maxLevel)로 "업그레이드 레벨 상한 ==
-    // 마을레벨"을 가정하는 공식입니다. 3종 업그레이드가 마을레벨 1회당 2회씩 필요해지면서
-    // maxLevel도 20이 됐으므로, UpgradeTrack 자체는 건드리지 않고 여기서 townLevel을
-    // UpgradesPerTownLevel배로 스케일링해서 넘깁니다(마을레벨1->2, 마을레벨10->20).
-    private int GetEffectiveTownLevelForUpgrades()
-    {
-        return GetCurrentTownLevel() * UpgradesPerTownLevel;
     }
 
     // #19: 엔드리스 모드에서는 3종 업그레이드 상한을 전부 해제합니다(UpgradeTrack 자체는 건드리지 않고,
@@ -191,7 +172,7 @@ public class TownUpgradeManager : MonoBehaviour
 
     private bool TryUpgrade(UpgradeTrack track, System.Action onLeveledUp)
     {
-        int townLevel = GetEffectiveTownLevelForUpgrades();
+        int townLevel = GetCurrentTownLevel();
         bool endless = IsEndlessMode();
         if ((!endless && track.IsMaxLevelAt(townLevel)) || CoinManager.Instance == null)
             return false;
@@ -218,8 +199,8 @@ public class TownUpgradeManager : MonoBehaviour
     {
         if (EarnProcessor.Instance == null) return;
 
-        EarnProcessor.Instance.ClickMultiplier = Mathf.RoundToInt(1 + clickUpgrade.Level * clickMultiplierPerLevel);
-        EarnProcessor.Instance.TypingMultiplier = Mathf.RoundToInt(1 + typingUpgrade.Level * typingMultiplierPerLevel);
+        EarnProcessor.Instance.ClickMultiplier = 1 + clickUpgrade.Level * clickMultiplierPerLevel;
+        EarnProcessor.Instance.TypingMultiplier = 1 + typingUpgrade.Level * typingMultiplierPerLevel;
 
         if (baseMaxCoinPerHour >= 0)
         {
@@ -258,7 +239,7 @@ public class TownUpgradeManager : MonoBehaviour
     private bool DebugForceUpgrade(UpgradeTrack track, System.Action onLeveledUp)
     {
         // 코인/CoinManager 검사 없음. 최대 레벨만 막음(엔드리스 모드면 그마저도 없음).
-        int townLevel = GetEffectiveTownLevelForUpgrades();
+        int townLevel = GetCurrentTownLevel();
         bool endless = IsEndlessMode();
         if (!endless && track.IsMaxLevelAt(townLevel)) return false;
 
