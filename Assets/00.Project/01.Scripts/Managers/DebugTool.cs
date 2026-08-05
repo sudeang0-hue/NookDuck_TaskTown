@@ -251,7 +251,7 @@ public class DebugTool : MonoBehaviour
             GUILayout.Label("(마을 레벨을 올려도 도구효율 배율이 바뀌지 않아야 정상 - 이제 구매로만 오릅니다)");
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label($"클릭 코인 Lv.{townUpgradeManager.ClickLevel}", GUILayout.Width(120f));
+            GUILayout.Label($"클릭 코인 Lv.{townUpgradeManager.ClickLevel + 1}", GUILayout.Width(120f));
             GUILayout.Label($"다음 비용 {townUpgradeManager.ClickUpgradeNextCost:N0}", GUILayout.Width(120f));
             //-------------------------------------26.07.29 KDH---------------------------------------------
             //if (GUILayout.Button("구매", GUILayout.Width(60f)))
@@ -267,7 +267,7 @@ public class DebugTool : MonoBehaviour
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label($"타이핑 코인 Lv.{townUpgradeManager.TypingLevel}", GUILayout.Width(120f));
+            GUILayout.Label($"타이핑 코인 Lv.{townUpgradeManager.TypingLevel + 1}", GUILayout.Width(120f));
             GUILayout.Label($"다음 비용 {townUpgradeManager.TypingUpgradeNextCost:N0}", GUILayout.Width(120f));
             //-------------------------------------26.07.29 KDH---------------------------------------------
             //if (GUILayout.Button("구매", GUILayout.Width(60f)))
@@ -283,7 +283,7 @@ public class DebugTool : MonoBehaviour
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label($"도구 효율 Lv.{townUpgradeManager.ToolEfficiencyLevel}", GUILayout.Width(120f));
+            GUILayout.Label($"도구 효율 Lv.{townUpgradeManager.ToolEfficiencyLevel + 1}", GUILayout.Width(120f));
             GUILayout.Label($"다음 비용 {townUpgradeManager.ToolEfficiencyUpgradeNextCost:N0}", GUILayout.Width(120f));
             //-------------------------------------26.07.29 KDH---------------------------------------------
             //if (GUILayout.Button("구매", GUILayout.Width(60f)))
