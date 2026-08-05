@@ -1,94 +1,78 @@
-using System.Collections;
 using UnityEngine;
+using Unity.AI.Navigation;
 
-/// <summary>
-/// 섬의 생성, 파괴 및 5레벨/10레벨 마일스톤 교체를 담당하는 안전 제어 컨트롤러
-/// </summary>
 public class IslandController : MonoBehaviour
 {
-    [Header("섬 생성 기준 앵커 (비워두면 이 스크립트가 붙은 오브젝트 위치 사용)")]
-    [SerializeField] private Transform islandSpawnParent;
+    [Header("섬 오브젝트 (단계별 - 각각 Pre-baked NavMeshSurface 보유)")]
+    [SerializeField] private GameObject island1st; // 1레벨 ~ 4레벨
+    [SerializeField] private GameObject island2nd; // 5레벨 ~ 9레벨
+    [SerializeField] private GameObject island3rd; // 10레벨 이상
 
-    [Header("현재 활성화된 섬 인스턴스 (런타임 전용)")]
-    [SerializeField] private GameObject currentIslandInstance;
-
-    public GameObject CurrentIslandInstance => currentIslandInstance;
-
-    private void Awake()
+    private void Start()
     {
-        // 부모 앵커가 지정되지 않았다면 자기 자신의 트랜스폼을 기본값으로 설정
-        if (islandSpawnParent == null)
+        if (TownManager.Instance != null)
         {
-            islandSpawnParent = transform;
+            TownManager.Instance.OnTownLevelChanged += HandleLevelChanged;
         }
+    }
+
+    private void OnDestroy()
+    {
+        if (TownManager.Instance != null)
+        {
+            TownManager.Instance.OnTownLevelChanged -= HandleLevelChanged;
+        }
+    }
+
+    private void HandleLevelChanged(int level)
+    {
+        UpdateIslandVisuals(level);
+    }
+
+    private void UpdateIslandVisuals(int level)
+    {
+        bool is1stActive = (level >= 1 && level < 5);
+        bool is2ndActive = (level >= 5 && level < 10);
+        bool is3rdActive = (level >= 10);
+
+        if (island1st != null) island1st.SetActive(is1stActive);
+        if (island2nd != null) island2nd.SetActive(is2ndActive);
+        if (island3rd != null) island3rd.SetActive(is3rdActive);
+
+        Debug.Log($"<color=green>[IslandController] 섬 형태 스위칭 완료 (현재 레벨: {level})</color>");
     }
 
     /// <summary>
-    /// 최초 게임 시작 시 1레벨 기본 섬을 생성합니다.
+    /// [핵심 메서드] 섬의 위치를 드래그 등으로 이동시킨 '직후'에 외부(이동 스크립트)에서 반드시 호출해 주어야 합니다!
+    /// 현재 활성화되어 있는 섬의 네브메시를 새로운 월드 좌표($World\ Space$) 기준으로 다시 구워줍니다.
     /// </summary>
-    public void SpawnInitialIsland(GameObject islandPrefab)
+    public void RebakeCurrentIslandNavMesh()
     {
-        if (islandPrefab == null) return;
-        if (currentIslandInstance != null) return;
+        NavMeshSurface targetSurface = null;
 
-        Transform safeParent = GetSafeSpawnParent();
-        currentIslandInstance = Instantiate(islandPrefab, safeParent.position, safeParent.rotation, safeParent);
-        Debug.Log($"[IslandController] 초기 섬 생성 완료: {islandPrefab.name}");
-    }
-
-    /// <summary>
-    /// 5레벨, 10레벨 마일스톤 도달 시 기존 섬을 안전하게 파괴하고 새 섬으로 교체합니다.
-    /// </summary>
-    public void ChangeIslandPrefab(GameObject newIslandPrefab)
-    {
-        if (newIslandPrefab == null)
+        // 현재 켜져 있는 섬을 판별하여 해당 섬의 NavMeshSurface를 타겟으로 잡습니다.
+        if (island1st != null && island1st.activeSelf)
         {
-            Debug.LogError("[IslandController] 교체할 새로운 섬 프리팹(Target Island Prefab)이 Null입니다! SO를 확인하세요.");
-            return;
+            targetSurface = island1st.GetComponentInChildren<NavMeshSurface>();
+        }
+        else if (island2nd != null && island2nd.activeSelf)
+        {
+            targetSurface = island2nd.GetComponentInChildren<NavMeshSurface>();
+        }
+        else if (island3rd != null && island3rd.activeSelf)
+        {
+            targetSurface = island3rd.GetComponentInChildren<NavMeshSurface>();
         }
 
-        StartCoroutine(ChangeIslandSequenceCoroutine(newIslandPrefab));
-    }
-
-    private IEnumerator ChangeIslandSequenceCoroutine(GameObject newIslandPrefab)
-    {
-        // 1. 기존에 존재하던 섬 인스턴스만 안전하게 파괴
-        if (currentIslandInstance != null)
+        // 타겟이 존재한다면 이동된 좌표계에 맞춰 네브메시를 안전하게 1회 갱신
+        if (targetSurface != null)
         {
-            Debug.Log($"[IslandController] 기존 섬 파괴 중: {currentIslandInstance.name}");
-            Destroy(currentIslandInstance);
-            currentIslandInstance = null;
-        }
-
-        // 2. 유니티 엔진이 파괴 명령을 처리할 수 있도록 1프레임 대기 ($t \ge 1\text{ frame}$)
-        yield return null;
-
-        // 3. [핵심 방어] 스폰 앵커가 도중에 파괴되었거나 유효하지 않은 경우 안전하게 복구
-        Transform safeParent = GetSafeSpawnParent();
-
-        // 4. 새로운 마일스톤 섬(예: 2nd_island)을 안전한 위치에 생성
-        currentIslandInstance = Instantiate(newIslandPrefab, safeParent.position, safeParent.rotation, safeParent);
-
-        if (currentIslandInstance != null)
-        {
-            Debug.Log($"[IslandController] ★ 마일스톤 섬 교체 성공: {newIslandPrefab.name}");
+            targetSurface.BuildNavMesh();
+            Debug.Log($"<color=cyan>[IslandController]  섬 이동 완료 감지! 현재 활성 섬의 NavMesh 재베이킹 완료.</color>");
         }
         else
         {
-            Debug.LogError($"[IslandController] 앗! '{newIslandPrefab.name}' 인스턴스화에 실패했습니다.");
+            Debug.LogWarning("<color=orange>[IslandController] 현재 활성화된 섬에서 NavMeshSurface를 찾지 못했습니다!</color>");
         }
-    }
-
-    /// <summary>
-    /// 스폰 부모 앵커가 파괴되었는지 검사하고, 문제가 있다면 현재 컨트롤러의 트랜스폼으로 대체 반환하는 방어 메서드
-    /// </summary>
-    private Transform GetSafeSpawnParent()
-    {
-        if (islandSpawnParent == null)
-        {
-            // C# 레벨에서 null이 된 경우
-            islandSpawnParent = transform;
-        }
-        return islandSpawnParent;
     }
 }
