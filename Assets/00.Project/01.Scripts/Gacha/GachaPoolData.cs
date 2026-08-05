@@ -22,7 +22,9 @@ namespace TaskTown.Gacha
 
         // townLevel 미만에서 해금되는(unlockTownLevel <= townLevel) 종류만 반환합니다.
         // 아직 해금되지 않은 종류는 등급 확률에 걸리더라도 뽑히지 않습니다.
-        public IReadOnlyList<GachaEntryData> GetEntries(ItemGrade grade, int townLevel)
+        // 엔트리가 IDifficultyGated이고 난이도 전용(IsDifficultyExclusive)이면, 현재 난이도가
+        // RequiredDifficulty와 일치할 때만 포함합니다(예: 시크릿 동물 - 하드/매우어려움 전용).
+        public IReadOnlyList<GachaEntryData> GetEntries(ItemGrade grade, int townLevel, DifficultyType currentDifficulty)
         {
             for (int i = 0; i < entryGroups.Count; i++)
             {
@@ -32,10 +34,20 @@ namespace TaskTown.Gacha
                     List<GachaEntryData> unlocked = new List<GachaEntryData>(entries.Count);
                     for (int e = 0; e < entries.Count; e++)
                     {
-                        if (entries[e] != null && entries[e].UnlockTownLevel <= townLevel)
+                        GachaEntryData entry = entries[e];
+                        if (entry == null || entry.UnlockTownLevel > townLevel)
                         {
-                            unlocked.Add(entries[e]);
+                            continue;
                         }
+
+                        if (entry is IDifficultyGated gated
+                            && gated.IsDifficultyExclusive
+                            && gated.RequiredDifficulty != currentDifficulty)
+                        {
+                            continue;
+                        }
+
+                        unlocked.Add(entry);
                     }
 
                     return unlocked;

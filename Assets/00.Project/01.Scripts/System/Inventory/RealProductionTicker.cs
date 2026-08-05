@@ -14,7 +14,7 @@ namespace TaskTown.KDH
     // 아니라 "동물이 그 도구에 장착됐는지"(CurrentAnimalSet)로 판단합니다(사용자 확인). 동물이
     // 장착된 도구는 도구 자체 생산 + 동물 생산(+특화 보너스)을 함께 계산합니다(InventoryManager_Animal
     // 쪽에는 별도의 "배치" 개념이 없음 - 도구 슬롯의 CurrentAnimalId로만 동물이 연결됩니다).
-    public class RealProductionTicker : MonoBehaviour
+    public class RealProductionTicker : MonoBehaviour, IDifficultyProvider
     {
         public static RealProductionTicker Instance { get; private set; }
 
@@ -63,6 +63,9 @@ namespace TaskTown.KDH
         {
             difficulty = newDifficulty;
         }
+
+        // IDifficultyProvider - 시크릿 동물 등 난이도 전용 뽑기 항목이 GachaManagerBase를 통해 참조합니다.
+        public DifficultyType CurrentDifficulty => difficulty;
 
         private void Update()
         {

@@ -11,8 +11,7 @@ GameObject:
   - component: {fileID: 1066419776458539979}
   - component: {fileID: 5052898533250768301}
   - component: {fileID: 4278152603540216987}
-  - component: {fileID: 7983547880734414462}
-  - component: {fileID: 8433689165559621666}
+  - component: {fileID: 7060871763739530346}
   m_Layer: 0
   m_Name: GachaSystems
   m_TagString: Untagged
@@ -51,24 +50,85 @@ MonoBehaviour:
   costConfig:
     levelCosts:
     - townLevelThreshold: 1
-      cost: 1500
+      cost: 2000
     - townLevelThreshold: 2
-      cost: 2200
+      cost: 2340
     - townLevelThreshold: 3
-      cost: 3400
+      cost: 2740
     - townLevelThreshold: 4
-      cost: 5100
+      cost: 3210
     - townLevelThreshold: 5
-      cost: 7600
+      cost: 3750
     - townLevelThreshold: 6
-      cost: 11400
+      cost: 4390
     - townLevelThreshold: 7
-      cost: 17100
+      cost: 5140
     - townLevelThreshold: 8
-      cost: 25600
+      cost: 6010
     - townLevelThreshold: 9
-      cost: 38400
-  townLevelProviderSource: {fileID: 7983547880734414462}
+      cost: 7040
+    - townLevelThreshold: 10
+      cost: 8230
+    - townLevelThreshold: 11
+      cost: 9630
+    - townLevelThreshold: 12
+      cost: 11300
+    - townLevelThreshold: 13
+      cost: 13200
+    - townLevelThreshold: 14
+      cost: 15400
+    - townLevelThreshold: 15
+      cost: 18100
+    - townLevelThreshold: 16
+      cost: 21100
+    - townLevelThreshold: 17
+      cost: 24700
+    - townLevelThreshold: 18
+      cost: 29000
+    - townLevelThreshold: 19
+      cost: 33900
+    - townLevelThreshold: 20
+      cost: 39700
+    - townLevelThreshold: 21
+      cost: 46400
+    - townLevelThreshold: 22
+      cost: 54300
+    - townLevelThreshold: 23
+      cost: 63600
+    - townLevelThreshold: 24
+      cost: 74400
+    - townLevelThreshold: 25
+      cost: 87000
+    - townLevelThreshold: 26
+      cost: 102000
+    - townLevelThreshold: 27
+      cost: 119000
+    - townLevelThreshold: 28
+      cost: 140000
+    - townLevelThreshold: 29
+      cost: 163000
+    - townLevelThreshold: 30
+      cost: 191000
+    - townLevelThreshold: 31
+      cost: 224000
+    - townLevelThreshold: 32
+      cost: 262000
+    - townLevelThreshold: 33
+      cost: 306000
+    - townLevelThreshold: 34
+      cost: 358000
+    - townLevelThreshold: 35
+      cost: 419000
+    - townLevelThreshold: 36
+      cost: 491000
+    - townLevelThreshold: 37
+      cost: 574000
+    - townLevelThreshold: 38
+      cost: 672000
+    - townLevelThreshold: 39
+      cost: 786000
+  townLevelProviderSource: {fileID: 7060871763739530346}
+  difficultyProviderSource: {fileID: 0}
 --- !u!114 &4278152603540216987
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -85,25 +145,86 @@ MonoBehaviour:
   costConfig:
     levelCosts:
     - townLevelThreshold: 1
-      cost: 1500
+      cost: 2000
     - townLevelThreshold: 2
-      cost: 2200
+      cost: 2340
     - townLevelThreshold: 3
-      cost: 3400
+      cost: 2740
     - townLevelThreshold: 4
-      cost: 5100
+      cost: 3210
     - townLevelThreshold: 5
-      cost: 7600
+      cost: 3750
     - townLevelThreshold: 6
-      cost: 11400
+      cost: 4390
     - townLevelThreshold: 7
-      cost: 17100
+      cost: 5140
     - townLevelThreshold: 8
-      cost: 25600
+      cost: 6010
     - townLevelThreshold: 9
-      cost: 38400
-  townLevelProviderSource: {fileID: 7983547880734414462}
---- !u!114 &7983547880734414462
+      cost: 7040
+    - townLevelThreshold: 10
+      cost: 8230
+    - townLevelThreshold: 11
+      cost: 9630
+    - townLevelThreshold: 12
+      cost: 11300
+    - townLevelThreshold: 13
+      cost: 13200
+    - townLevelThreshold: 14
+      cost: 15400
+    - townLevelThreshold: 15
+      cost: 18100
+    - townLevelThreshold: 16
+      cost: 21100
+    - townLevelThreshold: 17
+      cost: 24700
+    - townLevelThreshold: 18
+      cost: 29000
+    - townLevelThreshold: 19
+      cost: 33900
+    - townLevelThreshold: 20
+      cost: 39700
+    - townLevelThreshold: 21
+      cost: 46400
+    - townLevelThreshold: 22
+      cost: 54300
+    - townLevelThreshold: 23
+      cost: 63600
+    - townLevelThreshold: 24
+      cost: 74400
+    - townLevelThreshold: 25
+      cost: 87000
+    - townLevelThreshold: 26
+      cost: 102000
+    - townLevelThreshold: 27
+      cost: 119000
+    - townLevelThreshold: 28
+      cost: 140000
+    - townLevelThreshold: 29
+      cost: 163000
+    - townLevelThreshold: 30
+      cost: 191000
+    - townLevelThreshold: 31
+      cost: 224000
+    - townLevelThreshold: 32
+      cost: 262000
+    - townLevelThreshold: 33
+      cost: 306000
+    - townLevelThreshold: 34
+      cost: 358000
+    - townLevelThreshold: 35
+      cost: 419000
+    - townLevelThreshold: 36
+      cost: 491000
+    - townLevelThreshold: 37
+      cost: 574000
+    - townLevelThreshold: 38
+      cost: 672000
+    - townLevelThreshold: 39
+      cost: 786000
+  townLevelProviderSource: {fileID: 7060871763739530346}
+  difficultyProviderSource: {fileID: 0}
+--- !u!114 &7060871763739530346
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -112,52 +233,96 @@ MonoBehaviour:
   m_GameObject: {fileID: 7420439736619146514}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2fd360a2e13206f45ba7efcc7d6b5275, type: 3}
+  m_Script: {fileID: 11500000, guid: a41cd27fa0c2f904d80d26aa23c4f1c7, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: TaskTown.Gacha.Demo::TaskTown.Gacha.Demo.DemoTownLevelProvider
+  m_EditorClassIdentifier: Assembly-CSharp::Manager.VillageSystemManager
   townLevel: 1
---- !u!114 &8433689165559621666
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7420439736619146514}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 88b7fd53951b8c847851f6400b5305e2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: TaskTown.Gacha.Demo::TaskTown.Gacha.Demo.GachaDemoUI
-  animalGachaManager: {fileID: 5052898533250768301}
-  toolGachaManager: {fileID: 4278152603540216987}
-  townLevelProvider: {fileID: 7983547880734414462}
+  cycleClickDone: 0
+  cycleTypingDone: 0
+  cycleToolDone: 0
+  isEndlessMode: 0
   townUpgradeCostConfig:
     levelCosts:
     - townLevelThreshold: 1
-      cost: 400000
+      cost: 27000
     - townLevelThreshold: 2
-      cost: 1470000
+      cost: 88800
     - townLevelThreshold: 3
-      cost: 2410000
+      cost: 104000
     - townLevelThreshold: 4
-      cost: 3370000
+      cost: 122000
     - townLevelThreshold: 5
-      cost: 4770000
+      cost: 142000
     - townLevelThreshold: 6
-      cost: 7050000
+      cost: 167000
     - townLevelThreshold: 7
-      cost: 11480000
+      cost: 195000
     - townLevelThreshold: 8
-      cost: 21440000
+      cost: 228000
     - townLevelThreshold: 9
-      cost: 33000000
-  coinWalletSource: {fileID: 0}
-  animalGachaButton: {fileID: 0}
-  toolGachaButton: {fileID: 0}
-  animalGachaX10Button: {fileID: 0}
-  toolGachaX10Button: {fileID: 0}
-  increaseTownLevelButton: {fileID: 0}
-  addTestCoinButton: {fileID: 0}
-  resultText: {fileID: 0}
-  costText: {fileID: 0}
-  townLevelText: {fileID: 0}
+      cost: 266000
+    - townLevelThreshold: 10
+      cost: 312000
+    - townLevelThreshold: 11
+      cost: 366000
+    - townLevelThreshold: 12
+      cost: 428000
+    - townLevelThreshold: 13
+      cost: 500000
+    - townLevelThreshold: 14
+      cost: 586000
+    - townLevelThreshold: 15
+      cost: 686000
+    - townLevelThreshold: 16
+      cost: 802000
+    - townLevelThreshold: 17
+      cost: 938000
+    - townLevelThreshold: 18
+      cost: 1100000
+    - townLevelThreshold: 19
+      cost: 1290000
+    - townLevelThreshold: 20
+      cost: 1500000
+    - townLevelThreshold: 21
+      cost: 1760000
+    - townLevelThreshold: 22
+      cost: 2060000
+    - townLevelThreshold: 23
+      cost: 2420000
+    - townLevelThreshold: 24
+      cost: 2820000
+    - townLevelThreshold: 25
+      cost: 3300000
+    - townLevelThreshold: 26
+      cost: 3860000
+    - townLevelThreshold: 27
+      cost: 4520000
+    - townLevelThreshold: 28
+      cost: 5300000
+    - townLevelThreshold: 29
+      cost: 6200000
+    - townLevelThreshold: 30
+      cost: 7240000
+    - townLevelThreshold: 31
+      cost: 8480000
+    - townLevelThreshold: 32
+      cost: 9920000
+    - townLevelThreshold: 33
+      cost: 11600000
+    - townLevelThreshold: 34
+      cost: 13600000
+    - townLevelThreshold: 35
+      cost: 15900000
+    - townLevelThreshold: 36
+      cost: 18600000
+    - townLevelThreshold: 37
+      cost: 21800000
+    - townLevelThreshold: 38
+      cost: 25400000
+    - townLevelThreshold: 39
+      cost: 29800000
+    postMaxLevelGrowthRate: 1.1703
+  placedAnimalIds: []
+  maxPlacementCapacity: 20
+  unlockedSlotsAtTownLevel1: 5
+  unlockedSlotsByTownLevel: 050000000600000007000000090000000a0000000c0000000d0000000e0000001000000014000000

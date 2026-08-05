@@ -19,9 +19,6 @@ namespace TaskTown.Gacha.Demo
         [Tooltip("GachaDemoUI와 같은 DemoTownLevelProvider를 연결하면, 실제 마을 레벨업 결과가 생산 효율 버프에 반영됩니다.")]
         [SerializeField] private DemoTownLevelProvider townLevelProvider;
 
-        [Tooltip("마을 레벨당 전체 생산량에 곱해지는 효율 버프입니다.")]
-        [SerializeField] private TownUpgradeEffectConfig townUpgradeEffectConfig = new TownUpgradeEffectConfig();
-
         [Tooltip("ICoinWallet를 구현한 컴포넌트를 연결합니다(예: CoinManager). 비워두면 코인 누적 없이 수치만 표시합니다.")]
         [SerializeField] private MonoBehaviour coinWalletSource;
 
@@ -62,8 +59,9 @@ namespace TaskTown.Gacha.Demo
         // 초당 생산량의 소수점 이하를 보관하다가 1 이상 쌓이면 정수만큼 코인으로 반영합니다.
         private float productionBuffer;
 
-        // 마을 레벨업(GachaDemoUI 쪽 버튼)이 실제로 반영되도록, 매번 townLevelProvider의 현재 레벨을 기준으로 계산합니다.
-        private float TownUpgradeMultiplier => townUpgradeEffectConfig.GetProductionMultiplier(townLevelProvider != null ? townLevelProvider.CurrentTownLevel : 1);
+        // 이슈 #72로 마을레벨 자동 생산 버프(TownUpgradeEffectConfig)가 폐지되어 항상 1배입니다.
+        // 실제 게임의 생산 효율 버프는 TownUpgradeManager(도구 효율 업그레이드 구매)만 반영합니다.
+        private float TownUpgradeMultiplier => 1f;
 
         private GachaEntryData ActiveAnimal => activeAnimalId != null && animalsById.TryGetValue(activeAnimalId, out GachaEntryData animal) ? animal : null;
         private GachaEntryData ActiveTool => activeToolId != null && toolsById.TryGetValue(activeToolId, out GachaEntryData tool) ? tool : null;

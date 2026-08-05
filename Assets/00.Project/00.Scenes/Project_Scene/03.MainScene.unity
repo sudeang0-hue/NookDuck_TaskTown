@@ -2107,7 +2107,7 @@ PrefabInstance:
     - target: {fileID: 619346637666187708, guid: 0c3bc518a8c206045b4251e435e075a6, type: 3}
       propertyPath: townLevelProviderSource
       value: 
-      objectReference: {fileID: 1168367924}
+      objectReference: {fileID: 0}
     - target: {fileID: 1522706846613846961, guid: 0c3bc518a8c206045b4251e435e075a6, type: 3}
       propertyPath: m_Name
       value: RealInventorySystems
@@ -3696,17 +3696,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8fc1b46d3ec7ebe4d80d76fb82dbfc34, type: 3}
   m_Name: 
   m_EditorClassIdentifier: TaskTown.Gacha::TaskTown.Gacha.AnimalGachaManager
---- !u!114 &1168367924 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 7983547880734414462, guid: d3f7e9478acde854393b750a23d842e2, type: 3}
-  m_PrefabInstance: {fileID: 1466800560}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2fd360a2e13206f45ba7efcc7d6b5275, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: TaskTown.Gacha.Demo::TaskTown.Gacha.Demo.DemoTownLevelProvider
 --- !u!1 &1218492527 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1657798505442593269, guid: 5a06baf612796c74da0eb2e9fc401b48, type: 3}
@@ -4073,74 +4062,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1001 &1423079620
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 3012922826822980576, guid: 73aa10689d363d640829a667eb6536b4, type: 3}
-      propertyPath: m_Name
-      value: VillageSystemManager
-      objectReference: {fileID: 0}
-    - target: {fileID: 8628172424912724896, guid: 73aa10689d363d640829a667eb6536b4, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8628172424912724896, guid: 73aa10689d363d640829a667eb6536b4, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8628172424912724896, guid: 73aa10689d363d640829a667eb6536b4, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8628172424912724896, guid: 73aa10689d363d640829a667eb6536b4, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 8628172424912724896, guid: 73aa10689d363d640829a667eb6536b4, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8628172424912724896, guid: 73aa10689d363d640829a667eb6536b4, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8628172424912724896, guid: 73aa10689d363d640829a667eb6536b4, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8628172424912724896, guid: 73aa10689d363d640829a667eb6536b4, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8628172424912724896, guid: 73aa10689d363d640829a667eb6536b4, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8628172424912724896, guid: 73aa10689d363d640829a667eb6536b4, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 73aa10689d363d640829a667eb6536b4, type: 3}
---- !u!114 &1423079621 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 1597964003665372925, guid: 73aa10689d363d640829a667eb6536b4, type: 3}
-  m_PrefabInstance: {fileID: 1423079620}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a41cd27fa0c2f904d80d26aa23c4f1c7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Manager.VillageSystemManager
 --- !u!1 &1423423474
 GameObject:
   m_ObjectHideFlags: 0
@@ -4499,6 +4420,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d3f7e9478acde854393b750a23d842e2, type: 3}
+--- !u!114 &1466800561 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7060871763739530346, guid: d3f7e9478acde854393b750a23d842e2, type: 3}
+  m_PrefabInstance: {fileID: 1466800560}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a41cd27fa0c2f904d80d26aa23c4f1c7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Manager.VillageSystemManager
 --- !u!4 &1478624885 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: c2f84ff620f0ceb4899508abbf2422e7, type: 3}
@@ -4759,21 +4691,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TownUpgradeManager
   townLevelProviderSource: {fileID: 1492783272}
   clickUpgrade:
-    baseCost: 300
-    costGrowthRate: 1.6
-    maxLevel: 10
+    baseCost: 382
+    costGrowthRate: 1.2
+    maxLevel: 40
   clickMultiplierPerLevel: 1
-  clickCapBonusPerLevel: 2000
+  clickCapBonusPerLevel: 44500
   typingUpgrade:
-    baseCost: 300
-    costGrowthRate: 1.6
-    maxLevel: 10
+    baseCost: 382
+    costGrowthRate: 1.2
+    maxLevel: 40
   typingMultiplierPerLevel: 1
-  typingCapBonusPerLevel: 2000
+  typingCapBonusPerLevel: 44500
   toolEfficiencyUpgrade:
-    baseCost: 60000
-    costGrowthRate: 1.6
-    maxLevel: 10
+    baseCost: 11400
+    costGrowthRate: 1.2
+    maxLevel: 40
   toolEfficiencyBonusPerLevel: 0.1
 --- !u!4 &1685501864 stripped
 Transform:
@@ -5623,7 +5555,7 @@ PrefabInstance:
     - target: {fileID: 1283037210515985980, guid: 5a06baf612796c74da0eb2e9fc401b48, type: 3}
       propertyPath: villageSystem
       value: 
-      objectReference: {fileID: 1423079621}
+      objectReference: {fileID: 1466800561}
     - target: {fileID: 1283037210515985980, guid: 5a06baf612796c74da0eb2e9fc401b48, type: 3}
       propertyPath: completionPopup
       value: 
@@ -6685,5 +6617,4 @@ SceneRoots:
   - {fileID: 756930587}
   - {fileID: 95455241}
   - {fileID: 817074178}
-  - {fileID: 1423079620}
   - {fileID: 2063068325}
