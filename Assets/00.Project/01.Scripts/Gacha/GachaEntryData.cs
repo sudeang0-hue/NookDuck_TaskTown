@@ -17,9 +17,13 @@ namespace TaskTown.Gacha
         [SerializeField, Min(1)] private int unlockTownLevel = 1;
 
         [SerializeField] private float baseCoinPerSecond;
-        [SerializeField, Min(0f)] private float levelBonusRatePerLevel = 0.2f;   // 레벨당 +20% 기본값
-        [SerializeField, Min(0)] private long levelUpBaseCost = 100;             // Lv1->2 코인 비용
-        [SerializeField, Min(1f)] private float levelUpCostIncreaseRate = 1.5f;  // 레벨당 x1.5
+        [SerializeField, Min(0f)] private float levelBonusRatePerLevel = 0.2f;   // 레벨당 +20% 기본값(등급 공통)
+        // Lv1->2 코인 비용. 등급별 baseCoinPerSecond(1/2/4/8/34)에 정비례하도록 에셋별로 다르게
+        // 설정합니다(Normal 100 / Rare 200 / Epic 400 / Unique 800 / Legendary 3400) - 회수시간이
+        // 등급과 무관하게 항상 동일(500 x levelUpCostIncreaseRate^(레벨-1)초)해지도록 유도한 값입니다
+        // (사용자 확인). 클래스 기본값 100은 Normal 기준값입니다.
+        [SerializeField, Min(0)] private long levelUpBaseCost = 100;
+        [SerializeField, Min(1f)] private float levelUpCostIncreaseRate = 1.5f;  // 레벨당 x1.5(등급 공통)
 
         public string Id => id;
         public string DisplayName => displayName;
