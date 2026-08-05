@@ -225,6 +225,28 @@ namespace UI
             RefreshAnimalInvPage();
 
             animalInvPagePanel.SetActive(true);
+            BringPanelCanvasToFront(animalInvPagePanel);
+        }
+
+        /// <summary>
+        /// 상세 페이지 Canvas를 UIWindowLayerManager로 최상단 sortingOrder에 올립니다.
+        /// </summary>
+        private static void BringPanelCanvasToFront(GameObject panel)
+        {
+            if (panel == null)
+                return;
+
+            if (panel.TryGetComponent(out UIPanelWindow panelWindow))
+            {
+                panelWindow.BringCanvasToFront();
+                return;
+            }
+
+            Canvas canvas = panel.GetComponentInParent<Canvas>();
+            if (canvas == null || UIWindowLayerManager.Instance == null)
+                return;
+
+            UIWindowLayerManager.Instance.BringToFront(canvas);
         }
 
         /// <summary>
@@ -362,7 +384,7 @@ namespace UI
                 else if (hasEquippedTool)
                     equipToolText.text = equippedTool.ToolId;
                 else
-                    equipToolText.text = "배치된 도구가 없어요.";//string.Empty;
+                    equipToolText.text = "배치된 도구가 없어요";//string.Empty;
             }
 
             // 장착 도구 초당 생산량 표시. 미장착이면 숨김

@@ -190,12 +190,24 @@ namespace UI
             BringToFront();
         }
 
+        /// <summary>
+        /// 이 패널의 Canvas sortingOrder를 최상단으로 올립니다.
+        /// UIController_AnimalInvPage / ToolInvPage 오픈 시에도 호출됩니다.
+        /// </summary>
+        public void BringCanvasToFront()
+        {
+            Initialize();
+            BringToFront();
+        }
+
         private void BringToFront()
         {
+            if (panelCanvas == null)
+                panelCanvas = GetComponentInParent<Canvas>();
+
             if (UIWindowLayerManager.Instance == null)
             {
-                Debug.LogWarning("[UIPanelWindow] UIWindowLayerManager.Instance�� �����ϴ�.");
-
+                Debug.LogWarning("[UIPanelWindow] UIWindowLayerManager.Instance가 없습니다.");
                 return;
             }
 
