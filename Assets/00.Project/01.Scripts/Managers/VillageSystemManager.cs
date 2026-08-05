@@ -25,7 +25,7 @@ namespace Manager
         public static VillageSystemManager Instance { get; private set; }
 
         private const int RequiredUpgradeTotal = 3;
-        private const int NormalModeMaxTownLevel = 40; // #20 리밸런스: 레벨40 확장(사용자 확인)
+        private const int NormalModeMaxTownLevel = 10; // 레벨40 확장(#20) 실험 철회, 레벨10으로 되돌림(사용자 확인)
 
         [Header("마을 레벨")]
         [SerializeField] private int townLevel = 1;

@@ -17,9 +17,9 @@ namespace TaskTown.Gacha
         [SerializeField, Min(1)] private int unlockTownLevel = 1;
 
         [SerializeField] private float baseCoinPerSecond;
-        [SerializeField, Min(0f)] private float levelBonusRatePerLevel = 1.0f;   // #20 리밸런스: 레벨당 +100% (사용자 확인)
-        [SerializeField, Min(0)] private long levelUpBaseCost = 104000;          // #20 리밸런스: Lv1->2 코인 비용
-        [SerializeField, Min(1f)] private float levelUpCostIncreaseRate = 7.6f;  // #20 리밸런스: 레벨당 x7.6
+        [SerializeField, Min(0f)] private float levelBonusRatePerLevel = 0.2f;   // 레벨당 +20% 기본값
+        [SerializeField, Min(0)] private long levelUpBaseCost = 100;             // Lv1->2 코인 비용
+        [SerializeField, Min(1f)] private float levelUpCostIncreaseRate = 1.5f;  // 레벨당 x1.5
 
         public string Id => id;
         public string DisplayName => displayName;

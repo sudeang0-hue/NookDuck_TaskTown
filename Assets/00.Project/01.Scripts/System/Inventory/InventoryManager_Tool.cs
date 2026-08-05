@@ -23,15 +23,11 @@ namespace TaskTown.KDH
         private IEndlessModeProvider endlessModeProvider;
 
         // 도구 상한(동시에 "동물이 장착된 도구" 슬롯 개수 제한). 마을 레벨을 올리면 늘어납니다.
-        // #19 리밸런스: 레벨당 +2씩 무한 증가하는 기존 공식은 실제 보유 가능한 동물+도구 쌍 수를
-        // 레벨19~36 부근에서 추월해버려 페이스가 튀는 문제가 있어(사용자 확인),
-        // 완만하게 수렴하는 곡선(레벨40에서 30 근처로 수렴)으로 교체했습니다.
-        // 공식: toolCapacityBase + toolCapacityAsymptoteRange × (1 - e^(-(레벨-1) / toolCapacityDecayLevels))
-        // (Town_Coin_인플레이션_밸런스표.xlsx 시뮬레이션_파라미터 시트와 동일한 값)
-        [Header("도구 상한 (#19)")]
+        // 레벨40 확장(#20) 실험을 철회하고 레벨10 설계로 되돌리면서, 레벨19~36 부근 페이스 문제를
+        // 풀기 위해 설계했던 점근 곡선(#19)도 함께 되돌립니다 - 상한이 10이면 그 문제 자체가 없습니다.
+        [Header("도구 상한 (#18)")]
         [SerializeField] private int toolCapacityBase = 5;
-        [SerializeField] private float toolCapacityAsymptoteRange = 26.01f;
-        [SerializeField] private float toolCapacityDecayLevels = 12f;
+        [SerializeField] private int toolCapacityPerLevel = 2;
 
         [Header("도구 런타임 슬롯")]
         [Tooltip("현재 플레이어가 보유한 도구 슬롯 목록")]
@@ -86,9 +82,7 @@ namespace TaskTown.KDH
         /// </summary>
         public int GetToolCapacity()
         {
-            float value = toolCapacityBase + toolCapacityAsymptoteRange
-                * (1f - Mathf.Exp(-(GetCurrentTownLevel() - 1) / toolCapacityDecayLevels));
-            return Mathf.RoundToInt(value);
+            return toolCapacityBase + (GetCurrentTownLevel() - 1) * toolCapacityPerLevel;
         }
 
         /// <summary>
