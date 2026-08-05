@@ -43,10 +43,23 @@ public static class SoundSettingsStore
         return cachedData.GetLastNonZeroVolume(channel);
     }
 
+    public static BGMPlaybackMode GetBGMPlaybackMode()
+    {
+        EnsureLoaded();
+        return cachedData.GetBGMPlaybackMode();
+    }
+
     public static void SetVolume(SoundVolumeChannel channel, float percent)
     {
         EnsureLoaded();
         cachedData.SetVolume(channel, percent);
+        Save();
+    }
+
+    public static void SetBGMPlaybackMode(BGMPlaybackMode mode)
+    {
+        EnsureLoaded();
+        cachedData.SetBGMPlaybackMode(mode);
         Save();
     }
 
