@@ -285,7 +285,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIButtonSoundPlayer
   targetButton: {fileID: 0}
-  uiSoundId: 
+  uiSoundId: UI_Click
   soundManager: {fileID: 0}
 --- !u!1 &441402926274424766
 GameObject:
@@ -1553,6 +1553,7 @@ GameObject:
   - component: {fileID: 4281081445230953519}
   - component: {fileID: 7209531212718433932}
   - component: {fileID: 4869211817803640504}
+  - component: {fileID: 897040372902647071}
   m_Layer: 5
   m_Name: Tutorial_btn
   m_TagString: Untagged
@@ -1662,6 +1663,25 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &897040372902647071
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1481085596766269871}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dee9462fab40949439491033fd317452, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TutorialReplayButtonController
+  replayButton: {fileID: 4869211817803640504}
+  confirmationPopup: {fileID: 0}
+  confirmationMessage: "\uD29C\uD1A0\uB9AC\uC5BC\uC744 \uCC98\uC74C\uBD80\uD130 \uB2E4\uC2DC
+    \uBCF4\uC2DC\uACA0\uC2B5\uB2C8\uAE4C?"
+  rewardNotice: "\uC774\uBBF8 \uBC1B\uC740 \uD29C\uD1A0\uB9AC\uC5BC \uBCF4\uC0C1\uC740
+    \uB2E4\uC2DC \uC9C0\uAE09\uB418\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4."
+  overlayLoader: {fileID: 0}
 --- !u!1 &1789169180841229162
 GameObject:
   m_ObjectHideFlags: 0
@@ -4315,7 +4335,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIButtonSoundPlayer
   targetButton: {fileID: 0}
-  uiSoundId: 
+  uiSoundId: UI_Click
   soundManager: {fileID: 0}
 --- !u!1 &5111902328822306035
 GameObject:
@@ -4452,7 +4472,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIButtonSoundPlayer
   targetButton: {fileID: 0}
-  uiSoundId: 
+  uiSoundId: UI_Click
   soundManager: {fileID: 0}
 --- !u!1 &5343525168120803563
 GameObject:
@@ -6189,7 +6209,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIButtonSoundPlayer
   targetButton: {fileID: 0}
-  uiSoundId: 
+  uiSoundId: UI_Click
   soundManager: {fileID: 0}
 --- !u!1 &6793792101567338794
 GameObject:
