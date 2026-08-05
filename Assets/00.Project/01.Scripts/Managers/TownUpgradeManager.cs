@@ -10,9 +10,10 @@ using UnityEngine;
 // 증가 효과를 갖습니다(상한이 배율과 무관하게 고정이면 상한을 채우는 플레이어는 배율을 올려도
 // 얻는 게 없어서 - 사용자 확인 후 상한도 함께 올리는 방향으로 확정).
 //
-// #20 리밸런스(레벨40 확장, 사용자 확인): 절대 상한 10→40, 기본비용/성장률을
-// 인플레이션 밸런스표의 반올림 표(유효숫자 3자리)에 가장 가까운 순수 공식값으로
-// 대입했습니다.
+// 레벨40 확장(#20) 실험을 철회하고 레벨10 설계로 되돌렸습니다(사용자 확인). 아래 비용/효과
+// 기본값은 simulate_game.py의 N=1000 시뮬레이션으로 검증한 값입니다(완주 58~60h대, 레벨8~10
+// 비중 48.5%, 레벨별 비중 단조증가 확인. 셋 다 성장률을 1.6으로 통일했을 때만 단조증가가
+// 안정적으로 유지됨).
 public class TownUpgradeManager : MonoBehaviour
 {
     public static TownUpgradeManager Instance { get; private set; }
@@ -87,19 +88,21 @@ public class TownUpgradeManager : MonoBehaviour
     private IEndlessModeProvider endlessModeProvider;
 
     [Header("클릭 코인 업그레이드")]
-    [SerializeField] private UpgradeTrack clickUpgrade = new UpgradeTrack(382, 1.20f, 40);
+    // 2026.08.05 - 사용자 요청으로 클릭/타이핑 구매 비용을 50배로 인상(300->15,000). 성장률은
+    // 그대로라 모든 레벨의 비용이 정확히 50배가 됩니다. 레벨당 효과(clickCapBonusPerLevel)는 무변경.
+    [SerializeField] private UpgradeTrack clickUpgrade = new UpgradeTrack(15000, 1.6f, 9);
     [Tooltip("레벨당 EarnProcessor.ClickMultiplier 증가량(레벨 x 이 값을 매번 새로 계산해서 적용, 누적 아님)")]
     [SerializeField] private int clickMultiplierPerLevel = 1;
     [Tooltip("레벨당 시간당 획득 상한(maxCoinPerHour) 증가분")]
-    [SerializeField] private int clickCapBonusPerLevel = 44500;
+    [SerializeField] private int clickCapBonusPerLevel = 2000;
 
     [Header("타이핑 코인 업그레이드")]
-    [SerializeField] private UpgradeTrack typingUpgrade = new UpgradeTrack(382, 1.20f, 40);
+    [SerializeField] private UpgradeTrack typingUpgrade = new UpgradeTrack(15000, 1.6f, 9);
     [SerializeField] private int typingMultiplierPerLevel = 1;
-    [SerializeField] private int typingCapBonusPerLevel = 44500;
+    [SerializeField] private int typingCapBonusPerLevel = 2000;
 
     [Header("도구 효율 업그레이드 (기존 마을 레벨 자동 생산 보너스를 대체)")]
-    [SerializeField] private UpgradeTrack toolEfficiencyUpgrade = new UpgradeTrack(11400, 1.20f, 40);
+    [SerializeField] private UpgradeTrack toolEfficiencyUpgrade = new UpgradeTrack(60000, 1.6f, 9);
     [Tooltip("레벨당 전체 생산량에 곱해지는 효율 증가분")]
     [SerializeField, Min(0f)] private float toolEfficiencyBonusPerLevel = 0.1f;
 

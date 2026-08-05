@@ -650,6 +650,9 @@ namespace UI
                 || !TownUpgradeManager.Instance.DebugForceUpgradeClick())
                 return false;
 
+            // 버그 수정(2026.08.05): 사이클 게이트 카운트를 기록하지 않아 디버그 버튼으로는
+            // 아무리 구매해도 "필수 업그레이드 3종" 게이트가 영원히 안 풀리는 문제가 있었음.
+            system.TryMarkCycleTrackDone(VillageElementTrack.Click);
             RefreshAllUI();
             return true;
         }
@@ -664,6 +667,7 @@ namespace UI
                 || !TownUpgradeManager.Instance.DebugForceUpgradeTyping())
                 return false;
 
+            system.TryMarkCycleTrackDone(VillageElementTrack.Typing);
             RefreshAllUI();
             return true;
         }
@@ -678,6 +682,7 @@ namespace UI
                 || !TownUpgradeManager.Instance.DebugForceUpgradeToolEfficiency())
                 return false;
 
+            system.TryMarkCycleTrackDone(VillageElementTrack.ToolEfficiency);
             RefreshAllUI();
             return true;
         }
