@@ -15,7 +15,11 @@ namespace TaskTown.Gacha
         [Tooltip("ITownLevelProvider를 구현한 컴포넌트를 연결합니다. 비워두면 마을 레벨 1로 취급합니다.")]
         [SerializeField] private MonoBehaviour townLevelProviderSource;
 
+        [Tooltip("IDifficultyProvider를 구현한 컴포넌트를 연결합니다. 비워두면 Normal 난이도로 취급합니다.")]
+        [SerializeField] private MonoBehaviour difficultyProviderSource;
+
         private ITownLevelProvider townLevelProvider;
+        private IDifficultyProvider difficultyProvider;
         private GachaSystem gachaSystem;
 
         public event Action<GachaResult> OnGachaResolved;
@@ -25,7 +29,32 @@ namespace TaskTown.Gacha
         protected virtual void Awake()
         {
             gachaSystem = new GachaSystem();
-            townLevelProvider = townLevelProviderSource as ITownLevelProvider;
+            townLevelProvider = ResolveProvider<ITownLevelProvider>(townLevelProviderSource);
+            difficultyProvider = ResolveProvider<IDifficultyProvider>(difficultyProviderSource);
+        }
+
+        // 인스펙터에 연결된 값이 데모 전용(IDemoOnlyProvider) 구현체면, 씬에 다른 실제
+        // 구현체가 있는지 먼저 찾아서 있으면 그걸 우선 사용합니다. 이렇게 하면 이 프리팹을
+        // 새 씬(예: 03.MainScene)에 그대로 갖다놔도 별도 수동 배선 없이 그 씬의 진짜
+        // 마을/난이도 시스템에 자동으로 연결됩니다. 데모 전용 씬처럼 다른 구현체가 없으면
+        // 데모값을 그대로 사용합니다.
+        private static T ResolveProvider<T>(MonoBehaviour explicitSource) where T : class
+        {
+            T explicitProvider = explicitSource as T;
+            if (explicitProvider != null && !(explicitProvider is IDemoOnlyProvider))
+            {
+                return explicitProvider;
+            }
+
+            foreach (MonoBehaviour candidate in FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None))
+            {
+                if (candidate is T found && !(found is IDemoOnlyProvider))
+                {
+                    return found;
+                }
+            }
+
+            return explicitProvider;
         }
 
         // rollCount번 뽑을 때 필요한 총 비용입니다. 10연뽑기 버튼 등에서 사용합니다.
@@ -39,7 +68,7 @@ namespace TaskTown.Gacha
         // 재화 차감 여부 판단은 UI/저장 담당 쪽에서 CurrentCost를 확인해 처리합니다.
         public virtual GachaResult Roll()
         {
-            GachaResult result = gachaSystem.Roll(pool, GetTownLevel());
+            GachaResult result = gachaSystem.Roll(pool, GetTownLevel(), GetDifficulty());
             OnGachaResolved?.Invoke(result);
             return result;
         }
@@ -59,6 +88,11 @@ namespace TaskTown.Gacha
         private int GetTownLevel()
         {
             return townLevelProvider != null ? townLevelProvider.CurrentTownLevel : 1;
+        }
+
+        private DifficultyType GetDifficulty()
+        {
+            return difficultyProvider != null ? difficultyProvider.CurrentDifficulty : DifficultyType.Normal;
         }
     }
 }

@@ -1,3 +1,4 @@
+using TaskTown.Gacha;
 using TaskTown.KDH;
 using UI;
 using UnityEngine;
@@ -40,6 +41,11 @@ public class DebugTool : MonoBehaviour
     private string lastGrantActionText = "(없음)";
     //-----------------26.07.27 KDH-----------------------------------------
     private VillageUpgradeUI_Manager villageUpgradeUIManager;
+    //---------------------------------------------------------------------
+
+    //-----------------26.08.04 KNW: 난이도 전환 디버그(시크릿 동물 난이도 해금 테스트용)-------
+    private RealProductionTicker realProductionTicker;
+    private string lastDifficultyActionText = "(없음)";
     //---------------------------------------------------------------------
 
     private void Awake()
@@ -337,6 +343,26 @@ public class DebugTool : MonoBehaviour
         GUILayout.EndHorizontal();
         //-----------------------------------------------------------------------------
 
+        //--------------------------26.08.04 KNW--------------------------------------
+        // 시크릿 동물(하드/매우어려움 전용)이 실제로 뽑히는지 확인하기 위한 난이도 전환 테스트.
+        // 정식 난이도 선택 UI/흐름은 아직 없어서, RealProductionTicker.SetDifficulty를 직접 호출합니다.
+        GUILayout.Space(16f);
+        DrawSeparator();
+        GUILayout.Label("난이도 테스트 (시크릿 동물 해금 확인용)", GUI.skin.box);
+        GUILayout.Label($"현재 난이도: {(realProductionTicker != null ? realProductionTicker.CurrentDifficulty.ToString() : "-")}");
+        GUILayout.BeginHorizontal();
+        if (GUILayout.Button("Easy"))
+            SetDebugDifficulty(DifficultyType.Easy);
+        if (GUILayout.Button("Normal"))
+            SetDebugDifficulty(DifficultyType.Normal);
+        if (GUILayout.Button("Hard"))
+            SetDebugDifficulty(DifficultyType.Hard);
+        if (GUILayout.Button("VeryHard"))
+            SetDebugDifficulty(DifficultyType.VeryHard);
+        GUILayout.EndHorizontal();
+        GUILayout.Label($"마지막 결과: {lastDifficultyActionText}");
+        //-----------------------------------------------------------------------------
+
         GUILayout.Space(8f);
         GUI.DragWindow();
         GUILayout.EndScrollView();
@@ -365,6 +391,10 @@ public class DebugTool : MonoBehaviour
         //-------------------------------26.07.27 KDH--------------------------------------
         if (villageUpgradeUIManager == null)
             villageUpgradeUIManager = FindAnyObjectByType<VillageUpgradeUI_Manager>();
+        //---------------------------------------------------------------------------------
+        //-------------------------------26.08.04 KNW--------------------------------------
+        if (realProductionTicker == null)
+            realProductionTicker = RealProductionTicker.Instance;
         //---------------------------------------------------------------------------------
     }
 
@@ -500,6 +530,18 @@ public class DebugTool : MonoBehaviour
             ok = toolInventory.DebugAddTool(id, count);
             lastGrantActionText = ok ? $"도구 지급 성공: {id} x{count}" : $"도구 지급 실패: {id}";
         }
+    }
+
+    private void SetDebugDifficulty(DifficultyType difficulty)   // 26.08.04 KNW 추가
+    {
+        CacheManagersIfNeeded();
+        if (realProductionTicker == null)
+        {
+            lastDifficultyActionText = "RealProductionTicker 없음";
+            return;
+        }
+        realProductionTicker.SetDifficulty(difficulty);
+        lastDifficultyActionText = $"난이도 -> {difficulty}";
     }
 
     private void SetLevelById()     // 26.07.24 KDH 추가
