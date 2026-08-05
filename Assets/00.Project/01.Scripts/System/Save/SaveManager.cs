@@ -297,9 +297,9 @@ namespace TaskTown.KDH
             {
                 VillageSystemManager.VillageSaveSnapshot snapshot = villageSystem.CaptureSaveSnapshot();
                 data.townLevel = snapshot.townLevel;
-                data.cycleClickDone = snapshot.cycleClickDone;
-                data.cycleTypingDone = snapshot.cycleTypingDone;
-                data.cycleToolDone = snapshot.cycleToolDone;
+                data.cycleClickCount = snapshot.cycleClickCount;
+                data.cycleTypingCount = snapshot.cycleTypingCount;
+                data.cycleToolCount = snapshot.cycleToolCount;
                 data.isEndlessMode = snapshot.isEndlessMode;
                 return;
             }
@@ -328,9 +328,9 @@ namespace TaskTown.KDH
             {
                 villageSystem.ApplyProgressFromSave(
                     level,
-                    data.cycleClickDone,
-                    data.cycleTypingDone,
-                    data.cycleToolDone,
+                    data.cycleClickCount,
+                    data.cycleTypingCount,
+                    data.cycleToolCount,
                     data.isEndlessMode);
             }
             else

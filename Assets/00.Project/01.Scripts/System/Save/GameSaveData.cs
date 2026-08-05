@@ -23,10 +23,13 @@ namespace TaskTown.KDH
         public List<ToolSaveEntry> tools = new List<ToolSaveEntry>();
 
         // 2026.08.02 - KAY - 마을 사이클 게이트/엔드리스를 JSON에 포함 (VillageSystemManager 연동)
-        // 구버전 세이브에 필드가 없으면 역직렬화 시 false로 유지됩니다.
-        public bool cycleClickDone;
-        public bool cycleTypingDone;
-        public bool cycleToolDone;
+        // 구버전 세이브에 필드가 없으면 역직렬화 시 기본값(0)으로 유지됩니다.
+        // 3종 업그레이드 10->20 세분화(사용자 확인)로 bool(1회)에서 int(트랙당 필요 횟수)로 변경.
+        // 구버전 세이브의 cycleClickDone 등 bool 필드는 이름이 달라 무시되고, 진행중이던 사이클만
+        // 0으로 리셋됩니다(실제 업그레이드 레벨/코인 등 다른 진행도는 영향 없음).
+        public int cycleClickCount;
+        public int cycleTypingCount;
+        public int cycleToolCount;
         public bool isEndlessMode;
         // 배치 동물 ID는 팀원 AnimalSet 흐름 정리 후 추가 예정 (현재 단계 보류)
 

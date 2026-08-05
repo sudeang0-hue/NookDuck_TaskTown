@@ -814,7 +814,7 @@ Transform:
   m_Children:
   - {fileID: 1213499775}
   - {fileID: 1207801931}
-  - {fileID: 1347642880}
+  - {fileID: 848661467}
   - {fileID: 2034430585}
   - {fileID: 831402756}
   m_Father: {fileID: 734500522}
@@ -2248,7 +2248,7 @@ PrefabInstance:
     - target: {fileID: 619346637666187708, guid: 0c3bc518a8c206045b4251e435e075a6, type: 3}
       propertyPath: townLevelProviderSource
       value: 
-      objectReference: {fileID: 1168367924}
+      objectReference: {fileID: 0}
     - target: {fileID: 1522706846613846961, guid: 0c3bc518a8c206045b4251e435e075a6, type: 3}
       propertyPath: m_Name
       value: RealInventorySystems
@@ -3347,6 +3347,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: c247bc8c7aa80e741bb4c7af94d184f9, type: 3}
+--- !u!4 &848661467 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 9115166161287008777, guid: c247bc8c7aa80e741bb4c7af94d184f9, type: 3}
+  m_PrefabInstance: {fileID: 848661466}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &863291264
 GameObject:
   m_ObjectHideFlags: 0
@@ -4130,17 +4135,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8fc1b46d3ec7ebe4d80d76fb82dbfc34, type: 3}
   m_Name: 
   m_EditorClassIdentifier: TaskTown.Gacha::TaskTown.Gacha.AnimalGachaManager
---- !u!114 &1168367924 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 7983547880734414462, guid: d3f7e9478acde854393b750a23d842e2, type: 3}
-  m_PrefabInstance: {fileID: 1466800560}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2fd360a2e13206f45ba7efcc7d6b5275, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: TaskTown.Gacha.Demo::TaskTown.Gacha.Demo.DemoTownLevelProvider
 --- !u!1 &1182985865
 GameObject:
   m_ObjectHideFlags: 0
@@ -4695,11 +4689,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1294793749}
   m_CullTransparentMesh: 1
---- !u!4 &1347642880 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 3085618565331242240, guid: c247bc8c7aa80e741bb4c7af94d184f9, type: 3}
-  m_PrefabInstance: {fileID: 848661466}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1386169351
 GameObject:
   m_ObjectHideFlags: 0
@@ -5948,22 +5937,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TownUpgradeManager
   townLevelProviderSource: {fileID: 1492783272}
   clickUpgrade:
-    baseCost: 300
-    costGrowthRate: 1.6
-    maxLevel: 10
-  clickMultiplierPerLevel: 1
-  clickCapBonusPerLevel: 2000
+    baseCost: 132
+    costGrowthRate: 1.2649
+    maxLevel: 20
+  clickMultiplierPerLevel: 0.5
+  clickCapBonusPerLevel: 1000
   typingUpgrade:
-    baseCost: 300
-    costGrowthRate: 1.6
-    maxLevel: 10
-  typingMultiplierPerLevel: 1
-  typingCapBonusPerLevel: 2000
+    baseCost: 132
+    costGrowthRate: 1.2649
+    maxLevel: 20
+  typingMultiplierPerLevel: 0.5
+  typingCapBonusPerLevel: 1000
   toolEfficiencyUpgrade:
-    baseCost: 60000
-    costGrowthRate: 1.6
-    maxLevel: 10
-  toolEfficiencyBonusPerLevel: 0.1
+    baseCost: 26490
+    costGrowthRate: 1.2649
+    maxLevel: 20
+  toolEfficiencyBonusPerLevel: 0.05
 --- !u!1 &1573977828
 GameObject:
   m_ObjectHideFlags: 0

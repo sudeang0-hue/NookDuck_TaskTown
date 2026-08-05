@@ -27,13 +27,17 @@ namespace Manager
         private const int RequiredUpgradeTotal = 3;
         private const int NormalModeMaxTownLevel = 10; // 레벨40 확장(#20) 실험 철회, 레벨10으로 되돌림(사용자 확인)
 
+        // 3종 업그레이드 10->20 세분화(사용자 확인): 마을레벨 1회 상승마다 각 트랙을 이 횟수만큼
+        // 구매해야 사이클이 완료됩니다. 기존엔 1회였습니다.
+        private const int RequiredPurchasesPerTrack = 2;
+
         [Header("마을 레벨")]
         [SerializeField] private int townLevel = 1;
 
-        [Header("사이클 게이트 (해당 마을 레벨 구간에서 요소 1회 완료 여부)")]
-        [SerializeField] private bool cycleClickDone;
-        [SerializeField] private bool cycleTypingDone;
-        [SerializeField] private bool cycleToolDone;
+        [Header("사이클 게이트 (해당 마을 레벨 구간에서 요소를 RequiredPurchasesPerTrack회 완료 여부)")]
+        [SerializeField] private int cycleClickCount;
+        [SerializeField] private int cycleTypingCount;
+        [SerializeField] private int cycleToolCount;
 
         [Header("엔드리스 모드 (#19)")]
         [Tooltip("레벨10 완주 후 '엔드리스로 계속' 선택 시 켜집니다.")]
@@ -66,12 +70,12 @@ namespace Manager
         /// <summary>ITownLevelProvider — 도구 상한/뽑기/세이브가 참조.</summary>
         public int CurrentTownLevel => TownLevel;
 
-        public bool CycleClickDone => cycleClickDone;
-        public bool CycleTypingDone => cycleTypingDone;
-        public bool CycleToolDone => cycleToolDone;
+        public bool CycleClickDone => cycleClickCount >= RequiredPurchasesPerTrack;
+        public bool CycleTypingDone => cycleTypingCount >= RequiredPurchasesPerTrack;
+        public bool CycleToolDone => cycleToolCount >= RequiredPurchasesPerTrack;
 
         public int CycleCompletedCount =>
-            (cycleClickDone ? 1 : 0) + (cycleTypingDone ? 1 : 0) + (cycleToolDone ? 1 : 0);
+            (CycleClickDone ? 1 : 0) + (CycleTypingDone ? 1 : 0) + (CycleToolDone ? 1 : 0);
 
         public bool IsReadyForVillageLevelUp => CycleCompletedCount >= RequiredUpgradeTotal;
 
@@ -109,11 +113,11 @@ namespace Manager
             switch (track)
             {
                 case VillageElementTrack.Click:
-                    return cycleClickDone;
+                    return CycleClickDone;
                 case VillageElementTrack.Typing:
-                    return cycleTypingDone;
+                    return CycleTypingDone;
                 case VillageElementTrack.ToolEfficiency:
-                    return cycleToolDone;
+                    return CycleToolDone;
                 default:
                     return false;
             }
@@ -174,9 +178,9 @@ namespace Manager
         // -------------------------------------------------------------------------
 
         /// <summary>
-        /// 사이클에서 해당 요소 완료 처리만 기록.
+        /// 사이클에서 해당 요소 구매 1회를 기록합니다(트랙당 RequiredPurchasesPerTrack회 필요).
         /// 실제 코인 차감·영구 레벨업은 TownUpgradeManager.TryUpgrade* 성공 후에만 호출하세요.
-        /// 엔드리스 모드에서는 사이클 플래그를 세우지 않습니다.
+        /// 엔드리스 모드에서는 사이클 카운트를 올리지 않습니다.
         /// </summary>
         public bool TryMarkCycleTrackDone(VillageElementTrack track)
         {
@@ -186,16 +190,16 @@ namespace Manager
             switch (track)
             {
                 case VillageElementTrack.Click:
-                    if (cycleClickDone) return false;
-                    cycleClickDone = true;
+                    if (cycleClickCount >= RequiredPurchasesPerTrack) return false;
+                    cycleClickCount++;
                     break;
                 case VillageElementTrack.Typing:
-                    if (cycleTypingDone) return false;
-                    cycleTypingDone = true;
+                    if (cycleTypingCount >= RequiredPurchasesPerTrack) return false;
+                    cycleTypingCount++;
                     break;
                 case VillageElementTrack.ToolEfficiency:
-                    if (cycleToolDone) return false;
-                    cycleToolDone = true;
+                    if (cycleToolCount >= RequiredPurchasesPerTrack) return false;
+                    cycleToolCount++;
                     break;
                 default:
                     return false;
@@ -290,9 +294,9 @@ namespace Manager
 
         private void ResetCycleFlagsOnly()
         {
-            cycleClickDone = false;
-            cycleTypingDone = false;
-            cycleToolDone = false;
+            cycleClickCount = 0;
+            cycleTypingCount = 0;
+            cycleToolCount = 0;
         }
 
         private void RaiseStateChanged()
@@ -308,9 +312,9 @@ namespace Manager
         public class VillageSaveSnapshot
         {
             public int townLevel = 1;
-            public bool cycleClickDone;
-            public bool cycleTypingDone;
-            public bool cycleToolDone;
+            public int cycleClickCount;
+            public int cycleTypingCount;
+            public int cycleToolCount;
             public bool isEndlessMode;
             // null이면 Apply 시 배치 목록을 건드리지 않음 (AnimalSet 세이브 보류)
             public List<string> placedAnimalIds;
@@ -321,9 +325,9 @@ namespace Manager
             return new VillageSaveSnapshot
             {
                 townLevel = TownLevel,
-                cycleClickDone = cycleClickDone,
-                cycleTypingDone = cycleTypingDone,
-                cycleToolDone = cycleToolDone,
+                cycleClickCount = cycleClickCount,
+                cycleTypingCount = cycleTypingCount,
+                cycleToolCount = cycleToolCount,
                 isEndlessMode = isEndlessMode,
                 // 2026.08.02 - KAY - 배치 세이브는 보류. Capture에는 포함하되 GameSaveData에는 아직 쓰지 않음
                 placedAnimalIds = new List<string>(placedAnimalIds)
@@ -340,9 +344,9 @@ namespace Manager
                 return;
 
             townLevel = Mathf.Max(1, snapshot.townLevel);
-            cycleClickDone = snapshot.cycleClickDone;
-            cycleTypingDone = snapshot.cycleTypingDone;
-            cycleToolDone = snapshot.cycleToolDone;
+            cycleClickCount = snapshot.cycleClickCount;
+            cycleTypingCount = snapshot.cycleTypingCount;
+            cycleToolCount = snapshot.cycleToolCount;
             isEndlessMode = snapshot.isEndlessMode;
 
             // 기존: 항상 배치 목록을 비우고 스냅샷으로 교체
@@ -366,17 +370,17 @@ namespace Manager
         /// </summary>
         public void ApplyProgressFromSave(
             int savedTownLevel,
-            bool savedCycleClickDone,
-            bool savedCycleTypingDone,
-            bool savedCycleToolDone,
+            int savedCycleClickCount,
+            int savedCycleTypingCount,
+            int savedCycleToolCount,
             bool savedIsEndlessMode)
         {
             ApplySaveSnapshot(new VillageSaveSnapshot
             {
                 townLevel = savedTownLevel,
-                cycleClickDone = savedCycleClickDone,
-                cycleTypingDone = savedCycleTypingDone,
-                cycleToolDone = savedCycleToolDone,
+                cycleClickCount = savedCycleClickCount,
+                cycleTypingCount = savedCycleTypingCount,
+                cycleToolCount = savedCycleToolCount,
                 isEndlessMode = savedIsEndlessMode,
                 placedAnimalIds = null
             });
