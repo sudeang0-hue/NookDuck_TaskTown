@@ -1,5 +1,67 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &2312194018481930491
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1747760081279036684}
+  m_Layer: 0
+  m_Name: Socket_Windmill
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1747760081279036684
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2312194018481930491}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.00004243851, y: 0.00024059416, z: 0.000000029802326, w: 1}
+  m_LocalPosition: {x: -4.5533934, y: 6.022049, z: 1.4320478}
+  m_LocalScale: {x: 1, y: 2, z: 0.5}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4825840009028533675}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &3364367135787736876
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3346991943205607030}
+  m_Layer: 0
+  m_Name: Socket_Warehouse
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3346991943205607030
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3364367135787736876}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.000073358424, y: 0.0002329573, z: -0.4617486, w: 0.8870108}
+  m_LocalPosition: {x: 5.8465776, y: 2.6220548, z: 1.3667543}
+  m_LocalScale: {x: 1, y: 2, z: 0.50000006}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4825840009028533675}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: -55}
 --- !u!1 &5286013346765402887
 GameObject:
   m_ObjectHideFlags: 0
@@ -10,7 +72,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4825840009028533675}
   m_Layer: 0
-  m_Name: GameObject
+  m_Name: IslandSocketProvider
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -28,9 +90,43 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 3346991943205607030}
+  - {fileID: 6254282634130570914}
+  - {fileID: 1747760081279036684}
   m_Father: {fileID: 2893399725791501506}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &6581714480910802699
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6254282634130570914}
+  m_Layer: 0
+  m_Name: Socket_ClockTower
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6254282634130570914
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6581714480910802699}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.000073358424, y: 0.0002329573, z: -0.4617486, w: 0.8870108}
+  m_LocalPosition: {x: 1.6266152, y: 7.9820476, z: 1.4492397}
+  m_LocalScale: {x: 1, y: 2, z: 0.50000006}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4825840009028533675}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: -55}
 --- !u!1001 &3435633838594636585
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -65,23 +161,23 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 8766b38e992accd4c8bb13fccf6d611b, type: 3}
       propertyPath: m_LocalRotation.w
-      value: -0.54176974
+      value: -0.54167515
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 8766b38e992accd4c8bb13fccf6d611b, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.5415806
+      value: 0.54167515
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 8766b38e992accd4c8bb13fccf6d611b, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0.4544402
+      value: 0.45451954
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 8766b38e992accd4c8bb13fccf6d611b, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0.45459884
+      value: 0.45451954
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 8766b38e992accd4c8bb13fccf6d611b, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
-      value: -89.98
+      value: -90
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 8766b38e992accd4c8bb13fccf6d611b, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
@@ -101,8 +197,45 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 8766b38e992accd4c8bb13fccf6d611b, type: 3}
       insertIndex: -1
       addedObject: {fileID: 4825840009028533675}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 8766b38e992accd4c8bb13fccf6d611b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6414850142339006915}
   m_SourcePrefab: {fileID: 100100000, guid: 8766b38e992accd4c8bb13fccf6d611b, type: 3}
+--- !u!1 &2552620783850718840 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 8766b38e992accd4c8bb13fccf6d611b, type: 3}
+  m_PrefabInstance: {fileID: 3435633838594636585}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &6414850142339006915
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2552620783850718840}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bfc613ab8b0ce2048b462de682ce5255, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::IslandSocketProvider
+  levelSockets:
+  - buildingType: 4
+    targetLevel: 5
+    socketTransform: {fileID: 0}
+  - buildingType: 6
+    targetLevel: 6
+    socketTransform: {fileID: 0}
+  - buildingType: 7
+    targetLevel: 7
+    socketTransform: {fileID: 0}
+  - buildingType: 8
+    targetLevel: 8
+    socketTransform: {fileID: 0}
+  - buildingType: 9
+    targetLevel: 9
+    socketTransform: {fileID: 0}
+  propSockets: []
 --- !u!4 &2893399725791501506 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 8766b38e992accd4c8bb13fccf6d611b, type: 3}

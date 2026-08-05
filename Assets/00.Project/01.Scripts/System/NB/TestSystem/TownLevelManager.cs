@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// 1~4레벨 기본 섬 유지, 5레벨 마일스톤 섬 교체 및 건물 스폰을 총괄하는 레벨 관리자
+/// 건물 생명주기 관리, 딕셔너리 기반 리마핑 및 섬 교체를 총괄하는 최종 매니저
 /// </summary>
 public class TownLevelManager : MonoBehaviour
 {
@@ -13,10 +13,15 @@ public class TownLevelManager : MonoBehaviour
     [SerializeField] private SkyDropInstaller skyDropInstaller;
     [SerializeField] private List<LevelProgressionData> levelDataList;
 
+    [Header("계층 구조 컨테이너 설정")]
+    [SerializeField] private Transform buildingParentTransform;
+
     [Header("현재 진행 상태")]
     [SerializeField] private int currentLevel = 1;
 
-    // 연출 중복 실행을 막는 락(Lock) 플래그
+    // [핵심] 생성된 건물들을 타입별로 기억하여 섬이 바뀌어도 위치를 재조정할 수 있도록 관리하는 딕셔너리
+    private Dictionary<BuildingType, GameObject> spawnedBuildings = new Dictionary<BuildingType, GameObject>();
+
     private bool isTransitioning = false;
 
     public int CurrentLevel => currentLevel;
@@ -24,22 +29,15 @@ public class TownLevelManager : MonoBehaviour
 
     private void Start()
     {
-        // 게임 시작 시 1레벨 기준으로 초기화
         InitializeTownGame(currentLevel);
     }
 
-    /// <summary>
-    /// 게임 최초 구동 시 1레벨 세팅 (기본 섬 + 1레벨 건물 배치)
-    /// </summary>
     public void InitializeTownGame(int startLevel)
     {
         currentLevel = startLevel;
         StartCoroutine(InitSequenceCoroutine(startLevel));
     }
 
-    /// <summary>
-    /// 레벨업 실행 함수 (U키 또는 UI 버튼 연동)
-    /// </summary>
     public void LevelUp()
     {
         if (isTransitioning)
@@ -49,13 +47,10 @@ public class TownLevelManager : MonoBehaviour
         }
 
         currentLevel++;
-        Debug.Log($"[TownLevelManager] ★ 레벨업! 현재 레벨: {currentLevel}");
+        Debug.Log($"[TownLevelManager] ★ 레벨업 실행! 현재 레벨: {currentLevel}");
         StartCoroutine(ProcessLevelUpSequenceCoroutine(currentLevel));
     }
 
-    /// <summary>
-    /// 초기 1레벨 마을 구축 코루틴
-    /// </summary>
     private IEnumerator InitSequenceCoroutine(int targetLevel)
     {
         isTransitioning = true;
@@ -63,23 +58,18 @@ public class TownLevelManager : MonoBehaviour
         LevelProgressionData levelData = GetLevelData(targetLevel);
         if (levelData != null)
         {
-            // 만약 씬에 이미 섬이 배치되어 있지 않다면, 1레벨 SO에 있는 기본 섬 프리팹을 스폰합니다.
             if (islandController.CurrentIslandInstance == null && levelData.targetIslandPrefab != null)
             {
                 islandController.SpawnInitialIsland(levelData.targetIslandPrefab);
                 yield return null;
             }
 
-            // 1레벨 해금 건물 드롭
-            yield return StartCoroutine(SpawnAndDropBuildingsCoroutine(levelData, targetLevel));
+            yield return StartCoroutine(SpawnAndDropBuildingsCoroutine(levelData, targetLevel, false));
         }
 
         isTransitioning = false;
     }
 
-    /// <summary>
-    /// 레벨업 발생 시 섬 교체(5레벨 등) 및 신규 건물 스폰을 처리하는 핵심 코루틴
-    /// </summary>
     private IEnumerator ProcessLevelUpSequenceCoroutine(int targetLevel)
     {
         isTransitioning = true;
@@ -91,27 +81,29 @@ public class TownLevelManager : MonoBehaviour
             yield break;
         }
 
-        // [핵심] 해당 레벨 SO에 targetIslandPrefab이 할당되어 있다면 (예: 5레벨 2rd_island) 섬을 교체합니다!
-        // 2, 3, 4레벨 SO에는 이 칸이 비어있(null)으므로 섬 교체를 건너뛰고 기존 섬이 유지됩니다.
+        // 1. [섬 교체] 마일스톤 레벨(예: 5레벨)인 경우 새 섬으로 교체
         if (levelData.targetIslandPrefab != null && islandController != null)
         {
-            Debug.Log($"[TownLevelManager] 마일스톤 도달! 섬 교체 실행 -> {levelData.targetIslandPrefab.name}");
+            Debug.Log($"[TownLevelManager] 마일스톤 도달! 섬 교체 시작 -> {levelData.targetIslandPrefab.name}");
             islandController.ChangeIslandPrefab(levelData.targetIslandPrefab);
 
-            // 섬 교체 연출 대기 시간
+            // 새 섬이 인스턴스화되고 트랜스폼이 안착할 때까지 충분히 대기
             yield return new WaitForSeconds(1.2f);
+
+            // 2. [건물 리마핑] 섬이 바뀌었으므로, 기존에 지어둔 모든 건물의 위치를 새 섬의 소켓 위치로 재조정!
+            RemapExistingBuildingsToNewIsland(targetLevel);
         }
 
-        // 신규 건물 스폰 및 낙하 연출
-        yield return StartCoroutine(SpawnAndDropBuildingsCoroutine(levelData, targetLevel));
+        // 3. [신규 건물 스폰] 해당 레벨의 신규 해금 건물 낙하 연출
+        yield return StartCoroutine(SpawnAndDropBuildingsCoroutine(levelData, targetLevel, true));
 
         isTransitioning = false;
     }
 
     /// <summary>
-    /// 소켓 좌표를 찾아 건물을 생성하고 SkyDrop 연출을 태우는 서브 루틴
+    /// 건물을 생성하고 (필요시) SkyDrop 연출을 태우는 메서드
     /// </summary>
-    private IEnumerator SpawnAndDropBuildingsCoroutine(LevelProgressionData levelData, int targetLevel)
+    private IEnumerator SpawnAndDropBuildingsCoroutine(LevelProgressionData levelData, int targetLevel, bool playDropAnim)
     {
         if (islandController == null || islandController.CurrentIslandInstance == null)
         {
@@ -122,7 +114,7 @@ public class TownLevelManager : MonoBehaviour
         IslandSocketProvider socketProvider = islandController.CurrentIslandInstance.GetComponentInChildren<IslandSocketProvider>();
         if (socketProvider == null)
         {
-            Debug.LogError($"[TownLevelManager] '{islandController.CurrentIslandInstance.name}' 섬에 IslandSocketProvider 컴포넌트가 없습니다!", islandController.CurrentIslandInstance);
+            Debug.LogError($"[TownLevelManager] '{islandController.CurrentIslandInstance.name}' 섬에 IslandSocketProvider가 없습니다!");
             yield break;
         }
 
@@ -133,10 +125,14 @@ public class TownLevelManager : MonoBehaviour
 
         List<GameObject> dropSpawnList = new List<GameObject>();
         List<Transform> targetSocketList = new List<Transform>();
+        Transform parentTarget = buildingParentTransform != null ? buildingParentTransform : transform;
 
         foreach (var unlockInfo in levelData.unlockBuildings)
         {
             if (unlockInfo.buildingPrefab == null) continue;
+
+            // 이미 지어진 건물이라면 중복 생성 방지
+            if (spawnedBuildings.ContainsKey(unlockInfo.buildingType)) continue;
 
             Transform targetSocket = socketProvider.GetBuildingSocket(unlockInfo.buildingType, targetLevel);
             if (targetSocket == null) continue;
@@ -145,30 +141,61 @@ public class TownLevelManager : MonoBehaviour
                 unlockInfo.buildingPrefab,
                 targetSocket.position,
                 targetSocket.rotation,
-                transform
+                parentTarget
             );
 
-            dropSpawnList.Add(bldgObj);
-            targetSocketList.Add(targetSocket);
+            // 딕셔너리에 등록하여 영구 관리
+            spawnedBuildings[unlockInfo.buildingType] = bldgObj;
+
+            if (playDropAnim)
+            {
+                dropSpawnList.Add(bldgObj);
+                targetSocketList.Add(targetSocket);
+            }
         }
 
-        if (dropSpawnList.Count > 0 && skyDropInstaller != null)
+        if (playDropAnim && dropSpawnList.Count > 0 && skyDropInstaller != null)
         {
             yield return StartCoroutine(skyDropInstaller.PlayDropSequenceCoroutine(
                 dropSpawnList,
                 targetSocketList,
-                () => Debug.Log($"[TownLevelManager] Lv.{targetLevel} 건물 배치 완료!")
+                () => Debug.Log($"[TownLevelManager] Lv.{targetLevel} 신규 건물 배치 완료!")
             ));
+        }
+    }
+
+    /// <summary>
+    /// 섬이 교체되었을 때, 기존 건물들을 새 섬의 대응하는 소켓 위치로 이동시키는 리마핑 함수
+    /// </summary>
+    private void RemapExistingBuildingsToNewIsland(int currentGlobalLevel)
+    {
+        IslandSocketProvider newSocketProvider = islandController.CurrentIslandInstance.GetComponentInChildren<IslandSocketProvider>();
+        if (newSocketProvider == null)
+        {
+            Debug.LogError("[TownLevelManager] 새로 교체된 섬에 IslandSocketProvider가 없습니다!");
+            return;
+        }
+
+        foreach (var kvp in spawnedBuildings)
+        {
+            BuildingType bType = kvp.Key;
+            GameObject bObj = kvp.Value;
+
+            if (bObj == null) continue;
+
+            // 새 섬에서 해당 건물의 타입과 일치하는 소켓 위치를 탐색
+            Transform newSocket = newSocketProvider.GetBuildingSocket(bType, currentGlobalLevel);
+            if (newSocket != null)
+            {
+                bObj.transform.position = newSocket.position;
+                bObj.transform.rotation = newSocket.rotation;
+                Debug.Log($"[TownLevelManager] 건물 위치 재배치 완료: {bType}");
+            }
         }
     }
 
     private LevelProgressionData GetLevelData(int targetLevel)
     {
-        LevelProgressionData levelData = levelDataList.Find(data => data.level == targetLevel);
-        if (levelData == null)
-        {
-            Debug.LogError($"[TownLevelManager] Lv.{targetLevel}에 해당하는 LevelProgressionData SO를 찾을 수 없습니다.");
-        }
-        return levelData;
+        return levelDataList.Find(data => data.level == targetLevel);
     }
 }
