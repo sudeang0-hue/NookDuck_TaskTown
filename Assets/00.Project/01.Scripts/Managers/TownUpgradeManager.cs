@@ -88,14 +88,16 @@ public class TownUpgradeManager : MonoBehaviour
     private IEndlessModeProvider endlessModeProvider;
 
     [Header("클릭 코인 업그레이드")]
-    [SerializeField] private UpgradeTrack clickUpgrade = new UpgradeTrack(300, 1.6f, 9);
+    // 2026.08.05 - 사용자 요청으로 클릭/타이핑 구매 비용을 50배로 인상(300->15,000). 성장률은
+    // 그대로라 모든 레벨의 비용이 정확히 50배가 됩니다. 레벨당 효과(clickCapBonusPerLevel)는 무변경.
+    [SerializeField] private UpgradeTrack clickUpgrade = new UpgradeTrack(15000, 1.6f, 9);
     [Tooltip("레벨당 EarnProcessor.ClickMultiplier 증가량(레벨 x 이 값을 매번 새로 계산해서 적용, 누적 아님)")]
     [SerializeField] private int clickMultiplierPerLevel = 1;
     [Tooltip("레벨당 시간당 획득 상한(maxCoinPerHour) 증가분")]
     [SerializeField] private int clickCapBonusPerLevel = 2000;
 
     [Header("타이핑 코인 업그레이드")]
-    [SerializeField] private UpgradeTrack typingUpgrade = new UpgradeTrack(300, 1.6f, 9);
+    [SerializeField] private UpgradeTrack typingUpgrade = new UpgradeTrack(15000, 1.6f, 9);
     [SerializeField] private int typingMultiplierPerLevel = 1;
     [SerializeField] private int typingCapBonusPerLevel = 2000;
 
