@@ -88,19 +88,19 @@ public class TownUpgradeManager : MonoBehaviour
     private IEndlessModeProvider endlessModeProvider;
 
     [Header("클릭 코인 업그레이드")]
-    [SerializeField] private UpgradeTrack clickUpgrade = new UpgradeTrack(300, 1.6f, 10);
+    [SerializeField] private UpgradeTrack clickUpgrade = new UpgradeTrack(300, 1.6f, 9);
     [Tooltip("레벨당 EarnProcessor.ClickMultiplier 증가량(레벨 x 이 값을 매번 새로 계산해서 적용, 누적 아님)")]
     [SerializeField] private int clickMultiplierPerLevel = 1;
     [Tooltip("레벨당 시간당 획득 상한(maxCoinPerHour) 증가분")]
     [SerializeField] private int clickCapBonusPerLevel = 2000;
 
     [Header("타이핑 코인 업그레이드")]
-    [SerializeField] private UpgradeTrack typingUpgrade = new UpgradeTrack(300, 1.6f, 10);
+    [SerializeField] private UpgradeTrack typingUpgrade = new UpgradeTrack(300, 1.6f, 9);
     [SerializeField] private int typingMultiplierPerLevel = 1;
     [SerializeField] private int typingCapBonusPerLevel = 2000;
 
     [Header("도구 효율 업그레이드 (기존 마을 레벨 자동 생산 보너스를 대체)")]
-    [SerializeField] private UpgradeTrack toolEfficiencyUpgrade = new UpgradeTrack(60000, 1.6f, 10);
+    [SerializeField] private UpgradeTrack toolEfficiencyUpgrade = new UpgradeTrack(60000, 1.6f, 9);
     [Tooltip("레벨당 전체 생산량에 곱해지는 효율 증가분")]
     [SerializeField, Min(0f)] private float toolEfficiencyBonusPerLevel = 0.1f;
 
