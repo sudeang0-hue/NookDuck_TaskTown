@@ -3890,6 +3890,10 @@ PrefabInstance:
       propertyPath: townLevelProviderSource
       value: 
       objectReference: {fileID: 897448646}
+    - target: {fileID: 7060871763739530346, guid: d3f7e9478acde854393b750a23d842e2, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7420439736619146514, guid: d3f7e9478acde854393b750a23d842e2, type: 3}
       propertyPath: m_Name
       value: GachaSystems
@@ -3906,7 +3910,8 @@ PrefabInstance:
       propertyPath: coinWalletSource
       value: 
       objectReference: {fileID: 1566871428}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 7060871763739530346, guid: d3f7e9478acde854393b750a23d842e2, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -3947,7 +3952,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3f328045f2e5b9a4c8916427966ac32a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::VillageResetMenuButton
-  resetButton: {fileID: 0}
+  resetButton: {fileID: 831831335}
   confirmPopup: {fileID: 1478772868}
 --- !u!114 &1478772868
 MonoBehaviour:
@@ -3961,9 +3966,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 18627b4f8ca98c24b8815ba2cc116d07, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UI.VillageResetConfirmPopup
-  confirmButton: {fileID: 0}
-  cancelButton: {fileID: 0}
-  panelWindow: {fileID: 0}
+  confirmButton: {fileID: 1679954613}
+  cancelButton: {fileID: 1824774292}
+  panelWindow: {fileID: 1595469204}
 --- !u!114 &1478772869
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3976,9 +3981,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 37ddc89f009610c4f9c70d0680630660, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UI.VillageCompletionPopup
-  resetButton: {fileID: 0}
-  endlessButton: {fileID: 0}
-  panelWindow: {fileID: 0}
+  resetButton: {fileID: 1854298600}
+  endlessButton: {fileID: 44659642}
+  panelWindow: {fileID: 786826622}
 --- !u!4 &1478772870
 Transform:
   m_ObjectHideFlags: 0

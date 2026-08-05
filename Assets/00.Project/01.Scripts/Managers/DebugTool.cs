@@ -316,6 +316,18 @@ public class DebugTool : MonoBehaviour
         }
         //-----------------------------------------------------------------------------
 
+        //------------------26.08.05 KAY 추가 (마을 레벨업)---------------------------------
+        if (GUILayout.Button("마을 레벨업 (요소 완료 + Lv+1)"))
+        {
+            if (villageUpgradeUIManager == null)
+                lastUpgradeActionText = "VillageUpgradeUI_Manager 없음";
+            else if (!villageUpgradeUIManager.DebugForceVillageLevelUp())
+                lastUpgradeActionText = "마을 레벨업 실패 (최대 레벨/코인 부족/매니저 없음)";
+            else
+                lastUpgradeActionText = $"마을 레벨업 완료 → Lv.{villageUpgradeUIManager.UiTownLevel}";
+        }
+        //-----------------------------------------------------------------------------
+
         //--------------------------26.07.30 KNW--------------------------------------
         // #19: 완주 판정/선택 UI가 아직 없어서, 엔드리스 모드를 임시로 켜고 끄며 검증하기 위한 버튼입니다.
         GUILayout.Label($"엔드리스 모드: {(villageUpgradeUIManager != null ? villageUpgradeUIManager.IsEndlessMode.ToString() : "-")}");

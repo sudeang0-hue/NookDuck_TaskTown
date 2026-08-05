@@ -682,6 +682,48 @@ namespace UI
             return true;
         }
 
+        //------------------26.08.05 KAY 추가 (마을 레벨업)---------------------------------
+        /// <summary>
+        /// 디버그용. 미완료 요소 3종을 강제 완료한 뒤, 정식 경로로 마을 레벨업(코인 소모)을 시도합니다.
+        /// 상한 도달·코인 부족·매니저 없으면 false.
+        /// </summary>
+        public bool DebugForceVillageLevelUp()
+        {
+            VillageSystemManager system = ResolveVillageSystem();
+            if (system == null || system.IsVillageLevelMaxed)
+                return false;
+
+            TownUpgradeManager manager = TownUpgradeManager.Instance;
+            if (manager == null)
+                return false;
+
+            // 미완료 트랙만 영구 레벨업 + 사이클 완료 기록 (요소 비용은 디버그 스킵)
+            if (!system.CycleClickDone)
+            {
+                if (!manager.DebugForceUpgradeClick())
+                    return false;
+                system.TryMarkCycleTrackDone(VillageElementTrack.Click);
+            }
+
+            if (!system.CycleTypingDone)
+            {
+                if (!manager.DebugForceUpgradeTyping())
+                    return false;
+                system.TryMarkCycleTrackDone(VillageElementTrack.Typing);
+            }
+
+            if (!system.CycleToolDone)
+            {
+                if (!manager.DebugForceUpgradeToolEfficiency())
+                    return false;
+                system.TryMarkCycleTrackDone(VillageElementTrack.ToolEfficiency);
+            }
+
+            // 마을 레벨업은 정식 코인 소모 경로
+            return TryVillageLevelUp();
+        }
+        //-----------------------------------------------------------------------------
+
         //-------------------------------26.08.03 KDH-----------------------------------
         private void OpenCompletionChoicePopup()
         {

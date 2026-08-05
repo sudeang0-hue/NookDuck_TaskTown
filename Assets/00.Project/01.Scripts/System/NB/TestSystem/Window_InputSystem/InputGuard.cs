@@ -34,7 +34,7 @@ public static class InputGuard
             if (IsInteractiveUI(hitObject))
             {
                 // 디버깅용 로그
-                Debug.Log($"[InputGuard] 3D 클릭 차단 - 원인 UI: {hitObject.name}");
+                //Debug.Log($"[InputGuard] 3D 클릭 차단 - 원인 UI: {hitObject.name}");
                 return true; // 차단 실행
             }
         }

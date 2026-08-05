@@ -61,6 +61,10 @@ namespace Manager
         /// <summary>마을 상태가 바뀌면 UI/세이브 구독자가 갱신할 때 사용합니다.</summary>
         public event Action OnVillageStateChanged;
 
+        // --------- KAY. 08.05 추가 ------------------------
+        /// <summary> 엔딩을 보기 전&&엔드리스 모드가 아닐 때, 마을 레벨이 최대치에 도달했을때 사용합니다.</summary>
+        public event Action OnVillageLevelMax;
+
         public int TownLevel => Mathf.Max(1, townLevel);
 
         /// <summary>ITownLevelProvider — 도구 상한/뽑기/세이브가 참조.</summary>
@@ -224,6 +228,12 @@ namespace Manager
             townLevel = TownLevel + 1;
             ResetCycleFlagsOnly();
             RaiseStateChanged();
+
+            // --------- KAY. 08.05 추가 ------------------------
+            // 최대 도달 + 엔드리스 아님 → 1회성 통지
+            if (IsVillageLevelMaxed && !isEndlessMode)
+                OnVillageLevelMax?.Invoke();
+
             return true;
         }
 
