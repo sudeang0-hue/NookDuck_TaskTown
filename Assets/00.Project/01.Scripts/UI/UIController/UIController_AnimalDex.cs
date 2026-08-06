@@ -29,8 +29,11 @@ namespace UI
 
         private void Awake()
         {
-            //if (animalInventory == null)
+            //-----------------26.08.05 KDH-------------------------
+            animalInventory = InventoryManager_Animal.Instance;
+            if (animalInventory == null)
                 animalInventory = FindFirstObjectByType<InventoryManager_Animal>();
+            //----------------------------------------
 
             InitializeAnimalDex();
         }

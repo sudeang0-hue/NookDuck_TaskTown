@@ -56,7 +56,15 @@ namespace TaskTown.SceneFlow
                 totalWeight += orderedSteps[i].Weight;
             }
 
-            StartupLoadContext sharedContext = new(targetScene);
+            //-----------------26.08.05 KDH-------------------------
+            SceneId resolvedTarget = EndingMeta.NeedsDifficultySelect ? SceneId.DifficultySelect : targetScene;
+
+            ///Before
+            //StartupLoadContext sharedContext = new(targetScene);
+
+            ///After
+            StartupLoadContext sharedContext = new(resolvedTarget);
+            //----------------------------------------
             float completedWeight = 0f;
 
             for (int i = 0; i < orderedSteps.Count; i++)
