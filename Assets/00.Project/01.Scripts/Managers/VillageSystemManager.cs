@@ -42,6 +42,12 @@ namespace Manager
         [Header("마을 레벨업 비용")]
         [SerializeField] private TownUpgradeCostConfig townUpgradeCostConfig = new TownUpgradeCostConfig();
 
+        //------------------26.08.06 KAY 이관 (마을 재건 완료 비용)---------------------------------
+        [Header("마을 재건 완료 비용")]
+        [Tooltip("최대 레벨 도달 후 마을 재건/엔드 선택 팝업을 열 때 소모하는 코인")]
+        [SerializeField] private long villageCompletionCost;
+        //-----------------------------------------------------------------------------
+
         [Header("배치 동물 확정본")]
         [SerializeField] private List<string> placedAnimalIds = new List<string>();
 
@@ -172,6 +178,14 @@ namespace Manager
 
             return townUpgradeCostConfig.GetCostForTownLevel(TownLevel);
         }
+
+        //------------------26.08.06 KAY 이관 (마을 재건 완료 비용)---------------------------------
+        /// <summary>최대 레벨 도달 후 재건/엔드 선택 팝업 오픈에 필요한 코인.</summary>
+        public long GetVillageCompletionCost()
+        {
+            return villageCompletionCost < 0L ? 0L : villageCompletionCost;
+        }
+        //-----------------------------------------------------------------------------
 
         // -------------------------------------------------------------------------
         // 변경
