@@ -20,6 +20,15 @@ public class CoinManager : MonoBehaviour, ICoinWallet
         else Destroy(gameObject);
     }
 
+    //-----------------26.08.05 KDH-------------------------
+    private void OnDestroy()
+    {
+        // 씬 전환 후 파괴된 CoinManager를 Instance가 계속 가리키지 않게 합니다.
+        if (Instance == this)
+            Instance = null;
+    }
+    //----------------------------------------
+
     // ICoinWallet 구현. 기존 AddCoin/RemoveCoin(int)은 EarnProcessor 등 기존 코드가 쓰고 있어 그대로 둡니다.
     public void Add(long amount)
     {

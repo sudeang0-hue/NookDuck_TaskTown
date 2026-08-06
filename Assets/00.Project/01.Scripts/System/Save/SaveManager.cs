@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Manager;
 using TaskTown.Gacha;
@@ -34,6 +35,9 @@ namespace TaskTown.KDH
         // 기능: TutorialManager가 전달한 진행 상태를 복사해 안전하게 보관합니다.
         // -----------------------------------------------------------------------------
         private TutorialSaveData tutorialProgress = TutorialSaveData.CreateDefault();
+        //-----------------26.08.05 KDH-------------------------
+        private bool suppressSave;
+        //----------------------------------------
 
         public TutorialSaveData TutorialProgress => tutorialProgress.Copy();
 
@@ -58,7 +62,10 @@ namespace TaskTown.KDH
             if (OfflineRewardManager.Instance != null)
                 OfflineRewardManager.Instance.CheckOfflineReward(loadedProductionRate);
 
-            InvokeRepeating(nameof(SaveGame), AutoSaveIntervalSeconds, AutoSaveIntervalSeconds);
+            ///Before
+            //InvokeRepeating(nameof(SaveGame), AutoSaveIntervalSeconds, AutoSaveIntervalSeconds); 
+            ///After
+            StartAutoSave(); //26.08.05 KDH
         }
 
         private void OnDestroy()
@@ -77,13 +84,61 @@ namespace TaskTown.KDH
             SaveGame();
         }
 
+        //-----------------26.08.05 KDH-------------------------
+        /// <summary>
+        /// 엔딩 리셋: 자동저장을 막고 디스크/메모리 진행도를 비웁니다.
+        /// DeleteSave 직후 SaveGame이 옛 인벤으로 파일을 다시 만드는 것을 방지합니다.
+        /// </summary>
+        public void BeginProgressReset()
+        {
+            suppressSave = true;
+            CancelInvoke(nameof(SaveGame));
+            tutorialProgress = TutorialSaveData.CreateDefault();
+            RealProductionTicker.ClearStoredDifficulty();
+            DeleteSave();
+        }
+
+        /// <summary>
+        /// 리셋 후 새 Main이 준비되면 자동저장을 재개합니다.
+        /// </summary>
+        public void EndProgressReset()
+        {
+            suppressSave = false;
+            StartAutoSave();
+        }
+
+        private void StartAutoSave()
+        {
+            CancelInvoke(nameof(SaveGame));
+            if (!suppressSave)
+                InvokeRepeating(nameof(SaveGame), AutoSaveIntervalSeconds, AutoSaveIntervalSeconds);
+        }
+        //----------------------------------------
+
         public bool HasSave()
         {
             return GameSaveStorage.Exists();
         }
 
+        //-----------------------26.08.05 KDH-------------------------
+        // 씬 리로드로 Inspector 참조가 끊긴 경우 현재 CoinManager로 보정합니다.
+        private CoinManager ResolveCoinManager()
+        {
+            if (coinManager != null)
+                return coinManager;
+
+            coinManager = CoinManager.Instance;
+            return coinManager;
+        }
+        //-------------------------------------------------------------
+
         public void SaveGame()
         {
+            //-----------------26.08.05 KDH-------------------------
+            if (suppressSave)
+                return;
+            //----------------------------------------
+
             GameSaveData data = new GameSaveData();
 
             // -----------------------------------------------------------------------------
@@ -92,8 +147,16 @@ namespace TaskTown.KDH
             // -----------------------------------------------------------------------------
             data.tutorial = tutorialProgress.Copy();
 
-            if (coinManager != null)
-                data.coins = coinManager.Balance;
+            //-----------------26.08.05 KDH------------------------
+            ///Before
+            //if (coinManager != null)
+            //    data.coins = coinManager.Balance;
+
+            ///After
+            CoinManager resolvedCoinManager = ResolveCoinManager();
+            if (resolvedCoinManager != null)
+                data.coins = resolvedCoinManager.Balance;
+            //-------------------------------------------
 
             // 마을 레벨: 관리 패널이 있으면 그쪽을 진실 소스로 저장
             // VillageUpgradeUI_Manager villageUpgradeForSave = FindFirstObjectByType<VillageUpgradeUI_Manager>();
@@ -106,7 +169,12 @@ namespace TaskTown.KDH
             WriteVillageProgressToSaveData(data);
 
             if (RealProductionTicker.Instance != null)
+            {
                 data.productionRatePerSecond = RealProductionTicker.Instance.CalculateTotalCoinPerSecond();
+                //-----------------26.08.05 KDH-------------------------
+                data.difficulty = (int)RealProductionTicker.Instance.CurrentDifficulty;
+                //----------------------------------------
+            }
 
             if (TownUpgradeManager.Instance != null)
             {
@@ -190,9 +258,16 @@ namespace TaskTown.KDH
             // -----------------------------------------------------------------------------
             tutorialProgress = data.tutorial.Copy();
 
-            // 코인
-            if (coinManager != null)
-                coinManager.SetCoin(data.coins);
+            //-----------------------26.08.05 KDH--------------------------
+            ///Before
+            //if (coinManager != null)
+            //    coinManager.SetCoin(data.coins);
+            ///After
+            // 코인 (씬 리로드 후 Inspector 참조가 끊기면 Instance로 보정)
+            CoinManager resolvedCoinManager = ResolveCoinManager();
+            if (resolvedCoinManager != null)
+                resolvedCoinManager.SetCoin(data.coins);
+            //-------------------------------------------------------------
 
             // 클릭/타이핑/도구효율 업그레이드 레벨 복원 (TownUpgradeManager, 이슈 #72)
             if (TownUpgradeManager.Instance != null)
@@ -206,6 +281,21 @@ namespace TaskTown.KDH
 
             // 2026.08.02 - KAY - 마을 레벨+사이클+엔드리스를 VillageSystemManager에 복원 후 UI Refresh
             ApplyVillageProgressFromSave(data);
+
+            //-----------------26.08.05 KDH--------------------------------------------
+            // 난이도 복원 (구버전 세이브는 Normalize에서 Normal)
+            DifficultyType loadedDifficulty = Enum.IsDefined(typeof(DifficultyType), data.difficulty)
+                ? (DifficultyType)data.difficulty
+                : DifficultyType.Normal;
+            if (RealProductionTicker.Instance != null)
+                RealProductionTicker.Instance.SetDifficulty(loadedDifficulty);
+            else
+            {
+                // Ticker가 아직 없으면 PlayerPrefs만 갱신해 Start에서 읽게 합니다.
+                PlayerPrefs.SetInt(RealProductionTicker.DifficultyPrefsKey, (int)loadedDifficulty);
+                PlayerPrefs.Save();
+            }
+            //-----------------------------------------------------------------
 
             // 동물 인벤토리: 저장된 ID로 SO를 다시 조회해서 복원
             InventoryManager_Animal animalManager = InventoryManager_Animal.Instance;

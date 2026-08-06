@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using TaskTown.Gacha;
 using UnityEngine;
+using EndingMeta = TaskTown.EndingMeta;
 
 namespace TaskTown.KDH
 {
@@ -57,7 +58,33 @@ namespace TaskTown.KDH
 
             InitializeDictionary();
             SortAnimalSlots();
+
+            //-----------------26.08.05 KDH-------------------------
+            // 엔딩 리셋 직후: DDOL/세이브 잔여로 옛 슬롯이 남지 않게 한 번 더 비웁니다.
+            if (EndingMeta.ForceEmptyInventoryOnNextMain)
+                ClearAnimalInventory();
+            //----------------------------------------
         }
+
+        //-----------------26.08.05 KDH-------------------------
+        private void Start()
+        {
+            // Tool Awake까지 끝난 뒤 플래그를 소비하고 자동저장을 재개합니다.
+            if (!EndingMeta.ForceEmptyInventoryOnNextMain)
+                return;
+
+            EndingMeta.ForceEmptyInventoryOnNextMain = false;
+            if (SaveManager.Instance != null)
+                SaveManager.Instance.EndProgressReset();
+        }
+
+        private void OnDestroy()
+        {
+            // 리셋 시 DDOL 루트 파괴 / 씬 중복본 정리 후 Instance가 파괴된 객체를 가리키지 않게 합니다.
+            if (Instance == this)
+                Instance = null;
+        }
+        //----------------------------------------
 
         // #19: 엔드리스 모드에서는 동물 개별 레벨 5 상한을 해제합니다.
         private bool IsEndlessMode()

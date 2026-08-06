@@ -34,6 +34,18 @@ namespace UI
 
         private void Awake()
         {
+            //-----------------26.08.05 KDH-------------------------------------
+            // Instance를 우선합니다. FindFirstObjectByType은 리셋 직후 파괴 예정인 씬 복제본을 잡을 수 있습니다.
+            TryResolveInventoryReference();
+        }
+
+        private void TryResolveInventoryReference()
+        {
+            if (toolInventory != null)
+                return;
+
+            toolInventory = InventoryManager_Tool.Instance;
+            //-----------------------------------------------------------------
             if (toolInventory == null)
                 toolInventory = FindFirstObjectByType<InventoryManager_Tool>();
         }
@@ -171,8 +183,14 @@ namespace UI
 
         private bool TryResolveInventory()
         {
-            if (toolInventory == null)
-                toolInventory = InventoryManager_Tool.Instance;
+            //-----------------26.08.05 KDH-------------------------
+            ///Before
+            //if (toolInventory == null)
+            //    toolInventory = InventoryManager_Tool.Instance;
+
+            ///After
+            TryResolveInventoryReference();
+            //----------------------------------------
 
             if (toolInventory == null)
             {

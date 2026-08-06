@@ -64,7 +64,22 @@ namespace TaskTown.KDH
 
             InitializeDictionary();
             SortToolSlots();
+
+            //-----------------26.08.05 KDH-------------------------
+            // 엔딩 리셋 직후: DDOL/세이브 잔여로 옛 슬롯이 남지 않게 한 번 더 비웁니다.
+            if (TaskTown.EndingMeta.ForceEmptyInventoryOnNextMain)
+                ClearToolInventory();
+            //----------------------------------------
         }
+
+        //-----------------26.08.05 KDH-------------------------
+        private void OnDestroy()
+        {
+            // 리셋 시 DDOL 루트 파괴 / 씬 중복본 정리 후 Instance가 파괴된 객체를 가리키지 않게 합니다.
+            if (Instance == this)
+                Instance = null;
+        }
+        //----------------------------------------
 
         private int GetCurrentTownLevel()
         {

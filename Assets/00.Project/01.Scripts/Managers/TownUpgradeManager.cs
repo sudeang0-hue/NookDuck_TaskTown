@@ -126,14 +126,23 @@ public class TownUpgradeManager : MonoBehaviour
     // 지금은 이 업그레이드를 구매한 만큼만 오릅니다.
     public float ToolEfficiencyMultiplier => 1f + toolEfficiencyUpgrade.Level * toolEfficiencyBonusPerLevel;
 
+    //-----------------26.08.05 KDH-------------------------
     private void Awake()
     {
         if (Instance == null) Instance = this;
-        else Destroy(gameObject);
+        else Destroy(this); // CoinManager와 같은 GO일 수 있어 gameObject 전체 파괴는 피합니다.
+        // Before : else Destroy(gameObject);
 
         townLevelProvider = townLevelProviderSource as ITownLevelProvider;
         endlessModeProvider = townLevelProviderSource as IEndlessModeProvider;
     }
+
+    private void OnDestroy()
+    {
+        if (Instance == this)
+            Instance = null;
+    }
+    //----------------------------------------
 
     private int GetCurrentTownLevel()
     {
