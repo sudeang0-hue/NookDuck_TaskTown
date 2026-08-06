@@ -427,17 +427,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 312e2b000c0fe254f9583675a392c596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::VillageAnimalSetUI_Manager
---- !u!114 &227508670 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 1771603889770913089, guid: ebc8143c021e0744bafe6f8227635e41, type: 3}
-  m_PrefabInstance: {fileID: 681581928}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
 --- !u!1 &241183414
 GameObject:
   m_ObjectHideFlags: 0
@@ -1327,26 +1316,20 @@ PrefabInstance:
       propertyPath: m_Name
       value: NB_IconCanvas
       objectReference: {fileID: 0}
+    - target: {fileID: 5360842385097461529, guid: ebc8143c021e0744bafe6f8227635e41, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5458823844124010965, guid: ebc8143c021e0744bafe6f8227635e41, type: 3}
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 5360842385097461529, guid: ebc8143c021e0744bafe6f8227635e41, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: ebc8143c021e0744bafe6f8227635e41, type: 3}
---- !u!114 &755577601 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 3151437509952499292, guid: ebc8143c021e0744bafe6f8227635e41, type: 3}
-  m_PrefabInstance: {fileID: 681581928}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
 --- !u!1 &756930585
 GameObject:
   m_ObjectHideFlags: 0
@@ -1579,16 +1562,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIWindowLayerManager
   baseSortingOrder: 10
---- !u!1 &882622858 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 5360842385097461529, guid: ebc8143c021e0744bafe6f8227635e41, type: 3}
-  m_PrefabInstance: {fileID: 681581928}
-  m_PrefabAsset: {fileID: 0}
---- !u!225 &882622860 stripped
-CanvasGroup:
-  m_CorrespondingSourceObject: {fileID: 9132360648236404246, guid: ebc8143c021e0744bafe6f8227635e41, type: 3}
-  m_PrefabInstance: {fileID: 681581928}
-  m_PrefabAsset: {fileID: 0}
 --- !u!114 &976946782 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 4026553447733908484, guid: ebc8143c021e0744bafe6f8227635e41, type: 3}
@@ -2643,6 +2616,18 @@ PrefabInstance:
       propertyPath: animalGachaManager
       value: 
       objectReference: {fileID: 1168367923}
+    - target: {fileID: 1182854409896452011, guid: 5a06baf612796c74da0eb2e9fc401b48, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1182854409896452011, guid: 5a06baf612796c74da0eb2e9fc401b48, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1182854409896452011, guid: 5a06baf612796c74da0eb2e9fc401b48, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1283037210515985980, guid: 5a06baf612796c74da0eb2e9fc401b48, type: 3}
       propertyPath: villageSystem
       value: 
@@ -2951,6 +2936,10 @@ PrefabInstance:
       propertyPath: m_AnchorMax.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3769897050764329383, guid: 5a06baf612796c74da0eb2e9fc401b48, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3794129344751793891, guid: 5a06baf612796c74da0eb2e9fc401b48, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -3152,6 +3141,10 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5650454860766073142, guid: 5a06baf612796c74da0eb2e9fc401b48, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5938731727315097860, guid: 5a06baf612796c74da0eb2e9fc401b48, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
@@ -3455,6 +3448,18 @@ PrefabInstance:
       propertyPath: m_AnchorMin.x
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 9199185187270575927, guid: 5a06baf612796c74da0eb2e9fc401b48, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9199185187270575927, guid: 5a06baf612796c74da0eb2e9fc401b48, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9199185187270575927, guid: 5a06baf612796c74da0eb2e9fc401b48, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -3724,7 +3729,7 @@ PrefabInstance:
     - target: {fileID: 7250572678428035008, guid: a6cfedd5832123b429fde872bc625193, type: 3}
       propertyPath: btnQuit
       value: 
-      objectReference: {fileID: 755577601}
+      objectReference: {fileID: 0}
     - target: {fileID: 7250572678428035008, guid: a6cfedd5832123b429fde872bc625193, type: 3}
       propertyPath: panelDex
       value: 
@@ -3732,7 +3737,7 @@ PrefabInstance:
     - target: {fileID: 7250572678428035008, guid: a6cfedd5832123b429fde872bc625193, type: 3}
       propertyPath: menuPanel
       value: 
-      objectReference: {fileID: 882622858}
+      objectReference: {fileID: 0}
     - target: {fileID: 7250572678428035008, guid: a6cfedd5832123b429fde872bc625193, type: 3}
       propertyPath: panelGacha
       value: 
@@ -3756,7 +3761,7 @@ PrefabInstance:
     - target: {fileID: 7250572678428035008, guid: a6cfedd5832123b429fde872bc625193, type: 3}
       propertyPath: btnCloseMenu
       value: 
-      objectReference: {fileID: 227508670}
+      objectReference: {fileID: 0}
     - target: {fileID: 7250572678428035008, guid: a6cfedd5832123b429fde872bc625193, type: 3}
       propertyPath: panelToolInv
       value: 
@@ -3776,7 +3781,7 @@ PrefabInstance:
     - target: {fileID: 7250572678428035008, guid: a6cfedd5832123b429fde872bc625193, type: 3}
       propertyPath: menuCanvasGroup
       value: 
-      objectReference: {fileID: 882622860}
+      objectReference: {fileID: 0}
     - target: {fileID: 7250572678428035008, guid: a6cfedd5832123b429fde872bc625193, type: 3}
       propertyPath: ticketNotification
       value: 
