@@ -17,9 +17,19 @@ namespace UI
         private MonoBehaviour coinWalletSource;
         private ICoinWallet CoinWallet => coinWalletSource as ICoinWallet;
 
-        [Tooltip("VillageSystemManager를 연결합니다. 비워두면 VillageSystemManager.Instance를 사용합니다.")]
-        [SerializeField] private VillageSystemManager villageSystem;
+        // VillageSystemManager.Instance 또는 Find로 자동 탐색합니다.
+        private VillageSystemManager villageSystem;
         private bool isVillageStateSubscribed;
+
+        // -----------------------------------------------------------------------------
+        // [ 2026.08.06 - KAY - Menu 오픈 경로와 Bridge 부수효과 동기화 ]
+        // 기능: UIController_Menu가 뽑기 패널을 열/닫을 때 GachaSystemBridge가 수행하던
+        //       Director 초기화·정리 호출을 이 컨트롤러에서 이어받습니다.
+        //       참조는 FindObjectsInactive.Include 자동 탐색만 사용합니다.
+        // -----------------------------------------------------------------------------
+        private GachaDirector toolGachaDirector;
+        private GachaPortalController animalGachaDirector;
+        private GachaSystemBridge gachaSystemBridge;
 
         private const int MultiRollCount = 10;
 
@@ -42,6 +52,20 @@ namespace UI
         public Button AnimalOnePickButton => animalOnePickButton;
         public Button ToolOnePickButton => toolOnePickButton;
 
+        /// <summary>
+        /// 도구/동물 가챠 연출 중이면 true. 메뉴 토글 가드에 사용합니다.
+        /// </summary>
+        public bool IsAnyDirectorAnimating
+        {
+            get
+            {
+                EnsureDirectorReferences();
+                bool toolAnimating = toolGachaDirector != null && toolGachaDirector.IsAnimating;
+                bool animalAnimating = animalGachaDirector != null && animalGachaDirector.IsAnimating;
+                return toolAnimating || animalAnimating;
+            }
+        }
+
         private void Start()
         {
             if (animalGachaManager == null)
@@ -59,6 +83,7 @@ namespace UI
                 coinWalletSource = FindAnyObjectByType<CoinManager>();
             }
 
+            EnsureDirectorReferences();
             Subscribe();
             TrySubscribeVillageState();
             RefreshCostTexts();
@@ -71,12 +96,66 @@ namespace UI
         }
 
         /// <summary>
-        /// 가챠 패널이 열릴 때 호출합니다. 현재 뽑기 가격 텍스트를 갱신합니다.
+        /// 가챠 패널이 열릴 때 호출합니다.
+        /// 가격 텍스트 갱신과 함께 Bridge OpenAllGachaWindows의 Director 준비 부수효과를 수행합니다.
         /// </summary>
         public void NotifyPanelOpened()
         {
             TrySubscribeVillageState();
             RefreshCostTexts();
+            SyncDirectorsOnPanelOpened();
+        }
+
+        /// <summary>
+        /// 가챠 패널이 닫힐 때 호출합니다.
+        /// Bridge CloseAllGachaWindows와 동일하게 Director UI를 정리합니다.
+        /// </summary>
+        public void NotifyPanelClosed()
+        {
+            SyncDirectorsOnPanelClosed();
+        }
+
+        /// <summary>
+        /// Menu 오픈 시 Bridge가 하던 toolGachaDirector.OpenGachaWindowOnly()를 호출합니다.
+        /// </summary>
+        private void SyncDirectorsOnPanelOpened()
+        {
+            EnsureDirectorReferences();
+
+            if (toolGachaDirector != null)
+                toolGachaDirector.OpenGachaWindowOnly();
+        }
+
+        /// <summary>
+        /// Menu 클로즈 시 Bridge.CloseAllGachaWindows()로 초기창·Director를 함께 정리합니다.
+        /// Bridge가 없으면 Director만 직접 닫습니다.
+        /// </summary>
+        private void SyncDirectorsOnPanelClosed()
+        {
+            EnsureDirectorReferences();
+
+            if (gachaSystemBridge != null)
+            {
+                gachaSystemBridge.CloseAllGachaWindows();
+                return;
+            }
+
+            if (toolGachaDirector != null)
+                toolGachaDirector.CloseGachaUI();
+            if (animalGachaDirector != null)
+                animalGachaDirector.CloseGachaUI();
+        }
+
+        private void EnsureDirectorReferences()
+        {
+            if (toolGachaDirector == null)
+                toolGachaDirector = FindAnyObjectByType<GachaDirector>(FindObjectsInactive.Include);
+
+            if (animalGachaDirector == null)
+                animalGachaDirector = FindAnyObjectByType<GachaPortalController>(FindObjectsInactive.Include);
+
+            if (gachaSystemBridge == null)
+                gachaSystemBridge = FindAnyObjectByType<GachaSystemBridge>(FindObjectsInactive.Include);
         }
 
         /// <summary>

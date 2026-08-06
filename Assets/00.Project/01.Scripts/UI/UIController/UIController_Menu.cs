@@ -45,6 +45,7 @@ public class UIController_Menu : MonoBehaviour
     private readonly List<UIPanelWindow> registeredWindows = new List<UIPanelWindow>();
     private UIPanelWindow gachaPanel;
     private UIPanelWindow optionPanel;
+    private UIPanelWindow subscribedGachaPanel;
 
     // -----------------------------------------------------------------------------
     // [ 2026.07.28 - Choi - 튜토리얼 축소·확장 단계 연동 ]
@@ -64,6 +65,7 @@ public class UIController_Menu : MonoBehaviour
     {
         UIControllerNullRefrerenceBind();
         CachePanelWindows();
+        BindGachaPanelEvents();
 
         if (inventoryButton != null)
             inventoryButton.onClick.AddListener(OnInventoryButtonClicked);
@@ -88,6 +90,7 @@ public class UIController_Menu : MonoBehaviour
     {
         CloseAllPanels();
     }
+
     private void OnEnable()
     {
         TargetSelector.OnTargetSelected += OnCameraTargetSelected;
@@ -96,6 +99,11 @@ public class UIController_Menu : MonoBehaviour
     private void OnDisable()
     {
         TargetSelector.OnTargetSelected -= OnCameraTargetSelected;
+    }
+
+    private void OnDestroy()
+    {
+        UnbindGachaPanelEvents();
     }
 
     /// <summary>
@@ -182,6 +190,42 @@ public class UIController_Menu : MonoBehaviour
             if (optionPanel == null && window.MenuType == GameMenuType.Option)
                 optionPanel = window;
         }
+    }
+
+    /// <summary>
+    /// Gacha UIPanelWindow 오픈/클로즈 시 UIController_Gacha로 Bridge 부수효과를 동기화합니다.
+    /// CloseAllPanels / 배타 오픈으로 닫힐 때도 동일하게 처리됩니다.
+    /// </summary>
+    private void BindGachaPanelEvents()
+    {
+        UnbindGachaPanelEvents();
+
+        if (gachaPanel == null)
+            return;
+
+        subscribedGachaPanel = gachaPanel;
+        subscribedGachaPanel.OnPanelOpened += OnGachaPanelOpened;
+        subscribedGachaPanel.OnPanelClosed += OnGachaPanelClosed;
+    }
+
+    private void UnbindGachaPanelEvents()
+    {
+        if (subscribedGachaPanel == null)
+            return;
+
+        subscribedGachaPanel.OnPanelOpened -= OnGachaPanelOpened;
+        subscribedGachaPanel.OnPanelClosed -= OnGachaPanelClosed;
+        subscribedGachaPanel = null;
+    }
+
+    private void OnGachaPanelOpened()
+    {
+        gachaUI?.NotifyPanelOpened();
+    }
+
+    private void OnGachaPanelClosed()
+    {
+        gachaUI?.NotifyPanelClosed();
     }
 
     /// <summary>
@@ -320,7 +364,12 @@ public class UIController_Menu : MonoBehaviour
 
     private void OnGachaButtonClicked()
     {
-        ToggleSinglePanelMenu(GameMenuType.Gacha, () => gachaUI?.NotifyPanelOpened());
+        // Bridge ToggleGachaWindow와 동일: 연출 중에는 메뉴 토글을 막습니다.
+        if (gachaUI != null && gachaUI.IsAnyDirectorAnimating)
+            return;
+
+        // 오픈/클로즈 부수효과는 UIPanelWindow 이벤트로 NotifyPanelOpened/Closed에 연결됩니다.
+        ToggleSinglePanelMenu(GameMenuType.Gacha);
     }
 
     private void OnOptionButtonClicked()
