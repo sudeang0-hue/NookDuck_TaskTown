@@ -1,13 +1,15 @@
-//NB
-
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
+using System;
 using System.Collections;
 
 // 메인 화면의 확장/축소 상태, 카메라 포커스 연동, 하단 아이콘 애니메이션을 전담하는 메인 매니저
 public class GameMasterManager : MonoBehaviour
 {
+    // 팀원 메뉴 시스템 등 외부 UI 매니저가 구독할 수 있는 전역 UI 수거 이벤트
+    public static event Action OnCloseAllUIRequested;
+
     [Header("3D 오브젝트 및 카메라 설정")]
     public Transform villageOrigin;
     private Vector3 originalVillagePos;
@@ -16,14 +18,11 @@ public class GameMasterManager : MonoBehaviour
     [Header("메인 패널 참조")]
     public GameObject expandedPanel;
     public GameObject minimizedPanel;
-    public GameObject menuPanel;
-    public CanvasGroup menuCanvasGroup;
 
     [Header("전환 및 시스템 버튼들")]
     public Button btnMinimize;
     public Button btnMaximize;
     public Button btnQuit;
-    public Button btnCloseMenu;
 
     [Header("하단 메인 아이콘들")]
     public RectTransform[] bottomIcons;
@@ -36,8 +35,6 @@ public class GameMasterManager : MonoBehaviour
 
     // 상태 관리 플래그
     private bool isExpanded = true;
-    private bool isMenuOpen = false;
-    private bool isMenuAnimating = false;
     private bool isTransitioning = false; // 화면 전환 연타 방지용 가드 플래그
 
     void Start()
@@ -66,13 +63,10 @@ public class GameMasterManager : MonoBehaviour
         if (btnMinimize) btnMinimize.onClick.AddListener(SetMinimizedScreen);
         if (btnMaximize) btnMaximize.onClick.AddListener(SetExpandedScreen);
         if (btnQuit) btnQuit.onClick.AddListener(QuitGame);
-        if (btnCloseMenu) btnCloseMenu.onClick.AddListener(ToggleMenu);
 
         // 4. 초기 UI 패널 상태 설정
         expandedPanel.SetActive(true);
         minimizedPanel.SetActive(false);
-        menuPanel.SetActive(false);
-        if (menuCanvasGroup != null) menuCanvasGroup.alpha = 0f;
 
         // 5. 하단 아이콘 등장 연출
         AnimateIcons();
@@ -89,13 +83,11 @@ public class GameMasterManager : MonoBehaviour
                 ticketNotification.SetActive(true);
             }
         }
-
-        if (Input.GetKeyDown(KeyCode.Escape)) ToggleMenu();
     }
 
     private void OnEnable()
     {
-        // 카메라 포커스 시작 이벤트 수신 시 UI 정리
+        // 카메라 포커스 시작 이벤트 수신 시 UI 수거 함수 연결
         CameraDirector.OnCameraFocusStarted += CloseAllUI;
     }
 
@@ -105,22 +97,11 @@ public class GameMasterManager : MonoBehaviour
         CameraDirector.OnCameraFocusStarted -= CloseAllUI;
     }
 
-    // 동물이 클릭되거나 카메라 포커스가 동작할 때 메인 메뉴 및 팝업 UI를 수거하는 핸들러
+    // 동물이 클릭되거나 카메라 포커스가 동작할 때 전체 UI 닫기를 요청하는 핸들러
     public void CloseAllUI()
     {
-        // 전체 메뉴 패널이 열려있다면 즉시 페이드 아웃 처리
-        if (isMenuOpen && menuPanel != null && menuCanvasGroup != null)
-        {
-            isMenuOpen = false;
-            isMenuAnimating = true;
-
-            menuCanvasGroup.DOKill();
-            menuCanvasGroup.DOFade(0f, 0.2f).SetUpdate(true).OnComplete(() =>
-            {
-                menuPanel.SetActive(false);
-                isMenuAnimating = false;
-            });
-        }
+        // 외부(팀원의 메뉴 시스템 등)에 UI 수거 이벤트를 알림
+        OnCloseAllUIRequested?.Invoke();
     }
 
     #region 화면 확장 / 축소 제어
@@ -208,7 +189,7 @@ public class GameMasterManager : MonoBehaviour
 
     #endregion
 
-    #region 메뉴 및 시스템 제어
+    #region 시스템 및 연출 제어
 
     private void AnimateIcons()
     {
@@ -225,27 +206,6 @@ public class GameMasterManager : MonoBehaviour
             bottomIcons[i].DOAnchorPosY(iconOriginalPositions[i].y, 0.6f)
                 .SetEase(Ease.OutBounce)
                 .SetDelay(0.2f + (i * 0.15f));
-        }
-    }
-
-    private void ToggleMenu()
-    {
-        if (isMenuAnimating || menuPanel == null || menuCanvasGroup == null) return;
-        isMenuOpen = !isMenuOpen;
-        isMenuAnimating = true;
-
-        if (isMenuOpen)
-        {
-            menuPanel.SetActive(true);
-            menuCanvasGroup.DOFade(1f, 0.25f).SetUpdate(true).OnComplete(() => isMenuAnimating = false);
-        }
-        else
-        {
-            menuCanvasGroup.DOFade(0f, 0.25f).SetUpdate(true).OnComplete(() =>
-            {
-                menuPanel.SetActive(false);
-                isMenuAnimating = false;
-            });
         }
     }
 
