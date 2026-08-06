@@ -1,16 +1,18 @@
 //NB
 
-
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
 using System;
 using System.Collections;
 
-// 메인 화면의 확장/축소 상태, 카메라 포커스 연동, 하단 아이콘 애니메이션을 전담하는 메인 매니저
+// 메인 화면의 확장/축소 상태, 카메라 포커스 연동, 하단 아이콘 애니메이션을 전담하는 씬 전용 매니저
 public class GameMasterManager : MonoBehaviour
 {
-    // 팀원 메뉴 시스템 등 외부 UI 매니저가 구독할 수 있는 전역 UI 수거 이벤트
+    // 씬 내에서 접근 가능한 씬 싱글톤
+    public static GameMasterManager Instance { get; private set; }
+
+    // 외부 UI 매니저가 구독할 수 있는 전역 UI 수거 이벤트
     public static event Action OnCloseAllUIRequested;
 
     [Header("3D 오브젝트 및 카메라 설정")]
@@ -40,6 +42,20 @@ public class GameMasterManager : MonoBehaviour
     private bool isExpanded = true;
     private bool isTransitioning = false; // 화면 전환 연타 방지용 가드 플래그
 
+    private void Awake()
+    {
+        // 1. 씬 내부 싱글톤 할당 (씬이 재로드되면 자동으로 새 인스턴스로 교체됨)
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+
+        // static 이벤트 초기화 (씬 재로드 시 이전 씬의 구독 찌꺼기 제거)
+        OnCloseAllUIRequested = null;
+    }
+
     void Start()
     {
         // 1. 마을 원본 좌표 캐싱 및 카메라 디렉터 연동
@@ -54,22 +70,25 @@ public class GameMasterManager : MonoBehaviour
             }
         }
 
-        // 2. 하단 아이콘 원본 좌표 캐싱
-        iconOriginalPositions = new Vector2[bottomIcons.Length];
-        for (int i = 0; i < bottomIcons.Length; i++)
+        // 2. 하단 아이콘 원본 좌표 캐싱 (Null 방어 구문 추가)
+        if (bottomIcons != null && bottomIcons.Length > 0)
         {
-            if (bottomIcons[i] == null) continue;
-            iconOriginalPositions[i] = bottomIcons[i].anchoredPosition;
+            iconOriginalPositions = new Vector2[bottomIcons.Length];
+            for (int i = 0; i < bottomIcons.Length; i++)
+            {
+                if (bottomIcons[i] == null) continue;
+                bottomIcons[i].DOKill(); // 잔류 트윈 제거
+                iconOriginalPositions[i] = bottomIcons[i].anchoredPosition;
+            }
         }
 
-        // 3. 버튼 리스너 바인딩
-        if (btnMinimize) btnMinimize.onClick.AddListener(SetMinimizedScreen);
-        if (btnMaximize) btnMaximize.onClick.AddListener(SetExpandedScreen);
-        if (btnQuit) btnQuit.onClick.AddListener(QuitGame);
+        // 3. 버튼 리스너 바인딩 (중복 방지를 위한 RemoveAllListeners 호출)
+        InitButtonListeners();
 
         // 4. 초기 UI 패널 상태 설정
-        expandedPanel.SetActive(true);
-        minimizedPanel.SetActive(false);
+        if (expandedPanel) expandedPanel.SetActive(true);
+        if (minimizedPanel) minimizedPanel.SetActive(false);
+        if (ticketNotification) ticketNotification.SetActive(false);
 
         // 5. 하단 아이콘 등장 연출
         AnimateIcons();
@@ -100,16 +119,49 @@ public class GameMasterManager : MonoBehaviour
         CameraDirector.OnCameraFocusStarted -= CloseAllUI;
     }
 
-    // 동물이 클릭되거나 카메라 포커스가 동작할 때 전체 UI 닫기를 요청하는 핸들러
+    // 씬 전환/파괴 시 메모리 누수 방지 cleanup
+    private void OnDestroy()
+    {
+        if (bottomIcons != null)
+        {
+            for (int i = 0; i < bottomIcons.Length; i++)
+            {
+                if (bottomIcons[i] != null) bottomIcons[i].DOKill();
+            }
+        }
+
+        if (villageOrigin != null) villageOrigin.DOKill();
+
+        OnCloseAllUIRequested = null;
+        if (Instance == this) Instance = null;
+    }
+
+    private void InitButtonListeners()
+    {
+        if (btnMinimize)
+        {
+            btnMinimize.onClick.RemoveAllListeners();
+            btnMinimize.onClick.AddListener(SetMinimizedScreen);
+        }
+        if (btnMaximize)
+        {
+            btnMaximize.onClick.RemoveAllListeners();
+            btnMaximize.onClick.AddListener(SetExpandedScreen);
+        }
+        if (btnQuit)
+        {
+            btnQuit.onClick.RemoveAllListeners();
+            btnQuit.onClick.AddListener(QuitGame);
+        }
+    }
+
     public void CloseAllUI()
     {
-        // 외부(팀원의 메뉴 시스템 등)에 UI 수거 이벤트를 알림
         OnCloseAllUIRequested?.Invoke();
     }
 
     #region 화면 확장 / 축소 제어
 
-    // 화면 축소 진입점 (연타 방지 가드 적용)
     public void SetMinimizedScreen()
     {
         if (!isExpanded || isTransitioning) return;
@@ -123,8 +175,8 @@ public class GameMasterManager : MonoBehaviour
 
         CloseAllUI();
 
-        expandedPanel.SetActive(false);
-        minimizedPanel.SetActive(true);
+        if (expandedPanel) expandedPanel.SetActive(false);
+        if (minimizedPanel) minimizedPanel.SetActive(true);
 
         if (villageOrigin != null)
         {
@@ -133,16 +185,14 @@ public class GameMasterManager : MonoBehaviour
             villageOrigin.DOMove(originalVillagePos, 0.5f).SetEase(Ease.InOutQuad);
         }
 
-        // 카메라 축소 연출 호출
         if (CameraDirector.Instance != null)
             CameraDirector.Instance.SetMinimizedView();
 
-        // 하단 아이콘 숨기기 연출
         for (int i = 0; i < bottomIcons.Length; i++)
         {
             if (bottomIcons[i] == null) continue;
 
-            bottomIcons[i].DOKill(); // 잔류 트윈 제거
+            bottomIcons[i].DOKill();
             bottomIcons[i].anchoredPosition = iconOriginalPositions[i] + new Vector2(0, -400f);
         }
 
@@ -150,7 +200,6 @@ public class GameMasterManager : MonoBehaviour
         isTransitioning = false;
     }
 
-    // 화면 확장 진입점 (연타 방지 가드 적용)
     public void SetExpandedScreen()
     {
         if (isExpanded || isTransitioning) return;
@@ -161,8 +210,9 @@ public class GameMasterManager : MonoBehaviour
     {
         isTransitioning = true;
         isExpanded = true;
-        expandedPanel.SetActive(true);
-        minimizedPanel.SetActive(false);
+
+        if (expandedPanel) expandedPanel.SetActive(true);
+        if (minimizedPanel) minimizedPanel.SetActive(false);
 
         if (ticketNotification) ticketNotification.SetActive(false);
         ticketTimer = 0f;
@@ -173,14 +223,11 @@ public class GameMasterManager : MonoBehaviour
             villageOrigin.DOMove(savedDraggedPosition, 0.5f).SetEase(Ease.InOutQuad);
         }
 
-        // 카메라 복귀 연출 호출
         if (CameraDirector.Instance != null)
             CameraDirector.Instance.SetExpandedView();
 
-        // 아이콘 등장 바운스 연출
         AnimateIcons();
 
-        // 아이콘 연출 완료까지 입력 대기 (딜레이 + 재생시간 고려)
         yield return new WaitForSeconds(1.4f);
         isTransitioning = false;
     }
@@ -196,6 +243,8 @@ public class GameMasterManager : MonoBehaviour
 
     private void AnimateIcons()
     {
+        if (bottomIcons == null) return;
+
         for (int i = 0; i < bottomIcons.Length; i++)
         {
             if (bottomIcons[i] == null) continue;
@@ -205,7 +254,6 @@ public class GameMasterManager : MonoBehaviour
             float startY = iconOriginalPositions[i].y - 300f;
             bottomIcons[i].anchoredPosition = new Vector2(iconOriginalPositions[i].x, startY);
 
-            // 순차적 바운스 연출 ($t_i = 0.2 + 0.15 \times i$)
             bottomIcons[i].DOAnchorPosY(iconOriginalPositions[i].y, 0.6f)
                 .SetEase(Ease.OutBounce)
                 .SetDelay(0.2f + (i * 0.15f));
