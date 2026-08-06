@@ -73,10 +73,12 @@ namespace UI
         [SerializeField] private VillageCompletionPopup completionPopup;
         //-----------------------------------------------------------------
 
-        //------------------26.08.05 KAY 추가 (최대 레벨 엔드 버튼)---------------------------------
-        [Header("엔딩 선택 비용 (추후 VillageSystemManager 이관 예정)")]
-        [Tooltip("최대 레벨 도달 후 마을 재건/엔드 선택 팝업을 열 때 소모하는 코인")]
-        [SerializeField] private long villageCompletionCost;
+        //------------------26.08.05 KAY / 26.08.06 이관---------------------------------
+        // villageCompletionCost는 VillageSystemManager로 이관.
+        // UI는 GetVillageCompletionCost()로 System 값을 조회합니다.
+
+        /// <summary>재건 완료(Yes) 후 endUpGradeMessage 표시용. 최대 레벨이 아니면 리셋됩니다.</summary>
+        private bool villageReconstructionCompleted;
         //-----------------------------------------------------------------------------
 
         private void Awake()
@@ -177,6 +179,7 @@ namespace UI
             RefreshAllUI();
 
             //-------------------------26.08.04 KDH-----------------------------------
+            // 세이브 복원 시 최대 레벨이면 엔드리스 자동 진입(기존 흐름 유지)
             VillageSystemManager system = ResolveVillageSystem();
             if (system != null && system.IsVillageLevelMaxed && !system.IsEndlessMode)
             {
@@ -319,10 +322,16 @@ namespace UI
 
             long cost = system.GetVillageLevelUpCost();
 
+            //------------------26.08.06 KAY 추가 (레벨업 확인 시 VillageUpgrade_root 닫기)-------------
             OpenUpgradePopup(
                 $"마을을 Lv.{system.TownLevel + 1}로 업그레이드하시겠습니까?",
                 cost,
-                () => TryVillageLevelUp());
+                () =>
+                {
+                    if (TryVillageLevelUp())
+                        OnClickWindowClose();
+                });
+            //-----------------------------------------------------------------------------
         }
 
         //------------------26.08.05 KAY 추가 (최대 레벨 엔드 버튼)---------------------------------
@@ -356,6 +365,11 @@ namespace UI
                 if (CoinManager.Instance == null || !CoinManager.Instance.TrySpend(cost))
                     return false;
             }
+
+            //------------------26.08.06 KAY 수정 (재건 Yes → endUpGradeMessage)-----------------
+            villageReconstructionCompleted = true;
+            RefreshAllUI();
+            //-----------------------------------------------------------------------------
 
             OpenCompletionChoicePopup();
             RefreshInteractableStates();
@@ -429,13 +443,14 @@ namespace UI
             return system != null ? system.GetVillageLevelUpCost() : 0;
         }
 
-        //------------------26.08.05 KAY 추가 (최대 레벨 엔드 버튼)---------------------------------
+        //------------------26.08.05 KAY / 26.08.06 이관 (재건 완료 비용)-------------------------
         /// <summary>
-        /// 완주 선택 팝업 오픈 비용. System 프로퍼티와 System.Math 이름 충돌을 피하기 위해 분리합니다.
+        /// 완주 선택 팝업 오픈 비용. VillageSystemManager.villageCompletionCost를 조회합니다.
         /// </summary>
         private long GetVillageCompletionCost()
         {
-            return villageCompletionCost < 0L ? 0L : villageCompletionCost;
+            VillageSystemManager system = ResolveVillageSystem();
+            return system != null ? system.GetVillageCompletionCost() : 0L;
         }
         //-----------------------------------------------------------------------------
 
@@ -496,8 +511,22 @@ namespace UI
                 int townLevel = system != null ? system.TownLevel : 1;
                 bool levelMaxed = system != null && system.IsVillageLevelMaxed;
 
-                uiController.RefreshRequiredUpgrade(completedCount);
+                //------------------26.08.06 KAY 수정 (requiredUpgradeText 비용+문구 통합)---------
+                // 최대(재건 전): "{completionCost} 을 사용하여\n" + finishUpGradeMessage
+                // 재건 완료/엔드리스: endUpGradeMessage
+                if (!levelMaxed)
+                    villageReconstructionCompleted = false;
+
+                long completionCost = GetVillageCompletionCost();
+                uiController.RefreshRequiredUpgrade(
+                    completedCount,
+                    levelMaxed,
+                    endless,
+                    completionCost,
+                    villageReconstructionCompleted);
                 uiController.RefreshVillageLevel(townLevel);
+                //-----------------------------------------------------------------------------
+
                 // 다음 레벨업 보상 미리보기 (최대 레벨이면 RewardTexts 숨김, RewardEnd_txt 표시)
                 int nextTownLevel = townLevel + 1;
                 string decoBuildingName = system != null
@@ -506,20 +535,31 @@ namespace UI
                 uiController.RefreshReward(townLevel, !levelMaxed, decoBuildingName);
 
                 long villageCost = GetVillageLevelUpCost();
-                uiController.RefreshVillageLevelUpCost(villageCost);
 
-                //------------------26.08.05 KAY 추가 (최대 레벨 엔드 버튼)---------------------------------
-                // 최대 레벨 + 비엔드리스: 레벨업 버튼 숨기고 엔드 버튼 표시. 그 외는 레벨업 버튼.
-                bool showEndButton = levelMaxed && system != null && !system.IsEndlessMode;
-                uiController.SetMaxLevelEndButtons(showEndButton);
-                if (!showEndButton)
-                    uiController.SetVillageLevelUpVisible(true);
+                //------------------26.08.05 KAY 추가 / 26.08.06 수정 (최대 레벨 엔드 버튼)-----------
+                // 최대+비엔드리스: 엔드 버튼만 / 엔드리스: 두 버튼 모두 Active(false) / 그 외: 레벨업 버튼
+                bool showEndButton = levelMaxed && !endless && !villageReconstructionCompleted;
+                uiController.SetMaxLevelEndButtons(levelMaxed, endless || villageReconstructionCompleted);
+
+                // villageLevelUpCost: 일반 레벨에서만 필요 코인 표시 + 보유 충족 시 checkImg
+                // Lv.10 재건 전 / 재건 완료 / 엔드리스: 비활성 (비용은 requiredUpgradeText에 표기)
+                long costForCoinCheck;
+                if (endless || villageReconstructionCompleted || levelMaxed)
+                {
+                    uiController.SetVillageLevelUpCostVisible(false);
+                    costForCoinCheck = completionCost;
+                    if (endless || villageReconstructionCompleted)
+                        uiController.SetCoinCheckImg(false);
+                }
+                else
+                {
+                    costForCoinCheck = villageCost;
+                    uiController.RefreshVillageLevelUpCost(villageCost);
+                }
 
                 long coin = CoinManager.Instance != null ? CoinManager.Instance.totalCoin : 0;
-                long costForCoinCheck = showEndButton
-                    ? GetVillageCompletionCost()
-                    : villageCost;
-                uiController.SetCoinCheckImg(coin >= costForCoinCheck);
+                if (!endless && !villageReconstructionCompleted)
+                    uiController.SetCoinCheckImg(coin >= costForCoinCheck);
                 //-----------------------------------------------------------------------------
 
                 RefreshInteractableStates();
@@ -627,10 +667,11 @@ namespace UI
             uiController.SetTrackButtonsInteractable(clickEnabled, typingEnabled, toolEnabled);
 
             long villageCost = GetVillageLevelUpCost();
-            //------------------26.08.05 KAY 추가 (최대 레벨 엔드 버튼)---------------------------------
+            //------------------26.08.05 KAY 추가 / 26.08.06 수정 (최대 레벨 엔드 버튼)-------------
             bool showEndButton = system != null
                 && system.IsVillageLevelMaxed
-                && !system.IsEndlessMode;
+                && !system.IsEndlessMode
+                && !villageReconstructionCompleted;
 
             if (showEndButton)
             {
@@ -638,6 +679,13 @@ namespace UI
                 uiController.SetVillageLevelUpInteractable(false);
                 uiController.SetCompleteVillageEndInteractable(coin >= completionCost);
                 uiController.SetCoinCheckImg(coin >= completionCost);
+            }
+            else if (system != null
+                     && (system.IsEndlessMode || villageReconstructionCompleted))
+            {
+                uiController.SetVillageLevelUpInteractable(false);
+                uiController.SetCompleteVillageEndInteractable(false);
+                uiController.SetCoinCheckImg(false);
             }
             else
             {
@@ -712,6 +760,7 @@ namespace UI
                 return;
 
             system.DebugSetTownLevel(level);
+            villageReconstructionCompleted = false;
 
             //------------------26.08.05 KAY 추가 (마을 레벨 설정 연동)---------------------------------
             // 정식 진행은 사이클마다 요소 1회 → 현재 마을 Lv면 요소 영구 레벨은 보통 Lv-1.

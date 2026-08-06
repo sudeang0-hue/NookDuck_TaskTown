@@ -28,15 +28,24 @@ namespace UI
         [SerializeField] private TMP_Text RewardEnd_txt;
 
 
+
         [Header("요구 패널의 갱신 항목")]
         [SerializeField] private TMP_Text requiredUpgradeText;
         [Tooltip("마을 레벨업에 필요한 코인")]
         [SerializeField] private TMP_Text villageLevelUpCost;
         [Tooltip("완료 이미지(요구칸) - 0:클릭 / 1:타이핑 / 2:도구 효율 / 3:보유 코인")]
         [SerializeField] private GameObject[] checkImg;
-        [Tooltip("10레벨 도달 후 표시. RequireTexts는 숨김")]
-        [SerializeField] private TMP_Text RequireEndText;
+        [Tooltip("요구 문구 목록. 0=requiredUpgradeText. 최대 레벨/재건 완료 시 0만 유지합니다.")]
         [SerializeField] private TMP_Text[] RequireTexts;
+        [SerializeField, TextArea(2, 4)]
+        [Tooltip("10레벨 도달(재건 전) 시 requiredUpgradeText에 비용 문구와 함께 표시")]
+        private string finishUpGradeMessage = "마을 재건을 완료하기";
+        [SerializeField, TextArea(2, 4)]
+        [Tooltip("재건 완료/엔드리스 후 requiredUpgradeText에 표시")]
+        private string endUpGradeMessage = "마을 레벨이 최대치에 도달했어요\n자유롭게 성장시켜보세요!";
+
+        /// <summary>RequireTexts[0] — requiredUpgradeText 오브젝트.</summary>
+        private const int RequireTextTitleIndex = 0;
 
 
         [Header("필수 레벨업 패널의 갱신되어야 하는 항목")]
@@ -159,11 +168,110 @@ namespace UI
             SetCheckImg(3, coinReady);
         }
 
-        public void RefreshRequiredUpgrade(int completedCount)
+        //------------------26.08.06 KAY 수정 (requiredUpgradeText 비용+문구 통합)-----------------
+        /// <summary>
+        /// 요구 패널 갱신:
+        /// - 일반: "필수 업그레이드 완료: n / 3", RequireTexts 전부 표시
+        /// - 최대 레벨(재건 전): "{completionCost} 을 사용하여\n" + finishUpGradeMessage, [0]만 활성
+        /// - 재건 완료/엔드리스: endUpGradeMessage, [0]만 활성
+        /// villageLevelUpCost는 별도 출력하지 않습니다(비활성 유지).
+        /// </summary>
+        public void RefreshRequiredUpgrade(
+            int completedCount,
+            bool isMaxLevel = false,
+            bool isEndless = false,
+            long completionCost = 0L,
+            bool reconstructionCompleted = false)
         {
+            // 재건 Yes 또는 엔드리스: endUpGradeMessage만 표시
+            if (isEndless || reconstructionCompleted)
+            {
+                SetRequiredUpgradeTitle(endUpGradeMessage);
+                SetRequireTextsVisibleKeeping(RequireTextTitleIndex);
+                return;
+            }
+
+            if (isMaxLevel)
+            {
+                SetRequiredUpgradeTitle(completionCost + " 을 사용하여\n" + finishUpGradeMessage);
+                SetRequireTextsVisibleKeeping(RequireTextTitleIndex);
+                return;
+            }
+
             int clamped = Mathf.Clamp(completedCount, 0, RequiredUpgradeTotal);
-            SetText(requiredUpgradeText, "필수 업그레이드 완료: " + clamped + " / " + RequiredUpgradeTotal);
+            SetRequiredUpgradeTitle("필수 업그레이드 완료: " + clamped + " / " + RequiredUpgradeTotal);
+            SetAllRequireTextsVisible(true);
         }
+
+        /// <summary>
+        /// requiredUpgradeText 필드와 RequireTexts[0]에 동일한 제목 문구를 반영합니다.
+        /// </summary>
+        private void SetRequiredUpgradeTitle(string message)
+        {
+            SetText(requiredUpgradeText, message);
+            SetRequireText(RequireTextTitleIndex, message);
+        }
+
+        /// <summary>RequireTexts 전부 활성/비활성.</summary>
+        private void SetAllRequireTextsVisible(bool visible)
+        {
+            if (RequireTexts == null)
+                return;
+
+            for (int i = 0; i < RequireTexts.Length; i++)
+            {
+                TMP_Text target = RequireTexts[i];
+                if (target == null)
+                    continue;
+
+                SetActive(target.gameObject, visible);
+            }
+        }
+
+        /// <summary>
+        /// keepIndices에 포함된 인덱스만 활성, 나머지는 비활성합니다.
+        /// </summary>
+        private void SetRequireTextsVisibleKeeping(params int[] keepIndices)
+        {
+            if (RequireTexts == null)
+                return;
+
+            for (int i = 0; i < RequireTexts.Length; i++)
+            {
+                TMP_Text target = RequireTexts[i];
+                if (target == null)
+                    continue;
+
+                bool keep = false;
+                if (keepIndices != null)
+                {
+                    for (int k = 0; k < keepIndices.Length; k++)
+                    {
+                        if (keepIndices[k] == i)
+                        {
+                            keep = true;
+                            break;
+                        }
+                    }
+                }
+
+                SetActive(target.gameObject, keep);
+            }
+        }
+
+        private void SetRequireText(int index, string value)
+        {
+            if (RequireTexts == null || index < 0 || index >= RequireTexts.Length)
+                return;
+
+            TMP_Text target = RequireTexts[index];
+            if (target == null)
+                return;
+
+            SetActive(target.gameObject, true);
+            target.text = value ?? string.Empty;
+        }
+        //-----------------------------------------------------------------------------
 
         /// <summary>
         /// 다음 레벨업(현재 Lv → Lv+1) 시 얻는 보상을 RewardTexts에 미리보기로 출력합니다.
@@ -297,38 +405,33 @@ namespace UI
         public void RefreshVillageLevel(int townLevel)
         {
             SetText(villageLevel, "Town Level : " + townLevel);
-            // 마을 레벨 10: RequireEndText ON / RequireTexts OFF
-            RefreshRequirePanelForMaxLevel(townLevel >= MaxTownLevel);
-        }
-
-        /// <summary>
-        /// 최대 레벨(10)이면 RequireEndText만 표시하고 RequireTexts는 숨깁니다.
-        /// </summary>
-        private void RefreshRequirePanelForMaxLevel(bool isMaxLevel)
-        {
-            if (RequireEndText != null)
-                SetActive(RequireEndText.gameObject, isMaxLevel);
-
-            if (RequireTexts == null)
-                return;
-
-            for (int i = 0; i < RequireTexts.Length; i++)
-            {
-                TMP_Text target = RequireTexts[i];
-                if (target == null)
-                    continue;
-
-                SetActive(target.gameObject, !isMaxLevel);
-            }
         }
 
         /// <summary>
         /// VillageLevelUp_btn 안 Text에 필요 코인을 출력합니다.
         /// </summary>
+        /// <summary>
+        /// 마을 레벨업(또는 재건)에 필요한 코인 수치를 표시합니다.
+        /// 보유 코인 충족 여부는 checkImg로 별도 표시합니다.
+        /// </summary>
         public void RefreshVillageLevelUpCost(long cost)
         {
+            SetVillageLevelUpCostVisible(true);
             SetText(villageLevelUpCost, cost.ToString("N0") + " 코인 보유");
         }
+
+        //------------------26.08.06 KAY (villageLevelUpCost 표시 토글)-----------------------------
+        /// <summary>
+        /// villageLevelUpCost 오브젝트 활성/비활성.
+        /// </summary>
+        public void SetVillageLevelUpCostVisible(bool visible)
+        {
+            if (villageLevelUpCost == null)
+                return;
+
+            SetActive(villageLevelUpCost.gameObject, visible);
+        }
+        //-----------------------------------------------------------------------------
 
         /// <summary>
         /// 마을 레벨업 버튼 오브젝트를 항상 표시합니다.
@@ -357,25 +460,25 @@ namespace UI
             SetButtonInteractable(villageLevelUpButton, enabled);
         }
 
-        //------------------26.08.05 KAY 추가 (최대 레벨 엔드 버튼)---------------------------------
+        //------------------26.08.05 KAY 추가 / 26.08.06 수정 (최대 레벨 엔드 버튼)---------------
         /// <summary>
-        /// 최대 레벨 도달 시 레벨업 버튼/엔드 버튼을 서로 배타적으로 표시합니다.
-        /// showEndButton=true → 엔드 버튼만, false → 레벨업 버튼만.
+        /// 마을 액션 버튼 표시:
+        /// - isEndless: 레벨업/엔드 버튼 모두 Active(false)
+        /// - isMaxLevel: 엔드 버튼만 표시
+        /// - 그 외: 레벨업 버튼만 표시
         /// </summary>
-        public void SetMaxLevelEndButtons(bool showEndButton)
+        public void SetMaxLevelEndButtons(bool isMaxLevel, bool isEndless = false)
         {
-            if (villageLevelUpButton != null)
+            if (isEndless)
             {
-                bool showLevelUp = !showEndButton;
-                if (villageLevelUpButton.gameObject.activeSelf != showLevelUp)
-                    villageLevelUpButton.gameObject.SetActive(showLevelUp);
+                SetButtonObjectActive(villageLevelUpButton, false);
+                SetButtonObjectActive(complteVillageEndButton, false);
+                return;
             }
 
-            if (complteVillageEndButton != null)
-            {
-                if (complteVillageEndButton.gameObject.activeSelf != showEndButton)
-                    complteVillageEndButton.gameObject.SetActive(showEndButton);
-            }
+            bool showEndButton = isMaxLevel;
+            SetButtonObjectActive(villageLevelUpButton, !showEndButton);
+            SetButtonObjectActive(complteVillageEndButton, showEndButton);
         }
 
         public void SetCompleteVillageEndInteractable(bool enabled)
