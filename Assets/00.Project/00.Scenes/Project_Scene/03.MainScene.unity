@@ -1849,6 +1849,51 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 1657798505442593269, guid: 5a06baf612796c74da0eb2e9fc401b48, type: 3}
   m_PrefabInstance: {fileID: 1962344192}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1222778830
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1222778832}
+  - component: {fileID: 1222778831}
+  m_Layer: 0
+  m_Name: DifficultyApplier
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1222778831
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1222778830}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3e636a39a0cd61e4fa96c56b84028298, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TaskTown.DifficultyApplier
+  productionTicker: {fileID: 1738955340}
+--- !u!4 &1222778832
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1222778830}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 862.7329, y: 357.4437, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1341079123 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 5132156418470559613, guid: 5a06baf612796c74da0eb2e9fc401b48, type: 3}
@@ -2056,10 +2101,18 @@ PrefabInstance:
       propertyPath: townLevelProviderSource
       value: 
       objectReference: {fileID: 566639117}
+    - target: {fileID: 4278152603540216987, guid: d3f7e9478acde854393b750a23d842e2, type: 3}
+      propertyPath: difficultyProviderSource
+      value: 
+      objectReference: {fileID: 1222778831}
     - target: {fileID: 5052898533250768301, guid: d3f7e9478acde854393b750a23d842e2, type: 3}
       propertyPath: townLevelProviderSource
       value: 
       objectReference: {fileID: 566639117}
+    - target: {fileID: 5052898533250768301, guid: d3f7e9478acde854393b750a23d842e2, type: 3}
+      propertyPath: difficultyProviderSource
+      value: 
+      objectReference: {fileID: 1222778831}
     - target: {fileID: 7420439736619146514, guid: d3f7e9478acde854393b750a23d842e2, type: 3}
       propertyPath: m_Name
       value: GachaSystems
@@ -2390,6 +2443,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 30aa4bcf80c05934fa9f5d31793da672, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TaskTown.KDH.InventoryManager_Animal
+--- !u!114 &1738955340 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 619346637666187708, guid: 0c3bc518a8c206045b4251e435e075a6, type: 3}
+  m_PrefabInstance: {fileID: 555801519}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f2f69539d68e6f41bab0f17d77436e8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TaskTown.KDH.RealProductionTicker
 --- !u!1 &1852050584
 GameObject:
   m_ObjectHideFlags: 0
@@ -3877,6 +3941,7 @@ SceneRoots:
   - {fileID: 2008931152390479547}
   - {fileID: 1358237799}
   - {fileID: 390706443}
+  - {fileID: 1222778832}
   - {fileID: 1720173945}
   - {fileID: 1962344192}
   - {fileID: 4514271}
