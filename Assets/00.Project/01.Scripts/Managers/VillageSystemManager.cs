@@ -269,14 +269,24 @@ namespace Manager
         /// <summary>배치 확정본 교체 (AnimalSet Confirm 시).</summary>
         public void SetPlacedAnimalIds(IReadOnlyList<string> animalIds)
         {
-            placedAnimalIds.Clear();
-            if (animalIds != null)
-            {
-                for (int i = 0; i < animalIds.Count; i++)
-                    placedAnimalIds.Add(animalIds[i] ?? string.Empty);
-            }
+            ReplacePlacedAnimalIds(animalIds);
 
             RaiseStateChanged();
+        }
+
+        // -----------------------------------------------------------------------------
+        // [ 2026.08.06 - Choi - 마을 동물 배치 저장 연동 ]
+        // 기능: 저장값과 UI 확정값을 동일한 규칙으로 보정해 시스템 확정본에 반영합니다.
+        // -----------------------------------------------------------------------------
+        private void ReplacePlacedAnimalIds(IReadOnlyList<string> animalIds)
+        {
+            placedAnimalIds.Clear();
+            if (animalIds == null)
+                return;
+
+            int count = Mathf.Min(animalIds.Count, Mathf.Max(0, maxPlacementCapacity));
+            for (int i = 0; i < count; i++)
+                placedAnimalIds.Add(animalIds[i] ?? string.Empty);
         }
 
         /// <summary>레벨10 완주 후 "엔드리스로 계속" 선택 시 호출.</summary>
@@ -336,7 +346,7 @@ namespace Manager
             public bool cycleTypingDone;
             public bool cycleToolDone;
             public bool isEndlessMode;
-            // null이면 Apply 시 배치 목록을 건드리지 않음 (AnimalSet 세이브 보류)
+            // null이면 Apply 시 기존 배치 목록을 유지합니다(진행 상태 전용 호출 호환).
             public List<string> placedAnimalIds;
         }
 
@@ -349,7 +359,6 @@ namespace Manager
                 cycleTypingDone = cycleTypingDone,
                 cycleToolDone = cycleToolDone,
                 isEndlessMode = isEndlessMode,
-                // 2026.08.02 - KAY - 배치 세이브는 보류. Capture에는 포함하되 GameSaveData에는 아직 쓰지 않음
                 placedAnimalIds = new List<string>(placedAnimalIds)
             };
         }
@@ -369,17 +378,9 @@ namespace Manager
             cycleToolDone = snapshot.cycleToolDone;
             isEndlessMode = snapshot.isEndlessMode;
 
-            // 기존: 항상 배치 목록을 비우고 스냅샷으로 교체
-            // placedAnimalIds.Clear();
-            // if (snapshot.placedAnimalIds != null)
-            //     placedAnimalIds.AddRange(snapshot.placedAnimalIds);
-
-            // 2026.08.02 - KAY - 배치 세이브 보류: null이면 런타임/인스펙터 배치를 유지
+            // null은 기존 진행 상태 전용 호출과의 하위 호환을 위해 배치를 유지합니다.
             if (snapshot.placedAnimalIds != null)
-            {
-                placedAnimalIds.Clear();
-                placedAnimalIds.AddRange(snapshot.placedAnimalIds);
-            }
+                ReplacePlacedAnimalIds(snapshot.placedAnimalIds);
 
             RaiseStateChanged();
         }

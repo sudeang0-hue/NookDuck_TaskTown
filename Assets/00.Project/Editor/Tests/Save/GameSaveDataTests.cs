@@ -23,6 +23,8 @@ namespace TaskTown.EditorTests.Save
             Assert.IsFalse(data.tutorial.IsCompleted);
             Assert.AreEqual(0L, data.tutorial.manualEarnedCoin);
             Assert.AreEqual(0L, data.tutorial.autoProductionEarnedCoin);
+            Assert.NotNull(data.placedAnimalIds);
+            Assert.IsEmpty(data.placedAnimalIds);
         }
 
         [Test]
@@ -32,6 +34,7 @@ namespace TaskTown.EditorTests.Save
             {
                 animals = null,
                 tools = null,
+                placedAnimalIds = null,
                 tutorial = new TutorialSaveData
                 {
                     version = 0,
@@ -48,6 +51,7 @@ namespace TaskTown.EditorTests.Save
 
             Assert.NotNull(data.animals);
             Assert.NotNull(data.tools);
+            Assert.NotNull(data.placedAnimalIds);
             Assert.AreEqual(TutorialSaveData.CurrentVersion, data.tutorial.version);
             Assert.AreEqual(TutorialStep.IntroDialogue, data.tutorial.currentStep);
             Assert.AreEqual(0, data.tutorial.dialogueIndex);
@@ -55,6 +59,26 @@ namespace TaskTown.EditorTests.Save
             Assert.AreEqual(0L, data.tutorial.autoProductionEarnedCoin);
             Assert.AreEqual(0, data.tutorial.progressFlags);
             Assert.AreEqual(0, data.tutorial.rewardFlags);
+        }
+
+        [Test]
+        public void Normalize_배치목록의Null항목을_빈슬롯으로보정한다()
+        {
+            GameSaveData data = new GameSaveData
+            {
+                placedAnimalIds = new System.Collections.Generic.List<string>
+                {
+                    "duck",
+                    null,
+                    "cat"
+                }
+            };
+
+            data.Normalize();
+
+            CollectionAssert.AreEqual(
+                new[] { "duck", string.Empty, "cat" },
+                data.placedAnimalIds);
         }
 
         [Test]

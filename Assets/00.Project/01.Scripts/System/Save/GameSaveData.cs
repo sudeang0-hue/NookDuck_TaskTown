@@ -29,7 +29,12 @@ namespace TaskTown.KDH
         public bool cycleTypingDone;
         public bool cycleToolDone;
         public bool isEndlessMode;
-        // 배치 동물 ID는 팀원 AnimalSet 흐름 정리 후 추가 예정 (현재 단계 보류)
+
+        // -----------------------------------------------------------------------------
+        // [ 2026.08.06 - Choi - 마을 동물 배치 저장 연동 ]
+        // 기능: 인덱스를 마을 슬롯 번호로 사용하며, 빈 슬롯은 빈 문자열로 보존합니다.
+        // -----------------------------------------------------------------------------
+        public List<string> placedAnimalIds = new List<string>();
 
         //-----------------26.08.05 KDH-------------------------
         // 난이도 선택 유지 (DifficultyType 정수값, 구버전 세이브는 Normal)
@@ -49,6 +54,10 @@ namespace TaskTown.KDH
         {
             animals ??= new List<AnimalSaveEntry>();
             tools ??= new List<ToolSaveEntry>();
+            placedAnimalIds ??= new List<string>();
+            for (int i = 0; i < placedAnimalIds.Count; i++)
+                placedAnimalIds[i] ??= string.Empty;
+
             tutorial ??= TutorialSaveData.CreateDefault();
             tutorial.Normalize();
 
