@@ -30,7 +30,8 @@ public class GachaSystemBridge : MonoBehaviour
 
     [Header("Main UI Window References")]
     [SerializeField] private GameObject teammateInitialWindow;
-    [SerializeField] private Button btnOpenGachaWindow;
+    // ------------ 26.08.06 KAY 수정 (주석처리) ------------------
+    //[SerializeField] private Button btnOpenGachaWindow;
 
     [Header(" Auto Close Target Panels ")]
     [Tooltip("가챠 창이 열릴 때 자동으로 비활성화할 다른 메인 UI 패널 목록")]
@@ -93,9 +94,10 @@ public class GachaSystemBridge : MonoBehaviour
     {
         RemoveButtonListeners();
 
+        // ------------ 26.08.06 KAY 수정 (주석처리) ------------------
         // 1. 메인 가챠 창 열기 버튼
-        if (btnOpenGachaWindow != null)
-            btnOpenGachaWindow.onClick.AddListener(ToggleGachaWindow);
+        //if (btnOpenGachaWindow != null)
+        //    btnOpenGachaWindow.onClick.AddListener(ToggleGachaWindow);
 
         // 2. 도구 가챠 초기창 버튼
         if (btnToolDraw1 != null)
@@ -131,7 +133,8 @@ public class GachaSystemBridge : MonoBehaviour
     // 이벤트 중복 등록 방지를 위한 리스너 해제 처리
     private void RemoveButtonListeners()
     {
-        if (btnOpenGachaWindow != null) btnOpenGachaWindow.onClick.RemoveAllListeners();
+        // ------------ 26.08.06 KAY 수정 (주석처리) ------------------
+        //if (btnOpenGachaWindow != null) btnOpenGachaWindow.onClick.RemoveAllListeners();
 
         if (btnToolDraw1 != null) btnToolDraw1.onClick.RemoveAllListeners();
         if (btnToolDraw10 != null) btnToolDraw10.onClick.RemoveAllListeners();

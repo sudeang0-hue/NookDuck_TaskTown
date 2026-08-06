@@ -50,9 +50,9 @@ namespace UI
         [SerializeField] private int testTownLevel = 1;
         [SerializeField] private VillageUpgradeUI_Manager villageUpgradeUIManager;
 
-        [Header("패널")]
-        [SerializeField] private bool openPanelOnPlay = true;
-        [SerializeField] private bool hidePanelOnAwake = true;
+        
+        private bool openPanelOnPlay = false;
+        private bool hidePanelOnAwake = true;
 
         /// <summary>Edit 중 작업용 드래프트. Confirm 시 확정본으로 복사됩니다.</summary>
         private List<string> editDraftIds;
