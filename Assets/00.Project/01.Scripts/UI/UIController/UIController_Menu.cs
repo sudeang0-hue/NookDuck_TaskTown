@@ -94,11 +94,22 @@ public class UIController_Menu : MonoBehaviour
     private void OnEnable()
     {
         TargetSelector.OnTargetSelected += OnCameraTargetSelected;
+
+        // -----------------------------------------------------------------------------
+        // [ 2026.08.06 - NB - UI 수거 이벤트 ]
+        // 기능: GameMasterManager에서 방송하는 전역 UI 수거 이벤트도 함께 구독
+        // -----------------------------------------------------------------------------
+        GameMasterManager.OnCloseAllUIRequested += CloseAllPanels;
     }
 
     private void OnDisable()
     {
         TargetSelector.OnTargetSelected -= OnCameraTargetSelected;
+
+        // -----------------------------------------------------------------------------
+        // [ 2026.08.06 - NB - 메모리 누수 방지 해제 ]
+        // -----------------------------------------------------------------------------
+        GameMasterManager.OnCloseAllUIRequested -= CloseAllPanels;
     }
 
     private void OnDestroy()
