@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
 using TaskTown.KDH;
@@ -47,6 +48,12 @@ namespace TaskTown.EditorTests.Save
             GameSaveData source = new GameSaveData
             {
                 coins = 250,
+                placedAnimalIds = new List<string>
+                {
+                    "duck",
+                    string.Empty,
+                    "cat"
+                },
                 tutorial = new TutorialSaveData
                 {
                     currentStep = TutorialStep.EarnManualCoin,
@@ -71,6 +78,9 @@ namespace TaskTown.EditorTests.Save
             Assert.IsTrue(saved, saveError);
             Assert.AreEqual(GameSaveLoadStatus.Success, status, loadError);
             Assert.AreEqual(250L, loaded.coins);
+            CollectionAssert.AreEqual(
+                new[] { "duck", string.Empty, "cat" },
+                loaded.placedAnimalIds);
             Assert.AreEqual(TutorialStep.EarnManualCoin, loaded.tutorial.currentStep);
             Assert.AreEqual(3, loaded.tutorial.dialogueIndex);
             Assert.AreEqual(75L, loaded.tutorial.manualEarnedCoin);

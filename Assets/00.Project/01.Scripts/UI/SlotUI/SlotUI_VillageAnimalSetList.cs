@@ -1,7 +1,6 @@
 ﻿using System;
 using Animal.Data;
 using TaskTown.KDH;
-using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -11,12 +10,12 @@ namespace UI
     /// <summary>
     /// SetAnimalList_Panel용 작은 목록 슬롯.
     /// 클릭 시 배치할 동물 선택 콜백을 호출합니다.
+    /// 이름 텍스트는 사용하지 않으며, 아이콘만 표시합니다.
     /// </summary>
     public class SlotUI_VillageAnimalSetList : SlotUIBase, IPointerClickHandler
     {
         [Header("표시")]
         [SerializeField] private Image animalIconImage;
-        [SerializeField] private TMP_Text animalNameText;
 
         [Header("클릭")]
         [SerializeField] private Button coverButton;
@@ -101,11 +100,12 @@ namespace UI
                 return;
             }
 
-            SetBaseInfo(data.Id, data.DisplayName, data.Icon);
-            ApplyIconAndName(data);
+            // displayName은 부모 displayNameText용. 이 슬롯에서는 텍스트를 쓰지 않으므로 빈 문자열 전달.
+            SetBaseInfo(data.Id, string.Empty, data.Icon);
+            ApplyIcon(data);
         }
 
-        private void ApplyIconAndName(AnimalDataSO data)
+        private void ApplyIcon(AnimalDataSO data)
         {
             Image targetIcon = animalIconImage != null ? animalIconImage : iconImage;
             if (targetIcon != null)
@@ -113,10 +113,6 @@ namespace UI
                 targetIcon.sprite = data.Icon;
                 targetIcon.enabled = data.Icon != null;
             }
-
-            TMP_Text targetName = animalNameText != null ? animalNameText : displayNameText;
-            if (targetName != null)
-                targetName.text = data.DisplayName;
         }
 
         private void HandleSlotClicked()
@@ -140,10 +136,6 @@ namespace UI
                 targetIcon.sprite = null;
                 targetIcon.enabled = false;
             }
-
-            TMP_Text targetName = animalNameText != null ? animalNameText : displayNameText;
-            if (targetName != null)
-                targetName.text = string.Empty;
 
             SetSelected(false);
         }

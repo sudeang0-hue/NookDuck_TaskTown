@@ -391,6 +391,14 @@ namespace TaskTown.KDH
                 data.cycleTypingDone = snapshot.cycleTypingDone;
                 data.cycleToolDone = snapshot.cycleToolDone;
                 data.isEndlessMode = snapshot.isEndlessMode;
+
+                // -----------------------------------------------------------------------------
+                // [ 2026.08.06 - Choi - 마을 동물 배치 저장 연동 ]
+                // 기능: 슬롯 인덱스와 빈 슬롯을 유지한 채 배치 확정본을 JSON에 기록합니다.
+                // -----------------------------------------------------------------------------
+                data.placedAnimalIds = snapshot.placedAnimalIds != null
+                    ? new List<string>(snapshot.placedAnimalIds)
+                    : new List<string>();
                 return;
             }
 
@@ -416,12 +424,19 @@ namespace TaskTown.KDH
 
             if (villageSystem != null)
             {
-                villageSystem.ApplyProgressFromSave(
-                    level,
-                    data.cycleClickDone,
-                    data.cycleTypingDone,
-                    data.cycleToolDone,
-                    data.isEndlessMode);
+                // -----------------------------------------------------------------------------
+                // [ 2026.08.06 - Choi - 마을 동물 배치 저장 연동 ]
+                // 기능: 마을 진행 상태와 배치 슬롯 확정본을 하나의 스냅샷으로 복원합니다.
+                // -----------------------------------------------------------------------------
+                villageSystem.ApplySaveSnapshot(new VillageSystemManager.VillageSaveSnapshot
+                {
+                    townLevel = level,
+                    cycleClickDone = data.cycleClickDone,
+                    cycleTypingDone = data.cycleTypingDone,
+                    cycleToolDone = data.cycleToolDone,
+                    isEndlessMode = data.isEndlessMode,
+                    placedAnimalIds = new List<string>(data.placedAnimalIds)
+                });
             }
             else
             {

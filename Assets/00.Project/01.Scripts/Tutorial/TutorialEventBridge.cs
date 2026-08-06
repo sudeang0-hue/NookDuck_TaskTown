@@ -812,6 +812,14 @@ namespace TaskTown.Tutorial
 
         private void HandleUpgradeVillageButtonClicked()
         {
+            // 업그레이드 화면을 한 번 확인한 뒤에는 마을 버튼이 패널 닫기에도
+            // 사용되더라도 완료된 강조 흐름을 다시 시작하지 않습니다.
+            if (upgradeVillageHighlightPhase ==
+                UpgradeVillageHighlightPhase.Completed)
+            {
+                return;
+            }
+
             upgradeVillageHighlightPhase = UpgradeVillageHighlightPhase.UpgradeTab;
             ScheduleHighlightRefresh();
         }
@@ -1227,6 +1235,15 @@ namespace TaskTown.Tutorial
 
         private void RefreshUpgradeVillageHighlight()
         {
+            // 화면 확인으로 안내가 끝난 상태는 현재 튜토리얼 단계 동안 유지합니다.
+            // 실제 퀘스트 완료는 UpgradePurchased 이벤트가 별도로 판정합니다.
+            if (upgradeVillageHighlightPhase ==
+                UpgradeVillageHighlightPhase.Completed)
+            {
+                ClearHighlights();
+                return;
+            }
+
             if (townTabController?.IsVillageUpgradeTabOpen == true)
             {
                 upgradeVillageHighlightPhase = UpgradeVillageHighlightPhase.Completed;

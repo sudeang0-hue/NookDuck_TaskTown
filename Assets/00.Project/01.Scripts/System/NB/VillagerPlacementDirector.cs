@@ -7,6 +7,7 @@ using DG.Tweening;
 using System.Collections;
 using System.Collections.Generic;
 using Animal.Data;
+using Manager;
 using UI;
 
 // 버스 연출 및 마을 동물의 스폰, 삭제, 교체(Swap) 시스템을 총괄하는 디렉터 클래스
@@ -44,6 +45,7 @@ public class VillagerPlacementDirector : MonoBehaviour
     private Vector3[] _waypointsCache;
     private Quaternion _initialBusRotation;
     private Sequence _busSequence;
+    private bool _isSyncQueued;
 
     private void Awake()
     {
@@ -65,6 +67,7 @@ public class VillagerPlacementDirector : MonoBehaviour
             uiManager = FindFirstObjectByType<VillageAnimalSetUI_Manager>();
 
         BindConfirmButton();
+        StartCoroutine(RestoreSavedVillagersRoutine());
     }
 
     #region PUBLIC API (외부 UI 및 Bridge 연동 진입점)
@@ -72,7 +75,10 @@ public class VillagerPlacementDirector : MonoBehaviour
     // 3D 월드와 UI 상태를 자동 비교하여 승차(퇴장) 및 하차(신규) 연출을 완벽하게 동기화
     public void RequestVillagerSync()
     {
-        if (IsBusSummoning) return;
+        if (IsBusSummoning || _isSyncQueued)
+            return;
+
+        _isSyncQueued = true;
         StartCoroutine(SyncVillagersRoutine());
     }
 
@@ -122,17 +128,21 @@ public class VillagerPlacementDirector : MonoBehaviour
     private IEnumerator SyncVillagersRoutine()
     {
         yield return null; // UI Manager 확정 반영 1프레임 대기
+        _isSyncQueued = false;
 
-        if (uiManager == null) yield break;
+        IReadOnlyList<string> placedAnimalIds = GetConfirmedPlacementIds();
+        if (placedAnimalIds == null)
+            yield break;
 
         Transform parent = (villagerParent != null) ? villagerParent : villageOrigin;
-        if (parent == null) yield break;
+        if (parent == null)
+            yield break;
 
         List<string> remainingUIIds = new List<string>();
-        foreach (var id in uiManager.PlacedAnimalIds)
+        foreach (string id in placedAnimalIds)
         {
-            if (!string.IsNullOrEmpty(id))
-                remainingUIIds.Add(id.Trim().ToLower());
+            if (!string.IsNullOrWhiteSpace(id))
+                remainingUIIds.Add(id.Trim().ToLowerInvariant());
         }
 
         List<GameObject> outgoingObjects = new List<GameObject>();
@@ -142,16 +152,14 @@ public class VillagerPlacementDirector : MonoBehaviour
         {
             if (child.TryGetComponent<VillagerIdentity>(out var identity))
             {
-                string worldId = !string.IsNullOrEmpty(identity.AnimalId) ? identity.AnimalId.Trim().ToLower() : string.Empty;
+                string worldId = !string.IsNullOrWhiteSpace(identity.AnimalId)
+                    ? identity.AnimalId.Trim().ToLowerInvariant()
+                    : string.Empty;
 
                 if (remainingUIIds.Contains(worldId))
-                {
                     remainingUIIds.Remove(worldId);
-                }
                 else
-                {
                     outgoingObjects.Add(child.gameObject);
-                }
             }
         }
 
@@ -160,9 +168,118 @@ public class VillagerPlacementDirector : MonoBehaviour
         Debug.Log($"<color=cyan> 퇴장(승차): {outgoingObjects.Count}마리 | 입장(하차): {incomingIds.Count}마리</color>");
 
         if (outgoingObjects.Count > 0 || incomingIds.Count > 0)
-        {
             ExecuteSwapBusSequence(outgoingObjects, incomingIds);
+    }
+
+    // -----------------------------------------------------------------------------
+    // [ 2026.08.06 - Choi - 마을 동물 배치 저장 연동 ]
+    // 기능: 저장된 확정 배치를 버스 연출 없이 월드에 즉시 복원합니다.
+    // -----------------------------------------------------------------------------
+    private IEnumerator RestoreSavedVillagersRoutine()
+    {
+        // SaveManager(-100)와 UI Manager의 Start 복원이 모두 끝난 다음 실행합니다.
+        yield return null;
+
+        IReadOnlyList<string> placedAnimalIds = GetConfirmedPlacementIds();
+        if (placedAnimalIds == null)
+            yield break;
+
+        RestoreVillagersImmediately(placedAnimalIds);
+    }
+
+    private IReadOnlyList<string> GetConfirmedPlacementIds()
+    {
+        if (VillageSystemManager.Instance != null)
+            return VillageSystemManager.Instance.PlacedAnimalIds;
+
+        return uiManager != null ? uiManager.PlacedAnimalIds : null;
+    }
+
+    private void RestoreVillagersImmediately(IReadOnlyList<string> placedAnimalIds)
+    {
+        Transform parent = (villagerParent != null) ? villagerParent : villageOrigin;
+        if (parent == null)
+            return;
+
+        List<string> remainingIds = new List<string>();
+        for (int i = 0; i < placedAnimalIds.Count; i++)
+        {
+            string animalId = placedAnimalIds[i];
+            if (!string.IsNullOrWhiteSpace(animalId))
+                remainingIds.Add(animalId.Trim());
         }
+
+        List<GameObject> staleVillagers = new List<GameObject>();
+        foreach (Transform child in parent)
+        {
+            if (!child.TryGetComponent<VillagerIdentity>(out var identity))
+                continue;
+
+            string worldId = string.IsNullOrWhiteSpace(identity.AnimalId)
+                ? string.Empty
+                : identity.AnimalId.Trim();
+
+            int matchedIndex = remainingIds.FindIndex(
+                id => string.Equals(id, worldId, System.StringComparison.OrdinalIgnoreCase));
+            if (matchedIndex >= 0)
+                remainingIds.RemoveAt(matchedIndex);
+            else
+                staleVillagers.Add(child.gameObject);
+        }
+
+        for (int i = 0; i < staleVillagers.Count; i++)
+            Destroy(staleVillagers[i]);
+
+        for (int i = 0; i < remainingIds.Count; i++)
+            SpawnAnimalImmediately(remainingIds[i], i, remainingIds.Count);
+    }
+
+    private void SpawnAnimalImmediately(string animalId, int index, int totalCount)
+    {
+        GameObject prefabToSpawn = GetPrefabByAnimalId(animalId);
+        if (prefabToSpawn == null)
+            prefabToSpawn = animalPrefab;
+        if (prefabToSpawn == null)
+            return;
+
+        Transform targetParent = (villagerParent != null) ? villagerParent : villageOrigin;
+        if (targetParent == null)
+            return;
+
+        Transform spawnAnchor = trunkTransform != null
+            ? trunkTransform
+            : busObject != null
+                ? busObject
+                : targetParent;
+
+        float angleOffset = totalCount > 1
+            ? -60f + index * (120f / (totalCount - 1))
+            : 0f;
+        Vector3 spawnDirection =
+            (spawnAnchor.rotation * Quaternion.Euler(0f, angleOffset, 0f)) * Vector3.back;
+        Vector3 desiredPosition = spawnAnchor.position + spawnDirection * exitJumpDistance;
+        Vector3 spawnPosition = desiredPosition;
+
+        float sampleDistance = Mathf.Max(2f, exitJumpDistance);
+        if (NavMesh.SamplePosition(
+                desiredPosition,
+                out NavMeshHit hit,
+                sampleDistance,
+                NavMesh.AllAreas))
+        {
+            spawnPosition = hit.position;
+        }
+
+        Quaternion spawnRotation = spawnDirection.sqrMagnitude > 0f
+            ? Quaternion.LookRotation(spawnDirection, Vector3.up)
+            : spawnAnchor.rotation;
+
+        GameObject newAnimal =
+            Instantiate(prefabToSpawn, spawnPosition, spawnRotation, targetParent);
+        if (!newAnimal.TryGetComponent<VillagerIdentity>(out var identity))
+            identity = newAnimal.AddComponent<VillagerIdentity>();
+
+        identity.Init(animalId);
     }
 
     private void ExecuteSwapBusSequence(List<GameObject> outgoingList, List<string> incomingIds)
@@ -355,7 +472,11 @@ public class VillagerPlacementDirector : MonoBehaviour
 
     private void OnDestroy()
     {
+        if (confirmButton != null)
+            confirmButton.onClick.RemoveListener(OnConfirmButtonClicked);
+
         IsBusSummoning = false;
-        if (_busSequence != null && _busSequence.IsActive()) _busSequence.Kill();
+        if (_busSequence != null && _busSequence.IsActive())
+            _busSequence.Kill();
     }
 }

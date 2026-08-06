@@ -89,6 +89,7 @@ namespace UI
         {
             ResolveInventory();
             TryResolveVillageUpgradeManager();
+            RestoreConfirmedPlacementFromVillageSystem();
             EnsurePlacementBuffer();
             ResolveEditButton();
             ResolveConfirmButton();
@@ -370,11 +371,17 @@ namespace UI
             SetConfirmButtonActive(false);
             ApplyEditModeToSlots();
 
+            if (committed)
+                SynchronizeConfirmedPlacementToVillageSystem();
+
             // 확정본 기준으로 슬롯 UI를 다시 그림 (비운 슬롯은 empty 유지)
             RefreshUI();
 
             if (committed)
+            {
                 OnVillagePlacementChanged?.Invoke();
+                SaveManager.Instance?.SaveGame();
+            }
 
             ClosePanel();
             Debug.Log("[VillageAnimalSetUI.OnClickConfirmAnimalSet] Confirm 완료 — RefreshUI 반영, 창 닫기", this);
@@ -690,6 +697,75 @@ namespace UI
                 villageAnimalIds.RemoveRange(capacity, villageAnimalIds.Count - capacity);
         }
 
+        // -----------------------------------------------------------------------------
+        // [ 2026.08.06 - Choi - 마을 동물 배치 저장 연동 ]
+        // 기능: 시스템 확정본을 UI 슬롯에 복원하고, Confirm 결과를 시스템과 즉시 동기화합니다.
+        // -----------------------------------------------------------------------------
+        private void RestoreConfirmedPlacementFromVillageSystem()
+        {
+            VillageSystemManager villageSystem = VillageSystemManager.Instance;
+            if (villageSystem == null)
+                return;
+
+            EnsurePlacementBuffer();
+
+            IReadOnlyList<string> restoredIds = villageSystem.PlacedAnimalIds;
+            for (int i = 0; i < MaxCapacity; i++)
+            {
+                string animalId = i < restoredIds.Count
+                    ? restoredIds[i] ?? string.Empty
+                    : string.Empty;
+
+                // 동물 인벤토리 복원이 끝난 뒤 존재하지 않는 ID는 빈 슬롯으로 보정합니다.
+                if (!string.IsNullOrEmpty(animalId) &&
+                    animalInventory != null &&
+                    !animalInventory.TryGetAnimalSlot(animalId, out _))
+                {
+                    animalId = string.Empty;
+                }
+
+                villageAnimalIds[i] = animalId;
+            }
+
+            SanitizeList(villageAnimalIds);
+
+            // 잘못된 ID, null, 용량 초과를 보정했다면 시스템 확정본도 같은 값으로 맞춥니다.
+            if (!PlacementListsEqual(villageSystem.PlacedAnimalIds, villageAnimalIds))
+                villageSystem.SetPlacedAnimalIds(villageAnimalIds);
+        }
+
+        private void SynchronizeConfirmedPlacementToVillageSystem()
+        {
+            VillageSystemManager villageSystem = VillageSystemManager.Instance;
+            if (villageSystem == null)
+            {
+                Debug.LogWarning(
+                    "[VillageAnimalSetUI_Manager] VillageSystemManager가 없어 배치 확정본을 저장 시스템에 전달하지 못했습니다.",
+                    this);
+                return;
+            }
+
+            villageSystem.SetPlacedAnimalIds(villageAnimalIds);
+        }
+
+        private static bool PlacementListsEqual(
+            IReadOnlyList<string> left,
+            IReadOnlyList<string> right)
+        {
+            if (ReferenceEquals(left, right))
+                return true;
+            if (left == null || right == null || left.Count != right.Count)
+                return false;
+
+            for (int i = 0; i < left.Count; i++)
+            {
+                if (!string.Equals(left[i] ?? string.Empty, right[i] ?? string.Empty, StringComparison.Ordinal))
+                    return false;
+            }
+
+            return true;
+        }
+
         private void ResolveEditButton()
         {
             if (editAnimalSetButton != null)
@@ -817,7 +893,5 @@ namespace UI
                 setAnimalListPanel.SetActive(false);
         }
 
-        // TODO: 배치 목록 세이브/로드 (계약 0-4)
-        // TODO: VillageOrigin/Villager 월드 스폰 연동 (버스 연출 제외)
     }
 }
