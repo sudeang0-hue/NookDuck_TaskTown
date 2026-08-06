@@ -29,6 +29,9 @@ namespace TaskTown.SceneFlow
         private Coroutine activationRoutine;
         private bool loadingBgmStarted;
         private StartupLoadingHandoff loadingHandoff;
+        //-----------------26.08.05 KDH-------------------------
+        private SceneId pendingTargetScene = SceneId.Main;
+        //----------------------------------------
 
         private void OnEnable()
         {
@@ -109,7 +112,14 @@ namespace TaskTown.SceneFlow
 
         private void HandleCompleted(StartupLoadContext context)
         {
-            ShowProgress(MainSceneProgressWeight, "Main Scene 활성화 준비");
+            //-----------------26.08.05 KDH-------------------------
+            pendingTargetScene = context != null ? context.TargetScene : SceneId.Main;
+
+            string readyLabel = pendingTargetScene == SceneId.Main
+                ? "Main Scene 활성화 준비"
+                : $"{pendingTargetScene} 활성화 준비";
+            ShowProgress(MainSceneProgressWeight, readyLabel);
+            //----------------------------------------
 
             if (activationRoutine == null)
                 activationRoutine = StartCoroutine(ActivateTargetSceneRoutine());
@@ -117,7 +127,7 @@ namespace TaskTown.SceneFlow
 
         private IEnumerator ActivateTargetSceneRoutine()
         {
-            // 90% UI를 한 프레임 표시한 뒤 Main Scene을 활성화합니다.
+            // 90% UI를 한 프레임 표시한 뒤 대상 Scene을 활성화합니다.
             yield return null;
 
             SceneFlowManager manager = SceneFlowManager.EnsureInstance();
@@ -129,7 +139,16 @@ namespace TaskTown.SceneFlow
             }
 
             if (loadingHandoff != null)
-                yield return loadingHandoff.CompleteAfterSceneActivation(manager, ShowProgress);
+            {
+                //-----------------26.08.05 KDH-------------------------
+                // DifficultySelect 등 Main이 아닌 대상에는 TutorialOverlayLoader가 없습니다.
+                bool expectTutorial = pendingTargetScene == SceneId.Main;
+                yield return loadingHandoff.CompleteAfterSceneActivation(
+                    manager,
+                    ShowProgress,
+                    expectTutorial);
+                //----------------------------------------
+            }
 
             StopLoadingBgm();
         }

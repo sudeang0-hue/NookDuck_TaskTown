@@ -859,6 +859,11 @@ namespace UI
             UIController_Menu menu = FindFirstObjectByType<UIController_Menu>();
             menu?.CloseAllPanels();
 
+            //-----------------26.08.05 KDH-------------------------
+            // 엔딩 도달 = 클리어 경험 기록 (리셋 후에도 유지)
+            TaskTown.EndingMeta.MarkCleared();
+            //----------------------------------------
+
             completionPopup.Open(
                 resetAction: () => TaskTown.GameResetService.ResetProgressAndGoToTeamLogo(),
                 endlessAction: () =>

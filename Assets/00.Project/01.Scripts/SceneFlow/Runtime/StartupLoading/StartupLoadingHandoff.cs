@@ -59,6 +59,23 @@ namespace TaskTown.SceneFlow
             SceneFlowManager sceneFlowManager,
             Action<float, string> reportProgress)
         {
+            //-----------------26.08.05 KDH-------------------------
+            return CompleteAfterSceneActivation(
+                sceneFlowManager,
+                reportProgress,
+                expectTutorialOverlay: true);
+        }
+
+        /// <param name="expectTutorialOverlay">
+        /// Main처럼 튜토리얼 로더가 있는 씬만 true.
+        /// DifficultySelect 등에는 false로 두어 잘못된 경고를 막습니다.
+        /// </param>
+        public IEnumerator CompleteAfterSceneActivation(
+            SceneFlowManager sceneFlowManager,
+            Action<float, string> reportProgress,
+            bool expectTutorialOverlay)
+        {
+            //-----------------------------------------------------
             while (sceneFlowManager != null &&
                    (sceneFlowManager.State == SceneLoadState.Loading ||
                     sceneFlowManager.State == SceneLoadState.ReadyToActivate ||
@@ -80,41 +97,44 @@ namespace TaskTown.SceneFlow
             // 새 Scene의 Start가 모두 실행되고 TutorialOverlayLoader가 로드를 시작할 기회를 줍니다.
             yield return null;
 
-            TutorialOverlayLoader overlayLoader = null;
-            for (int frame = 0; frame < MaxLoaderResolveFrames && overlayLoader == null; frame++)
+            if (expectTutorialOverlay)  // 26.08.05 KDH if Add
             {
-                overlayLoader = FindFirstObjectByType<TutorialOverlayLoader>();
-                if (overlayLoader == null)
-                    yield return null;
-            }
-
-            if (overlayLoader == null)
-            {
-                Debug.LogWarning(
-                    "[StartupLoadingHandoff] Main Scene에서 TutorialOverlayLoader를 찾지 못했습니다. " +
-                    "튜토리얼 로딩을 건너뛰고 게임 입력을 허용합니다.",
-                    this);
-            }
-            else
-            {
-                if (overlayLoader.State == TutorialOverlayLoadState.Idle)
-                    overlayLoader.TryLoadIfRequired();
-
-                while (!overlayLoader.IsStartupReady)
+                TutorialOverlayLoader overlayLoader = null;
+                for (int frame = 0; frame < MaxLoaderResolveFrames && overlayLoader == null; frame++)
                 {
-                    float tutorialProgress = Mathf.Clamp01(overlayLoader.Progress);
-                    reportProgress?.Invoke(
-                        Mathf.Lerp(0.9f, 1f, tutorialProgress),
-                        "튜토리얼 준비 중");
-                    yield return null;
+                    overlayLoader = FindFirstObjectByType<TutorialOverlayLoader>();
+                    if (overlayLoader == null)
+                        yield return null;
                 }
 
-                if (overlayLoader.State == TutorialOverlayLoadState.Failed)
+                if (overlayLoader == null)
                 {
                     Debug.LogWarning(
-                        "[StartupLoadingHandoff] 튜토리얼 오버레이 준비에 실패했지만 Main 게임은 계속 실행합니다. " +
-                        overlayLoader.LastError,
-                        overlayLoader);
+                        "[StartupLoadingHandoff] Main Scene에서 TutorialOverlayLoader를 찾지 못했습니다. " +
+                        "튜토리얼 로딩을 건너뛰고 게임 입력을 허용합니다.",
+                        this);
+                }
+                else
+                {
+                    if (overlayLoader.State == TutorialOverlayLoadState.Idle)
+                        overlayLoader.TryLoadIfRequired();
+
+                    while (!overlayLoader.IsStartupReady)
+                    {
+                        float tutorialProgress = Mathf.Clamp01(overlayLoader.Progress);
+                        reportProgress?.Invoke(
+                            Mathf.Lerp(0.9f, 1f, tutorialProgress),
+                            "튜토리얼 준비 중");
+                        yield return null;
+                    }
+
+                    if (overlayLoader.State == TutorialOverlayLoadState.Failed)
+                    {
+                        Debug.LogWarning(
+                            "[StartupLoadingHandoff] 튜토리얼 오버레이 준비에 실패했지만 Main 게임은 계속 실행합니다. " +
+                            overlayLoader.LastError,
+                            overlayLoader);
+                    }
                 }
             }
 

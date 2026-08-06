@@ -11,7 +11,7 @@ public class UIController_Coin_mini : MonoBehaviour
 
     private CoinManager coinManager;
 
-    [Header("È¹µæ ÄÚÀÎ ÅØ½ºÆ®")]
+    [Header("È¹ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ø½ï¿½Æ®")]
     [SerializeField] private TMP_Text allCoinText;
 
     private bool isSubscribed;
@@ -72,8 +72,8 @@ public class UIController_Coin_mini : MonoBehaviour
         if (!isSubscribed && GetCoinManager() == null)
         {
             Debug.LogWarning(
-                "[UIController_Coin_mini] CoinManager°¡ ¾ø½À´Ï´Ù. " +
-                "Inspector ÂüÁ¶ ¶Ç´Â ¾ÀÀÇ È°¼º CoinManager¸¦ È®ÀÎÇÏ¼¼¿ä.");
+                "[UIController_Coin_mini] CoinManagerï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½. " +
+                "Inspector ï¿½ï¿½ï¿½ï¿½ ï¿½Ç´ï¿½ ï¿½ï¿½ï¿½ï¿½ È°ï¿½ï¿½ CoinManagerï¿½ï¿½ È®ï¿½ï¿½ï¿½Ï¼ï¿½ï¿½ï¿½.");
         }
     }
 
@@ -90,11 +90,17 @@ public class UIController_Coin_mini : MonoBehaviour
         if (isSubscribed)
             return;
 
+        //-----------------26.08.05 KDH-------------------------
+        // Prefabï¿½ï¿½ ï¿½Ø½ï¿½Æ® ï¿½Ì¿ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ö¾ï¿½, Ç¥ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ê½ï¿½ï¿½Ï´ï¿½.
+        if (allCoinText == null)
+            return;
+        //----------------------------------------
+
         CoinManager source = GetCoinManager();
         if (source == null)
             return;
 
-        // Inspector ¹Ì¿¬°á ½Ã Instance·Î º¸Á¤
+        // Inspector ï¿½Ì¿ï¿½ï¿½ï¿½ ï¿½ï¿½ Instanceï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         if (coinManager == null)
             coinManager = source;
 
@@ -107,7 +113,7 @@ public class UIController_Coin_mini : MonoBehaviour
     {
         if (allCoinText == null)
         {
-            Debug.LogWarning("[UIController_Coin_mini] allCoinText°¡ ¿¬°áµÇÁö ¾Ê¾Ò½À´Ï´Ù.");
+            Debug.LogWarning("[UIController_Coin_mini] allCoinTextï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ê¾Ò½ï¿½ï¿½Ï´ï¿½.");
             return;
         }
 

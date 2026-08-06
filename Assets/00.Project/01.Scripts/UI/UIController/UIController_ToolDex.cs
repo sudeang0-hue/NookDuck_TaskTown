@@ -29,7 +29,11 @@ namespace UI
 
         private void Awake()
         {
-            toolInventory = FindFirstObjectByType<InventoryManager_Tool>();
+            //-----------------26.08.05 KDH-------------------------
+            toolInventory = InventoryManager_Tool.Instance;
+            if (toolInventory == null)
+                toolInventory = FindFirstObjectByType<InventoryManager_Tool>();
+            //----------------------------------------
 
             InitializeToolDex();
         }

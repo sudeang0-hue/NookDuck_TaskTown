@@ -15,6 +15,10 @@ namespace TaskTown.KDH
 
         private void OnEnable()
         {
+            //-----------------26.08.05 KDH-------------------------
+            ResolveGachaManagers();
+            //----------------------------------------
+
             if (animalGachaManager != null) animalGachaManager.OnGachaResolved += HandleAnimalGachaResolved;
             if (toolGachaManager != null) toolGachaManager.OnGachaResolved += HandleToolGachaResolved;
         }
@@ -24,6 +28,18 @@ namespace TaskTown.KDH
             if (animalGachaManager != null) animalGachaManager.OnGachaResolved -= HandleAnimalGachaResolved;
             if (toolGachaManager != null) toolGachaManager.OnGachaResolved -= HandleToolGachaResolved;
         }
+
+        //-----------------26.08.05 KDH-------------------------
+        // 씬 리로드 후 Inspector 참조가 파괴되면 현재 씬의 가챠 매니저로 다시 연결합니다.
+        private void ResolveGachaManagers()
+        {
+            if (animalGachaManager == null)
+                animalGachaManager = FindFirstObjectByType<AnimalGachaManager>();
+
+            if (toolGachaManager == null)
+                toolGachaManager = FindFirstObjectByType<ToolGachaManager>();
+        }
+        //----------------------------------------
 
         private void HandleAnimalGachaResolved(GachaResult result)
         {

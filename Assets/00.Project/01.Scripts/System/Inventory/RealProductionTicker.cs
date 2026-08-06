@@ -18,6 +18,11 @@ namespace TaskTown.KDH
     {
         public static RealProductionTicker Instance { get; private set; }
 
+        //-----------------26.08.05 KDH-------------------------
+        // 앱 재시작 시에도 난이도를 유지하기 위한 PlayerPrefs 키 (세이브 JSON과 함께 사용)
+        public const string DifficultyPrefsKey = "GameDifficulty";
+        //----------------------------------------
+
         // -----------------------------------------------------------------------------
         // [ 2026.07.27 - Choi - 튜토리얼 기능 업데이트 ]
         // 기능: 자동 생산 코인이 실제 지급된 시점을 튜토리얼 진행 판정에 전달합니다.
@@ -47,12 +52,56 @@ namespace TaskTown.KDH
         // 현재 초당 생산량. UIController_Coin 등 시간당 획득량 표시용 UI가 참조합니다.
         public float CurrentCoinPerSecond { get; private set; }
 
-        private ICoinWallet CoinWallet => coinWalletSource as ICoinWallet;
+        //----------------------------------26.08.05 KDH--------------------------------
+        ///Before
+        //private ICoinWallet CoinWallet => coinWalletSource as ICoinWallet;
+
+        ///After
+        private ICoinWallet CoinWallet
+        {
+            get
+            {
+                // 씬 리로드 후 Inspector 참조가 파괴되면 현재 CoinManager로 폴백합니다.
+                if (coinWalletSource != null)
+                    return coinWalletSource as ICoinWallet;
+
+                if (CoinManager.Instance != null)
+                {
+                    coinWalletSource = CoinManager.Instance;
+                    return CoinManager.Instance;
+                }
+
+                return null;
+            }
+        }
 
         private void Awake()
         {
+            // 인벤 DDOL 루트 중복본이 같은 프레임에 Awake될 때 Instance를 훔치지 않습니다.
+            if (Instance != null && Instance != this)
+                return;
+
             Instance = this;
         }
+
+        private void Start()
+        {
+            // SaveManager.LoadGame / 이전 세션 PlayerPrefs에서 복원합니다.
+            // PendingDifficulty(난이도 선택 직후)는 DifficultyApplier가 이후에 덮어쓸 수 있습니다.
+            if (PlayerPrefs.HasKey(DifficultyPrefsKey))
+            {
+                int stored = PlayerPrefs.GetInt(DifficultyPrefsKey, (int)DifficultyType.Normal);
+                if (Enum.IsDefined(typeof(DifficultyType), stored))
+                    difficulty = (DifficultyType)stored;
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (Instance == this)
+                Instance = null;
+        }
+        //-------------------------------------------------------------------------------------------------
 
         // 이슈 #72: 예전에는 마을 레벨이 오르면 자동으로 전체 생산량에 배율이 붙었지만(TownUpgradeEffectConfig),
         // 이제는 플레이어가 직접 구매하는 도구 효율 업그레이드(TownUpgradeManager)만큼만 배율이 오릅니다.
@@ -62,6 +111,20 @@ namespace TaskTown.KDH
         public void SetDifficulty(DifficultyType newDifficulty)
         {
             difficulty = newDifficulty;
+            //-----------------26.08.05 KDH-----------------------------
+            PlayerPrefs.SetInt(DifficultyPrefsKey, (int)newDifficulty);
+            PlayerPrefs.Save();
+        }
+
+        /// <summary>엔딩 리셋 시 저장된 난이도 선택을 지웁니다.</summary>
+        public static void ClearStoredDifficulty()
+        {
+            if (PlayerPrefs.HasKey(DifficultyPrefsKey))
+            {
+                PlayerPrefs.DeleteKey(DifficultyPrefsKey);
+                PlayerPrefs.Save();
+            }
+            //--------------------------------------------------------
         }
 
         // IDifficultyProvider - 시크릿 동물 등 난이도 전용 뽑기 항목이 GachaManagerBase를 통해 참조합니다.

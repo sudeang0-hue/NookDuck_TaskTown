@@ -60,8 +60,16 @@ namespace UI
 
         private void Awake()
         {
-            if (animalInventory == null)
-                animalInventory = FindFirstObjectByType<InventoryManager_Animal>();
+            //-----------------26.08.05 KDH-------------------------
+            ///Before
+            //if (animalInventory == null)
+            //    animalInventory = FindFirstObjectByType<InventoryManager_Animal>();
+
+            ///After
+            // Instance를 우선합니다. FindFirstObjectByType은 리셋 직후 파괴 예정인 씬 복제본을
+            // 잡을 수 있어 뽑기 결과가 UI에 안 보이는 원인이 됩니다.
+            TryResolveInventoryReference();
+            //----------------------------------------
 
             ResolveToolInventory();
             ResolveVillageAnimalSet();
@@ -118,14 +126,31 @@ namespace UI
             UnsubscribeVillagePlacementEvents();
         }
 
+        //-----------------26.08.05 KDH-------------------------
+        private void TryResolveInventoryReference()
+        {
+            if (animalInventory != null)
+                return;
+
+            animalInventory = InventoryManager_Animal.Instance;
+            if (animalInventory == null)
+                animalInventory = FindFirstObjectByType<InventoryManager_Animal>();
+        }
+        //----------------------------------------
+
         private bool TryResolveInventory()
         {
-            if (animalInventory == null)
-                animalInventory = InventoryManager_Animal.Instance;
+            //-----------------26.08.05 KDH-------------------------
+            ///Before
+            //if (animalInventory == null)
+            //    animalInventory = InventoryManager_Animal.Instance;
 
+            ///After
+            TryResolveInventoryReference();
+            //-----------------------------------------------------
             if (animalInventory == null)
             {
-                Debug.LogWarning("[UIController_AnimalInv] toolInventory 가 연결되지 않았습니다.");
+                Debug.LogWarning("[UIController_AnimalInv] animalInventory 가 연결되지 않았습니다.");
                 return false;
             }
 
