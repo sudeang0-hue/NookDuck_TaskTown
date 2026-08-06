@@ -1,5 +1,4 @@
 ﻿using System;
-using TMPro;
 using UnityEngine;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
@@ -10,13 +9,13 @@ namespace UI
     /// 마을 동물 배치 슬롯 1칸 표시.
     /// 생성 직후 Set/Remove는 비활성. Edit 모드에서만 활성화됩니다.
     /// SetAnimal_btn: SetAnimalList_Panel 오픈 (배치 완료는 목록 슬롯 클릭에서 처리).
+    /// 이름 텍스트는 사용하지 않으며, 아이콘만 표시합니다.
     /// </summary>
     public class SlotUI_VillageAnimal : SlotUIBase
     {
         [Header("마을 배치 슬롯")]
         [FormerlySerializedAs("AnimalIconImage")]
         [SerializeField] private Image animalIconImage;
-        [SerializeField] private TMP_Text animalNameText;
 
         [Header("빈/배치 시각 (Image)")]
         [Tooltip("빈 슬롯일 때 animal_icon에 적용할 Image 설정 소스")]
@@ -117,11 +116,8 @@ namespace UI
 
             // iconImage가 emptyVisual과 동일하므로, 동물 아이콘을 base에 넣지 않음
             // (Remove 시 empty가 동물 이미지로 남는 현상 방지)
+            // displayName은 API 호환용. 이 슬롯에서는 이름 텍스트를 쓰지 않음.
             currentId = animalId;
-
-            TMP_Text targetName = animalNameText != null ? animalNameText : displayNameText;
-            if (targetName != null)
-                targetName.text = displayName ?? string.Empty;
 
             ApplyFilledVisual(icon);
             SetEmptyState(false);
@@ -139,12 +135,6 @@ namespace UI
         public override void Clear()
         {
             currentId = string.Empty;
-
-            if (displayNameText != null)
-                displayNameText.text = string.Empty;
-
-            if (animalNameText != null)
-                animalNameText.text = string.Empty;
 
             // 배치 아이콘(fill)을 완전히 비움
             ClearFilledVisual();
