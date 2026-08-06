@@ -1,15 +1,15 @@
+//NB
+
 using UnityEngine;
 
-/// <summary>
-/// Tripo AI 등 외부 에셋의 자식 노드 순서에 맞추어 풍차 날개 회전을 제어하는 컴포넌트입니다.
-/// </summary>
+//풍차 날개 회전을 제어하는 컴포넌트
 public class WindmillBladeRotator : MonoBehaviour
 {
     [Header("오브젝트 참조 및 자식 설정")]
     [Tooltip("회전시킬 자식 날개 메쉬의 Transform")]
     [SerializeField] private Transform bladeTransform;
 
-    [Tooltip("날개 오브젝트가 위치한 자식 인덱스 (Tripo 모델은 보통 1번)")]
+    [Tooltip("날개 오브젝트가 위치한 자식 인덱스")]
     [SerializeField] private int targetChildIndex = 1;
 
     [Header("회전 및 축 설정")]
@@ -28,9 +28,7 @@ public class WindmillBladeRotator : MonoBehaviour
 
     private float currentWindMultiplier = 1.0f;
 
-    /// <summary>
-    /// 에디터에서 컴포넌트를 붙이거나 Reset할 때 안전하게 지정된 자식 인덱스를 자동 할당합니다.
-    /// </summary>
+    // 에디터에서 컴포넌트를 붙이거나 Reset할 때 안전하게 지정된 자식 인덱스를 자동 할당
     private void Reset()
     {
         AutoAssignBladeTransform();
@@ -45,9 +43,7 @@ public class WindmillBladeRotator : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// 안전 범위 검사($N_{child} > Index_{target}$) 후 지정된 인덱스의 자식을 자동으로 바인딩합니다.
-    /// </summary>
+    // 안전 범위 검사($N_{child} > Index_{target}$) 후 지정된 인덱스의 자식을 자동으로 바인딩
     private void AutoAssignBladeTransform()
     {
         int childCount = transform.childCount;
