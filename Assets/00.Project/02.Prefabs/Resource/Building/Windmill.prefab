@@ -69,7 +69,8 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: -6748287935452084066, guid: 62a90417e434ab64a8850143fe79cf4e, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 62a90417e434ab64a8850143fe79cf4e, type: 3}
@@ -125,6 +126,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BuildingDropEffect
   dropHeight: 15
   dropDuration: 0.4
+  enableBounce: 1
+  bounceCount: 3
+  bounceHeight: 1.2
+  bounceDuration: 0.4
+  dampingPower: 2
+  subProps: []
+  subPropDropDuration: 0.25
 --- !u!114 &141623343098038567
 MonoBehaviour:
   m_ObjectHideFlags: 0
