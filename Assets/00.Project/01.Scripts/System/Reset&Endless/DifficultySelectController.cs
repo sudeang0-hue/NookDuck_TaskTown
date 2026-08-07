@@ -32,6 +32,10 @@ namespace TaskTown.SceneFlow
                 hardButton.onClick.AddListener(() => Select(DifficultyType.Hard));
             if (veryHardButton != null)
                 veryHardButton.onClick.AddListener(() => Select(DifficultyType.VeryHard));
+
+            //-----------------26.08.07 KAY 'VeryHard 버튼 해금'-------------------------
+            ApplyVeryHardButtonUnlock();
+            //----------------------------------------
         }
 
         private void OnDestroy()
@@ -60,6 +64,19 @@ namespace TaskTown.SceneFlow
                 isSelecting = false;
             }
         }
+
+        //-----------------26.08.07 KAY 'VeryHard 버튼 해금'-------------------------
+        /// <summary>
+        /// Hard 이상 엔딩 클리어 기록이 있을 때만 VeryHard 버튼을 누를 수 있게 합니다.
+        /// </summary>
+        private void ApplyVeryHardButtonUnlock()
+        {
+            if (veryHardButton == null)
+                return;
+
+            veryHardButton.interactable = EndingMeta.IsVeryHardUnlocked;
+        }
+        //----------------------------------------
     }
     //----------------------------------------
 }
