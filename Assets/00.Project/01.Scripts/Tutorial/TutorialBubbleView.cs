@@ -245,8 +245,8 @@ namespace TaskTown.Tutorial
             bool showAdvanceButton)
         {
             SetText(speakerNameText, speakerName);
-            SetText(messageText, message);
-            bool hasObjective = SetOptionalText(objectiveText, objective);
+            SetText(messageText, message, true);
+            bool hasObjective = SetOptionalText(objectiveText, objective, true);
             SetOptionalText(progressText, progress);
 
             if (objectiveContainer != null)
@@ -478,19 +478,37 @@ namespace TaskTown.Tutorial
                 portraitRoot = speakerPortraitImage.transform.parent as RectTransform;
         }
 
-        private static void SetText(TMP_Text target, string value)
+        private static void SetText(
+            TMP_Text target,
+            string value,
+            bool applyWordLineBreaks = false)
         {
             if (target != null)
-                target.text = value ?? string.Empty;
+            {
+                target.text = applyWordLineBreaks
+                    ? TutorialTextLineBreakUtility.ApplyWordLineBreaks(
+                        target,
+                        value)
+                    : value ?? string.Empty;
+            }
         }
 
-        private static bool SetOptionalText(TMP_Text target, string value)
+        private static bool SetOptionalText(
+            TMP_Text target,
+            string value,
+            bool applyWordLineBreaks = false)
         {
             if (target == null)
                 return false;
 
             bool hasValue = !string.IsNullOrWhiteSpace(value);
-            target.text = hasValue ? value : string.Empty;
+            target.text = hasValue
+                ? applyWordLineBreaks
+                    ? TutorialTextLineBreakUtility.ApplyWordLineBreaks(
+                        target,
+                        value)
+                    : value
+                : string.Empty;
             target.gameObject.SetActive(hasValue);
             return hasValue;
         }
