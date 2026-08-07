@@ -66,7 +66,7 @@ namespace TaskTown
         private const string ClearedDifficultyKey = "EndingMeta_LastClearedDifficulty";
 
         /// <summary>
-        /// Hard 이상 클리어 기록이 있으면 VeryHard 선택 버튼을 해금합니다.
+        /// 가장 최근에 클리어한 난이도가 Hard일 때만 VeryHard 버튼을 해금합니다.
         /// </summary>
         public static bool IsVeryHardUnlocked
         {
@@ -77,12 +77,12 @@ namespace TaskTown
 
                 int stored = PlayerPrefs.GetInt(ClearedDifficultyKey, -1);
                 return Enum.IsDefined(typeof(DifficultyType), stored)
-                    && stored >= (int)DifficultyType.Hard;
+                    && stored == (int)DifficultyType.Hard;
             }
         }
 
         /// <summary>
-        /// 현재 플레이 난이도를 클리어 기록으로 남깁니다. 기존보다 높을 때만 갱신합니다.
+        /// 현재 플레이 난이도를 '최근 클리어 난이도'로 덮어씁니다.
         /// </summary>
         private static void RecordClearedDifficultyFromCurrent()
         {
@@ -99,15 +99,7 @@ namespace TaskTown
                     cleared = (DifficultyType)stored;
             }
 
-            int incoming = (int)cleared;
-            int current = PlayerPrefs.HasKey(ClearedDifficultyKey)
-                ? PlayerPrefs.GetInt(ClearedDifficultyKey, -1)
-                : -1;
-
-            if (incoming <= current)
-                return;
-
-            PlayerPrefs.SetInt(ClearedDifficultyKey, incoming);
+            PlayerPrefs.SetInt(ClearedDifficultyKey, (int)cleared);
             PlayerPrefs.Save();
         }
         //----------------------------------------

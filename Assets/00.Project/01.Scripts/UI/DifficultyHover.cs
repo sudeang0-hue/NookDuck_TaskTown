@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using DG.Tweening;
+using TaskTown;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -52,6 +53,11 @@ public class DifficultyHover : MonoBehaviour
     {
         CacheTargets();
         BindHoverRelays();
+
+        //-----------------26.08.07 KAY '난이도 버튼 오픈 조건'-------------------------
+        // 씬에 켜져 있던 버튼이 있어도 인트로 전까지 모두 끕니다.
+        ForceCloseAllHoverButtons();
+        //----------------------------------------
     }
 
     private void Start()
@@ -100,6 +106,15 @@ public class DifficultyHover : MonoBehaviour
         {
             if (hoverPanel[i] == null || targets[i] == null)
                 continue;
+
+            //-----------------26.08.07 KAY '난이도 버튼 오픈 조건'-------------------------
+            // Easy 미사용 / 미해금 VeryHard 는 인트로에서 켜지 않습니다.
+            if (!IsDifficultyButtonOpenable(i))
+            {
+                hoverPanel[i].gameObject.SetActive(false);
+                continue;
+            }
+            //----------------------------------------
 
             hoverPanel[i].gameObject.SetActive(true);
             baseScales[i] = Vector3.one;
@@ -210,6 +225,11 @@ public class DifficultyHover : MonoBehaviour
         if (isIntroPlaying || !IsValidIndex(index))
             return;
 
+        //-----------------26.08.07 KAY 'VeryHard 오픈 조건'-------------------------
+        if (!IsDifficultyButtonOpenable(index))
+            return;
+        //----------------------------------------
+
         StopHoverDelayRoutine();
         hoveredIndex = index;
 
@@ -252,7 +272,10 @@ public class DifficultyHover : MonoBehaviour
 
         for (int i = 0; i < targets.Length; i++)
         {
-            if (targets[i] == null)
+            if (targets[i] == null || !IsDifficultyButtonOpenable(i))
+                continue;
+
+            if (!targets[i].gameObject.activeInHierarchy)
                 continue;
 
             float targetScale = i == focusedIndex ? hoverScale : shrinkScale;
@@ -267,7 +290,10 @@ public class DifficultyHover : MonoBehaviour
 
         for (int i = 0; i < targets.Length; i++)
         {
-            if (targets[i] == null)
+            if (targets[i] == null || !IsDifficultyButtonOpenable(i))
+                continue;
+
+            if (!targets[i].gameObject.activeInHierarchy)
                 continue;
 
             PlayScale(i, baseScales[i]);
@@ -330,6 +356,45 @@ public class DifficultyHover : MonoBehaviour
     {
         return targets != null && index >= 0 && index < targets.Length && targets[index] != null;
     }
+
+    //-----------------26.08.07 KAY '난이도 버튼 오픈 조건'-------------------------
+    private const int EasyIndex = 0;
+    private const int NormalIndex = 1;
+    private const int HardIndex = 2;
+    private const int VeryHardIndex = 3;
+
+    /// <summary>
+    /// Normal/Hard는 항상 오픈, VeryHard는 최근 클리어가 Hard일 때만 오픈, Easy는 미사용(삭제 예정).
+    /// </summary>
+    private static bool IsDifficultyButtonOpenable(int index)
+    {
+        // Easy: 삭제 예정 — 오픈하지 않음
+        if (index == EasyIndex)
+            return false;
+
+        if (index == NormalIndex || index == HardIndex)
+            return true;
+
+        if (index == VeryHardIndex)
+            return EndingMeta.IsVeryHardUnlocked;
+
+        return false;
+    }
+
+    private void ForceCloseAllHoverButtons()
+    {
+        if (hoverPanel == null)
+            return;
+
+        for (int i = 0; i < hoverPanel.Length; i++)
+        {
+            if (hoverPanel[i] == null)
+                continue;
+
+            hoverPanel[i].gameObject.SetActive(false);
+        }
+    }
+    //----------------------------------------
 
     /// <summary>
     /// 각 버튼의 포인터 이벤트를 DifficultyHover로 전달합니다.
