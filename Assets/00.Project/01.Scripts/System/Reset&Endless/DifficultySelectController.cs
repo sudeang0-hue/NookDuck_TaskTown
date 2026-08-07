@@ -12,7 +12,6 @@ namespace TaskTown.SceneFlow
     public sealed class DifficultySelectController : MonoBehaviour
     {
         [Header("Buttons")]
-        [SerializeField] private Button easyButton;
         [SerializeField] private Button normalButton;
         [SerializeField] private Button hardButton;
         [SerializeField] private Button veryHardButton;
@@ -24,8 +23,6 @@ namespace TaskTown.SceneFlow
 
         private void Awake()
         {
-            if (easyButton != null)
-                easyButton.onClick.AddListener(() => Select(DifficultyType.Easy));
             if (normalButton != null)
                 normalButton.onClick.AddListener(() => Select(DifficultyType.Normal));
             if (hardButton != null)
@@ -40,7 +37,6 @@ namespace TaskTown.SceneFlow
 
         private void OnDestroy()
         {
-            if (easyButton != null) easyButton.onClick.RemoveAllListeners();
             if (normalButton != null) normalButton.onClick.RemoveAllListeners();
             if (hardButton != null) hardButton.onClick.RemoveAllListeners();
             if (veryHardButton != null) veryHardButton.onClick.RemoveAllListeners();
