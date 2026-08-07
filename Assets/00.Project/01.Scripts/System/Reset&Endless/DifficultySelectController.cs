@@ -72,12 +72,12 @@ namespace TaskTown.SceneFlow
         /// </summary>
         private void ApplyDifficultyButtonInitialState()
         {
-            // Easy: 삭제 예정 — 항상 비활성
-            if (easyButton != null)
-            {
-                easyButton.gameObject.SetActive(false);
-                easyButton.interactable = false;
-            }
+            //// Easy: 삭제 예정 — 항상 비활성
+            //if (easyButton != null)
+            //{
+            //    easyButton.gameObject.SetActive(false);
+            //    easyButton.interactable = false;
+            //}
 
             // Normal / Hard: 인트로에서 동시 오픈 (여기선 끔)
             if (normalButton != null)
