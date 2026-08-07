@@ -3347,6 +3347,7 @@ GameObject:
   - component: {fileID: 8264156282849029817}
   - component: {fileID: 646558278493565381}
   - component: {fileID: 6305965163960669960}
+  - component: {fileID: 1957213661201538540}
   m_Layer: 5
   m_Name: Credits_btn
   m_TagString: Untagged
@@ -3456,18 +3457,33 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 3313193847178706130}
-        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
-        m_MethodName: SetActive
-        m_Mode: 6
+      - m_Target: {fileID: 2743335900859244543}
+        m_TargetAssemblyTypeName: UI.UIPanelWindow, Assembly-CSharp
+        m_MethodName: OpenPanelDefaultPosition
+        m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: 
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
-          m_BoolArgument: 1
+          m_BoolArgument: 0
         m_CallState: 2
+--- !u!114 &1957213661201538540
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3079788264139769017}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0af9290513608304ca5b0c851a28d019, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIButtonSoundPlayer
+  targetButton: {fileID: 0}
+  uiSoundId: UI_Click
+  soundManager: {fileID: 0}
 --- !u!1 &3085432757083479800
 GameObject:
   m_ObjectHideFlags: 0
@@ -3614,6 +3630,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4726574773367500764}
+  - component: {fileID: 2743335900859244543}
   m_Layer: 0
   m_Name: CreditsPopup_root
   m_TagString: Untagged
@@ -3642,6 +3659,23 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 2500, y: 1400}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &2743335900859244543
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3313193847178706130}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8cff2151963596f4cbfcf5d73400e022, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.UIPanelWindow
+  panelCanvas: {fileID: 3048004119820935630}
+  panelRect: {fileID: 3483078629808204794}
+  gameMenuType: 0
+  gameTabType: 0
+  isDragging: 0
 --- !u!1 &3342949663892475930
 GameObject:
   m_ObjectHideFlags: 0
@@ -4735,10 +4769,10 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 3313193847178706130}
-        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
-        m_MethodName: SetActive
-        m_Mode: 6
+      - m_Target: {fileID: 2743335900859244543}
+        m_TargetAssemblyTypeName: UI.UIPanelWindow, Assembly-CSharp
+        m_MethodName: ClosePanel
+        m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: 
