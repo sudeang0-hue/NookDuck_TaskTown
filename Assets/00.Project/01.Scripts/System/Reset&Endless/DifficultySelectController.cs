@@ -32,6 +32,10 @@ namespace TaskTown.SceneFlow
                 hardButton.onClick.AddListener(() => Select(DifficultyType.Hard));
             if (veryHardButton != null)
                 veryHardButton.onClick.AddListener(() => Select(DifficultyType.VeryHard));
+
+            //-----------------26.08.07 KAY '난이도 버튼 초기 상태'-------------------------
+            ApplyDifficultyButtonInitialState();
+            //----------------------------------------
         }
 
         private void OnDestroy()
@@ -60,6 +64,36 @@ namespace TaskTown.SceneFlow
                 isSelecting = false;
             }
         }
+
+        //-----------------26.08.07 KAY '난이도 버튼 초기 상태'-------------------------
+        /// <summary>
+        /// 인트로 전까지 버튼을 모두 끕니다.
+        /// Easy는 미사용, VeryHard는 최근 클리어 난이도가 Hard일 때만 인트로에서 켜집니다.
+        /// </summary>
+        private void ApplyDifficultyButtonInitialState()
+        {
+            //// Easy: 삭제 예정 — 항상 비활성
+            //if (easyButton != null)
+            //{
+            //    easyButton.gameObject.SetActive(false);
+            //    easyButton.interactable = false;
+            //}
+
+            // Normal / Hard: 인트로에서 동시 오픈 (여기선 끔)
+            if (normalButton != null)
+                normalButton.gameObject.SetActive(false);
+
+            if (hardButton != null)
+                hardButton.gameObject.SetActive(false);
+
+            // VeryHard: 인트로 전 끔. 클릭 가능 여부만 해금 상태로 맞춤
+            if (veryHardButton != null)
+            {
+                veryHardButton.gameObject.SetActive(false);
+                veryHardButton.interactable = EndingMeta.IsVeryHardUnlocked;
+            }
+        }
+        //----------------------------------------
     }
     //----------------------------------------
 }
