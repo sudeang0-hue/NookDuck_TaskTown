@@ -11,12 +11,15 @@ import statistics
 # 비율(Unique 8%/Legendary 2%=4배) 때문에 기여도 역전을 안 만들려면 Legendary가 Unique의
 # 최소 4배(32)는 필요하다는 걸 확인(Unique를 올려도 이 배율 자체는 줄지 않음), 그래서
 # 최소치보다 살짝 여유만 둔 34(짝수, 4.25배)로 낮춤 - EV/기여도 단조증가는 그대로 유지됨
+# 2026.08.05: 개별 레벨업 기준비용을 등급 공통 단일값(100)에서 등급별 기본생산량에
+# 비례하는 값으로 교체(GachaEntryData.levelUpBaseCost, 사용자 확인). Normal 20000
+# 기준값 x prod 배수 그대로 비례(1/2/4/8/34배 -> 20000/40000/80000/160000/680000).
 GRADES = [
-    {"name": "Normal",    "count": 12, "prob": 0.45, "prod": 1},
-    {"name": "Rare",      "count": 10, "prob": 0.30, "prod": 2},
-    {"name": "Epic",      "count": 8,  "prob": 0.15, "prod": 4},
-    {"name": "Unique",    "count": 6,  "prob": 0.08, "prod": 8},
-    {"name": "Legendary", "count": 4,  "prob": 0.02, "prod": 34},
+    {"name": "Normal",    "count": 12, "prob": 0.45, "prod": 1,  "levelup_base_cost": 20_000},
+    {"name": "Rare",      "count": 10, "prob": 0.30, "prod": 2,  "levelup_base_cost": 40_000},
+    {"name": "Epic",      "count": 8,  "prob": 0.15, "prod": 4,  "levelup_base_cost": 80_000},
+    {"name": "Unique",    "count": 6,  "prob": 0.08, "prod": 8,  "levelup_base_cost": 160_000},
+    {"name": "Legendary", "count": 4,  "prob": 0.02, "prod": 34, "levelup_base_cost": 680_000},
 ]
 TOTAL_COUNT = sum(g["count"] for g in GRADES)  # 40
 
@@ -46,9 +49,48 @@ UNLOCK_SCHEDULE = {
 }
 _UNLOCK_GRADE_ORDER = ["Normal", "Rare", "Epic", "Unique", "Legendary"]
 _GRADE_COUNT = {g["name"]: g["count"] for g in GRADES}
+_GRADE_PROB = {g["name"]: g["prob"] for g in GRADES}
+_GRADE_PROD = {g["name"]: g["prod"] for g in GRADES}
+_GRADE_LEVELUP_BASE_COST = {g["name"]: g["levelup_base_cost"] for g in GRADES}
+
+# 2026.08.06: 사용자 요청으로 기존 일반 동물 8종을 시크릿 9종과 별개로 난이도 전용화
+# (노말2/레어1/에픽1 x Hard,VeryHard). 등급 내 개체 인덱스(0-based, build_roster의
+# 생성 순서와 동일) 기준으로 태그합니다. 노말 난이도 최대 수집 가능 개체수는
+# 40 -> 32종(80%)로 줄어듭니다(사용자 확인).
+GENERAL_DIFFICULTY_EXCLUSIVE = {
+    ("Normal", 0): "Hard",      # 늑대
+    ("Normal", 1): "Hard",      # 곰
+    ("Normal", 2): "VeryHard",  # 여우
+    ("Normal", 3): "VeryHard",  # 사슴
+    ("Rare", 0): "Hard",        # 표범
+    ("Rare", 1): "VeryHard",    # 독수리
+    ("Epic", 0): "Hard",        # 버팔로
+    ("Epic", 1): "VeryHard",    # 코끼리
+}
+
+# 2026.08.05 설계: 시크릿 동물 9종(Hard 4 + VeryHard 5). 등급 누적 해금 스케줄과 무관하게
+# 자체 unlockTownLevel + 난이도 일치 여부로만 해금됩니다. 등급별 확률/생산량/개별 레벨업
+# 비용은 소속 등급(Unique/Legendary) 값을 그대로 공유합니다(라이브 GachaPoolData 확인 완료).
+SECRET_ANIMALS = [
+    # (grade, unlockTownLevel, difficulty, 참고용 이름)
+    ("Unique", 5, "Hard", "armadillo"),
+    ("Unique", 6, "Hard", "Chick"),
+    ("Legendary", 7, "Hard", "giraffe"),
+    ("Legendary", 8, "Hard", "kangaroo"),
+    ("Unique", 5, "VeryHard", "mammoth"),
+    ("Unique", 6, "VeryHard", "otter"),
+    ("Legendary", 7, "VeryHard", "rhino"),
+    ("Legendary", 8, "VeryHard", "seal"),
+    ("Legendary", 9, "VeryHard", "unicorn"),
+]
 
 
-def unlocked_pool(roster, town_level):
+def unlocked_pool(roster, town_level, difficulty):
+    # 해당 town_level/difficulty 조합에서 실제로 "뽑기 풀에 존재"하는 개체만 반환합니다.
+    # 일반 개체: 기존 등급 누적 해금 로직(카운터)은 원래 인덱스 순서 그대로 유지하고,
+    # 난이도 전용 태그가 있는 개체만 difficulty 불일치 시 결과에서 제외합니다(다른 개체의
+    # 해금 타이밍에 영향 없음). 시크릿 개체: 등급 카운터와 무관, 자체 unlockTownLevel +
+    # 난이도 일치 여부로만 판정합니다.
     town_level = min(max(town_level, 1), 9)
     epic_n, uniq_n, leg_n = UNLOCK_SCHEDULE[town_level]
     limits = {
@@ -61,15 +103,24 @@ def unlocked_pool(roster, town_level):
     counters = {g: 0 for g in _UNLOCK_GRADE_ORDER}
     result = []
     for item in roster:
+        if item.get("is_secret"):
+            if town_level >= item["unlockTownLevel"] and item["difficulty"] == difficulty:
+                result.append(item)
+            continue
         g = item["grade"]
         if counters[g] < limits[g]:
-            result.append(item)
             counters[g] += 1
+            item_diff = item.get("difficulty")
+            if item_diff is not None and item_diff != difficulty:
+                continue
+            result.append(item)
     return result
 
 # #13: 도구 수치(등급 분포/생산량)는 동물과 1:1 미러링으로 확정 - 사용자 확인 완료.
 # 도구 이름/설명 등 텍스트만 추후 추가 예정이며 밸런스 수치에는 영향 없음.
-# 도구는 동물과 1:1 비율로 생성 (같은 등급 분포, 생산량은 동물과 동일하게 미러링)
+# 도구는 동물과 1:1 비율로 생성 (같은 등급 분포, 생산량은 동물과 동일하게 미러링).
+# 시크릿 동물은 짝꿍 도구가 없습니다(실제 Tool 에셋 어디에도 시크릿 동물을 specialAnimalId로
+# 지정한 곳이 없음 - 확인 완료). 도구 자체는 난이도 제한이 없어 모든 난이도에서 동일합니다.
 def build_roster():
     animals, tools = [], []
     for g in GRADES:
@@ -77,8 +128,25 @@ def build_roster():
         for i in range(g["count"]):
             aid = f"A_{g['name']}_{i}"
             tid = f"T_{g['name']}_{i}"
-            animals.append({"id": aid, "grade": g["name"], "prod": g["prod"], "indiv_prob": indiv_prob})
-            tools.append({"id": tid, "grade": g["name"], "prod": g["prod"], "indiv_prob": indiv_prob, "pair": aid})
+            diff = GENERAL_DIFFICULTY_EXCLUSIVE.get((g["name"], i))
+            animals.append({
+                "id": aid, "grade": g["name"], "prod": g["prod"], "indiv_prob": indiv_prob,
+                "levelup_base_cost": g["levelup_base_cost"], "difficulty": diff,
+            })
+            tools.append({
+                "id": tid, "grade": g["name"], "prod": g["prod"], "indiv_prob": indiv_prob,
+                "pair": aid, "levelup_base_cost": g["levelup_base_cost"],
+            })
+
+    for idx, (grade, unlock_lvl, diff, name) in enumerate(SECRET_ANIMALS):
+        aid = f"S_{name}"
+        animals.append({
+            "id": aid, "grade": grade, "prod": _GRADE_PROD[grade],
+            "indiv_prob": _GRADE_PROB[grade] / _GRADE_COUNT[grade],
+            "levelup_base_cost": _GRADE_LEVELUP_BASE_COST[grade],
+            "difficulty": diff, "is_secret": True, "unlockTownLevel": unlock_lvl,
+        })
+
     return animals, tools
 
 ANIMALS, TOOLS = build_roster()
@@ -89,13 +157,14 @@ TOOL_BY_ID = {t["id"]: t for t in TOOLS}
 # ---------------------------------------------------------------
 # 게임 규칙 파라미터 (실제 코드 기본값 + 조정 대상 성장률)
 # ---------------------------------------------------------------
-LEVEL_BONUS_RATE = 0.2          # AnimalData/ToolData - levelBonusRatePerLevel
+# 2026.08.05: 사용자 요청으로 생산량 상승 배율을 1.2배(0.2)에서 2배(1.0)로 상향.
+LEVEL_BONUS_RATE = 1.0          # AnimalData/ToolData - levelBonusRatePerLevel
 SPECIAL_BONUS = 0.5             # ToolData.specialAnimalBonusRate
 # #10 리밸런스: 4^레벨(4/16/64/256)은 코인 타이밍 문제(항상 0원)와 겹쳐 레벨업이 사실상
 # 불가능했음. 환급/천장으로 코인 타이밍은 고쳤지만, 중복 요구치 자체도 2^레벨(2/4/8/16)로
 # 낮춰서 레벨업 빈도와 희귀 등급 진행도를 함께 개선함 (사용자 확인 후 확정).
 DUP_GROWTH = 2                   # LevelUpRequirementCalculator (2^레벨)
-LEVELUP_BASE_COST = 100
+# LEVELUP_BASE_COST는 등급별 값으로 대체됨(위 GRADES의 levelup_base_cost 참고). 성장률만 공통.
 LEVELUP_COST_RATE = 1.5
 
 CLICK_TYPING_HOURLY_CAP = 10000 / 3600.0  # 코인/초 (EarnProcessor.cs maxCoinPerHour) - #17 이후 미사용(레거시 참고용)
@@ -135,26 +204,6 @@ GACHA_COSTS = [1500, 2200, 3400, 5100, 7600, 11400, 17100, 25600, 38400]
 # 다른 파라미터로 상쇄하는 데 한계가 있었음), 실제 게임 코드(GachaCostConfig,
 # TownUpgradeCostConfig)와 같은 방식으로 레벨 1~9 비용을 직접 나열해서 목표 구간 비중에
 # 맞춰 하나하나 역산한 뒤, 깔끔한 숫자로 반올림하고 항상 증가하도록(내림 없이) 다듬었습니다.
-# 목표 구간 비중: 5/6/8/9/10/12/15/17/18% (레벨2~10, 합 100%, 레벨 8~10 합 50%) x 목표 총 50시간.
-# 초반(2→3구간, 4.55배)과 막판(9→10구간, 2.58배)에 배율이 큰 건 계산 실수가 아니라,
-# 레벨1에 노말+레어를 몰아서 풀어준 것과 Legendary가 레벨9 근처에 몰려 해금되는 것 때문에
-# 생기는 구조적인 현상입니다 (사용자 확인 후 반올림 값으로 확정).
-# #10 리밸런스: DUP_GROWTH를 4->2로 낮추면서(아래 참고) 레벨업이 더 쉬워져 완주가
-# 빨라진 만큼, 같은 목표 구간 소요시간(2.5~9.0h, 합 50h)에 맞춰 다시 역산.
-# #11 리밸런스: Legendary 생산량을 40->34로 낮추면서(아래 GRADES 참고) 완주가 살짝
-# 느려진 만큼, 같은 목표 구간 소요시간에 맞춰 다시 역산.
-# #15: 사용자 요청으로 1만 단위로 깔끔하게 반올림 (완주시간 48.74h->48.73h로 사실상 동일).
-# #18 리밸런스(도구 상한 기능 추가, 이슈 #72 후속): 도구 상한(TOOL_CAPACITY_*)과 위 인터리빙
-# 해금 스케줄이 추가되면서 이 비용 곡선도 다시 역산했습니다. 처음엔 목표 총 70h를 잡았지만,
-# 상한 도입 후 경제구조에서는 "완전한 단조증가"와 "정확히 70h"를 동시에 만족하는 지점이
-# 없었습니다(구간 하나를 늘리면 다른 구간이 깨지는 두더지잡기 현상을 좌표하강법/스케일링/
-# 구간별 수동보정으로 반복 확인). 완전한 단조증가가 자연스럽게 성립하는 지점을 찾은 결과
-# 총 78.6h로 확정(N=1000, avg=78.61h, std=1.67h, 레벨8~10 비중 46.8%, 사용자 확인 완료).
-# #19 리밸런스: 클릭/타이핑/도구효율 업그레이드 상한을 고정 20에서 min(마을레벨, 10)으로
-# 바꾸고(사용자 확인), 그동안 시뮬레이션에 빠져있던 동물/도구 개별 레벨5 상한(실제 코드
-# SlotData_Tool.ToolLevelUp 기준)을 처음 반영하면서 다시 역산했습니다. 업그레이드 상한이
-# 낮아지며 돈이 마을업그레이드/뽑기로 더 몰려서 완주시간이 78.61h -> 59.95h로 단축됨
-# (레벨9->10 구간만 소폭 상향해서 단조증가 유지, N=1000 검증 완료).
 TOWN_UPGRADE_COSTS = [
     77_000,       # 레벨1->2
     425_000,      # 레벨2->3
@@ -169,45 +218,25 @@ TOWN_UPGRADE_COSTS = [
 
 # #4: 마을 업그레이드의 "생산 효율 버프" - 마을 레벨당 전체 생산량에 곱해지는 배율
 # #17 리밸런스(이슈 #72): 이 자동 버프는 폐지되고, 아래 도구 효율 업그레이드로 대체됩니다.
-# EFFICIENCY_BUFF_PER_LEVEL은 도구 효율 업그레이드의 레벨당 배율로 그대로 재사용합니다
-# (마을 레벨이 아니라 "구매한 도구 효율 레벨"에 곱해짐).
 EFFICIENCY_BUFF_PER_LEVEL = 0.1
 
 # ---------------------------------------------------------------
 # #17 리밸런스(이슈 #72): 클릭 코인/타이핑 코인/도구 효율 개별 업그레이드.
-# 기존에는 마을 레벨이 오르면 자동으로 생산량에 배율이 붙었지만(위 EFFICIENCY_BUFF_PER_LEVEL을
-# 마을 레벨에 곱함), 이제는 도구 효율 업그레이드를 직접 구매해야만 그 배율이 오릅니다.
-# 클릭/타이핑 업그레이드는 EarnProcessor의 배율(ClickMultiplier/TypingMultiplier)뿐 아니라
-# 시간당 획득 상한(maxCoinPerHour)도 함께 올려서, "이미 상한을 채우는 플레이어"에게도 실질적인
-# 생산량 증가 효과를 갖도록 설계했습니다(상한이 배율과 무관하게 고정이면 상한을 채우는 플레이어는
-# 배율을 올려도 얻는 게 없어서 - 사용자 확인 후 상한도 함께 올리는 방향으로 확정).
-#
-# 셋 다 "효율적 지출" 봇의 선택지에 추가해서, 뽑기/마을업그레이드와 회수시간(payback)을 비교하며
-# 가장 유리한 곳에 코인을 쓰도록 했습니다. 아래 비용/효과 값은 N=1,000 시뮬레이션으로 목표
-# 완주시간(약 60h, 레벨8~10 비중 50%, 단조증가)을 유지하면서 세 업그레이드가 실제로 유의미한
-# 빈도로 구매되도록 역산/조정한 값입니다.
 TOOL_EFF_BASE_COST = 60_000
 TOOL_EFF_COST_GROWTH = 1.6
 TOOL_EFF_BONUS_PER_LEVEL = EFFICIENCY_BUFF_PER_LEVEL  # 레벨당 +10% 생산 배율 (기존 자동 버프와 동일 폭)
 
-# 클릭/타이핑은 초반 부트스트랩(자동 생산이 거의 없을 때) 위주로 의미 있고, 생산량이 커지면
-# 시간당 상한 자체가 상대적으로 작아져서 봇이 자연스럽게 더 이상 안 사게 됩니다(의도된 설계).
-# #17 튜닝: growth 1.35/1.6 조합 등 여러 값을 N=150~300으로 스윕한 결과, 도구효율/클릭/타이핑
-# 성장률을 모두 1.6으로 통일했을 때만 단조증가(share never decreases)가 안정적으로 유지됨
-# (하나라도 더 낮으면 해당 업그레이드가 중후반에 몰아 사는 구간이 생겨 레벨9->10 구간이
-# 비정상적으로 짧아지는 비단조 현상 발생 - N=300 검증 완료).
-CLICK_UPGRADE_BASE_COST = 300
+# 2026.08.05: 사용자 요청으로 클릭/타이핑 구매 비용을 50배로 인상(300->15,000).
+CLICK_UPGRADE_BASE_COST = 15_000
 CLICK_UPGRADE_COST_GROWTH = 1.6
 CLICK_CAP_BONUS_PER_LEVEL = 2000   # 코인/시간, 레벨당 시간당 상한 증가분
 
-TYPING_UPGRADE_BASE_COST = 300
+TYPING_UPGRADE_BASE_COST = 15_000
 TYPING_UPGRADE_COST_GROWTH = 1.6
 TYPING_CAP_BONUS_PER_LEVEL = 2000  # 코인/시간, 레벨당 시간당 상한 증가분
 
-# #19(신규): 실제 유니티 구현(TownUpgradeManager)과 동일하게 레벨 상한을 둡니다.
-# 기존엔 마을 레벨과 무관하게 고정 20이었으나, 마을 레벨과 나란히 올라가다 10에서 같이
-# 멈추는 구조로 변경(사용자 확인 완료) - 엔드리스 모드 설계의 사전 작업.
-UPGRADE_MAX_LEVEL_CAP = 10   # 절대 상한(일반 모드)
+# 2026.08.05: 레벨10 완주 시점과 3종 업그레이드 만렙이 정확히 일치하도록 상한을 10->9로 낮춤.
+UPGRADE_MAX_LEVEL_CAP = 9   # 절대 상한(일반 모드)
 ENDLESS_MODE = False          # True면 아래 상한들이 전부 해제됨(엔드리스 모드용)
 
 
@@ -218,17 +247,11 @@ def upgrade_max_level(town_level):
 
 
 # 실제 코드(SlotData_Tool.ToolLevelUp/SlotData_Animal 동일)는 개별 동물/도구 레벨을 5에서
-# 막는데, 이 시뮬레이션은 지금까지 이 상한을 전혀 반영하지 않고 있었음(발견 및 수정, #19).
-# 다만 기존 결과 통계(등급별 평균 최고 도달 레벨 3~5대)를 보면 "효율적 지출" 봇이 애초에
-# 5를 크게 못 넘기고 있어서 78.6h 설계에 미치는 영향은 작을 것으로 예상 - 재검증으로 확인.
+# 막습니다.
 ANIMAL_TOOL_MAX_LEVEL = 5
 
 # ---------------------------------------------------------------
-# #18(신규): 도구 상한(동시에 "동물이 장착된 도구" 슬롯 개수 제한). 실제 게임 생산 로직
-# (RealProductionTicker)은 도구 슬롯 중 CurrentAnimalSet==true인 것만 생산하므로, 이 상한은
-# 사실상 "동시에 생산 가능한 동물+도구 쌍의 개수"입니다. 마을 레벨을 올리면 상한이 늘어납니다.
-# 레벨10은 엔딩(완주 시점)이라 시뮬레이션이 그 순간 종료되므로 tool_capacity(10)은 실제로
-# 쓰이지 않습니다(9->10 구간까지만 적용) - 사용자 확인 완료.
+# #18(신규): 도구 상한(동시에 "동물이 장착된 도구" 슬롯 개수 제한).
 TOOL_CAPACITY_BASE = 5
 TOOL_CAPACITY_PER_LEVEL = 2  # 마을 레벨 1당 상한 증가분
 
@@ -249,36 +272,28 @@ def typing_upgrade_cost(level):
     return TYPING_UPGRADE_BASE_COST * (TYPING_UPGRADE_COST_GROWTH ** level)
 
 
+# 2026.08.06: 레벨10(마을 상한) 도달 후 "재건(엔딩)" 선택 팝업을 열기 위해 지불하는 비용
+# (VillageSystemManager.villageCompletionCost, ALL_UI_Connect_root.prefab 실제 반영값과 동일).
+VILLAGE_COMPLETION_COST = 25_000_000
+
+
 # ---------------------------------------------------------------
 # #9 리밸런스: 죽은 재고(레벨업이 사실상 안 되는 문제) 개선 메커니즘 + 민감도 실험용 파라미터
 # ---------------------------------------------------------------
-# 중복 환급: 이미 보유한 종류를 다시 뽑으면 현재 뽑기 비용의 이 비율만큼 코인 환급
 DUP_REFUND_RATE = 0.3
-# Legendary 천장(pity): Legendary가 해금된 상태에서 이 횟수 동안 Legendary가 안 나오면
-# 다음 뽑기는 해금된 Legendary 중 하나 확정
 PITY_ROLLS = 100
-# 클릭/타이핑 상한 실제 달성률 (1.0 = 매시간 상한 완주라는 기존의 낙관 가정, 민감도 분석용)
 CLICK_UTILIZATION = 1.0
-# #12 리밸런스: 문제#6(완주 후 인플레이션) 해결 방향 확정 - 레벨10 완주("엔딩") 시 코인/마을레벨/
-# 보유 동물·도구/도감을 전부 초기화하고 다음 난이도로 재도전하는 구조로 기획 확정. 코인이 쌓일 시간
-# 자체가 없어지므로 별도 코인 싱크 없이 인플레이션 문제가 해소됨. 남은 건 난이도별 재도전이 실제로
-# 유의미하게 오래 걸리는지 검증하는 것뿐 - DIFFICULTY_MULT가 그 "다음 난이도" 배율.
+# #12 리밸런스: 레벨10 완주("엔딩") 시 코인/마을레벨/보유 동물·도구/도감을 전부 초기화하고
+# 다음 난이도로 재도전하는 구조. DIFFICULTY_MULT_TABLE이 난이도별 생산 배율입니다.
 # 2026.08.06: 사용자 요청으로 Easy 난이도 제거(Normal/Hard/VeryHard 3단계로 축소).
-# 검증 당시(Easy 포함) 결과 - Easy(x1.2)/Normal(x1.0)/Hard(x0.8)/VeryHard(x0.6), N=1000,
-# 최종 파라미터 기준: 42.00h -> 50.25h -> 62.58h -> 83.00h, 전 구간 단조증가 + 레벨8~10
-# 비중 50%대 유지, VeryHard/Easy 완주시간 비율 1.98배(배율 역수 2.0배와 거의 일치) -
-# 난이도 간 체감 격차가 생산 배율에 비례해서 예측 가능하게 늘어남을 확인(Easy 제거로
-# 현재는 Normal/Hard/VeryHard 3단계만 유효, 배율 자체는 변경 없음).
-DIFFICULTY_MULT = 1.0
+# 배율(DifficultyProductionTable_Default.asset과 동일): Normal=1.0/Hard=0.8/VeryHard=0.6.
+DIFFICULTY_MULT_TABLE = {"Normal": 1.0, "Hard": 0.8, "VeryHard": 0.6}
 
 
 def gacha_cost(level):
     return GACHA_COSTS[min(level, len(GACHA_COSTS)) - 1]
 
 
-# #19(엔드리스 사전 작업): 실제 유니티 구현(TownUpgradeCostConfig.GetCostForTownLevel)과 동일하게,
-# 정의된 표(레벨9까지)를 넘어서면 레벨9->10 구간의 실제 성장률을 그대로 반복해서 계속 늘어나도록 함
-# (사용자 확인: "레벨9->10 배율을 그대로 반복"). 정의된 범위 안에서는 기존과 동일하게 표 값을 그대로 씀.
 POST_MAX_LEVEL_GROWTH_RATE = TOWN_UPGRADE_COSTS[-1] / TOWN_UPGRADE_COSTS[-2]  # ≈ 1.2661
 
 
@@ -298,18 +313,18 @@ def level_multiplier(level):
     return 1 + (level - 1) * LEVEL_BONUS_RATE
 
 
-def levelup_cost(level):
-    return LEVELUP_BASE_COST * (LEVELUP_COST_RATE ** (level - 1))
+def levelup_cost(base_cost, level):
+    return base_cost * (LEVELUP_COST_RATE ** (level - 1))
 
 
 def dup_required(level):
     return DUP_GROWTH ** level
 
 
-def roll_item(is_animal, town_level, rng):
+def roll_item(is_animal, town_level, difficulty, rng):
     # 해금된 종류끼리만 (실제 개별 확률값을) 재정규화해서 뽑음 (잠긴 종류는 애초에 나오지 않음)
     roster = ANIMALS if is_animal else TOOLS
-    pool = unlocked_pool(roster, town_level)
+    pool = unlocked_pool(roster, town_level, difficulty)
     total_prob = sum(x["indiv_prob"] for x in pool)
     r = rng.random() * total_prob
     cum = 0.0
@@ -328,24 +343,24 @@ class Owned:
         self.dup = 1
 
 
-def simulate_once(town_upgrade_costs, rng, max_hours=500):
+def simulate_once(town_upgrade_costs, rng, difficulty="Normal", max_hours=500):
     coins = 0.0
     time_s = 0.0
     town_level = 1
+    difficulty_mult = DIFFICULTY_MULT_TABLE[difficulty]
 
     owned_animals = {}   # id -> Owned
     owned_tools = {}     # id -> Owned
     placed_animal_ids = []
     placed_tool_ids = []
 
-    # #17(이슈 #72): 마을 레벨 자동 보너스를 대체하는 구매형 업그레이드 레벨들
     tool_eff_level = 0
     click_level = 0
     typing_level = 0
 
     def _all_units():
         # 페어(동물+도구, 특화매칭) 또는 단독 동물/단독 도구를 하나의 "생산 유닛"으로 모읍니다.
-        # 각 유닛을 (생산량, 동물id_또는_None, 도구id_또는_None)로 반환합니다.
+        # 시크릿 동물은 짝꿍 도구가 없으므로 TOOL_PAIR_OF_ANIMAL에 항목이 없을 수 있습니다.
         paired_tool_ids = set()
         units = []
         placed_tool_set = set(placed_tool_ids)
@@ -353,8 +368,8 @@ def simulate_once(town_upgrade_costs, rng, max_hours=500):
             a = ANIMAL_BY_ID[aid]
             oa = owned_animals[aid]
             animal_prod = a["prod"] * level_multiplier(oa.level)
-            expected_tid = TOOL_PAIR_OF_ANIMAL[aid]
-            if expected_tid in placed_tool_set and expected_tid not in paired_tool_ids:
+            expected_tid = TOOL_PAIR_OF_ANIMAL.get(aid)
+            if expected_tid is not None and expected_tid in placed_tool_set and expected_tid not in paired_tool_ids:
                 t = TOOL_BY_ID[expected_tid]
                 ot = owned_tools[expected_tid]
                 tool_prod = t["prod"] * level_multiplier(ot.level)
@@ -370,9 +385,6 @@ def simulate_once(town_upgrade_costs, rng, max_hours=500):
         return units
 
     def _active_units():
-        # #18: 도구 상한 - 생산 유닛을 값 기준 내림차순 정렬해서 상위 tool_capacity(town_level)개만
-        # "활성"(실제로 생산에 반영)으로 취급합니다. 실제 플레이어라면 당연히 제일 좋은 조합을
-        # 골라서 끼울 것이므로, 항상 상위 N개가 활성이라고 가정합니다(효율적 지출 봇과 동일한 전제).
         units = _all_units()
         units.sort(key=lambda u: u[0], reverse=True)
         cap = tool_capacity(town_level)
@@ -381,18 +393,15 @@ def simulate_once(town_upgrade_costs, rng, max_hours=500):
     def production_rate():
         active, _all = _active_units()
         total = sum(u[0] for u in active)
-        return total * (1 + tool_eff_level * TOOL_EFF_BONUS_PER_LEVEL) * DIFFICULTY_MULT
+        return total * (1 + tool_eff_level * TOOL_EFF_BONUS_PER_LEVEL) * difficulty_mult
 
     def active_ids():
-        # 현재 활성(생산 중) 슬롯에 들어있는 동물/도구 id 집합 - 레벨업 대상 판단에 사용
         active, _all = _active_units()
         animal_ids = {u[1] for u in active if u[1] is not None}
         tool_ids = {u[2] for u in active if u[2] is not None}
         return animal_ids, tool_ids
 
     def active_cutoff():
-        # 지금 활성 슬롯 중 가장 약한 유닛의 생산량(= 새 유닛이 이 값을 넘어야 상한 안에 들어감).
-        # 아직 상한을 다 못 채웠으면 0(뭘 얻어도 바로 활성화됨).
         active, all_units = _active_units()
         cap = tool_capacity(town_level)
         if len(all_units) < cap:
@@ -400,8 +409,6 @@ def simulate_once(town_upgrade_costs, rng, max_hours=500):
         return active[-1][0] if active else 0.0
 
     def click_typing_cap_per_sec():
-        # 기본 상한(1만/시간) + 클릭/타이핑 업그레이드로 늘어난 상한. 상한 자체가 오르므로
-        # 이미 상한을 채우는 플레이어(CLICK_UTILIZATION=1.0)에게도 실질적인 이득이 됩니다.
         cap_per_hour = 10000 + click_level * CLICK_CAP_BONUS_PER_LEVEL + typing_level * TYPING_CAP_BONUS_PER_LEVEL
         return cap_per_hour / 3600.0
 
@@ -416,15 +423,14 @@ def simulate_once(town_upgrade_costs, rng, max_hours=500):
         coins = cost
 
     def roll_item_with_pity(is_animal):
-        # Legendary 천장: 해금된 Legendary가 있는 상태에서 PITY_ROLLS 동안 안 나오면 확정 지급
         roster = ANIMALS if is_animal else TOOLS
-        pool = unlocked_pool(roster, town_level)
+        pool = unlocked_pool(roster, town_level, difficulty)
         legend_pool = [x for x in pool if x["grade"] == "Legendary"]
 
         if PITY_ROLLS > 0 and legend_pool and pity_counters[is_animal] >= PITY_ROLLS:
             item = legend_pool[rng.randrange(len(legend_pool))]
         else:
-            item = roll_item(is_animal, town_level, rng)
+            item = roll_item(is_animal, town_level, difficulty, rng)
 
         if legend_pool:
             if item["grade"] == "Legendary":
@@ -445,19 +451,13 @@ def simulate_once(town_upgrade_costs, rng, max_hours=500):
                 coins += refund
                 total_refund += refund
         else:
-            # 새 종류를 얻으면 그 즉시 슬롯도 함께 생겨서 바로 배치됨
             owned[item["id"]] = Owned()
             placed_ids.append(item["id"])
 
     def marginal_gain_per_roll(is_animal):
-        # 이번 뽑기 1회가 기대할 수 있는 "새 종류 획득으로 인한 생산량 증가분" (레벨1 기준 base prod)과
-        # 중복이 나올 확률을 함께 반환. 해금된 종류끼리만 확률을 재정규화 (roll_item과 동일한 풀)
-        # #18: 도구 상한 때문에, 새로 얻는 종류의 기본 생산량이 지금 활성 슬롯 중 가장 약한 유닛보다
-        # 낮으면 어차피 상한 밖으로 밀려나 생산에 반영되지 않으므로 기대 이득을 0으로 봅니다
-        # (효율적 지출 봇이 상한이 꽉 찬 뒤에는 낮은 등급 뽑기를 그만 가치 있게 여기게 되는 이유).
         owned = owned_animals if is_animal else owned_tools
         roster = ANIMALS if is_animal else TOOLS
-        pool = unlocked_pool(roster, town_level)
+        pool = unlocked_pool(roster, town_level, difficulty)
         total_prob = sum(x["indiv_prob"] for x in pool)
         if total_prob == 0:
             return 0.0, 0.0
@@ -473,7 +473,6 @@ def simulate_once(town_upgrade_costs, rng, max_hours=500):
         return expected, owned_prob
 
     def tool_eff_gain():
-        # 도구 효율 업그레이드 1레벨이 늘려주는 생산량 증가분 (현재 배율 기준 marginal)
         if tool_eff_level >= upgrade_max_level(town_level):
             return 0.0
         current_mult = 1 + tool_eff_level * TOOL_EFF_BONUS_PER_LEVEL
@@ -490,34 +489,23 @@ def simulate_once(town_upgrade_costs, rng, max_hours=500):
         return TYPING_CAP_BONUS_PER_LEVEL / 3600.0 * CLICK_UTILIZATION
 
     def production_gain_from_town_upgrade():
-        # #17: 자동 생산 버프는 폐지되어 마을 업그레이드 자체엔 직접적인 생산 증가가 없습니다.
-        # #18: 대신 마을 레벨업은 도구 상한을 늘려줘서, 지금 상한 밖(벤치)에 있는 유닛 중 제일
-        # 강한 걸 바로 활성화시켜주는 실질적 효과가 생겼습니다 - 그 유닛의 생산량을 "마을
-        # 업그레이드의 기대 이득"으로 사용합니다(실제 메커니즘에 기반한 값이라 #17때 썼던
-        # 도구효율 프록시보다 안정적).
-        # 다만 아직 상한을 다 못 채웠으면(벤치가 없으면) 이 값이 0이 되어 "효율적 지출" 봇이
-        # 재량 지출(도구효율 등)을 무한정 우선시하는 문제가 생기므로, 도구 효율 업그레이드의
-        # 기대 이득을 최소 기준점(fallback)으로 함께 반영해 항상 0보다 큰 판단 기준을 보장합니다.
         fallback = tool_eff_gain()
         active, all_units = _active_units()
         cap = tool_capacity(town_level)
         if len(all_units) > cap:
             benched_best = all_units[cap][0]
-            capacity_gain = benched_best * (1 + tool_eff_level * TOOL_EFF_BONUS_PER_LEVEL) * DIFFICULTY_MULT
+            capacity_gain = benched_best * (1 + tool_eff_level * TOOL_EFF_BONUS_PER_LEVEL) * difficulty_mult
             return max(fallback, capacity_gain)
         return fallback
 
     def try_level_ups():
-        # 저장한 코인 한도 내에서 가능한 레벨업을 반복 수행 (동물/도구 번갈아 시도).
-        # #18: 도구 상한 때문에 지금 활성(생산 중)이 아닌 벤치 유닛을 레벨업하는 건 낭비이므로,
-        # 활성 슬롯에 들어있는 동물/도구만 레벨업 대상으로 삼습니다(효율적 지출 봇 전제).
         nonlocal total_levelups
         progressed = True
         while progressed:
             progressed = False
             active_animal_ids, active_tool_ids = active_ids()
-            for owned_dict, active_id_set in (
-                (owned_animals, active_animal_ids), (owned_tools, active_tool_ids)
+            for owned_dict, active_id_set, by_id in (
+                (owned_animals, active_animal_ids, ANIMAL_BY_ID), (owned_tools, active_tool_ids, TOOL_BY_ID)
             ):
                 for oid, o in owned_dict.items():
                     if oid not in active_id_set:
@@ -525,7 +513,7 @@ def simulate_once(town_upgrade_costs, rng, max_hours=500):
                     if not ENDLESS_MODE and o.level >= ANIMAL_TOOL_MAX_LEVEL:
                         continue
                     req = dup_required(o.level)
-                    cost = levelup_cost(o.level)
+                    cost = levelup_cost(by_id[oid]["levelup_base_cost"], o.level)
                     if o.dup >= req and coins_avail() >= cost:
                         spend(cost)
                         o.dup -= req
@@ -569,25 +557,18 @@ def simulate_once(town_upgrade_costs, rng, max_hours=500):
     total_levelups = 0
     total_refund = 0.0
     pity_counters = {True: 0, False: 0}
-    # #17(이슈 #72): 새 개별 업그레이드 구매 횟수 집계용
     total_tool_eff_buys = 0
     total_click_buys = 0
     total_typing_buys = 0
-    # #16: 오프라인 보상 설계용 - 마을 레벨업 시점의 생산량(코인/초)을 기록
     production_rate_by_level = {}
 
     while town_level < 10 and time_s / 3600.0 < max_hours:
-        # 1) "효율적 지출": 아래 5가지 선택지(동물뽑기/도구뽑기/도구효율/클릭/타이핑) 중 회수시간
-        #    (payback = 비용/기대 생산량 증가분)이 가장 좋은 곳부터 계속 사고, 전부 마을 업그레이드
-        #    저축보다 못해지면 멈춥니다. 수집이 진행될수록 뽑기의 기대 이득이 줄고(중복 확률 상승),
-        #    개별 업그레이드도 레벨이 오를수록 비용이 기하급수적으로 늘어 자연히 비중이 줄어듭니다.
         while True:
             g_cost = gacha_cost(town_level)
             u_cost = town_upgrade_cost(town_level, town_upgrade_costs)
 
             a_gain, a_dup_prob = marginal_gain_per_roll(True)
             t_gain, t_dup_prob = marginal_gain_per_roll(False)
-            # 중복 환급이 있으면 기대 환급만큼 뽑기의 유효 비용이 줄어든다 (효율적 지출 봇의 판단 기준)
             a_eff_cost = g_cost * (1 - a_dup_prob * DUP_REFUND_RATE)
             t_eff_cost = g_cost * (1 - t_dup_prob * DUP_REFUND_RATE)
             a_payback = a_eff_cost / a_gain if a_gain > 0 else float("inf")
@@ -628,7 +609,6 @@ def simulate_once(town_upgrade_costs, rng, max_hours=500):
                 buy_typing()
             try_level_ups()
 
-        # 2) 마을 업그레이드 비용 저축 후 업그레이드
         cost = town_upgrade_cost(town_level, town_upgrade_costs)
         advance_to(cost)
         spend(cost)
@@ -637,7 +617,14 @@ def simulate_once(town_upgrade_costs, rng, max_hours=500):
         level_reach_hours[town_level] = time_s / 3600.0
         try_level_ups()
 
-    # 등급별 도달 레벨/잉여 중복(본체 1개 제외 후 남은 재고) 집계 - 죽은 재고 분석용
+    level10_hours = time_s / 3600.0
+
+    # 2026.08.06: 레벨10 도달 후 "재건(엔딩)" 버튼 - VillageSystemManager.villageCompletionCost.
+    # 코인을 모아서 지불해야 리셋/엔드리스 선택 팝업이 열리므로, "완주"의 실제 끝은 여기입니다.
+    advance_to(VILLAGE_COMPLETION_COST)
+    spend(VILLAGE_COMPLETION_COST)
+    ending_hours = time_s / 3600.0
+
     max_level_by_grade = {}
     leftover_dups = 0
     for owned_dict, by_id in ((owned_animals, ANIMAL_BY_ID), (owned_tools, TOOL_BY_ID)):
@@ -647,7 +634,8 @@ def simulate_once(town_upgrade_costs, rng, max_hours=500):
             leftover_dups += max(0, o.dup - 1)
 
     return {
-        "hours": time_s / 3600.0,
+        "hours": ending_hours,
+        "level10_hours": level10_hours,
         "level_reach_hours": level_reach_hours,
         "total_gacha_rolls": total_gacha_rolls,
         "animals_collected": len(owned_animals),
@@ -667,73 +655,79 @@ def simulate_once(town_upgrade_costs, rng, max_hours=500):
     }
 
 
-def run_trials(town_upgrade_costs, trials=200, max_hours=500):
-    return [simulate_once(town_upgrade_costs, random.Random(1000 + i), max_hours=max_hours) for i in range(trials)]
+def run_trials(town_upgrade_costs, difficulty="Normal", trials=200, max_hours=500):
+    return [simulate_once(town_upgrade_costs, random.Random(1000 + i), difficulty=difficulty, max_hours=max_hours)
+            for i in range(trials)]
 
 
-def average_completion_hours(town_upgrade_costs, trials=200, max_hours=500):
-    runs = run_trials(town_upgrade_costs, trials, max_hours)
+def average_completion_hours(town_upgrade_costs, difficulty="Normal", trials=200, max_hours=500):
+    runs = run_trials(town_upgrade_costs, difficulty=difficulty, trials=trials, max_hours=max_hours)
     hours = [r["hours"] for r in runs]
     return statistics.mean(hours), statistics.pstdev(hours), hours
 
 
-if __name__ == "__main__":
-    N = 1000
-    runs = run_trials(TOWN_UPGRADE_COSTS, trials=N, max_hours=5000)
-    hours = [r["hours"] for r in runs]
-    print("town_upgrade_costs:", TOWN_UPGRADE_COSTS)
+def report_for_difficulty(difficulty, N=1000):
+    runs = run_trials(TOWN_UPGRADE_COSTS, difficulty=difficulty, trials=N, max_hours=5000)
+    hours = [r["hours"] for r in runs]           # 레벨10 + 재건 버튼(엔딩) 비용 지불까지 전체
+    level10_hours = [r["level10_hours"] for r in runs]  # 레벨10 도달까지만(재건 비용 제외)
+    print("=" * 70)
+    print("난이도:", difficulty, " (생산 배율 x", DIFFICULTY_MULT_TABLE[difficulty], ")")
+    print("--- 레벨10 도달까지(재건 비용 제외) ---")
+    print("avg:", statistics.mean(level10_hours), "std:", statistics.pstdev(level10_hours))
+    print("--- 완주(레벨10 + 재건 버튼", f"{VILLAGE_COMPLETION_COST:,}", "코인) ---")
     print("avg hours:", statistics.mean(hours), "std:", statistics.pstdev(hours))
     print("min/max:", min(hours), max(hours))
     print("median:", statistics.median(hours))
 
-    print()
-    print("--- per-level average hours to reach (across", N, "trials) ---")
     total = statistics.mean(hours)
     prev = 0.0
     shares = []
     for lvl in range(1, 11):
         vals = [r["level_reach_hours"].get(lvl) for r in runs if lvl in r["level_reach_hours"]]
         avgv = statistics.mean(vals)
-        stdv = statistics.pstdev(vals) if len(vals) > 1 else 0.0
         share = (avgv - prev) / total
         shares.append(share)
-        print(f"Level {lvl:2}: avg={avgv:7.2f}h  share={share*100:5.2f}%  std={stdv:.2f}h  "
-              f"min={min(vals):.2f}h  max={max(vals):.2f}h  reached_by={len(vals)}/{N}")
+        print(f"Level {lvl:2}: avg={avgv:7.2f}h  share={share*100:5.2f}%  reached_by={len(vals)}/{N}")
         prev = avgv
+    ending_avg = statistics.mean(hours)
+    ending_share = (ending_avg - prev) / total
+    print(f"엔딩(재건): avg={ending_avg:7.2f}h  share={ending_share*100:5.2f}%")
 
-    print()
-    print("monotonic (share never decreases vs previous level):",
-          all(shares[i] <= shares[i + 1] + 1e-6 for i in range(1, 9)))
-    print("levels 8-10 share:", sum(shares[7:10]) * 100, "%")
-
-    print()
+    monotonic = all(shares[i] <= shares[i + 1] + 1e-6 for i in range(1, 9))
+    print("monotonic(레벨1~10 구간):", monotonic, " levels 8-10 share:", sum(shares[7:10]) * 100, "%")
     print("avg total gacha rolls:", statistics.mean(r["total_gacha_rolls"] for r in runs))
-    print("avg animals collected (of 40):", statistics.mean(r["animals_collected"] for r in runs))
+    print("avg animals collected:", statistics.mean(r["animals_collected"] for r in runs))
     print("avg tools collected (of 40):", statistics.mean(r["tools_collected"] for r in runs))
+    print("avg final_production (coins/sec):", statistics.mean(r["final_production"] for r in runs))
+    return {
+        "difficulty": difficulty,
+        "avg_level10_hours": statistics.mean(level10_hours),
+        "avg_hours": statistics.mean(hours),
+        "std_hours": statistics.pstdev(hours),
+        "median_hours": statistics.median(hours),
+        "min_hours": min(hours),
+        "max_hours": max(hours),
+        "monotonic": monotonic,
+        "levels_8_10_share": sum(shares[7:10]) * 100,
+        "ending_share": ending_share * 100,
+        "avg_gacha_rolls": statistics.mean(r["total_gacha_rolls"] for r in runs),
+        "avg_animals_collected": statistics.mean(r["animals_collected"] for r in runs),
+        "avg_tools_collected": statistics.mean(r["tools_collected"] for r in runs),
+        "avg_final_production": statistics.mean(r["final_production"] for r in runs),
+        "level_reach_hours_avg": [
+            statistics.mean([r["level_reach_hours"].get(lvl) for r in runs if lvl in r["level_reach_hours"]])
+            for lvl in range(1, 11)
+        ],
+    }
 
-    print()
-    print("--- #17(이슈 #72): 클릭/타이핑/도구효율 업그레이드 ---")
-    print("avg tool_eff level reached:", statistics.mean(r["tool_eff_level"] for r in runs),
-          "/ max", upgrade_max_level(10))
-    print("avg click level reached:", statistics.mean(r["click_level"] for r in runs),
-          "/ max", upgrade_max_level(10))
-    print("avg typing level reached:", statistics.mean(r["typing_level"] for r in runs),
-          "/ max", upgrade_max_level(10))
-    print("avg tool_eff buys:", statistics.mean(r["total_tool_eff_buys"] for r in runs))
-    print("avg click buys:", statistics.mean(r["total_click_buys"] for r in runs))
-    print("avg typing buys:", statistics.mean(r["total_typing_buys"] for r in runs))
 
+if __name__ == "__main__":
     import json
-    with open("sim_results_v5.json", "w", encoding="utf-8") as f:
-        json.dump({
-            "solved_town_upgrade_costs": TOWN_UPGRADE_COSTS,
-            "hours": hours,
-            "level_reach_hours": [r["level_reach_hours"] for r in runs],
-            "total_gacha_rolls": [r["total_gacha_rolls"] for r in runs],
-            "animals_collected": [r["animals_collected"] for r in runs],
-            "tools_collected": [r["tools_collected"] for r in runs],
-            "tool_eff_level": [r["tool_eff_level"] for r in runs],
-            "click_level": [r["click_level"] for r in runs],
-            "typing_level": [r["typing_level"] for r in runs],
-        }, f)
-    print("saved sim_results_v5.json")
+    results = {}
+    for diff in ("Normal", "Hard", "VeryHard"):
+        results[diff] = report_for_difficulty(diff, N=1000)
+        print()
+
+    with open("sim_results_difficulty.json", "w", encoding="utf-8") as f:
+        json.dump(results, f, ensure_ascii=False, indent=2)
+    print("saved sim_results_difficulty.json")
