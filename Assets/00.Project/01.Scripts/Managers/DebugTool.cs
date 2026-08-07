@@ -390,8 +390,6 @@ public class DebugTool : MonoBehaviour
         GUILayout.Label("난이도 테스트 (시크릿 동물 해금 확인용)", GUI.skin.box);
         GUILayout.Label($"현재 난이도: {(realProductionTicker != null ? realProductionTicker.CurrentDifficulty.ToString() : "-")}");
         GUILayout.BeginHorizontal();
-        if (GUILayout.Button("Easy"))
-            SetDebugDifficulty(DifficultyType.Easy);
         if (GUILayout.Button("Normal"))
             SetDebugDifficulty(DifficultyType.Normal);
         if (GUILayout.Button("Hard"))

@@ -29,17 +29,17 @@ namespace TaskTown.Gacha.Tests
         public void GetMultiplier_등록된_난이도면_해당_배율을_반환한다()
         {
             DifficultyProductionTable table = CreateTable(
-                (DifficultyType.Easy, 1.5f),
+                (DifficultyType.Normal, 1.5f),
                 (DifficultyType.Hard, 0.7f));
 
-            Assert.AreEqual(1.5f, table.GetMultiplier(DifficultyType.Easy), 0.0001f);
+            Assert.AreEqual(1.5f, table.GetMultiplier(DifficultyType.Normal), 0.0001f);
             Assert.AreEqual(0.7f, table.GetMultiplier(DifficultyType.Hard), 0.0001f);
         }
 
         [Test]
         public void GetMultiplier_등록되지_않은_난이도는_1을_반환한다()
         {
-            DifficultyProductionTable table = CreateTable((DifficultyType.Easy, 1.5f));
+            DifficultyProductionTable table = CreateTable((DifficultyType.Normal, 1.5f));
 
             Assert.AreEqual(1f, table.GetMultiplier(DifficultyType.VeryHard), 0.0001f);
         }
