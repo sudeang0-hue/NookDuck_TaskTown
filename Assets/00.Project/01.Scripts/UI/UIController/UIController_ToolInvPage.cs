@@ -359,17 +359,17 @@ namespace UI
         {
             // 본체 1개 제외한 재료 수량 표시 (SlotUI_ToolInv 와 동일 규칙)
             if (currentCountText != null)
-                currentCountText.text = "현재 수량: " + Mathf.Max(0, slotData.CurrentCount - 1).ToString();
+                currentCountText.text = "현재 수량 : " + Mathf.Max(0, slotData.CurrentCount - 1).ToString();
 
             if (requireCountText != null)
-                requireCountText.text = "레벨업 필요 수량:" + $"{slotData.RequiredUpgradeCount}";
+                requireCountText.text = "레벨업 필요 수량 : " + $"{slotData.RequiredUpgradeCount}";
 
             ApplyLevelImage(slotData.Level);
 
             if (currentProductCoin != null)
             {
                 float coinPerSecond = data.BaseCoinPerSecond * data.CalculateLevelMultiplier(slotData.Level);
-                currentProductCoin.text = "초당 생산량:" + $"{coinPerSecond:0.#}/s";
+                currentProductCoin.text = "초당 생산량 : " + $"{coinPerSecond:0.#}/s";
             }
 
             // 장착 동물 아이콘은 CurrentAnimalId로 조회해 표시, 없으면 숨김
