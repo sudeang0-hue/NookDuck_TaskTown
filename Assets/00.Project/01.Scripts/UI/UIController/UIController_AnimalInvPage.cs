@@ -339,10 +339,10 @@ namespace UI
         {
             // 본체 1마리를 제외한 재료 수량 표시 (SlotUI_AnimalInv 와 동일 규칙)
             if (currentCountText != null)
-                currentCountText.text = "현재 수량: " + Mathf.Max(0, slotData.CurrentCount - 1).ToString();
+                currentCountText.text = "현재 수량 \n: " + Mathf.Max(0, slotData.CurrentCount - 1).ToString();
 
             if (requireCountText != null)
-                requireCountText.text = "레벨업 필요 수량: " + $" {slotData.RequiredUpgradeCount}";
+                requireCountText.text = "레벨업 필요 수량 \n: " + $" {slotData.RequiredUpgradeCount}";
 
             ApplyLevelImage(slotData.Level);
 
