@@ -10,7 +10,7 @@ namespace UI
     /// </summary>
     public class UIController_VillageUpgrade : MonoBehaviour
     {
-        private const int RequiredUpgradeTotal = 3;
+        private const int RequiredUpgradeTotal = 4;
         /// <summary>일반 모드 마을 레벨 상한 (레벨40 확장 철회 후 10으로 확정).</summary>
         private const int MaxTownLevel = 10;
 
@@ -37,6 +37,9 @@ namespace UI
         [SerializeField] private GameObject[] checkImg;
         [Tooltip("요구 문구 목록. 0=requiredUpgradeText. 최대 레벨/재건 완료 시 0만 유지합니다.")]
         [SerializeField] private TMP_Text[] RequireTexts;
+        [SerializeField, TextArea(2, 4)]
+        [Tooltip("마을 레벨업 필수 조건 requiredUpgradeText에 표시")]
+        private string requireConditionMessage = "마을 레벨업 조건: ";
         [SerializeField, TextArea(2, 4)]
         [Tooltip("10레벨 도달(재건 전) 시 requiredUpgradeText에 비용 문구와 함께 표시")]
         private string finishUpGradeMessage = "마을 재건을 완료하기";
@@ -171,10 +174,11 @@ namespace UI
         //------------------26.08.06 KAY 수정 (requiredUpgradeText 비용+문구 통합)-----------------
         /// <summary>
         /// 요구 패널 갱신:
-        /// - 일반: "필수 업그레이드 완료: n / 3", RequireTexts 전부 표시
+        /// - 일반: "필수 조건: n / 4" (클릭/타이핑/생산 + 보유 코인), RequireTexts 전부 표시
         /// - 최대 레벨(재건 전): "{completionCost} 을 사용하여\n" + finishUpGradeMessage, [0]만 활성
         /// - 재건 완료/엔드리스: endUpGradeMessage, [0]만 활성
         /// villageLevelUpCost는 별도 출력하지 않습니다(비활성 유지).
+        /// completedCount는 호출부에서 트랙 완료 + 코인 충족을 합산해 전달합니다.
         /// </summary>
         public void RefreshRequiredUpgrade(
             int completedCount,
@@ -199,7 +203,7 @@ namespace UI
             }
 
             int clamped = Mathf.Clamp(completedCount, 0, RequiredUpgradeTotal);
-            SetRequiredUpgradeTitle("필수 업그레이드 완료: " + clamped + " / " + RequiredUpgradeTotal);
+            SetRequiredUpgradeTitle(requireConditionMessage + clamped + " / " + RequiredUpgradeTotal);
             SetAllRequireTextsVisible(true);
         }
 
