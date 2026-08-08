@@ -1,3 +1,6 @@
+using Animal.Data;
+using System.Collections.Generic;
+using Tool.Data;
 using UnityEngine;
 
 namespace TaskTown.KDH
@@ -70,5 +73,50 @@ namespace TaskTown.KDH
 
             return PlayerPrefs.GetInt(DiscoveredKeyPrefix + id, 0) == 1;
         }
+
+        // ----------------08.08.KAY (도감 해금 기록 초기화)------------------
+        /// <summary>
+        /// 단일 ID의 도감 해금 기록을 삭제합니다. 디버그/초기화용.
+        /// </summary>
+        public void ClearDiscovered(string id)
+        {
+            if (string.IsNullOrEmpty(id))
+                return;
+
+            PlayerPrefs.DeleteKey(DiscoveredKeyPrefix + id);
+        }
+
+        /// <summary>
+        /// AnimalDatabase / ToolDatabase에 등록된 전체 ID의 도감 해금 기록을 삭제합니다.
+        /// </summary>
+        public void ClearAllDiscoveredRecords(AnimalDatabase animalDatabase, ToolDatabase toolDatabase)
+        {
+            if (animalDatabase != null && animalDatabase.Animals != null)
+            {
+                IReadOnlyList<AnimalDataSO> animals = animalDatabase.Animals;
+                for (int i = 0; i < animals.Count; i++)
+                {
+                    AnimalDataSO animal = animals[i];
+                    if (animal == null || string.IsNullOrEmpty(animal.Id))
+                        continue;
+                    ClearDiscovered(animal.Id);
+                }
+            }
+
+            if (toolDatabase != null && toolDatabase.Tools != null)
+            {
+                IReadOnlyList<ToolDataSO> tools = toolDatabase.Tools;
+                for (int i = 0; i < tools.Count; i++)
+                {
+                    ToolDataSO tool = tools[i];
+                    if (tool == null || string.IsNullOrEmpty(tool.Id))
+                        continue;
+                    ClearDiscovered(tool.Id);
+                }
+            }
+
+            PlayerPrefs.Save();
+        }
+        // ---------------------------------------------------------
     }
 }

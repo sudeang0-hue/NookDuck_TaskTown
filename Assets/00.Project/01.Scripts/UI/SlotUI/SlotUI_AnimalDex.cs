@@ -1,4 +1,6 @@
 using Animal.Data;
+using TaskTown.Gacha;
+using TaskTown.KDH;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -9,15 +11,17 @@ namespace UI
     public class SlotUI_AnimalDex : SlotUIBase
     {
 
-        [Header("미해금 상태 도감 슬롯")]
+        [Header("????? ???? ???? ????")]
         [SerializeField] private Sprite unknownAnimalIcon;
         [SerializeField] private string unknownAnimalName = "???";
+        [Header("???? ????????? ???? ?? ???? ????")]
+        [SerializeField] private TMP_Text unknownAnimalName_Dif;
 
-        [Header("해금 상태 동물 정보")]
+        [Header("??? ???? ???? ????")]
         [SerializeField] private Image animalIconImage;
         [SerializeField] private TMP_Text animalNameText;
 
-        [Header("클릭 범위 버튼")]
+        [Header("??? ???? ???")]
         [SerializeField] private Button coverButton;
 
         private AnimalDataSO animalData;
@@ -52,19 +56,19 @@ namespace UI
         }
 
         /// <summary>
-        /// 도감 슬롯에 동물 데이터와 상세 페이지 Controller를 연결
+        /// ???? ????? ???? ??????? ?? ?????? Controller?? ????
         /// </summary>
         public void Initialize(AnimalDataSO data, UIController_AnimalDexPage pageController, bool unlocked)
         {
             if (data == null)
             {
-                Debug.LogWarning("[SlotUI_AnimalDex] 연결할 AnimalDataSO가 없습니다.");
+                Debug.LogWarning("[SlotUI_AnimalDex] ?????? AnimalDataSO?? ???????.");
                 return;
             }
 
             if (coverButton == null)
             {
-                Debug.LogWarning("[SlotUI_AnimalDex] coverButton이 연결되지 않았습니다.");
+                Debug.LogWarning("[SlotUI_AnimalDex] coverButton?? ??????? ???????.");
                 return;
             }
 
@@ -76,7 +80,7 @@ namespace UI
         }
 
         /// <summary>
-        /// 도감 슬롯의 잠금 상태를 변경하고 이름과 아이콘을 다시 표시합니다.
+        /// ???? ?????? ??? ???¸? ??????? ????? ???????? ??? ???????.
         /// </summary>
         public void SetUnlocked(bool unlocked)
         {
@@ -85,7 +89,7 @@ namespace UI
         }
 
         /// <summary>
-        /// 현재 동물 데이터로 슬롯 비주얼 갱신
+        /// ???? ???? ??????? ???? ????? ????
         /// </summary>
         private void RefreshView()
         {
@@ -101,6 +105,9 @@ namespace UI
                 ShowLockedView();
             }
 
+            // ????? + ???? ????????? ???? ?? ???? ??????? Dif ???
+            RefreshDifficultyUnavailableMark();
+
             if (coverButton != null)
             {
                 coverButton.interactable = isUnlocked;
@@ -109,7 +116,7 @@ namespace UI
         }
 
         /// <summary>
-        /// 해금되면 보여주는 UIController_AnimalInvPage
+        /// ????? ??????? UIController_AnimalInvPage
         /// </summary>
         private void ShowUnlockedView()
         {
@@ -126,7 +133,7 @@ namespace UI
         }
 
         /// <summary>
-        /// 미해금 상태에서 보여주는 UIController_AnimalInvPage
+        /// ????? ???¿??? ??????? UIController_AnimalInvPage
         /// </summary>
         private void ShowLockedView()
         {
@@ -142,22 +149,66 @@ namespace UI
             }
         }
 
+        /// <summary>
+        /// 획득한 적 없고, 현재 난이도보다 높은 RequiredDifficulty 동물이면
+        /// unknownAnimalName_Dif를 활성화합니다.
+        /// </summary>
+        private void RefreshDifficultyUnavailableMark()
+        {
+            if (unknownAnimalName_Dif == null)
+                return;
+
+            bool showDif = !isUnlocked && IsUnavailableOnCurrentDifficulty();
+            unknownAnimalName_Dif.gameObject.SetActive(showDif);
+
+        }
 
         /// <summary>
-        /// 슬롯 클릭 시 도감 상세 페이지를 토글합니다.
-        /// 같은 동물이 이미 열려 있으면 Close, 아니면 Open합니다.
+        /// 난이도 계층 기준 획득 불가 여부.
+        /// Normal → Hard/VeryHard Dif ON
+        /// Hard → VeryHard Dif ON
+        /// VeryHard → 모든 Dif OFF (하위 난이도 설정도 획득 가능)
+        /// </summary>
+        private bool IsUnavailableOnCurrentDifficulty()
+        {
+            if (animalData == null || !animalData.IsDifficultyExclusive)
+                return false;
+
+            DifficultyType currentDifficulty = GetCurrentDifficulty();
+            return animalData.RequiredDifficulty > currentDifficulty;
+        }
+
+        private static DifficultyType GetCurrentDifficulty()
+        {
+            if (RealProductionTicker.Instance != null)
+                return RealProductionTicker.Instance.CurrentDifficulty;
+
+            int stored = PlayerPrefs.GetInt(
+                RealProductionTicker.DifficultyPrefsKey,
+                (int)DifficultyType.Normal);
+
+            if (System.Enum.IsDefined(typeof(DifficultyType), stored))
+                return (DifficultyType)stored;
+
+            return DifficultyType.Normal;
+        }
+
+
+        /// <summary>
+        /// ???? ??? ?? ???? ?? ???????? ???????.
+        /// ???? ?????? ??? ???? ?????? Close, ???? Open????.
         /// </summary>
         private void HandleSlotClicked()
         {
             if (animalData == null)
             {
-                Debug.LogWarning("[SlotUI_AnimalDex] 현재 슬롯에 동물 데이터가 없습니다.", this);
+                Debug.LogWarning("[SlotUI_AnimalDex] ???? ????? ???? ??????? ???????.", this);
                 return;
             }
 
             if (animalPageController == null)
             {
-                Debug.LogWarning("[SlotUI_AnimalDex] UIController_AnimalDexPage 가 연결되지 않았습니다.", this);
+                Debug.LogWarning("[SlotUI_AnimalDex] UIController_AnimalDexPage ?? ??????? ???????.", this);
                 return;
             }
 

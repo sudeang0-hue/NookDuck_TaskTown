@@ -1,5 +1,7 @@
+using Animal.Data;
 using TaskTown.Gacha;
 using TaskTown.KDH;
+using Tool.Data;
 using UI;
 using UnityEngine;
 /*#if UNITY_EDITOR || DEVELOPMENT_BUILD*/
@@ -52,6 +54,13 @@ public class DebugTool : MonoBehaviour
     private RealProductionTicker realProductionTicker;
     private string lastDifficultyActionText = "(없음)";
     //---------------------------------------------------------------------
+
+    // ----------------08.08.KAY (인벤토리 + 도감 초기화)------------------
+    [Header("도감 초기화 (Debug)")]
+    [SerializeField] private AnimalDatabase animalDatabaseForDexReset;
+    [SerializeField] private ToolDatabase toolDatabaseForDexReset;
+    private string lastDexResetActionText = "(없음)";
+    // ---------------------------------------------------------
 
     private void Awake()
     {
@@ -174,6 +183,16 @@ public class DebugTool : MonoBehaviour
         GUILayout.Label("초기화 후에도 도감 패널에는 계속 '이미 본 적 있음'으로 표시돼야 정상입니다.");
         if (GUILayout.Button("보유 동물/도구 인벤토리 초기화"))
             ResetInventoryForDexTest();
+
+        // ----------------08.08.KAY (인벤토리 + 도감 초기화)------------------
+        GUILayout.Space(16f);
+        DrawSeparator();
+        GUILayout.Label("인벤토리 + 도감 초기화", GUI.skin.box);
+        GUILayout.Label("보유 인벤토리와 도감 해금(PlayerPrefs)을 함께 초기화합니다.");
+        if (GUILayout.Button("인벤토리 + 도감 초기화"))
+            ResetInventoryAndDex();
+        GUILayout.Label($"마지막 결과: {lastDexResetActionText}");
+        // ---------------------------------------------------------
 
         //-------------------26.07.24 KDH 추가----------------------------------
         GUILayout.Space(16f);
@@ -531,6 +550,75 @@ public class DebugTool : MonoBehaviour
         Debug.Log("[DebugTool] 보유 동물/도구 인벤토리를 초기화했습니다. 도감 패널에서 유지 여부를 확인하세요.");
     }
 
+    // ----------------08.08.KAY (인벤토리 + 도감 초기화)------------------
+    /// <summary>
+    /// 보유 인벤토리와 도감 해금 기록을 함께 초기화합니다.
+    /// </summary>
+    private void ResetInventoryAndDex()
+    {
+        CacheManagersIfNeeded();
+
+        if (animalInventory != null)
+            animalInventory.ClearAnimalInventory();
+
+        if (toolInventory != null)
+            toolInventory.ClearToolInventory();
+
+        AnimalDatabase animalDb = ResolveAnimalDatabaseForDexReset();
+        ToolDatabase toolDb = ResolveToolDatabaseForDexReset();
+
+        if (DexRecordManager.Instance == null)
+        {
+            lastDexResetActionText = "DexRecordManager 없음 (인벤토리만 초기화됨)";
+            Debug.LogWarning("[DebugTool] DexRecordManager가 없어 도감 기록은 지우지 못했습니다.");
+            return;
+        }
+
+        if (animalDb == null && toolDb == null)
+        {
+            lastDexResetActionText = "Animal/Tool Database 없음 (인벤토리만 초기화됨)";
+            Debug.LogWarning("[DebugTool] AnimalDatabase/ToolDatabase를 찾지 못해 도감 기록은 지우지 못했습니다. Inspector에 연결하세요.");
+            return;
+        }
+
+        DexRecordManager.Instance.ClearAllDiscoveredRecords(animalDb, toolDb);
+
+        UIController_AnimalDex animalDex = FindAnyObjectByType<UIController_AnimalDex>();
+        if (animalDex != null)
+            animalDex.DebugRefreshUnlockStates();
+
+        UIController_ToolDex toolDex = FindAnyObjectByType<UIController_ToolDex>();
+        if (toolDex != null)
+            toolDex.DebugRefreshUnlockStates();
+
+        lastDexResetActionText = "인벤토리 + 도감 초기화 완료";
+        Debug.Log("[DebugTool] 인벤토리와 도감 해금 기록을 초기화했습니다.");
+    }
+
+    private AnimalDatabase ResolveAnimalDatabaseForDexReset()
+    {
+        if (animalDatabaseForDexReset != null)
+            return animalDatabaseForDexReset;
+
+        AnimalDatabase[] found = Resources.FindObjectsOfTypeAll<AnimalDatabase>();
+        if (found != null && found.Length > 0)
+            return found[0];
+
+        return null;
+    }
+
+    private ToolDatabase ResolveToolDatabaseForDexReset()
+    {
+        if (toolDatabaseForDexReset != null)
+            return toolDatabaseForDexReset;
+
+        ToolDatabase[] found = Resources.FindObjectsOfTypeAll<ToolDatabase>();
+        if (found != null && found.Length > 0)
+            return found[0];
+
+        return null;
+    }
+    // ---------------------------------------------------------
 
     private void GrantById()    // 26.07.24 KDH 추가
     {
@@ -579,6 +667,13 @@ public class DebugTool : MonoBehaviour
         }
         realProductionTicker.SetDifficulty(difficulty);
         lastDifficultyActionText = $"난이도 -> {difficulty}";
+
+        // ----------------08.08.KAY (난이도 변경 시 도감 Dif 갱신)------------------
+        // 개발용: 난이도 전환 직후 이미 생성된 동물 도감 슬롯의 Dif 표시를 갱신합니다.
+        UIController_AnimalDex animalDex = FindAnyObjectByType<UIController_AnimalDex>(FindObjectsInactive.Include);
+        if (animalDex != null)
+            animalDex.DebugRefreshUnlockStates();
+        // ---------------------------------------------------------
     }
 
     private void SetLevelById()     // 26.07.24 KDH 추가

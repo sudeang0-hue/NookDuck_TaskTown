@@ -49,6 +49,12 @@ namespace UI
             animalPageController?.CloseAnimalDexPage();
 
             SubscribeEvents();
+
+            // ----------------08.08.KAY (패널 오픈 시 도감 Dif 갱신)------------------
+            // 패널을 다시 열 때 현재 난이도 기준 Dif 표시를 맞춥니다.
+            if (isInitialized)
+                RefreshInventory();
+            // ---------------------------------------------------------
         }
 
         /// <summary>
@@ -151,6 +157,16 @@ namespace UI
                 pair.Value.SetUnlocked(isUnlocked);
             }
         }
+
+        // ----------------08.08.KAY (도감 해금/Dif 디버그 갱신)------------------
+        /// <summary>
+        /// 디버그용: 도감 해금 상태를 DexRecordManager 기준으로 다시 그립니다.
+        /// </summary>
+        public void DebugRefreshUnlockStates()
+        {
+            RefreshInventory();
+        }
+        // ---------------------------------------------------------
 
         /// <summary>
         /// 동물 획득 이벤트로 전달된 ID의 도감 슬롯 하나만 갱신합니다.
