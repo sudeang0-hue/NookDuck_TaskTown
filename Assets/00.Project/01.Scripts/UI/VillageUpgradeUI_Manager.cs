@@ -507,7 +507,6 @@ namespace UI
                     || (!endless && system != null && system.CycleToolDone);
                 uiController.SetTrackComplete(showClickComplete, showTypingComplete, showToolComplete);
 
-                int completedCount = system != null ? system.CycleCompletedCount : 0;
                 int townLevel = system != null ? system.TownLevel : 1;
                 bool levelMaxed = system != null && system.IsVillageLevelMaxed;
 
@@ -518,6 +517,12 @@ namespace UI
                     villageReconstructionCompleted = false;
 
                 long completionCost = GetVillageCompletionCost();
+                long villageCost = GetVillageLevelUpCost();
+                long coin = CoinManager.Instance != null ? CoinManager.Instance.totalCoin : 0;
+
+                // 일반 레벨업 제목(n / 4): 트랙 완료 + 현재 보유 코인 충족 여부
+                int completedCount = GetRequiredUpgradeCompletedCount(system, coin, villageCost);
+
                 uiController.RefreshRequiredUpgrade(
                     completedCount,
                     levelMaxed,
@@ -533,8 +538,6 @@ namespace UI
                     ? system.GetVillageDecoBuildingName(nextTownLevel)
                     : null;
                 uiController.RefreshReward(townLevel, !levelMaxed, decoBuildingName);
-
-                long villageCost = GetVillageLevelUpCost();
 
                 //------------------26.08.05 KAY 추가 / 26.08.06 수정 (최대 레벨 엔드 버튼)-----------
                 // 최대+비엔드리스: 엔드 버튼만 / 엔드리스: 두 버튼 모두 Active(false) / 그 외: 레벨업 버튼
@@ -557,7 +560,6 @@ namespace UI
                     uiController.RefreshVillageLevelUpCost(villageCost);
                 }
 
-                long coin = CoinManager.Instance != null ? CoinManager.Instance.totalCoin : 0;
                 if (!endless && !villageReconstructionCompleted)
                     uiController.SetCoinCheckImg(coin >= costForCoinCheck);
                 //-----------------------------------------------------------------------------
@@ -696,8 +698,28 @@ namespace UI
                 uiController.SetVillageLevelUpInteractable(villageEnabled);
                 uiController.SetCompleteVillageEndInteractable(false);
                 uiController.SetCoinCheckImg(coin >= villageCost);
+
+                // 코인 변동(OnCoinChanged)만으로도 3/4 ↔ 4/4 제목이 즉시 반영되도록 갱신
+                int completedCount = GetRequiredUpgradeCompletedCount(system, coin, villageCost);
+                uiController.RefreshRequiredUpgrade(completedCount);
             }
             //-----------------------------------------------------------------------------
+        }
+
+        /// <summary>
+        /// 필수 조건 달성 수: 클릭/타이핑/생산 완료 + 현재 보유 코인이 레벨업 비용 이상이면 +1.
+        /// </summary>
+        private int GetRequiredUpgradeCompletedCount(
+            VillageSystemManager system,
+            long coin,
+            long villageCost)
+        {
+            int completedCount = system != null ? system.CycleCompletedCount : 0;
+            bool levelMaxed = system != null && system.IsVillageLevelMaxed;
+            bool endless = system != null && system.IsEndlessMode;
+            if (!levelMaxed && !endless && !villageReconstructionCompleted && coin >= villageCost)
+                completedCount++;
+            return completedCount;
         }
 
         private IEnumerator SubscribeWhenDependenciesReady()
