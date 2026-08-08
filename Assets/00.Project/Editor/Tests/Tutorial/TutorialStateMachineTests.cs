@@ -98,14 +98,14 @@ namespace TaskTown.EditorTests.Tutorial
 
             Assert.IsTrue(machine.TryHandleSignal(
                 TutorialSignalType.AutoProductionConfirmed,
-                49L));
-            Assert.AreEqual(49L, machine.AutoProductionEarnedCoin);
+                29L));
+            Assert.AreEqual(29L, machine.AutoProductionEarnedCoin);
             Assert.AreEqual(TutorialStep.ConfirmAutoProduction, machine.CurrentStep);
 
             Assert.IsTrue(machine.TryHandleSignal(
                 TutorialSignalType.AutoProductionConfirmed,
                 1L));
-            Assert.AreEqual(50L, machine.AutoProductionEarnedCoin);
+            Assert.AreEqual(30L, machine.AutoProductionEarnedCoin);
             Assert.AreEqual(TutorialStep.VillagePlacementExplanation, machine.CurrentStep);
         }
 
@@ -212,7 +212,7 @@ namespace TaskTown.EditorTests.Tutorial
         }
 
         [Test]
-        public void AutoProductionConfirmed_자동생산누적50에도달하면_다음단계로진행한다()
+        public void AutoProductionConfirmed_자동생산누적30에도달하면_다음단계로진행한다()
         {
             TutorialStateMachine machine = CreateMachine(
                 TutorialStep.ConfirmAutoProduction);
@@ -222,14 +222,14 @@ namespace TaskTown.EditorTests.Tutorial
                 20L));
             Assert.IsTrue(machine.TryHandleSignal(
                 TutorialSignalType.AutoProductionConfirmed,
-                29L));
-            Assert.AreEqual(49L, machine.AutoProductionEarnedCoin);
+                9L));
+            Assert.AreEqual(29L, machine.AutoProductionEarnedCoin);
             Assert.AreEqual(TutorialStep.ConfirmAutoProduction, machine.CurrentStep);
 
             Assert.IsTrue(machine.TryHandleSignal(
                 TutorialSignalType.AutoProductionConfirmed,
                 1L));
-            Assert.AreEqual(50L, machine.AutoProductionEarnedCoin);
+            Assert.AreEqual(30L, machine.AutoProductionEarnedCoin);
             Assert.AreEqual(TutorialStep.VillagePlacementExplanation, machine.CurrentStep);
         }
 

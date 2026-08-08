@@ -101,55 +101,67 @@ public class GachaSystemBridge : MonoBehaviour
 
         // 2. 도구 가챠 초기창 버튼
         if (btnToolDraw1 != null)
-            btnToolDraw1.onClick.AddListener(() => OnClickedDrawGacha(GachaType.Tool, 1));
+            btnToolDraw1.onClick.AddListener(HandleToolDrawOne);
         if (btnToolDraw10 != null)
-            btnToolDraw10.onClick.AddListener(() => OnClickedDrawGacha(GachaType.Tool, 10));
+            btnToolDraw10.onClick.AddListener(HandleToolDrawTen);
 
         // 3. 동물 가챠 초기창 버튼
         if (btnAnimalDraw1 != null)
-            btnAnimalDraw1.onClick.AddListener(() => OnClickedDrawGacha(GachaType.Animal, 1));
+            btnAnimalDraw1.onClick.AddListener(HandleAnimalDrawOne);
         if (btnAnimalDraw10 != null)
-            btnAnimalDraw10.onClick.AddListener(() => OnClickedDrawGacha(GachaType.Animal, 10));
+            btnAnimalDraw10.onClick.AddListener(HandleAnimalDrawTen);
 
         // 4. 도구 가챠 전용 결과창 다시 뽑기 버튼
         if (btnToolResultDraw1 != null)
-            btnToolResultDraw1.onClick.AddListener(() => OnClickedDrawGacha(GachaType.Tool, 1));
+            btnToolResultDraw1.onClick.AddListener(HandleToolResultDrawOne);
         if (btnToolResultDraw10 != null)
-            btnToolResultDraw10.onClick.AddListener(() => OnClickedDrawGacha(GachaType.Tool, 10));
+            btnToolResultDraw10.onClick.AddListener(HandleToolResultDrawTen);
 
         // 5. 동물 가챠 전용 결과창 다시 뽑기 버튼
         if (btnAnimalResultDraw1 != null)
-            btnAnimalResultDraw1.onClick.AddListener(() => OnClickedDrawGacha(GachaType.Animal, 1));
+            btnAnimalResultDraw1.onClick.AddListener(HandleAnimalResultDrawOne);
         if (btnAnimalResultDraw10 != null)
-            btnAnimalResultDraw10.onClick.AddListener(() => OnClickedDrawGacha(GachaType.Animal, 10));
+            btnAnimalResultDraw10.onClick.AddListener(HandleAnimalResultDrawTen);
 
         // 6. 통합 공용 결과창 다시 뽑기 버튼 (마지막 실행된 가챠 타입 추적)
         if (btnResultDraw1 != null)
-            btnResultDraw1.onClick.AddListener(() => OnClickedDrawGacha(_lastExecutedType, 1));
+            btnResultDraw1.onClick.AddListener(HandleSharedResultDrawOne);
         if (btnResultDraw10 != null)
-            btnResultDraw10.onClick.AddListener(() => OnClickedDrawGacha(_lastExecutedType, 10));
+            btnResultDraw10.onClick.AddListener(HandleSharedResultDrawTen);
     }
 
-    // 이벤트 중복 등록 방지를 위한 리스너 해제 처리
+    // 가챠 버튼별 콜백
+    private void HandleToolDrawOne() => OnClickedDrawGacha(GachaType.Tool, 1);
+    private void HandleToolDrawTen() => OnClickedDrawGacha(GachaType.Tool, 10);
+    private void HandleAnimalDrawOne() => OnClickedDrawGacha(GachaType.Animal, 1);
+    private void HandleAnimalDrawTen() => OnClickedDrawGacha(GachaType.Animal, 10);
+    private void HandleToolResultDrawOne() => OnClickedDrawGacha(GachaType.Tool, 1);
+    private void HandleToolResultDrawTen() => OnClickedDrawGacha(GachaType.Tool, 10);
+    private void HandleAnimalResultDrawOne() => OnClickedDrawGacha(GachaType.Animal, 1);
+    private void HandleAnimalResultDrawTen() => OnClickedDrawGacha(GachaType.Animal, 10);
+    private void HandleSharedResultDrawOne() => OnClickedDrawGacha(_lastExecutedType, 1);
+    private void HandleSharedResultDrawTen() => OnClickedDrawGacha(_lastExecutedType, 10);
+
+    // 이벤트 중복 등록 방지를 위한 자체 리스너 해제 처리
     private void RemoveButtonListeners()
     {
         // ------------ 26.08.06 KAY 수정 (주석처리) ------------------
         //if (btnOpenGachaWindow != null) btnOpenGachaWindow.onClick.RemoveAllListeners();
 
-        if (btnToolDraw1 != null) btnToolDraw1.onClick.RemoveAllListeners();
-        if (btnToolDraw10 != null) btnToolDraw10.onClick.RemoveAllListeners();
+        if (btnToolDraw1 != null) btnToolDraw1.onClick.RemoveListener(HandleToolDrawOne);
+        if (btnToolDraw10 != null) btnToolDraw10.onClick.RemoveListener(HandleToolDrawTen);
 
-        if (btnAnimalDraw1 != null) btnAnimalDraw1.onClick.RemoveAllListeners();
-        if (btnAnimalDraw10 != null) btnAnimalDraw10.onClick.RemoveAllListeners();
+        if (btnAnimalDraw1 != null) btnAnimalDraw1.onClick.RemoveListener(HandleAnimalDrawOne);
+        if (btnAnimalDraw10 != null) btnAnimalDraw10.onClick.RemoveListener(HandleAnimalDrawTen);
 
-        if (btnToolResultDraw1 != null) btnToolResultDraw1.onClick.RemoveAllListeners();
-        if (btnToolResultDraw10 != null) btnToolResultDraw10.onClick.RemoveAllListeners();
+        if (btnToolResultDraw1 != null) btnToolResultDraw1.onClick.RemoveListener(HandleToolResultDrawOne);
+        if (btnToolResultDraw10 != null) btnToolResultDraw10.onClick.RemoveListener(HandleToolResultDrawTen);
 
-        if (btnAnimalResultDraw1 != null) btnAnimalResultDraw1.onClick.RemoveAllListeners();
-        if (btnAnimalResultDraw10 != null) btnAnimalResultDraw10.onClick.RemoveAllListeners();
+        if (btnAnimalResultDraw1 != null) btnAnimalResultDraw1.onClick.RemoveListener(HandleAnimalResultDrawOne);
+        if (btnAnimalResultDraw10 != null) btnAnimalResultDraw10.onClick.RemoveListener(HandleAnimalResultDrawTen);
 
-        if (btnResultDraw1 != null) btnResultDraw1.onClick.RemoveAllListeners();
-        if (btnResultDraw10 != null) btnResultDraw10.onClick.RemoveAllListeners();
+        if (btnResultDraw1 != null) btnResultDraw1.onClick.RemoveListener(HandleSharedResultDrawOne);
+        if (btnResultDraw10 != null) btnResultDraw10.onClick.RemoveListener(HandleSharedResultDrawTen);
     }
 
     public void ToggleGachaWindow()

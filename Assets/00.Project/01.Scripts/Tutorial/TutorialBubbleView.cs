@@ -1,4 +1,5 @@
 using System;
+using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -161,6 +162,13 @@ namespace TaskTown.Tutorial
         [SerializeField] private GameObject advanceIndicator;
         [SerializeField] private TutorialBubbleHoverTween hoverTween;
 
+        [Header("Progress Punch")]
+        [SerializeField] private Vector3 progressPunchScale =
+            new(0.12f, 0.12f, 0f);
+        [SerializeField, Min(0.01f)] private float progressPunchDuration = 0.18f;
+        [SerializeField, Min(1)] private int progressPunchVibrato = 4;
+        [SerializeField, Range(0f, 1f)] private float progressPunchElasticity = 0.6f;
+
         [Header("Speaker Layout")]
         [SerializeField] private RectTransform layoutRoot;
         [SerializeField] private RectTransform portraitRoot;
@@ -184,6 +192,9 @@ namespace TaskTown.Tutorial
         private bool hasAppliedLayout;
         private TutorialSpeakerSide appliedLayoutSide;
         private Vector2 appliedLayoutOffset;
+        private Tween progressPunchTween;
+        private bool isProgressPunchRequested;
+        private Vector3 progressTextOriginalScale = Vector3.one;
 
         public event Action AdvanceRequested;
         public event Action SkipConfirmationOpened;
@@ -201,6 +212,7 @@ namespace TaskTown.Tutorial
             if (hoverTween == null && advanceButton != null)
                 advanceButton.TryGetComponent(out hoverTween);
 
+            CacheProgressTextOriginalScale();
             ResolveLayoutReferences();
         }
 
@@ -218,6 +230,7 @@ namespace TaskTown.Tutorial
 
             isTutorialVisible = IsVisible;
             ResetSkipRequest();
+            CacheProgressTextOriginalScale();
         }
 
         private void OnDisable()
@@ -234,6 +247,12 @@ namespace TaskTown.Tutorial
 
             isTutorialVisible = false;
             ResetSkipRequest();
+            StopProgressPunchAndRestore();
+        }
+
+        private void LateUpdate()
+        {
+            PlayRequestedProgressPunch();
         }
 
         public void Render(
@@ -247,7 +266,9 @@ namespace TaskTown.Tutorial
             SetText(speakerNameText, speakerName);
             SetText(messageText, message, true);
             bool hasObjective = SetOptionalText(objectiveText, objective, true);
-            SetOptionalText(progressText, progress);
+            bool hasProgress = SetOptionalText(progressText, progress);
+            if (!hasProgress)
+                StopProgressPunchAndRestore();
 
             if (objectiveContainer != null)
                 objectiveContainer.SetActive(hasObjective);
@@ -296,6 +317,80 @@ namespace TaskTown.Tutorial
         public void PlayPunch()
         {
             hoverTween?.PlayPunch();
+        }
+
+        public void RequestProgressPunch()
+        {
+            if (progressText != null && progressText.gameObject.activeInHierarchy)
+                isProgressPunchRequested = true;
+        }
+
+        private void CacheProgressTextOriginalScale()
+        {
+            if (progressText != null)
+                progressTextOriginalScale = progressText.rectTransform.localScale;
+        }
+
+        private void PlayRequestedProgressPunch()
+        {
+            if (!isProgressPunchRequested || progressText == null)
+                return;
+
+            RectTransform target = progressText.rectTransform;
+            if (!target.gameObject.activeInHierarchy)
+            {
+                isProgressPunchRequested = false;
+                return;
+            }
+
+            if (progressPunchTween != null && progressPunchTween.IsActive() &&
+                progressPunchTween.IsPlaying())
+            {
+                return;
+            }
+
+            EnsureProgressPunchTween(target);
+            if (progressPunchTween == null || !progressPunchTween.IsActive())
+                return;
+
+            isProgressPunchRequested = false;
+            target.localScale = progressTextOriginalScale;
+            progressPunchTween.Restart();
+        }
+
+        private void EnsureProgressPunchTween(RectTransform target)
+        {
+            if (progressPunchTween != null && progressPunchTween.IsActive())
+                return;
+
+            target.localScale = progressTextOriginalScale;
+            progressPunchTween = target
+                .DOPunchScale(
+                    progressPunchScale,
+                    progressPunchDuration,
+                    progressPunchVibrato,
+                    progressPunchElasticity)
+                .SetAutoKill(false)
+                .SetUpdate(true)
+                .SetLink(target.gameObject, LinkBehaviour.KillOnDestroy)
+                .Pause()
+                .OnComplete(() =>
+                {
+                    if (target != null)
+                        target.localScale = progressTextOriginalScale;
+                });
+        }
+
+        private void StopProgressPunchAndRestore()
+        {
+            isProgressPunchRequested = false;
+
+            if (progressPunchTween != null && progressPunchTween.IsActive())
+                progressPunchTween.Kill(false);
+
+            progressPunchTween = null;
+            if (progressText != null)
+                progressText.rectTransform.localScale = progressTextOriginalScale;
         }
 
         public void ApplySpeakerLayout(

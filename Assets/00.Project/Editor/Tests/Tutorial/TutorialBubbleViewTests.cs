@@ -80,8 +80,8 @@ namespace TaskTown.EditorTests.Tutorial
         [TestCase(
             TutorialStep.ConfirmAutoProduction,
             TutorialStep.OpenVillageInfo,
-            51L,
-            "50 / 50")]
+            31L,
+            "30 / 30")]
         public void ProgressChanged_목표달성으로단계가바뀌면_완료수치를먼저표시한다(
             TutorialStep presentedStep,
             TutorialStep nextStep,
@@ -219,6 +219,58 @@ namespace TaskTown.EditorTests.Tutorial
             }
             finally
             {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void ProgressPunch_빠른연속요청에도_Tween하나만재사용한다()
+        {
+            GameObject root = new(
+                "TutorialProgressPunchTest",
+                typeof(CanvasGroup),
+                typeof(TutorialBubbleView));
+            GameObject progressObject = new(
+                "ProgressText",
+                typeof(RectTransform),
+                typeof(TextMeshProUGUI));
+            progressObject.transform.SetParent(root.transform);
+
+            TutorialBubbleView view = root.GetComponent<TutorialBubbleView>();
+            TMP_Text progressText = progressObject.GetComponent<TMP_Text>();
+            SerializedObject serialized = new(view);
+            serialized.FindProperty("canvasGroup").objectReferenceValue =
+                root.GetComponent<CanvasGroup>();
+            serialized.FindProperty("progressText").objectReferenceValue = progressText;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+
+            try
+            {
+                InvokeLifecycle(view, "OnEnable");
+                view.Render("Guide", null, "Auto", "Objective", "1 / 30", false);
+
+                view.RequestProgressPunch();
+                view.RequestProgressPunch();
+                view.RequestProgressPunch();
+                InvokeLifecycle(view, "LateUpdate");
+
+                var tweens = DOTween.TweensByTarget(progressText.rectTransform);
+                Assert.IsNotNull(tweens);
+                Assert.AreEqual(1, tweens.Count);
+                Tween firstTween = tweens[0];
+
+                view.RequestProgressPunch();
+                view.RequestProgressPunch();
+                InvokeLifecycle(view, "LateUpdate");
+
+                tweens = DOTween.TweensByTarget(progressText.rectTransform);
+                Assert.IsNotNull(tweens);
+                Assert.AreEqual(1, tweens.Count);
+                Assert.AreSame(firstTween, tweens[0]);
+            }
+            finally
+            {
+                InvokeLifecycle(view, "OnDisable");
                 Object.DestroyImmediate(root);
             }
         }

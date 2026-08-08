@@ -693,6 +693,7 @@ GameObject:
   - component: {fileID: 1607782892165366041}
   - component: {fileID: 7628188143185383871}
   - component: {fileID: 2539802735824278294}
+  - component: {fileID: 3562046921953794116}
   m_Layer: 5
   m_Name: Btn_Tool_Gacha_1
   m_TagString: Untagged
@@ -802,6 +803,21 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &3562046921953794116
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2712812740359538869}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0af9290513608304ca5b0c851a28d019, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIButtonSoundPlayer
+  targetButton: {fileID: 2539802735824278294}
+  uiSoundId: UI_Click
+  soundManager: {fileID: 0}
 --- !u!1 &2721390385590134551
 GameObject:
   m_ObjectHideFlags: 0
@@ -814,6 +830,7 @@ GameObject:
   - component: {fileID: 7009871167669708878}
   - component: {fileID: 5696699801446026774}
   - component: {fileID: 6365315764922323306}
+  - component: {fileID: 5533792126374135172}
   m_Layer: 5
   m_Name: Confin
   m_TagString: Untagged
@@ -923,6 +940,21 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &5533792126374135172
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2721390385590134551}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0af9290513608304ca5b0c851a28d019, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIButtonSoundPlayer
+  targetButton: {fileID: 6365315764922323306}
+  uiSoundId: UI_Click
+  soundManager: {fileID: 0}
 --- !u!1 &3360296626372212593
 GameObject:
   m_ObjectHideFlags: 0
@@ -1944,6 +1976,7 @@ GameObject:
   - component: {fileID: 1809095985345512597}
   - component: {fileID: 890781982595826809}
   - component: {fileID: 2068082772180209469}
+  - component: {fileID: 277076769946039360}
   m_Layer: 5
   m_Name: Btn_Tool_Gacha_10
   m_TagString: Untagged
@@ -2053,3 +2086,18 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &277076769946039360
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8291816986511779807}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0af9290513608304ca5b0c851a28d019, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIButtonSoundPlayer
+  targetButton: {fileID: 2068082772180209469}
+  uiSoundId: UI_Click
+  soundManager: {fileID: 0}
