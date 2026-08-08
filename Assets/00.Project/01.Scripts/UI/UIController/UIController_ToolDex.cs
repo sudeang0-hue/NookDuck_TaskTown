@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using TaskTown.KDH;
+using TMPro;
 using Tool.Data;
 using UnityEngine;
 
@@ -16,6 +17,9 @@ namespace UI
         [Header("도감 슬롯")]
         [SerializeField] private SlotUI_ToolDex toolSlotPrefab;
         [SerializeField] private Transform toolSlotContentRoot;
+        [SerializeField] private TMP_Text toolcountMessage;
+        [SerializeField, TextArea(2, 4)]
+        private string countMessage = "발견한 도구의 수: ";
 
         [Header("도구 상세 페이지")]
         [SerializeField] private UIController_ToolDexPage toolPageController;
@@ -49,6 +53,10 @@ namespace UI
             toolPageController?.CloseToolDexPage();
 
             SubscribeEvents();
+
+            // 패널을 다시 열 때 해금 상태·카운트 문구를 맞춥니다.
+            if (isInitialized)
+                RefreshInventory();
         }
 
         /// <summary>
@@ -139,6 +147,7 @@ namespace UI
             if (DexRecordManager.Instance == null)
             {
                 Debug.LogWarning("[UIController_ToolDex] DexRecordManager.Instance가 없습니다.");
+                RefreshCountMessage();
                 return;
             }
 
@@ -147,6 +156,8 @@ namespace UI
                 bool isUnlocked = DexRecordManager.Instance.IsDiscovered(pair.Key);
                 pair.Value.SetUnlocked(isUnlocked);
             }
+
+            RefreshCountMessage();
         }
 
         // ----------------08.08.KAY (도구 도감 해금 디버그 갱신)------------------
@@ -174,6 +185,44 @@ namespace UI
             }
 
             slot.SetUnlocked(true);
+
+            // 최초 획득 시 MarkDiscovered 구독 순서와 무관하게 카운트가 맞도록 이번 ID를 포함합니다.
+            RefreshCountMessage(slotData.ToolId);
+        }
+
+        /// <summary>
+        /// toolcountMessage = countMessage + 획득한 적 있는 수 + "/" + ToolDatabase 등록 수
+        /// </summary>
+        /// <param name="treatAsDiscoveredId">이번 프레임에 막 획득해 Discovered로 칠할 ID(이벤트 순서 보정용)</param>
+        private void RefreshCountMessage(string treatAsDiscoveredId = null)
+        {
+            if (toolcountMessage == null)
+                return;
+
+            int totalCount = 0;
+            int discoveredCount = 0;
+
+            IReadOnlyList<ToolDataSO> tools = toolDatabase != null ? toolDatabase.Tools : null;
+            if (tools != null)
+            {
+                for (int i = 0; i < tools.Count; i++)
+                {
+                    ToolDataSO tool = tools[i];
+                    if (tool == null || string.IsNullOrEmpty(tool.Id))
+                        continue;
+
+                    totalCount++;
+
+                    bool discovered =
+                        (DexRecordManager.Instance != null && DexRecordManager.Instance.IsDiscovered(tool.Id))
+                        || tool.Id == treatAsDiscoveredId;
+
+                    if (discovered)
+                        discoveredCount++;
+                }
+            }
+
+            toolcountMessage.text = countMessage + discoveredCount + "/" + totalCount;
         }
 
         /// <summary>
