@@ -43,6 +43,34 @@ namespace TaskTown.Tutorial
             Vector2 pointerTargetAnchor,
             Vector2 pointerAdditionalOffset)
         {
+            if (config == null ||
+                !config.TryGetStepContent(step, out TutorialStepContent content))
+            {
+                ClearAllHighlights();
+                return;
+            }
+
+            Highlight(
+                step,
+                content.HighlightEffects,
+                scaleTargets,
+                pointerTargets,
+                pointerTargetAnchor,
+                pointerAdditionalOffset);
+        }
+
+        /// <summary>
+        /// 같은 단계 안에서 메뉴와 패널 내부 버튼의 강조 효과를 구간별로 다르게 적용합니다.
+        /// 위치와 크기 설정은 단계 Config를 유지하고 표시 효과만 덮어씁니다.
+        /// </summary>
+        public void Highlight(
+            TutorialStep step,
+            TutorialHighlightEffect effects,
+            Button[] scaleTargets,
+            Button[] pointerTargets,
+            Vector2 pointerTargetAnchor,
+            Vector2 pointerAdditionalOffset)
+        {
             ClearAllHighlights();
 
             if (config == null ||
@@ -51,16 +79,17 @@ namespace TaskTown.Tutorial
                 return;
             }
 
-            if (UsesPointerVisual(content))
+            if (UsesPointerVisual(effects))
             {
                 pointerIndicator?.Show(
                     content,
+                    effects,
                     pointerTargetAnchor,
                     pointerAdditionalOffset,
                     pointerTargets);
             }
 
-            if (content.UsesHighlightEffect(TutorialHighlightEffect.ScalePulse))
+            if ((effects & TutorialHighlightEffect.ScalePulse) != 0)
                 scaleHighlighter?.Highlight(scaleTargets);
         }
 
@@ -153,8 +182,13 @@ namespace TaskTown.Tutorial
 
         private static bool UsesPointerVisual(TutorialStepContent content)
         {
-            return content.UsesHighlightEffect(TutorialHighlightEffect.Pointer) ||
-                   content.UsesHighlightEffect(TutorialHighlightEffect.FocusRing);
+            return UsesPointerVisual(content.HighlightEffects);
+        }
+
+        private static bool UsesPointerVisual(TutorialHighlightEffect effects)
+        {
+            return (effects & TutorialHighlightEffect.Pointer) != 0 ||
+                   (effects & TutorialHighlightEffect.FocusRing) != 0;
         }
     }
 }

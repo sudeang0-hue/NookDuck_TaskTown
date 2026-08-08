@@ -1,4 +1,4 @@
-
+using System;
 using Manager;
 using TaskTown.Gacha;
 using TMPro;
@@ -47,6 +47,7 @@ namespace UI
         // -----------------------------------------------------------------------------
         public Button AnimalOnePickButton => animalOnePickButton;
         public Button ToolOnePickButton => toolOnePickButton;
+        public event Action PanelOpened;
 
         /// <summary>
         /// 도구/동물 가챠 연출 중이면 true. 메뉴 토글 가드에 사용합니다.
@@ -89,6 +90,7 @@ namespace UI
             TrySubscribeVillageState();
             RefreshCostTexts();
             SyncDirectorsOnPanelOpened();
+            PanelOpened?.Invoke();
         }
 
         /// <summary>

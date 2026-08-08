@@ -2482,6 +2482,7 @@ GameObject:
   - component: {fileID: 761438988289119039}
   - component: {fileID: 3619589822373936104}
   - component: {fileID: 1747582283900375567}
+  - component: {fileID: 2563947660177539889}
   m_Layer: 5
   m_Name: Testbtn_FollowOff
   m_TagString: Untagged
@@ -2591,6 +2592,21 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &2563947660177539889
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5458823844124010965}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0af9290513608304ca5b0c851a28d019, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIButtonSoundPlayer
+  targetButton: {fileID: 1747582283900375567}
+  uiSoundId: UI_Click
+  soundManager: {fileID: 0}
 --- !u!1 &6841002827745570892
 GameObject:
   m_ObjectHideFlags: 0

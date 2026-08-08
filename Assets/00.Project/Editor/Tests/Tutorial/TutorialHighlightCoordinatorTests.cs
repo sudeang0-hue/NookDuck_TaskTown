@@ -138,6 +138,36 @@ namespace TaskTown.EditorTests.Tutorial
         }
 
         [Test]
+        public void Highlight_효과덮어쓰기는_Config의FocusRing을표시하지않는다()
+        {
+            TestContext context = CreateContext(
+                TutorialHighlightEffect.ScalePulse |
+                TutorialHighlightEffect.Pointer |
+                TutorialHighlightEffect.FocusRing);
+
+            try
+            {
+                context.Coordinator.Highlight(
+                    TutorialStep.DrawAnimal,
+                    TutorialHighlightEffect.ScalePulse |
+                    TutorialHighlightEffect.Pointer,
+                    new[] { context.Button },
+                    new[] { context.Button },
+                    new Vector2(0.5f, 0.5f),
+                    Vector2.zero);
+
+                Assert.IsTrue(context.PointerRoot.activeSelf);
+                Assert.IsTrue(context.HandObject.activeSelf);
+                Assert.IsFalse(context.RingObject.activeSelf);
+                Assert.IsNotNull(DOTween.TweensByTarget(context.Button.transform));
+            }
+            finally
+            {
+                context.Dispose();
+            }
+        }
+
+        [Test]
         public void HighlightUiTarget_FocusRingOnly_HidesHandAndShowsRing()
         {
             TestContext context = CreateContext(

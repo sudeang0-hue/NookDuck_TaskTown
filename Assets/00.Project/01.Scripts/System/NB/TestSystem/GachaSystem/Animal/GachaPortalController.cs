@@ -38,7 +38,9 @@ public class GachaPortalController : MonoBehaviour
     [SerializeField] private List<GachaEntryData> debugDummyEntries = new List<GachaEntryData>();
 
     public bool IsAnimating => _isAnimating;
+    public Button ConfirmButton => btnConfirm;
     public event Action OnPortalOpened;
+    public event Action ResultConfirmed;
 
     private bool _isAnimating = false;
     private Vector3 _baseScale;
@@ -61,8 +63,8 @@ public class GachaPortalController : MonoBehaviour
 
         if (btnConfirm != null)
         {
-            btnConfirm.onClick.RemoveAllListeners();
-            btnConfirm.onClick.AddListener(CloseGachaUI);
+            btnConfirm.onClick.RemoveListener(HandleConfirmClicked);
+            btnConfirm.onClick.AddListener(HandleConfirmClicked);
         }
 
         ValidateReferences();
@@ -253,6 +255,12 @@ public class GachaPortalController : MonoBehaviour
     }
 
     // 차원문 및 결과창 UI 상태 완전 리셋 
+    private void HandleConfirmClicked()
+    {
+        CloseGachaUI();
+        ResultConfirmed?.Invoke();
+    }
+
     public void ResetPortalState()
     {
         StopAndResetAllCoroutinesAndTweens();
@@ -313,6 +321,9 @@ public class GachaPortalController : MonoBehaviour
 
     private void OnDestroy()
     {
+        if (btnConfirm != null)
+            btnConfirm.onClick.RemoveListener(HandleConfirmClicked);
+
         ResetPortalState();
     }
 }

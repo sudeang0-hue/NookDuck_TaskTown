@@ -22,6 +22,8 @@ namespace TaskTown.Tutorial
         private Coroutine pendingStepPresentation;
         private TutorialStep presentedStep;
         private bool hasPresentedStep;
+        private bool hasObservedAutoProductionCoin;
+        private long observedAutoProductionCoin;
 
         private void Awake()
         {
@@ -112,17 +114,22 @@ namespace TaskTown.Tutorial
                 return;
             }
 
+            bool shouldPunchProgress = ShouldPunchAutoProductionProgress(progress);
+
             // 상태 머신은 목표치를 달성한 ProgressChanged를 다음 단계 값으로 전달합니다.
             // 기존 퀘스트를 유지하는 완료 연출 동안에는 최종 목표 수치를 먼저 확정 표시합니다.
             if (hasPresentedStep &&
                 progress != null &&
                 progress.currentStep != presentedStep)
             {
-                TryRenderCompletedProgress(progress);
+                if (TryRenderCompletedProgress(progress) && shouldPunchProgress)
+                    view?.RequestProgressPunch();
                 return;
             }
 
             RefreshView();
+            if (shouldPunchProgress)
+                view?.RequestProgressPunch();
         }
 
         private void HandlePauseChanged(bool isPaused)
@@ -137,6 +144,8 @@ namespace TaskTown.Tutorial
         {
             StopPendingStepPresentation();
             hasPresentedStep = false;
+            hasObservedAutoProductionCoin = false;
+            observedAutoProductionCoin = 0L;
             view?.ResetSkipRequest();
             RefreshView();
         }
@@ -418,6 +427,35 @@ namespace TaskTown.Tutorial
             view.SetVisible(true);
             presentedStep = step;
             hasPresentedStep = true;
+
+            if (step == TutorialStep.ConfirmAutoProduction)
+            {
+                observedAutoProductionCoin =
+                    tutorialManager?.AutoProductionEarnedCoin ?? 0L;
+                hasObservedAutoProductionCoin = true;
+            }
+            else
+            {
+                observedAutoProductionCoin = 0L;
+                hasObservedAutoProductionCoin = false;
+            }
+        }
+
+        private bool ShouldPunchAutoProductionProgress(TutorialSaveData progress)
+        {
+            if (!hasPresentedStep ||
+                presentedStep != TutorialStep.ConfirmAutoProduction ||
+                progress == null)
+            {
+                return false;
+            }
+
+            bool shouldPunch = hasObservedAutoProductionCoin &&
+                               progress.autoProductionEarnedCoin >
+                               observedAutoProductionCoin;
+            observedAutoProductionCoin = progress.autoProductionEarnedCoin;
+            hasObservedAutoProductionCoin = true;
+            return shouldPunch;
         }
 
         private bool TryRenderCompletedProgress(TutorialSaveData progress)

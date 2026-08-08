@@ -1,5 +1,6 @@
 //NB
 
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -47,6 +48,9 @@ public class GachaDirector : MonoBehaviour
     [SerializeField] private List<GachaEntryData> debugDummyEntries = new List<GachaEntryData>();
 
     public bool IsAnimating => _isAnimating;
+    public Button ConfirmButton => btnConfirm;
+    public event Action ResultOpened;
+    public event Action ResultConfirmed;
 
     private Sequence _gachaSequence;
     private bool _isAnimating;
@@ -57,7 +61,11 @@ public class GachaDirector : MonoBehaviour
         panelCanvasGroup ??= GetComponent<CanvasGroup>();
 
         if (imageBoxTransform != null) SetupTransformPivotCenter(imageBoxTransform);
-        if (btnConfirm) btnConfirm.onClick.AddListener(CloseGachaUI);
+        if (btnConfirm != null)
+        {
+            btnConfirm.onClick.RemoveListener(HandleConfirmClicked);
+            btnConfirm.onClick.AddListener(HandleConfirmClicked);
+        }
 
         AutoHidePanelsOnStart();
     }
@@ -174,6 +182,7 @@ public class GachaDirector : MonoBehaviour
     {
         resultPopupPanel.SetActive(true);
 
+        Sequence emergeSequence = null;
         RectTransform resultRect = resultPopupPanel.transform as RectTransform;
         if (resultRect != null)
         {
@@ -182,13 +191,18 @@ public class GachaDirector : MonoBehaviour
             resultRect.localScale = Vector3.zero;
             resultRect.localRotation = Quaternion.identity;
 
-            Sequence emergeSeq = DOTween.Sequence();
-            emergeSeq.Append(resultRect.DOAnchorPos(Vector2.zero, popupEmergeDuration).SetEase(Ease.OutCubic));
-            emergeSeq.Join(resultRect.DOScale(Vector3.one, popupEmergeDuration).SetEase(Ease.OutBack));
-            emergeSeq.Join(imageBoxTransform.DOScale(0.85f, popupEmergeDuration).SetEase(Ease.OutQuad));
+            emergeSequence = DOTween.Sequence();
+            emergeSequence.Append(resultRect.DOAnchorPos(Vector2.zero, popupEmergeDuration).SetEase(Ease.OutCubic));
+            emergeSequence.Join(resultRect.DOScale(Vector3.one, popupEmergeDuration).SetEase(Ease.OutBack));
+            emergeSequence.Join(imageBoxTransform.DOScale(0.85f, popupEmergeDuration).SetEase(Ease.OutQuad));
         }
 
         PopulateResultSlots(drawCount, resultEntries);
+
+        if (emergeSequence != null)
+            emergeSequence.OnComplete(() => ResultOpened?.Invoke());
+        else
+            ResultOpened?.Invoke();
     }
 
     private void PopulateResultSlots(int drawCount, List<GachaEntryData> resultEntries)
@@ -238,6 +252,12 @@ public class GachaDirector : MonoBehaviour
         {
             LayoutRebuilder.ForceRebuildLayoutImmediate(gridRect);
         }
+    }
+
+    private void HandleConfirmClicked()
+    {
+        CloseGachaUI();
+        ResultConfirmed?.Invoke();
     }
 
     public void CloseGachaUI()
@@ -297,6 +317,9 @@ public class GachaDirector : MonoBehaviour
 
     private void OnDestroy()
     {
+        if (btnConfirm != null)
+            btnConfirm.onClick.RemoveListener(HandleConfirmClicked);
+
         _isAnimating = false;
         ResetAllTweens();
     }

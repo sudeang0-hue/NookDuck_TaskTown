@@ -82,7 +82,7 @@ public class GameMasterManager : MonoBehaviour
             }
         }
 
-        // 3. 버튼 리스너 바인딩 (중복 방지를 위한 RemoveAllListeners 호출)
+        // 3. 버튼 리스너 바인딩 (자체 리스너만 제거하여 다른 기능과 버튼음을 보존)
         InitButtonListeners();
 
         // 4. 초기 UI 패널 상태 설정
@@ -140,17 +140,17 @@ public class GameMasterManager : MonoBehaviour
     {
         if (btnMinimize)
         {
-            btnMinimize.onClick.RemoveAllListeners();
+            btnMinimize.onClick.RemoveListener(SetMinimizedScreen);
             btnMinimize.onClick.AddListener(SetMinimizedScreen);
         }
         if (btnMaximize)
         {
-            btnMaximize.onClick.RemoveAllListeners();
+            btnMaximize.onClick.RemoveListener(SetExpandedScreen);
             btnMaximize.onClick.AddListener(SetExpandedScreen);
         }
         if (btnQuit)
         {
-            btnQuit.onClick.RemoveAllListeners();
+            btnQuit.onClick.RemoveListener(QuitGame);
             btnQuit.onClick.AddListener(QuitGame);
         }
     }
