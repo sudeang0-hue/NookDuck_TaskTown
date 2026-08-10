@@ -49,12 +49,12 @@ namespace TaskTown.EditorTests.Tutorial
         }
 
         [Test]
-        public void ConfigAsset_인트로9개_완료대화1개를포함한다()
+        public void ConfigAsset_인트로9개_완료대화5개를포함한다()
         {
             TutorialConfigSO config = LoadConfig();
 
             Assert.AreEqual(9, config.GetMessageCount(TutorialStep.IntroDialogue));
-            Assert.AreEqual(1, config.GetMessageCount(TutorialStep.CompletionDialogue));
+            Assert.AreEqual(5, config.GetMessageCount(TutorialStep.CompletionDialogue));
         }
 
         [TestCase(-10, 0)]
@@ -177,15 +177,32 @@ namespace TaskTown.EditorTests.Tutorial
         }
 
         [Test]
-        public void ConfigAsset_마을업그레이드설명을행동단계전에표시한다()
+        public void ConfigAsset_마을업그레이드는_화면확인후세부설명을표시한다()
         {
             TutorialConfigSO config = LoadConfig();
 
             Assert.IsTrue(config.TryGetStepContent(
                 TutorialStep.UpgradeExplanation,
                 out TutorialStepContent explanation));
-            Assert.AreEqual(6, explanation.Messages.Count);
+            Assert.AreEqual(2, explanation.Messages.Count);
             Assert.IsTrue(explanation.AllowClickAdvance);
+
+            Assert.IsTrue(config.TryGetStepContent(
+                TutorialStep.UpgradeVillage,
+                out TutorialStepContent quest));
+            Assert.AreEqual("마을 업그레이드 화면 확인", quest.ObjectiveText);
+            Assert.IsFalse(quest.AllowClickAdvance);
+
+            Assert.IsTrue(config.TryGetStepContent(
+                TutorialStep.CompletionDialogue,
+                out TutorialStepContent completion));
+            Assert.AreEqual(5, completion.Messages.Count);
+            CollectionAssert.Contains(
+                completion.Messages,
+                "이곳에서는 클릭 수익, 타이핑 수익, 도구 효율을 각각 높일 수 있습니다.");
+            CollectionAssert.Contains(
+                completion.Messages,
+                "필수 업그레이드를 완료하면 마을 레벨을 올리고, 마을의 성장 범위를 넓힐 수 있습니다.");
         }
 
         [Test]

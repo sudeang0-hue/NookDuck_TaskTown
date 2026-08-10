@@ -248,7 +248,7 @@ public class SlotUI_AnimalInv : SlotUIBase
         }
 
         if (animalNameText != null)
-            animalNameText.text = data.DisplayName;
+            animalNameText.text = data.AnimalDisplayName_;
     }
 
     // ------------------------------------------------------------------------------------------

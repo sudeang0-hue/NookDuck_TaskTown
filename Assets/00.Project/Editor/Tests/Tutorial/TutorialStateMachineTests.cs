@@ -273,7 +273,8 @@ namespace TaskTown.EditorTests.Tutorial
             Assert.IsTrue(machine.TryHandleSignal(TutorialSignalType.VillageAnimalPlaced));
             Assert.IsTrue(machine.TryHandleSignal(TutorialSignalType.VillageInfoOpened));
             Assert.IsTrue(machine.TryHandleSignal(TutorialSignalType.DialogueCompleted));
-            Assert.IsTrue(machine.TryHandleSignal(TutorialSignalType.AnyUpgradePurchased));
+            Assert.IsTrue(machine.TryHandleSignal(
+                TutorialSignalType.VillageUpgradePanelOpened));
             Assert.IsTrue(machine.TryHandleSignal(TutorialSignalType.DialogueCompleted));
 
             Assert.IsTrue(machine.IsCompleted);
@@ -284,11 +285,12 @@ namespace TaskTown.EditorTests.Tutorial
         }
 
         [Test]
-        public void AnyUpgradePurchased_업그레이드단계_완료대화로진행한다()
+        public void VillageUpgradePanelOpened_업그레이드단계_완료대화로진행한다()
         {
             TutorialStateMachine machine = CreateMachine(TutorialStep.UpgradeVillage);
 
-            bool handled = machine.TryHandleSignal(TutorialSignalType.AnyUpgradePurchased);
+            bool handled = machine.TryHandleSignal(
+                TutorialSignalType.VillageUpgradePanelOpened);
 
             Assert.IsTrue(handled);
             Assert.AreEqual(TutorialStep.CompletionDialogue, machine.CurrentStep);
