@@ -8,6 +8,9 @@ namespace UI
 {
     public class UIController_AnimalDex : MonoBehaviour
     {
+        [SerializeField] private bool useProfileImageToslot;
+        [SerializeField] private bool useProfileImageToPage;
+
         [Header("동물 인벤토리")]
         [SerializeField] private InventoryManager_Animal animalInventory;
 
@@ -87,6 +90,9 @@ namespace UI
             if (!ValidateReferences())
                 return;
 
+            // 상세 페이지 아이콘 분기(Icon / ProfileImage)를 AnimalDex에서 일괄 제어
+            animalPageController.SetUseProfileImage(useProfileImageToPage);
+
             CreateAnimalSlots();
 
             isInitialized = true;
@@ -133,8 +139,8 @@ namespace UI
 
                 SlotUI_AnimalDex slot = Instantiate(animalSlotPrefab, animalSlotContentRoot);
 
-                // slot.Initialize(toolData, animalPageController);
-                slot.Initialize(animalData, animalPageController, false);
+                // useProfileImageToslot == false: Icon / true: AnimalDataSO.ProfileImage
+                slot.Initialize(animalData, animalPageController, false, useProfileImageToslot);
 
                 slotMap.Add(animalId, slot);
                 createdSlots.Add(slot);

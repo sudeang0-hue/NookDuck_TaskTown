@@ -13,6 +13,9 @@ namespace UI
         // Dex_Page 자신에 붙어 있으므로 SerializeField 없이 gameObject를 사용합니다.
         private GameObject AnimalDexPagePanel => gameObject;
 
+        // UIController_AnimalDex.useProfileImageToPage 로 설정됩니다.
+        private bool useProfileImage;
+
         [Header("동물 상세 정보")]
         [SerializeField] private Image animalIconImage;
         [Tooltip("동물 타입 텍스트(오리,개,고양이)")]
@@ -51,6 +54,15 @@ namespace UI
         private void Awake()
         {
             AnimalDexPagePanel.SetActive(false);
+        }
+
+        /// <summary>
+        /// 해금 동물 아이콘에 ProfileImage를 사용할지 설정합니다.
+        /// UIController_AnimalDex의 useProfileImageToPage 값을 전달받습니다.
+        /// </summary>
+        public void SetUseProfileImage(bool useProfileImage)
+        {
+            this.useProfileImage = useProfileImage;
         }
 
         /// <summary>
@@ -97,8 +109,17 @@ namespace UI
         {
             if (animalIconImage != null)
             {
-                animalIconImage.sprite = currentAnimalData.Icon;
-                animalIconImage.enabled = currentAnimalData.Icon != null;
+                if(useProfileImage == false)
+                {
+                    animalIconImage.sprite = currentAnimalData.Icon;
+                    animalIconImage.enabled = currentAnimalData.Icon != null;
+                }
+                else
+                {
+                    animalIconImage.sprite = currentAnimalData.ProfileImage;
+                    animalIconImage.enabled = currentAnimalData.ProfileImage != null;
+                }
+
             }
 
             if (animalNameText != null)

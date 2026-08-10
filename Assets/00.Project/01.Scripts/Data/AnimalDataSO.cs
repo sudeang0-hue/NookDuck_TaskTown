@@ -9,6 +9,7 @@ namespace Animal.Data
     public class AnimalDataSO : GachaEntryData, IDifficultyGated
     {
         [SerializeField] private string animalDisplayName_;
+        [SerializeField] private Sprite profileImage;
 
         [Header("도감 설명")]
         [TextArea(3, 5)]
@@ -26,6 +27,7 @@ namespace Animal.Data
 
 
         public string AnimalDisplayName_ => animalDisplayName_;
+        public Sprite ProfileImage => profileImage;
         public string AnimalDescription => animalDescription;
         public string AnimalHintDescription => animalHintDescription;
         public int DexIndex => dexIndex;
