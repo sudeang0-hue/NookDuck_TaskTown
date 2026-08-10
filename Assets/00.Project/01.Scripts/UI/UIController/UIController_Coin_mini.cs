@@ -132,7 +132,7 @@ public class UIController_Coin_mini : MonoBehaviour
                 "0.##",
                 CultureInfo.InvariantCulture) + "B";
         }
-
+        /*
         if (coinAmount >= Million)
         {
             double formattedAmount = coinAmount / (double)Million;
@@ -141,7 +141,7 @@ public class UIController_Coin_mini : MonoBehaviour
                 "0.##",
                 CultureInfo.InvariantCulture) + "M";
         }
-
+        */
         return coinAmount.ToString("N0");
     }
 }
