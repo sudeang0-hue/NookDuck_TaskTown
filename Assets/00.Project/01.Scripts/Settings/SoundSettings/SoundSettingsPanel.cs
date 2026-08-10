@@ -7,6 +7,7 @@
  * - 슬라이더 변경 시 AudioMixer에 즉시 적용하고 SoundSettingsStore에 저장합니다.
  * - 볼륨 아이콘 클릭 시 해당 채널을 음소거하거나 마지막 볼륨으로 복원합니다.
  * - 볼륨이 0이면 mute icon, 0보다 크면 playing icon으로 갱신합니다.
+ * - Master, BGM, UI 채널은 각각 전용 playing/mute icon을 사용할 수 있습니다.
  */
 using TMPro;
 using UnityEngine;
@@ -27,23 +28,31 @@ public class SoundSettingsPanel : MonoBehaviour
     [FormerlySerializedAs("animalVolumeParameter")]
     [SerializeField] private string environmentVolumeParameter = "EnvironmentVolume";
 
-    [Header("Sound Icons")]
+    [Header("Sound Icon Fallback")]
+    [Tooltip("채널별 아이콘이 연결되지 않았을 때 사용하는 기본 재생 아이콘입니다.")]
     [SerializeField] private Sprite soundPlayingIcon;
+    [Tooltip("채널별 아이콘이 연결되지 않았을 때 사용하는 기본 음소거 아이콘입니다.")]
     [SerializeField] private Sprite soundMuteIcon;
 
     [Header("Master")]
+    [SerializeField] private Sprite masterPlayingIcon;
+    [SerializeField] private Sprite masterMuteIcon;
     [SerializeField] private Image masterIconImage;
     [SerializeField] private Button masterMuteButton;
     [SerializeField] private Slider masterSlider;
     [SerializeField] private TextMeshProUGUI masterPercentText;
 
     [Header("BGM")]
+    [SerializeField] private Sprite bgmPlayingIcon;
+    [SerializeField] private Sprite bgmMuteIcon;
     [SerializeField] private Image bgmIconImage;
     [SerializeField] private Button bgmMuteButton;
     [SerializeField] private Slider bgmSlider;
     [SerializeField] private TextMeshProUGUI bgmPercentText;
 
-    [Header("UIController_AnimalInvPage")]
+    [Header("UI")]
+    [SerializeField] private Sprite uiPlayingIcon;
+    [SerializeField] private Sprite uiMuteIcon;
     [SerializeField] private Image uiIconImage;
     [SerializeField] private Button uiMuteButton;
     [SerializeField] private Slider uiSlider;
@@ -319,7 +328,8 @@ public class SoundSettingsPanel : MonoBehaviour
             return;
         }
 
-        Sprite targetIcon = percent <= 0f ? soundMuteIcon : soundPlayingIcon;
+        bool isMuted = percent <= 0f;
+        Sprite targetIcon = GetVolumeIcon(channel, isMuted);
 
         if (targetIcon == null)
         {
@@ -329,6 +339,24 @@ public class SoundSettingsPanel : MonoBehaviour
         iconImage.sprite = targetIcon;
         iconImage.enabled = true;
         iconImage.preserveAspect = true;
+    }
+
+    private Sprite GetVolumeIcon(SoundVolumeChannel channel, bool isMuted)
+    {
+        Sprite channelIcon = channel switch
+        {
+            SoundVolumeChannel.Master => isMuted ? masterMuteIcon : masterPlayingIcon,
+            SoundVolumeChannel.BGM => isMuted ? bgmMuteIcon : bgmPlayingIcon,
+            SoundVolumeChannel.UI => isMuted ? uiMuteIcon : uiPlayingIcon,
+            _ => null
+        };
+
+        if (channelIcon != null)
+        {
+            return channelIcon;
+        }
+
+        return isMuted ? soundMuteIcon : soundPlayingIcon;
     }
 
     private Image GetIconImage(SoundVolumeChannel channel)
