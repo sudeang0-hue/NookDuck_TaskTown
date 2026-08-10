@@ -110,7 +110,10 @@ namespace UI
 
             if (coverButton != null)
             {
-                coverButton.interactable = isUnlocked;
+                // ----------------08.09.KAY (미해금 슬롯도 상세 페이지 오픈)------------------
+                // 미해금이어도 상세 페이지를 열 수 있도록 클릭을 항상 허용합니다.
+                coverButton.interactable = true;
+                // ---------------------------------------------------------
             }
 
         }
