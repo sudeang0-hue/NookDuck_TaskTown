@@ -320,8 +320,9 @@ namespace UI
             if (InventoryManager_Animal.Instance != null)
                 animalData = InventoryManager_Animal.Instance.GetAnimalData(specialId);
 
-            string animalName = animalData != null && !string.IsNullOrEmpty(animalData.DisplayName)
-                ? animalData.DisplayName
+            // AnimalInv/Dex와 동일하게 AnimalDisplayName_ 사용. 비어 있으면 Id 폴백
+            string animalName = animalData != null && !string.IsNullOrEmpty(animalData.AnimalDisplayName_)
+                ? animalData.AnimalDisplayName_
                 : specialId;
 
             specialAnimal.text = $"특화 동물: {animalName}";
@@ -405,10 +406,10 @@ namespace UI
                 if (animalData != null)
                 {
                     animalIcon = animalData.Icon;
-                    animalDisplayName = animalData.DisplayName;
+                    animalDisplayName = animalData.AnimalDisplayName_;
                 }
 
-                // DisplayName이 비어 있으면 Id로 대체
+                // AnimalDisplayName_이 비어 있으면 Id로 대체
                 if (string.IsNullOrEmpty(animalDisplayName))
                     animalDisplayName = slotData.CurrentAnimalId;
             }
