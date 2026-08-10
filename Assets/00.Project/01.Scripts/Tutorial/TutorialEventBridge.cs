@@ -32,6 +32,7 @@ namespace TaskTown.Tutorial
         [Header("튜토리얼 버튼 강조")]
         [SerializeField] private TutorialButtonHighlighter buttonHighlighter;
         [SerializeField] private TutorialHighlightCoordinator highlightCoordinator;
+        [SerializeField] private TutorialManualCoinFeedback manualCoinFeedback;
         [SerializeField] private UIController_Coin coinController;
         [SerializeField] private UIController_Menu menuController;
         [SerializeField] private UIController_Gacha gachaController;
@@ -175,6 +176,7 @@ namespace TaskTown.Tutorial
             UnsubscribeGachaGuidanceEvents();
             EndAnimalResultConfirmationGuidance();
             EndToolResultConfirmationGuidance();
+            manualCoinFeedback?.StopAndRestore();
 
             if (tutorialManager != null)
             {
@@ -221,6 +223,8 @@ namespace TaskTown.Tutorial
                 TryGetComponent(out buttonHighlighter);
             if (highlightCoordinator == null)
                 TryGetComponent(out highlightCoordinator);
+            if (manualCoinFeedback == null)
+                TryGetComponent(out manualCoinFeedback);
             if (coinController == null)
             {
                 coinController = FindFirstObjectByType<UIController_Coin>(
@@ -442,6 +446,7 @@ namespace TaskTown.Tutorial
             switch (step)
             {
                 case TutorialStep.EarnManualCoin:
+                    BindCoinGainFeedbackTarget();
                     if (earnProcessor != null)
                         earnProcessor.ManualCoinGranted += HandleManualCoinGranted;
                     else
@@ -488,6 +493,7 @@ namespace TaskTown.Tutorial
                     break;
 
                 case TutorialStep.ConfirmAutoProduction:
+                    BindCoinGainFeedbackTarget();
                     if (realProductionTicker != null)
                         realProductionTicker.ProductionCoinGranted += HandleProductionCoinGranted;
                     else
@@ -611,7 +617,13 @@ namespace TaskTown.Tutorial
 
         private void HandleManualCoinGranted(int amount)
         {
+            manualCoinFeedback?.Play();
             tutorialManager?.ReportSignal(TutorialSignalType.ManualCoinEarned, amount);
+        }
+
+        private void BindCoinGainFeedbackTarget()
+        {
+            manualCoinFeedback?.Bind(coinController?.AllCoinText?.rectTransform);
         }
 
         private void HandleGachaPanelOpened()
@@ -756,6 +768,7 @@ namespace TaskTown.Tutorial
 
         private void HandleProductionCoinGranted(int amount)
         {
+            manualCoinFeedback?.Play();
             tutorialManager?.ReportSignal(
                 TutorialSignalType.AutoProductionConfirmed,
                 amount);
@@ -1300,6 +1313,7 @@ namespace TaskTown.Tutorial
 
         private void RefreshManualCoinHighlight()
         {
+            BindCoinGainFeedbackTarget();
             RectTransform target = coinController?.AllCoinText?.rectTransform;
             if (highlightCoordinator == null || target == null)
             {
