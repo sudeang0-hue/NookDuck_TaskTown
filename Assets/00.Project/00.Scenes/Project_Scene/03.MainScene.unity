@@ -390,6 +390,16 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 7757256890723271820, guid: ebc8143c021e0744bafe6f8227635e41, type: 3}
   m_PrefabInstance: {fileID: 1345245583145195381}
   m_PrefabAsset: {fileID: 0}
+--- !u!4 &186007138 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3356292285005524502, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+  m_PrefabInstance: {fileID: 1556606970}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &190875339 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3903794480337831591, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+  m_PrefabInstance: {fileID: 1556606970}
+  m_PrefabAsset: {fileID: 0}
 --- !u!114 &201233762 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 3132967009936138935, guid: 5a06baf612796c74da0eb2e9fc401b48, type: 3}
@@ -1726,6 +1736,11 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &1255038003 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6574645200995677487, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+  m_PrefabInstance: {fileID: 1556606970}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1358237799
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1881,6 +1896,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
+--- !u!4 &1419629211 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3907515083259115934, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+  m_PrefabInstance: {fileID: 1556606970}
+  m_PrefabAsset: {fileID: 0}
 --- !u!114 &1431615618 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 5229181972752057137, guid: 76da42b5f9837174c8b39a965fde3d5f, type: 3}
@@ -1981,6 +2001,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e258d1eca156b9f4da752baa1e792622, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::VillageUpgradeUI_Manager
+--- !u!4 &1515754172 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3379269147016771667, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+  m_PrefabInstance: {fileID: 1556606970}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1556606970
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2001,6 +2026,38 @@ PrefabInstance:
       propertyPath: m_LocalPosition.z
       value: 4.28
       objectReference: {fileID: 0}
+    - target: {fileID: 593636380928661826, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: mainVfxScale.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 593636380928661826, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: mainVfxScale.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 593636380928661826, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: mainVfxScale.z
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 593636380928661826, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: mainDustVfxPrefab
+      value: 
+      objectReference: {fileID: 2930374520652304124, guid: 91544527dbb4ce0409ed6598189a2f0b, type: 3}
+    - target: {fileID: 593636380928661826, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: defaultSubPropVfxScale.x
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 593636380928661826, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: defaultSubPropVfxScale.y
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 593636380928661826, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: defaultSubPropVfxScale.z
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 593636380928661826, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: defaultSubPropDustVfxPrefab
+      value: 
+      objectReference: {fileID: 4526682489233482748, guid: 27b2b8d6393befa4ca5d9a5bc811bb32, type: 3}
     - target: {fileID: 763532481181922343, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
       propertyPath: m_Enabled
       value: 1
@@ -2025,6 +2082,38 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: b636712b387fe1349984e5cb7b583ce9, type: 2}
+    - target: {fileID: 1206138399013998239, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: mainVfxScale.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1206138399013998239, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: mainVfxScale.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1206138399013998239, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: mainVfxScale.z
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1206138399013998239, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: mainDustVfxPrefab
+      value: 
+      objectReference: {fileID: 2930374520652304124, guid: 91544527dbb4ce0409ed6598189a2f0b, type: 3}
+    - target: {fileID: 1206138399013998239, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: defaultSubPropVfxScale.x
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1206138399013998239, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: defaultSubPropVfxScale.y
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1206138399013998239, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: defaultSubPropVfxScale.z
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1206138399013998239, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: defaultSubPropDustVfxPrefab
+      value: 
+      objectReference: {fileID: 4526682489233482748, guid: 27b2b8d6393befa4ca5d9a5bc811bb32, type: 3}
     - target: {fileID: 1268849489215911268, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
@@ -2033,6 +2122,38 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 89afb0aee9741944aa9c13e894c6de75, type: 2}
+    - target: {fileID: 1888036855664711106, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: mainVfxScale.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1888036855664711106, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: mainVfxScale.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1888036855664711106, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: mainVfxScale.z
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1888036855664711106, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: mainDustVfxPrefab
+      value: 
+      objectReference: {fileID: 2930374520652304124, guid: 91544527dbb4ce0409ed6598189a2f0b, type: 3}
+    - target: {fileID: 1888036855664711106, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: defaultSubPropVfxScale.x
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1888036855664711106, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: defaultSubPropVfxScale.y
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1888036855664711106, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: defaultSubPropVfxScale.z
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1888036855664711106, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: defaultSubPropDustVfxPrefab
+      value: 
+      objectReference: {fileID: 4526682489233482748, guid: 27b2b8d6393befa4ca5d9a5bc811bb32, type: 3}
     - target: {fileID: 2091020775079149303, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
@@ -2113,6 +2234,210 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: c0630aa99e9f5eb429f2939d3f651d65, type: 2}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: dropHeight
+      value: 15
+      objectReference: {fileID: 0}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: mainVfxScale.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: mainVfxScale.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: mainVfxScale.z
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: mainDustVfxPrefab
+      value: 
+      objectReference: {fileID: 2930374520652304124, guid: 91544527dbb4ce0409ed6598189a2f0b, type: 3}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: defaultSubPropVfxScale.x
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: defaultSubPropVfxScale.y
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: defaultSubPropVfxScale.z
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: defaultSubPropDustVfxPrefab
+      value: 
+      objectReference: {fileID: 1705755711278829983, guid: 666c9014779c90343b05bf7edab2168f, type: 3}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: subProps.Array.data[0].delay
+      value: 0.4
+      objectReference: {fileID: 0}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: subProps.Array.data[1].delay
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: subProps.Array.data[2].delay
+      value: 0.6
+      objectReference: {fileID: 0}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: subProps.Array.data[3].delay
+      value: 0.7
+      objectReference: {fileID: 0}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: subProps.Array.data[4].delay
+      value: 0.9
+      objectReference: {fileID: 0}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: subProps.Array.data[0].customDropHeight
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: subProps.Array.data[0].customVfxScale.x
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: subProps.Array.data[0].customVfxScale.y
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: subProps.Array.data[0].customVfxScale.z
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: subProps.Array.data[1].customDropHeight
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: subProps.Array.data[1].customVfxScale.x
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: subProps.Array.data[1].customVfxScale.y
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: subProps.Array.data[1].customVfxScale.z
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: subProps.Array.data[2].customDropHeight
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: subProps.Array.data[2].customVfxScale.x
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: subProps.Array.data[2].customVfxScale.y
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: subProps.Array.data[2].customVfxScale.z
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: subProps.Array.data[3].customDropHeight
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: subProps.Array.data[3].customVfxScale.x
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: subProps.Array.data[3].customVfxScale.y
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: subProps.Array.data[3].customVfxScale.z
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: subProps.Array.data[4].customDropHeight
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: subProps.Array.data[4].customVfxScale.x
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: subProps.Array.data[4].customVfxScale.y
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: subProps.Array.data[4].customVfxScale.z
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: subProps.Array.data[0].customVfxOffset.x
+      value: 0.583
+      objectReference: {fileID: 0}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: subProps.Array.data[0].customVfxOffset.y
+      value: -0.0003
+      objectReference: {fileID: 0}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: subProps.Array.data[0].customVfxOffset.z
+      value: 0.011
+      objectReference: {fileID: 0}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: subProps.Array.data[0].customDustVfxPrefab
+      value: 
+      objectReference: {fileID: 1705755711278829983, guid: 666c9014779c90343b05bf7edab2168f, type: 3}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: subProps.Array.data[1].customDustVfxPrefab
+      value: 
+      objectReference: {fileID: 1705755711278829983, guid: 666c9014779c90343b05bf7edab2168f, type: 3}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: subProps.Array.data[2].customDustVfxPrefab
+      value: 
+      objectReference: {fileID: 1705755711278829983, guid: 666c9014779c90343b05bf7edab2168f, type: 3}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: subProps.Array.data[3].customDustVfxPrefab
+      value: 
+      objectReference: {fileID: 1705755711278829983, guid: 666c9014779c90343b05bf7edab2168f, type: 3}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: subProps.Array.data[4].customDustVfxPrefab
+      value: 
+      objectReference: {fileID: 1705755711278829983, guid: 666c9014779c90343b05bf7edab2168f, type: 3}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: subProps.Array.data[0].customVfxSpawnTransform
+      value: 
+      objectReference: {fileID: 1419629211}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: subProps.Array.data[1].customVfxSpawnTransform
+      value: 
+      objectReference: {fileID: 1255038003}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: subProps.Array.data[2].customVfxSpawnTransform
+      value: 
+      objectReference: {fileID: 190875339}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: subProps.Array.data[3].customVfxSpawnTransform
+      value: 
+      objectReference: {fileID: 186007138}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: subProps.Array.data[4].customVfxSpawnTransform
+      value: 
+      objectReference: {fileID: 1515754172}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: OnSubPropLanded.m_PersistentCalls.m_Calls.Array.size
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: OnMainBuildingLanded.m_PersistentCalls.m_Calls.Array.size
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: OnSubPropLanded.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3752470589317882786, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: OnMainBuildingLanded.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 3892636890688655677, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
@@ -2125,6 +2450,14 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 459d3f1940005354ea9f8465d5668924, type: 2}
+    - target: {fileID: 4744050612430677219, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0.14
+      objectReference: {fileID: 0}
+    - target: {fileID: 4744050612430677219, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.111
+      objectReference: {fileID: 0}
     - target: {fileID: 5134208464007281892, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
@@ -2177,10 +2510,106 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: b636712b387fe1349984e5cb7b583ce9, type: 2}
+    - target: {fileID: 5506534600449687398, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: mainVfxScale.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 5506534600449687398, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: mainVfxScale.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 5506534600449687398, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: mainVfxScale.z
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 5506534600449687398, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: mainDustVfxPrefab
+      value: 
+      objectReference: {fileID: 2930374520652304124, guid: 91544527dbb4ce0409ed6598189a2f0b, type: 3}
+    - target: {fileID: 5506534600449687398, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: defaultSubPropVfxScale.x
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 5506534600449687398, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: defaultSubPropVfxScale.y
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 5506534600449687398, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: defaultSubPropVfxScale.z
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 5506534600449687398, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: defaultSubPropDustVfxPrefab
+      value: 
+      objectReference: {fileID: 4526682489233482748, guid: 27b2b8d6393befa4ca5d9a5bc811bb32, type: 3}
     - target: {fileID: 5621120413283805374, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
       propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 5664410279168701719, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0.14177303
+      objectReference: {fileID: 0}
+    - target: {fileID: 5664410279168701719, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -1.0664376
+      objectReference: {fileID: 0}
+    - target: {fileID: 5664410279168701719, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -0.03099819
+      objectReference: {fileID: 0}
+    - target: {fileID: 5664410279168701719, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.6797386
+      objectReference: {fileID: 0}
+    - target: {fileID: 5664410279168701719, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0.00000036507836
+      objectReference: {fileID: 0}
+    - target: {fileID: 5664410279168701719, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0.00000034272662
+      objectReference: {fileID: 0}
+    - target: {fileID: 5664410279168701719, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0.7334544
+      objectReference: {fileID: 0}
+    - target: {fileID: 5664410279168701719, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: -94.354
+      objectReference: {fileID: 0}
+    - target: {fileID: 5746872009404448018, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: mainVfxScale.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 5746872009404448018, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: mainVfxScale.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 5746872009404448018, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: mainVfxScale.z
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 5746872009404448018, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: mainDustVfxPrefab
+      value: 
+      objectReference: {fileID: 2930374520652304124, guid: 91544527dbb4ce0409ed6598189a2f0b, type: 3}
+    - target: {fileID: 5746872009404448018, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: defaultSubPropVfxScale.x
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 5746872009404448018, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: defaultSubPropVfxScale.y
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 5746872009404448018, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: defaultSubPropVfxScale.z
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 5746872009404448018, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: defaultSubPropDustVfxPrefab
+      value: 
+      objectReference: {fileID: 4526682489233482748, guid: 27b2b8d6393befa4ca5d9a5bc811bb32, type: 3}
     - target: {fileID: 5952597425981982523, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
@@ -2209,6 +2638,38 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 7135976514188569328, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: mainVfxScale.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7135976514188569328, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: mainVfxScale.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7135976514188569328, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: mainVfxScale.z
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7135976514188569328, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: mainDustVfxPrefab
+      value: 
+      objectReference: {fileID: 2930374520652304124, guid: 91544527dbb4ce0409ed6598189a2f0b, type: 3}
+    - target: {fileID: 7135976514188569328, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: defaultSubPropVfxScale.x
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 7135976514188569328, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: defaultSubPropVfxScale.y
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 7135976514188569328, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: defaultSubPropVfxScale.z
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 7135976514188569328, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: defaultSubPropDustVfxPrefab
+      value: 
+      objectReference: {fileID: 4526682489233482748, guid: 27b2b8d6393befa4ca5d9a5bc811bb32, type: 3}
     - target: {fileID: 7277658124779809336, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
@@ -2221,10 +2682,74 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 39181e8fcb718be4fb73b4378b59cbc1, type: 2}
+    - target: {fileID: 7610635453024477160, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: mainVfxScale.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7610635453024477160, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: mainVfxScale.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7610635453024477160, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: mainVfxScale.z
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7610635453024477160, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: mainDustVfxPrefab
+      value: 
+      objectReference: {fileID: 2930374520652304124, guid: 91544527dbb4ce0409ed6598189a2f0b, type: 3}
+    - target: {fileID: 7610635453024477160, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: defaultSubPropVfxScale.x
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 7610635453024477160, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: defaultSubPropVfxScale.y
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 7610635453024477160, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: defaultSubPropVfxScale.z
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 7610635453024477160, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: defaultSubPropDustVfxPrefab
+      value: 
+      objectReference: {fileID: 4526682489233482748, guid: 27b2b8d6393befa4ca5d9a5bc811bb32, type: 3}
     - target: {fileID: 7729048551843420764, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 459d3f1940005354ea9f8465d5668924, type: 2}
+    - target: {fileID: 7800611921338171021, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: mainVfxScale.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7800611921338171021, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: mainVfxScale.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7800611921338171021, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: mainVfxScale.z
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7800611921338171021, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: mainDustVfxPrefab
+      value: 
+      objectReference: {fileID: 2930374520652304124, guid: 91544527dbb4ce0409ed6598189a2f0b, type: 3}
+    - target: {fileID: 7800611921338171021, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: defaultSubPropVfxScale.x
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 7800611921338171021, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: defaultSubPropVfxScale.y
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 7800611921338171021, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: defaultSubPropVfxScale.z
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 7800611921338171021, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: defaultSubPropDustVfxPrefab
+      value: 
+      objectReference: {fileID: 4526682489233482748, guid: 27b2b8d6393befa4ca5d9a5bc811bb32, type: 3}
     - target: {fileID: 7956619276292938175, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
       propertyPath: m_Enabled
       value: 1
@@ -2233,6 +2758,38 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 9e971e44ffaa11b418fa090a5750d5d0, type: 2}
+    - target: {fileID: 8160967227279741611, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: mainVfxScale.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 8160967227279741611, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: mainVfxScale.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 8160967227279741611, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: mainVfxScale.z
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 8160967227279741611, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: mainDustVfxPrefab
+      value: 
+      objectReference: {fileID: 2930374520652304124, guid: 91544527dbb4ce0409ed6598189a2f0b, type: 3}
+    - target: {fileID: 8160967227279741611, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: defaultSubPropVfxScale.x
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 8160967227279741611, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: defaultSubPropVfxScale.y
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 8160967227279741611, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: defaultSubPropVfxScale.z
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 8160967227279741611, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: defaultSubPropDustVfxPrefab
+      value: 
+      objectReference: {fileID: 4526682489233482748, guid: 27b2b8d6393befa4ca5d9a5bc811bb32, type: 3}
     - target: {fileID: 8192398149545952573, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
       propertyPath: m_Enabled
       value: 1
@@ -2241,6 +2798,14 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 39181e8fcb718be4fb73b4378b59cbc1, type: 2}
+    - target: {fileID: 8356057272327197711, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0.225
+      objectReference: {fileID: 0}
+    - target: {fileID: 8356057272327197711, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.514
+      objectReference: {fileID: 0}
     - target: {fileID: 8428775673212743464, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
