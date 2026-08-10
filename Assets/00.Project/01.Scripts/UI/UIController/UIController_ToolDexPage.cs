@@ -1,3 +1,4 @@
+using TaskTown.KDH;
 using TMPro;
 using Tool.Data;
 using UnityEngine;
@@ -14,6 +15,12 @@ namespace UI
         [SerializeField] private Image toolIconImage;
         [SerializeField] private TMP_Text toolNameText;
         [SerializeField] private TMP_Text toolDescriptionText;
+
+        [Header("미해금 반영 사항")]
+        [SerializeField] private Sprite unknownToolIcon;
+        [SerializeField] private string unknownToolName = "???";
+        [SerializeField, TextArea(2, 4)]
+        private string unlokedMessage = "이 도구는 아직 발견하지 못 했어요.";
 
         private ToolDataSO currentToolData;
 
@@ -51,12 +58,28 @@ namespace UI
 
         /// <summary>
         /// 현재 선택된 도구 데이터로 상세 페이지를 갱신합니다.
+        /// 해금/미해금에 따라 아이콘·이름·설명을 분기합니다.
         /// </summary>
         private void RefreshToolDexPage()
         {
             if (currentToolData == null)
                 return;
 
+            // ----------------08.09.KAY (미해금 도구 상세 페이지 표시)------------------
+            bool isUnlocked = IsToolDiscovered(currentToolData.Id);
+
+            if (isUnlocked)
+            {
+                ShowUnlockedToolView();
+                return;
+            }
+
+            ShowLockedToolView();
+            // ---------------------------------------------------------
+        }
+
+        private void ShowUnlockedToolView()
+        {
             if (toolIconImage != null)
             {
                 toolIconImage.sprite = currentToolData.Icon;
@@ -64,14 +87,33 @@ namespace UI
             }
 
             if (toolNameText != null)
-            {
                 toolNameText.text = currentToolData.DisplayName;
-            }
 
             if (toolDescriptionText != null)
-            {
                 toolDescriptionText.text = currentToolData.ToolDescription;
+        }
+
+        private void ShowLockedToolView()
+        {
+            if (toolIconImage != null)
+            {
+                toolIconImage.sprite = unknownToolIcon;
+                toolIconImage.enabled = unknownToolIcon != null;
             }
+
+            if (toolNameText != null)
+                toolNameText.text = unknownToolName;
+
+            if (toolDescriptionText != null)
+                toolDescriptionText.text = unlokedMessage;
+        }
+
+        private static bool IsToolDiscovered(string toolId)
+        {
+            if (string.IsNullOrEmpty(toolId) || DexRecordManager.Instance == null)
+                return false;
+
+            return DexRecordManager.Instance.IsDiscovered(toolId);
         }
 
         /// <summary>

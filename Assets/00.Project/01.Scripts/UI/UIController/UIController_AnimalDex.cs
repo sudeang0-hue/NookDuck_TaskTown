@@ -1,6 +1,7 @@
 using Animal.Data;
 using System.Collections.Generic;
 using TaskTown.KDH;
+using TMPro;
 using UnityEngine;
 
 namespace UI
@@ -13,9 +14,12 @@ namespace UI
         [Header("동물 데이터베이스")]
         [SerializeField] private AnimalDatabase animalDatabase;
 
-        [Header("도감 슬롯")]
+        [Header("동물 슬롯")]
         [SerializeField] private SlotUI_AnimalDex animalSlotPrefab;
         [SerializeField] private Transform animalSlotContentRoot;
+        [SerializeField] private TMP_Text animalcountMessage;
+        [SerializeField, TextArea(2, 4)]
+        private string countMessage = "만나본 주민의 수: ";
 
         [Header("동물 상세 페이지")]
         [SerializeField] private UIController_AnimalDexPage animalPageController;
@@ -148,6 +152,7 @@ namespace UI
             if (DexRecordManager.Instance == null)
             {
                 Debug.LogWarning("[UIController_AnimalDex] DexRecordManager.Instance가 없습니다.");
+                RefreshCountMessage();
                 return;
             }
 
@@ -156,6 +161,8 @@ namespace UI
                 bool isUnlocked = DexRecordManager.Instance.IsDiscovered(pair.Key);
                 pair.Value.SetUnlocked(isUnlocked);
             }
+
+            RefreshCountMessage();
         }
 
         // ----------------08.08.KAY (도감 해금/Dif 디버그 갱신)------------------
@@ -183,6 +190,44 @@ namespace UI
             }
 
             slot.SetUnlocked(true);
+
+            // 최초 획득 시 MarkDiscovered 구독 순서와 무관하게 카운트가 맞도록 이번 ID를 포함합니다.
+            RefreshCountMessage(slotData.AnimalId);
+        }
+
+        /// <summary>
+        /// animalcountMessage = countMessage + 획득한 적 있는 수 + "/" + AnimalDatabase 등록 수
+        /// </summary>
+        /// <param name="treatAsDiscoveredId">이번 프레임에 막 획득해 Discovered로 칠할 ID(이벤트 순서 보정용)</param>
+        private void RefreshCountMessage(string treatAsDiscoveredId = null)
+        {
+            if (animalcountMessage == null)
+                return;
+
+            int totalCount = 0;
+            int discoveredCount = 0;
+
+            IReadOnlyList<AnimalDataSO> animals = animalDatabase != null ? animalDatabase.Animals : null;
+            if (animals != null)
+            {
+                for (int i = 0; i < animals.Count; i++)
+                {
+                    AnimalDataSO animal = animals[i];
+                    if (animal == null || string.IsNullOrEmpty(animal.Id))
+                        continue;
+
+                    totalCount++;
+
+                    bool discovered =
+                        (DexRecordManager.Instance != null && DexRecordManager.Instance.IsDiscovered(animal.Id))
+                        || animal.Id == treatAsDiscoveredId;
+
+                    if (discovered)
+                        discoveredCount++;
+                }
+            }
+
+            animalcountMessage.text = countMessage + discoveredCount + "/" + totalCount;
         }
 
         /// <summary>
