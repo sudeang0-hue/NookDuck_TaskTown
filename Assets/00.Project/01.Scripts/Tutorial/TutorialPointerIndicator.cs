@@ -122,6 +122,22 @@ namespace TaskTown.Tutorial
         {
             Show(
                 content,
+                content != null
+                    ? content.HighlightEffects
+                    : TutorialHighlightEffect.None,
+                new Vector2(0.5f, 0.5f),
+                Vector2.zero,
+                candidates);
+        }
+
+        public void Show(
+            TutorialStepContent content,
+            TutorialHighlightEffect effects,
+            params Button[] candidates)
+        {
+            Show(
+                content,
+                effects,
                 new Vector2(0.5f, 0.5f),
                 Vector2.zero,
                 candidates);
@@ -137,8 +153,26 @@ namespace TaskTown.Tutorial
             Vector2 additionalPointerOffset,
             params Button[] candidates)
         {
+            Show(
+                content,
+                content != null
+                    ? content.HighlightEffects
+                    : TutorialHighlightEffect.None,
+                targetAnchorNormalized,
+                additionalPointerOffset,
+                candidates);
+        }
+
+        public void Show(
+            TutorialStepContent content,
+            TutorialHighlightEffect effects,
+            Vector2 targetAnchorNormalized,
+            Vector2 additionalPointerOffset,
+            params Button[] candidates)
+        {
             if (!PrepareVisual(
                     content,
+                    effects,
                     targetAnchorNormalized,
                     additionalPointerOffset))
                 return;
@@ -182,6 +216,9 @@ namespace TaskTown.Tutorial
             if (target == null ||
                 !PrepareVisual(
                     content,
+                    content != null
+                        ? content.HighlightEffects
+                        : TutorialHighlightEffect.None,
                     targetAnchorNormalized,
                     additionalPointerOffset))
             {
@@ -208,7 +245,13 @@ namespace TaskTown.Tutorial
             Camera targetCamera = null)
         {
             if (targetCollider == null ||
-                !PrepareVisual(content, new Vector2(0.5f, 0.5f), Vector2.zero))
+                !PrepareVisual(
+                    content,
+                    content != null
+                        ? content.HighlightEffects
+                        : TutorialHighlightEffect.None,
+                    new Vector2(0.5f, 0.5f),
+                    Vector2.zero))
             {
                 return;
             }
@@ -239,6 +282,7 @@ namespace TaskTown.Tutorial
 
         private bool PrepareVisual(
             TutorialStepContent content,
+            TutorialHighlightEffect effects,
             Vector2 targetAnchorNormalized,
             Vector2 additionalPointerOffset)
         {
@@ -251,9 +295,8 @@ namespace TaskTown.Tutorial
                 return false;
             }
 
-            showHand = content.UsesHighlightEffect(TutorialHighlightEffect.Pointer);
-            showFocusRing = content.UsesHighlightEffect(
-                TutorialHighlightEffect.FocusRing);
+            showHand = (effects & TutorialHighlightEffect.Pointer) != 0;
+            showFocusRing = (effects & TutorialHighlightEffect.FocusRing) != 0;
             if (!showHand && !showFocusRing)
                 return false;
 

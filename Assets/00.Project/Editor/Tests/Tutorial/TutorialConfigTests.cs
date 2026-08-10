@@ -102,7 +102,7 @@ namespace TaskTown.EditorTests.Tutorial
         }
 
         [Test]
-        public void ConfigAsset_자동생산단계는50코인진행도를표시한다()
+        public void ConfigAsset_자동생산단계는30코인진행도를표시한다()
         {
             TutorialConfigSO config = LoadConfig();
 
@@ -112,7 +112,7 @@ namespace TaskTown.EditorTests.Tutorial
             Assert.AreEqual(
                 TutorialProgressDisplayType.AutoProductionCoin,
                 content.ProgressDisplayType);
-            StringAssert.Contains("50", content.ObjectiveText);
+            StringAssert.Contains("30", content.ObjectiveText);
         }
 
         [Test]
@@ -206,8 +206,9 @@ namespace TaskTown.EditorTests.Tutorial
 
         [TestCase(TutorialStep.EarnManualCoin, false, false, true)]
         [TestCase(TutorialStep.CollapseAndExpandTown, true, true, true)]
-        [TestCase(TutorialStep.DrawAnimal, true, true, false)]
-        [TestCase(TutorialStep.DrawTool, true, true, false)]
+        [TestCase(TutorialStep.DrawAnimal, true, true, true)]
+        [TestCase(TutorialStep.DrawTool, true, true, true)]
+        [TestCase(TutorialStep.ConfirmAutoProduction, false, false, true)]
         [TestCase(TutorialStep.AssignAnimal, true, true, false)]
         [TestCase(TutorialStep.PlaceAnimalInVillage, true, true, false)]
         [TestCase(TutorialStep.OpenVillageInfo, false, true, false)]

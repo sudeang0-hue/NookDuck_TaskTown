@@ -10,7 +10,7 @@ namespace TaskTown.Tutorial
     public sealed class TutorialStateMachine
     {
         public const long ManualCoinTarget = 100L;
-        public const long AutoProductionCoinTarget = 50L;
+        public const long AutoProductionCoinTarget = 30L;
 
         private readonly TutorialSaveData progress;
 

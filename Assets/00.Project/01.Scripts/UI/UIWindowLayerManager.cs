@@ -1,13 +1,13 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 /// <summary>
-/// ���� �ٸ� Canvas�� ��ġ�� UI â(�� ������ ��)�� ǥ�� ������ �����մϴ�.
+/// 서로 다른 Canvas에 배치된 UI 창(예: 상세 페이지 등)의 표시 순서를 관리합니다.
 /// </summary>
 public class UIWindowLayerManager : MonoBehaviour
 {
     public static UIWindowLayerManager Instance { get; private set; }
 
-    [Header("â ���� ����")]
+    [Header("창 정렬 설정")]
     [SerializeField] private int baseSortingOrder = 10;
 
     private int currentSortingOrder;
@@ -16,7 +16,7 @@ public class UIWindowLayerManager : MonoBehaviour
     {
         if (Instance != null && Instance != this)
         {
-            Debug.LogWarning("[UIWindowLayerManager] �ߺ��� ���̾� �����ڰ� �����Ͽ� �����մϴ�.");
+            Debug.LogWarning("[UIWindowLayerManager] 중복된 레이어 관리자가 존재하여 제거합니다.");
 
             Destroy(gameObject);
             return;
@@ -27,13 +27,13 @@ public class UIWindowLayerManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ���޹��� Canvas�� ���� UI â �� ���� ������ �̵��մϴ�.
+    /// 전달받은 Canvas를 현재 UI 창 중 가장 앞으로 이동합니다.
     /// </summary>
     public void BringToFront(Canvas targetCanvas)
     {
         if (targetCanvas == null)
         {
-            Debug.LogWarning("[UIWindowLayerManager] ������ �̵��� Canvas�� �����ϴ�.");
+            Debug.LogWarning("[UIWindowLayerManager] 앞으로 이동할 Canvas가 없습니다.");
 
             return;
         }

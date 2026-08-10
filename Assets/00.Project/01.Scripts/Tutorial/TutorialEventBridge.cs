@@ -32,10 +32,11 @@ namespace TaskTown.Tutorial
         [Header("튜토리얼 버튼 강조")]
         [SerializeField] private TutorialButtonHighlighter buttonHighlighter;
         [SerializeField] private TutorialHighlightCoordinator highlightCoordinator;
-        [SerializeField] private TutorialManualCoinFeedback manualCoinFeedback;
         [SerializeField] private UIController_Coin coinController;
         [SerializeField] private UIController_Menu menuController;
         [SerializeField] private UIController_Gacha gachaController;
+        [SerializeField] private GachaPortalController animalGachaPortalController;
+        [SerializeField] private GachaDirector toolGachaDirector;
         [SerializeField] private UIController_AnimalInv animalInventoryController;
         [SerializeField] private UIController_AnimalInvPage animalInventoryPageController;
         [SerializeField] private TabUIManager_Town townTabController;
@@ -67,9 +68,24 @@ namespace TaskTown.Tutorial
         private Button subscribedAnimalSlotButton;
         private Button subscribedVillageSlotButton;
         private Collider villageHouseCollider;
+        private GachaDrawHighlightPhase animalDrawHighlightPhase;
+        private GachaDrawHighlightPhase toolDrawHighlightPhase;
+        private bool isWaitingForAnimalResultConfirmation;
+        private bool isWaitingForToolResultConfirmation;
         private AssignAnimalHighlightPhase assignAnimalHighlightPhase;
         private VillagePlacementHighlightPhase villagePlacementHighlightPhase;
         private UpgradeVillageHighlightPhase upgradeVillageHighlightPhase;
+
+        private const TutorialHighlightEffect InnerGachaButtonEffects =
+            TutorialHighlightEffect.ScalePulse |
+            TutorialHighlightEffect.Pointer;
+
+        private enum GachaDrawHighlightPhase
+        {
+            MenuButton = 0,
+            OnePickButton = 1,
+            WaitingForResult = 2
+        }
 
         private enum AssignAnimalHighlightPhase
         {
@@ -145,6 +161,7 @@ namespace TaskTown.Tutorial
             tutorialManager.TutorialCompleted += HandleTutorialCompleted;
 
             SubscribeWindowState();
+            SubscribeGachaGuidanceEvents();
             isConnected = true;
 
             if (!tutorialManager.IsCompleted)
@@ -155,7 +172,9 @@ namespace TaskTown.Tutorial
         {
             UnsubscribeCurrentStep();
             UnsubscribeWindowState();
-            manualCoinFeedback?.StopAndRestore();
+            UnsubscribeGachaGuidanceEvents();
+            EndAnimalResultConfirmationGuidance();
+            EndToolResultConfirmationGuidance();
 
             if (tutorialManager != null)
             {
@@ -202,8 +221,6 @@ namespace TaskTown.Tutorial
                 TryGetComponent(out buttonHighlighter);
             if (highlightCoordinator == null)
                 TryGetComponent(out highlightCoordinator);
-            if (manualCoinFeedback == null)
-                TryGetComponent(out manualCoinFeedback);
             if (coinController == null)
             {
                 coinController = FindFirstObjectByType<UIController_Coin>(
@@ -213,6 +230,17 @@ namespace TaskTown.Tutorial
                 menuController = FindAnyObjectByType<UIController_Menu>();
             if (gachaController == null)
                 gachaController = FindAnyObjectByType<UIController_Gacha>();
+            if (animalGachaPortalController == null)
+            {
+                animalGachaPortalController =
+                    FindFirstObjectByType<GachaPortalController>(
+                        FindObjectsInactive.Include);
+            }
+            if (toolGachaDirector == null)
+            {
+                toolGachaDirector = FindFirstObjectByType<GachaDirector>(
+                    FindObjectsInactive.Include);
+            }
             if (animalInventoryController == null)
             {
                 animalInventoryController = FindFirstObjectByType<UIController_AnimalInv>(
@@ -236,6 +264,55 @@ namespace TaskTown.Tutorial
             }
         }
 
+        private void SubscribeGachaGuidanceEvents()
+        {
+            if (gachaController != null)
+            {
+                gachaController.PanelOpened -= HandleGachaPanelOpened;
+                gachaController.PanelOpened += HandleGachaPanelOpened;
+            }
+
+            if (animalGachaPortalController != null)
+            {
+                animalGachaPortalController.OnPortalOpened -=
+                    HandleAnimalResultOpened;
+                animalGachaPortalController.OnPortalOpened +=
+                    HandleAnimalResultOpened;
+                animalGachaPortalController.ResultConfirmed -=
+                    HandleAnimalResultConfirmed;
+                animalGachaPortalController.ResultConfirmed +=
+                    HandleAnimalResultConfirmed;
+            }
+
+            if (toolGachaDirector != null)
+            {
+                toolGachaDirector.ResultOpened -= HandleToolResultOpened;
+                toolGachaDirector.ResultOpened += HandleToolResultOpened;
+                toolGachaDirector.ResultConfirmed -= HandleToolResultConfirmed;
+                toolGachaDirector.ResultConfirmed += HandleToolResultConfirmed;
+            }
+        }
+
+        private void UnsubscribeGachaGuidanceEvents()
+        {
+            if (gachaController != null)
+                gachaController.PanelOpened -= HandleGachaPanelOpened;
+
+            if (animalGachaPortalController != null)
+            {
+                animalGachaPortalController.OnPortalOpened -=
+                    HandleAnimalResultOpened;
+                animalGachaPortalController.ResultConfirmed -=
+                    HandleAnimalResultConfirmed;
+            }
+
+            if (toolGachaDirector != null)
+            {
+                toolGachaDirector.ResultOpened -= HandleToolResultOpened;
+                toolGachaDirector.ResultConfirmed -= HandleToolResultConfirmed;
+            }
+        }
+
         private void HandleStepChanged(TutorialStep previousStep, TutorialStep nextStep)
         {
             UnsubscribeCurrentStep();
@@ -248,7 +325,8 @@ namespace TaskTown.Tutorial
         {
             // 수동 코인 진행도는 입력마다 갱신됩니다. 이 단계의 도넛 강조는 단계 진입 시
             // 한 번만 시작하고 독립적으로 Loop해야 하므로 코인 Punch마다 재생성하지 않습니다.
-            if (subscribedStep == TutorialStep.EarnManualCoin)
+            if (subscribedStep == TutorialStep.EarnManualCoin ||
+                subscribedStep == TutorialStep.ConfirmAutoProduction)
                 return;
 
             RefreshButtonHighlight();
@@ -256,6 +334,8 @@ namespace TaskTown.Tutorial
 
         private void HandleTutorialRestarted()
         {
+            EndAnimalResultConfirmationGuidance();
+            EndToolResultConfirmationGuidance();
             UnsubscribeCurrentStep();
 
             if (tutorialManager != null && !tutorialManager.IsCompleted)
@@ -362,7 +442,6 @@ namespace TaskTown.Tutorial
             switch (step)
             {
                 case TutorialStep.EarnManualCoin:
-                    BindManualCoinFeedbackTarget();
                     if (earnProcessor != null)
                         earnProcessor.ManualCoinGranted += HandleManualCoinGranted;
                     else
@@ -374,6 +453,10 @@ namespace TaskTown.Tutorial
                     break;
 
                 case TutorialStep.DrawAnimal:
+                    animalDrawHighlightPhase = IsButtonVisible(
+                        gachaController?.AnimalOnePickButton)
+                        ? GachaDrawHighlightPhase.OnePickButton
+                        : GachaDrawHighlightPhase.MenuButton;
                     if (animalGachaManager != null)
                         animalGachaManager.OnGachaResolved += HandleAnimalDrawn;
                     else
@@ -381,6 +464,10 @@ namespace TaskTown.Tutorial
                     break;
 
                 case TutorialStep.DrawTool:
+                    toolDrawHighlightPhase = IsButtonVisible(
+                        gachaController?.ToolOnePickButton)
+                        ? GachaDrawHighlightPhase.OnePickButton
+                        : GachaDrawHighlightPhase.MenuButton;
                     if (toolGachaManager != null)
                         toolGachaManager.OnGachaResolved += HandleToolDrawn;
                     else
@@ -463,11 +550,13 @@ namespace TaskTown.Tutorial
                 case TutorialStep.DrawAnimal:
                     if (animalGachaManager != null)
                         animalGachaManager.OnGachaResolved -= HandleAnimalDrawn;
+                    animalDrawHighlightPhase = GachaDrawHighlightPhase.MenuButton;
                     break;
 
                 case TutorialStep.DrawTool:
                     if (toolGachaManager != null)
                         toolGachaManager.OnGachaResolved -= HandleToolDrawn;
+                    toolDrawHighlightPhase = GachaDrawHighlightPhase.MenuButton;
                     break;
 
                 case TutorialStep.AssignAnimal:
@@ -522,23 +611,130 @@ namespace TaskTown.Tutorial
 
         private void HandleManualCoinGranted(int amount)
         {
-            manualCoinFeedback?.Play();
             tutorialManager?.ReportSignal(TutorialSignalType.ManualCoinEarned, amount);
         }
 
-        private void BindManualCoinFeedbackTarget()
+        private void HandleGachaPanelOpened()
         {
-            manualCoinFeedback?.Bind(coinController?.AllCoinText?.rectTransform);
+            if (subscribedStep == TutorialStep.DrawAnimal)
+            {
+                animalDrawHighlightPhase = GachaDrawHighlightPhase.OnePickButton;
+                ScheduleHighlightRefresh();
+                return;
+            }
+
+            if (subscribedStep == TutorialStep.DrawTool)
+            {
+                toolDrawHighlightPhase = GachaDrawHighlightPhase.OnePickButton;
+                ScheduleHighlightRefresh();
+            }
         }
 
         private void HandleAnimalDrawn(GachaResult result)
         {
-            tutorialManager?.ReportSignal(TutorialSignalType.AnimalDrawn);
+            animalDrawHighlightPhase = GachaDrawHighlightPhase.WaitingForResult;
+            ClearHighlights();
+
+            bool didAdvance = tutorialManager?.ReportSignal(
+                TutorialSignalType.AnimalDrawn) == true;
+            if (!didAdvance || animalGachaPortalController == null)
+                return;
+
+            isWaitingForAnimalResultConfirmation = true;
+            tutorialManager.SetPaused(true);
         }
 
         private void HandleToolDrawn(GachaResult result)
         {
-            tutorialManager?.ReportSignal(TutorialSignalType.ToolDrawn);
+            toolDrawHighlightPhase = GachaDrawHighlightPhase.WaitingForResult;
+            ClearHighlights();
+
+            bool didAdvance = tutorialManager?.ReportSignal(
+                TutorialSignalType.ToolDrawn) == true;
+            if (!didAdvance || toolGachaDirector == null)
+                return;
+
+            isWaitingForToolResultConfirmation = true;
+            tutorialManager.SetPaused(true);
+            ClearHighlights();
+        }
+
+        private void HandleAnimalResultOpened()
+        {
+            if (!isWaitingForAnimalResultConfirmation ||
+                tutorialManager == null ||
+                tutorialManager.CurrentStep != TutorialStep.AnimalDrawExplanation)
+            {
+                return;
+            }
+
+            Button confirmButton = animalGachaPortalController?.ConfirmButton;
+            ApplyHighlight(
+                TutorialStep.AnimalDrawExplanation,
+                InnerGachaButtonEffects,
+                new[] { confirmButton },
+                new[] { confirmButton });
+        }
+
+        private void HandleAnimalResultConfirmed()
+        {
+            if (!isWaitingForAnimalResultConfirmation)
+                return;
+
+            EndAnimalResultConfirmationGuidance();
+            RefreshButtonHighlight();
+        }
+
+        private void EndAnimalResultConfirmationGuidance()
+        {
+            if (!isWaitingForAnimalResultConfirmation)
+                return;
+
+            isWaitingForAnimalResultConfirmation = false;
+            ClearHighlights();
+            tutorialManager?.SetPaused(false);
+        }
+
+        private void HandleToolResultOpened()
+        {
+            if (!isWaitingForToolResultConfirmation ||
+                tutorialManager == null ||
+                tutorialManager.CurrentStep != TutorialStep.AssignAnimal)
+            {
+                return;
+            }
+
+            Button confirmButton = toolGachaDirector?.ConfirmButton;
+            ApplyHighlight(
+                TutorialStep.AssignAnimal,
+                InnerGachaButtonEffects,
+                new[] { confirmButton },
+                new[] { confirmButton });
+        }
+
+        private void HandleToolResultConfirmed()
+        {
+            if (!isWaitingForToolResultConfirmation)
+                return;
+
+            EndToolResultConfirmationGuidance();
+            RefreshButtonHighlight();
+        }
+
+        private void EndToolResultConfirmationGuidance()
+        {
+            if (!isWaitingForToolResultConfirmation)
+                return;
+
+            isWaitingForToolResultConfirmation = false;
+            ClearHighlights();
+            tutorialManager?.SetPaused(false);
+        }
+
+        private static bool IsButtonVisible(Button button)
+        {
+            return button != null && button.isActiveAndEnabled &&
+                   button.gameObject.activeInHierarchy;
         }
 
         private void HandleToolSlotChanged(SlotData_Tool slot)
@@ -1066,33 +1262,15 @@ namespace TaskTown.Tutorial
                     break;
 
                 case TutorialStep.DrawAnimal:
-                    ApplyHighlight(
-                        TutorialStep.DrawAnimal,
-                        new[]
-                        {
-                            menuController?.GachaButton,
-                            gachaController?.AnimalOnePickButton
-                        },
-                        new[]
-                        {
-                            gachaController?.AnimalOnePickButton,
-                            menuController?.GachaButton
-                        });
+                    RefreshDrawAnimalHighlight();
                     break;
 
                 case TutorialStep.DrawTool:
-                    ApplyHighlight(
-                        TutorialStep.DrawTool,
-                        new[]
-                        {
-                            menuController?.GachaButton,
-                            gachaController?.ToolOnePickButton
-                        },
-                        new[]
-                        {
-                            gachaController?.ToolOnePickButton,
-                            menuController?.GachaButton
-                        });
+                    RefreshDrawToolHighlight();
+                    break;
+
+                case TutorialStep.ConfirmAutoProduction:
+                    RefreshAutoProductionHighlight();
                     break;
 
                 case TutorialStep.AssignAnimal:
@@ -1122,7 +1300,6 @@ namespace TaskTown.Tutorial
 
         private void RefreshManualCoinHighlight()
         {
-            BindManualCoinFeedbackTarget();
             RectTransform target = coinController?.AllCoinText?.rectTransform;
             if (highlightCoordinator == null || target == null)
             {
@@ -1132,6 +1309,74 @@ namespace TaskTown.Tutorial
 
             highlightCoordinator.HighlightUiTarget(
                 TutorialStep.EarnManualCoin,
+                target);
+        }
+
+        private void RefreshDrawAnimalHighlight()
+        {
+            switch (animalDrawHighlightPhase)
+            {
+                case GachaDrawHighlightPhase.MenuButton:
+                    Button menuButton = menuController?.GachaButton;
+                    ApplyHighlight(
+                        TutorialStep.DrawAnimal,
+                        new[] { menuButton },
+                        new[] { menuButton });
+                    break;
+
+                case GachaDrawHighlightPhase.OnePickButton:
+                    Button onePickButton = gachaController?.AnimalOnePickButton;
+                    ApplyHighlight(
+                        TutorialStep.DrawAnimal,
+                        InnerGachaButtonEffects,
+                        new[] { onePickButton },
+                        new[] { onePickButton });
+                    break;
+
+                default:
+                    ClearHighlights();
+                    break;
+            }
+        }
+
+        private void RefreshDrawToolHighlight()
+        {
+            switch (toolDrawHighlightPhase)
+            {
+                case GachaDrawHighlightPhase.MenuButton:
+                    Button menuButton = menuController?.GachaButton;
+                    ApplyHighlight(
+                        TutorialStep.DrawTool,
+                        new[] { menuButton },
+                        new[] { menuButton });
+                    break;
+
+                case GachaDrawHighlightPhase.OnePickButton:
+                    Button onePickButton = gachaController?.ToolOnePickButton;
+                    ApplyHighlight(
+                        TutorialStep.DrawTool,
+                        InnerGachaButtonEffects,
+                        new[] { onePickButton },
+                        new[] { onePickButton });
+                    break;
+
+                default:
+                    ClearHighlights();
+                    break;
+            }
+        }
+
+        private void RefreshAutoProductionHighlight()
+        {
+            RectTransform target = coinController?.AutoCoinText?.rectTransform;
+            if (highlightCoordinator == null || target == null)
+            {
+                ClearHighlights();
+                return;
+            }
+
+            highlightCoordinator.HighlightUiTarget(
+                TutorialStep.ConfirmAutoProduction,
                 target);
         }
 
@@ -1293,6 +1538,30 @@ namespace TaskTown.Tutorial
                 pointerTargets,
                 new Vector2(0.5f, 0.5f),
                 Vector2.zero);
+        }
+
+        private void ApplyHighlight(
+            TutorialStep step,
+            TutorialHighlightEffect effects,
+            Button[] scaleTargets,
+            Button[] pointerTargets)
+        {
+            if (highlightCoordinator != null)
+            {
+                highlightCoordinator.Highlight(
+                    step,
+                    effects,
+                    scaleTargets,
+                    pointerTargets,
+                    new Vector2(0.5f, 0.5f),
+                    Vector2.zero);
+                return;
+            }
+
+            if ((effects & TutorialHighlightEffect.ScalePulse) != 0)
+                buttonHighlighter?.Highlight(scaleTargets);
+            else
+                buttonHighlighter?.Clear();
         }
 
         private void ApplyHighlight(

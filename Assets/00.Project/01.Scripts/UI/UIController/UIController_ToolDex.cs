@@ -149,6 +149,16 @@ namespace UI
             }
         }
 
+        // ----------------08.08.KAY (도구 도감 해금 디버그 갱신)------------------
+        /// <summary>
+        /// 디버그용: 도감 해금 상태를 DexRecordManager 기준으로 다시 그립니다.
+        /// </summary>
+        public void DebugRefreshUnlockStates()
+        {
+            RefreshInventory();
+        }
+        // ---------------------------------------------------------
+
         /// <summary>
         /// 도구 획득 이벤트로 전달된 ID의 도감 슬롯 하나만 갱신합니다.
         /// </summary>

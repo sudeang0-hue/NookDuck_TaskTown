@@ -1,3 +1,6 @@
+using System;
+using TaskTown.Gacha;
+using TaskTown.KDH;
 using UnityEngine;
 
 namespace TaskTown
@@ -38,6 +41,9 @@ namespace TaskTown
         public static void MarkCleared()
         {
             HasClearedEnding = true;
+            //-----------------26.08.07 KAY '클리어 난이도 기록'-------------------------
+            RecordClearedDifficultyFromCurrent();
+            //----------------------------------------
         }
 
         public static void RequestDifficultySelect()
@@ -55,6 +61,48 @@ namespace TaskTown
         {
             ForceEmptyInventoryOnNextMain = false;
         }
+
+        //-----------------26.08.07 KAY '클리어 난이도 기록'-------------------------
+        private const string ClearedDifficultyKey = "EndingMeta_LastClearedDifficulty";
+
+        /// <summary>
+        /// 가장 최근에 클리어한 난이도가 Hard일 때만 VeryHard 버튼을 해금합니다.
+        /// </summary>
+        public static bool IsVeryHardUnlocked
+        {
+            get
+            {
+                if (!PlayerPrefs.HasKey(ClearedDifficultyKey))
+                    return false;
+
+                int stored = PlayerPrefs.GetInt(ClearedDifficultyKey, -1);
+                return Enum.IsDefined(typeof(DifficultyType), stored)
+                    && stored == (int)DifficultyType.Hard;
+            }
+        }
+
+        /// <summary>
+        /// 현재 플레이 난이도를 '최근 클리어 난이도'로 덮어씁니다.
+        /// </summary>
+        private static void RecordClearedDifficultyFromCurrent()
+        {
+            DifficultyType cleared = DifficultyType.Normal;
+
+            if (RealProductionTicker.Instance != null)
+            {
+                cleared = RealProductionTicker.Instance.CurrentDifficulty;
+            }
+            else if (PlayerPrefs.HasKey(RealProductionTicker.DifficultyPrefsKey))
+            {
+                int stored = PlayerPrefs.GetInt(RealProductionTicker.DifficultyPrefsKey, (int)DifficultyType.Normal);
+                if (Enum.IsDefined(typeof(DifficultyType), stored))
+                    cleared = (DifficultyType)stored;
+            }
+
+            PlayerPrefs.SetInt(ClearedDifficultyKey, (int)cleared);
+            PlayerPrefs.Save();
+        }
+        //----------------------------------------
     }
     //----------------------------------------
 }
