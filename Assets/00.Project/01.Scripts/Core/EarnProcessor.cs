@@ -21,6 +21,8 @@ public class EarnProcessor : MonoBehaviour
     [SerializeField] private int baseCoinPerTyping = 3;   // 타이핑당 기본 획득량
 
     [Header("Reward Limit Settings")]
+    [Tooltip("활성화하면 클릭과 타이핑으로 얻는 수동 코인에 주기별 획득 한도를 적용합니다.")]
+    [SerializeField] private bool useRewardLimit = true;
     [SerializeField] private int maxCoinPerHour = 10000; // 시간(또는 지정 주기)당 최대 획득 가능 재화
     private int currentPeriodEarnedCoin = 0;             // 현재 주기 동안 획득한 재화 누적액
 
@@ -35,6 +37,7 @@ public class EarnProcessor : MonoBehaviour
     // ---- Debug API (DebugTool에서만 사용) ----
     public int BaseCoinPerClick => baseCoinPerClick;
     public int BaseCoinPerTyping => baseCoinPerTyping;
+    public bool UseRewardLimit => useRewardLimit;
     public int MaxCoinPerHour => maxCoinPerHour;
     public float LimitPeriodSeconds => limitPeriodSeconds;
     public float LimitTimer => limitTimer;
@@ -66,6 +69,11 @@ public class EarnProcessor : MonoBehaviour
 
     private void Update()
     {
+        if (!useRewardLimit)
+        {
+            return;
+        }
+
         // 제한 주기 타이머 체크 (예: 1시간이 지나면 누적 획득량 초기화)
         limitTimer += Time.deltaTime;
         if (limitTimer >= limitPeriodSeconds)
@@ -78,15 +86,19 @@ public class EarnProcessor : MonoBehaviour
 
     private bool CheckLimitAndAddCoin(int amount)
     {
-        if (currentPeriodEarnedCoin >= maxCoinPerHour) return false;
-
         int allowedAmount = amount;
-        if (currentPeriodEarnedCoin + amount > maxCoinPerHour)
-        {
-            allowedAmount = maxCoinPerHour - currentPeriodEarnedCoin;
-        }
 
-        currentPeriodEarnedCoin += allowedAmount;
+        if (useRewardLimit)
+        {
+            if (currentPeriodEarnedCoin >= maxCoinPerHour) return false;
+
+            if (currentPeriodEarnedCoin + amount > maxCoinPerHour)
+            {
+                allowedAmount = maxCoinPerHour - currentPeriodEarnedCoin;
+            }
+
+            currentPeriodEarnedCoin += allowedAmount;
+        }
 
         // [NB 수정}ICoinWallet 인터페이스를 통해 결합도를 낮추는 것이 좋음
         // 현재 CoinManager가 Add(long)으로 구현되어 있으므로 이를 사용
@@ -151,12 +163,41 @@ public class EarnProcessor : MonoBehaviour
     {
         maxCoinPerHour = Mathf.Max(0, value);
     }
+
+    /// <summary>
+    /// 수동 코인 획득 제한의 사용 여부를 변경합니다.
+    /// 상태가 바뀌면 이전 제한 주기의 누적량과 타이머를 초기화합니다.
+    /// </summary>
+    public void SetRewardLimitEnabled(bool enabled)
+    {
+        if (useRewardLimit == enabled)
+        {
+            return;
+        }
+
+        useRewardLimit = enabled;
+        ResetLimitState();
+    }
+
+    private void OnValidate()
+    {
+        if (!useRewardLimit)
+        {
+            ResetLimitState();
+        }
+    }
+
+    private void ResetLimitState()
+    {
+        limitTimer = 0f;
+        currentPeriodEarnedCoin = 0;
+    }
+
     // limitPeriodSeconds 타이머 + 이번 주기 누적 획득량 리셋
     // Update 폴링 없이 버튼 한 번으로 주기를 처음부터 다시 시작
     public void ResetLimitPeriod()
     {
-        limitTimer = 0f;
-        currentPeriodEarnedCoin = 0;
+        ResetLimitState();
         Debug.Log("[EarnProcessor] 획득 제한 주기가 수동 리셋되었습니다.");
     }
 }

@@ -18,14 +18,8 @@ namespace UI
         [Header("마을 패널의 갱신 항목")]
         [Tooltip("마을 레벨 텍스트")]
         [SerializeField] private TMP_Text villageLevel;
-        [SerializeField] private string villageLevelTest = "마을 레벨 :";
         [Tooltip("마을 레벨업 버튼")]
         [SerializeField] private Button villageLevelUpButton;
-        [Tooltip("마을 레벨업 버튼 비활성 시 levelUpText에 적용할 Alpha (0~255). 활성 시에는 255.")]
-        [SerializeField, Range(0, 255)] private byte levelUpTextAlpha = 30;
-        /// <summary>villageLevelUpButton 하위의 TMP_Text. Awake/OnValidate에서 자동 연결.</summary>
-        private TMP_Text levelUpText;
-        private const byte LevelUpTextAlphaEnabled = 255;
         
         [Header("레벨업 보상 미리보기")]
         [Tooltip("0:도구 상한 / 1:동물 배치 상한 / 2:마을 장식 / 3:섬 모양 변경")]
@@ -105,64 +99,6 @@ namespace UI
         public Button VillageLevelUpButton => villageLevelUpButton;
         public Button ComplteVillageEndButton => complteVillageEndButton;
         public Button WindowClose => windowClose;
-
-        private void Awake()
-        {
-            ResolveLevelUpText();
-            SyncLevelUpTextAlpha();
-        }
-
-#if UNITY_EDITOR
-        private void OnValidate()
-        {
-            ResolveLevelUpText();
-        }
-#endif
-
-        /// <summary>
-        /// villageLevelUpButton 자식 중 TMP_Text를 levelUpText에 자동 연결합니다.
-        /// </summary>
-        private void ResolveLevelUpText()
-        {
-            if (villageLevelUpButton == null)
-            {
-                levelUpText = null;
-                return;
-            }
-
-            // 이미 버튼 하위로 연결된 참조가 있으면 유지
-            if (levelUpText != null &&
-                levelUpText.transform.IsChildOf(villageLevelUpButton.transform))
-                return;
-
-            levelUpText = villageLevelUpButton.GetComponentInChildren<TMP_Text>(true);
-        }
-
-        /// <summary>현재 버튼 interactable 상태에 맞춰 levelUpText Alpha를 동기화합니다.</summary>
-        private void SyncLevelUpTextAlpha()
-        {
-            if (villageLevelUpButton == null)
-                return;
-
-            ApplyLevelUpTextAlpha(villageLevelUpButton.interactable);
-        }
-
-        /// <summary>
-        /// 버튼 활성 시 Alpha 255, 비활성 시 levelUpTextAlpha를 적용합니다.
-        /// </summary>
-        private void ApplyLevelUpTextAlpha(bool buttonEnabled)
-        {
-            if (levelUpText == null)
-                ResolveLevelUpText();
-
-            if (levelUpText == null)
-                return;
-
-            byte alphaByte = buttonEnabled ? LevelUpTextAlphaEnabled : levelUpTextAlpha;
-            Color color = levelUpText.color;
-            color.a = alphaByte / 255f;
-            levelUpText.color = color;
-        }
 
         public void RefreshTrackLevels(int clickLevel, int typingLevel, int toolLevel)
         {
@@ -472,10 +408,7 @@ namespace UI
 
         public void RefreshVillageLevel(int townLevel)
         {
-            SetText(villageLevel, "Town Level : " + townLevel);
-
-            // 인스펙터에서 문구 수정을 하려면 해당 코드 사용, villageLevelTest텍스트 수정
-            // SetText(villageLevel, villageLevelTest + townLevel);
+            SetText(villageLevel, "Lv : " + townLevel);
         }
 
         /// <summary>
@@ -529,7 +462,6 @@ namespace UI
         public void SetVillageLevelUpInteractable(bool enabled)
         {
             SetButtonInteractable(villageLevelUpButton, enabled);
-            ApplyLevelUpTextAlpha(enabled);
         }
 
         //------------------26.08.05 KAY 추가 / 26.08.06 수정 (최대 레벨 엔드 버튼)---------------

@@ -22,7 +22,7 @@ namespace UI
         [SerializeField] private Transform animalSlotContentRoot;
         [SerializeField] private TMP_Text animalcountMessage;
         [SerializeField, TextArea(2, 4)]
-        private string countMessage = "만나본 주민의 수: ";
+        private string countMessage = "만나본 주민의 수 : ";
 
         [Header("동물 상세 페이지")]
         [SerializeField] private UIController_AnimalDexPage animalPageController;
