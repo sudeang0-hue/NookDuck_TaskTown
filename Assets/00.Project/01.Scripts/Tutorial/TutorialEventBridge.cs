@@ -26,7 +26,6 @@ namespace TaskTown.Tutorial
         [SerializeField] private RealProductionTicker realProductionTicker;
         [SerializeField] private VillageAnimalSetUI_Manager villageAnimalSetUIManager;
         [SerializeField] private VillageInfoUI_Manager villageInfoUIManager;
-        [SerializeField] private TownUpgradeManager townUpgradeManager;
         [SerializeField] private GameMasterManager gameMasterManager;
 
         [Header("튜토리얼 버튼 강조")]
@@ -215,8 +214,6 @@ namespace TaskTown.Tutorial
             }
             if (villageInfoUIManager == null)
                 villageInfoUIManager = FindAnyObjectByType<VillageInfoUI_Manager>();
-            if (townUpgradeManager == null)
-                townUpgradeManager = TownUpgradeManager.Instance;
             if (gameMasterManager == null)
                 gameMasterManager = FindAnyObjectByType<GameMasterManager>();
             if (buttonHighlighter == null)
@@ -523,10 +520,6 @@ namespace TaskTown.Tutorial
 
                 case TutorialStep.UpgradeVillage:
                     SubscribeUpgradeVillageHighlightFlow();
-                    if (townUpgradeManager != null)
-                        townUpgradeManager.UpgradePurchased += HandleUpgradePurchased;
-                    else
-                        WarnMissingSource(nameof(TownUpgradeManager), step);
                     break;
             }
 
@@ -594,8 +587,6 @@ namespace TaskTown.Tutorial
 
                 case TutorialStep.UpgradeVillage:
                     UnsubscribeUpgradeVillageHighlightFlow();
-                    if (townUpgradeManager != null)
-                        townUpgradeManager.UpgradePurchased -= HandleUpgradePurchased;
                     break;
             }
 
@@ -1035,8 +1026,8 @@ namespace TaskTown.Tutorial
 
         private void HandleTownUpgradeTabClicked()
         {
-            upgradeVillageHighlightPhase = UpgradeVillageHighlightPhase.Completed;
-            ClearHighlights();
+            upgradeVillageHighlightPhase = UpgradeVillageHighlightPhase.UpgradeTab;
+            ScheduleHighlightRefresh();
         }
 
         private void BindAnimalSlotButton(Button target)
@@ -1494,8 +1485,9 @@ namespace TaskTown.Tutorial
 
         private void RefreshUpgradeVillageHighlight()
         {
-            // 화면 확인으로 안내가 끝난 상태는 현재 튜토리얼 단계 동안 유지합니다.
-            // 실제 퀘스트 완료는 UpgradePurchased 이벤트가 별도로 판정합니다.
+            // 패널 열림을 확인한 뒤에는 강조를 종료하고 퀘스트 완료 신호를 보냅니다.
+            // 버튼 클릭 직후가 아니라 실제 UI 활성 상태를 확인하므로 닫기 동작을
+            // 완료로 잘못 처리하지 않습니다.
             if (upgradeVillageHighlightPhase ==
                 UpgradeVillageHighlightPhase.Completed)
             {
@@ -1507,6 +1499,8 @@ namespace TaskTown.Tutorial
             {
                 upgradeVillageHighlightPhase = UpgradeVillageHighlightPhase.Completed;
                 ClearHighlights();
+                tutorialManager?.ReportSignal(
+                    TutorialSignalType.VillageUpgradePanelOpened);
                 return;
             }
 
@@ -1613,11 +1607,6 @@ namespace TaskTown.Tutorial
         private void HandleVillageInfoOpened()
         {
             tutorialManager?.ReportSignal(TutorialSignalType.VillageInfoOpened);
-        }
-
-        private void HandleUpgradePurchased()
-        {
-            tutorialManager?.ReportSignal(TutorialSignalType.AnyUpgradePurchased);
         }
 
         private void WarnMissingSource(string sourceName, TutorialStep step)

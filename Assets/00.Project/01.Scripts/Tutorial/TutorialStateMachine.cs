@@ -124,7 +124,9 @@ namespace TaskTown.Tutorial
                     return TryAdvance(signalType, TutorialSignalType.VillageInfoOpened);
 
                 case TutorialStep.UpgradeVillage:
-                    return TryAdvance(signalType, TutorialSignalType.AnyUpgradePurchased);
+                    return TryAdvance(
+                        signalType,
+                        TutorialSignalType.VillageUpgradePanelOpened);
 
                 default:
                     return false;

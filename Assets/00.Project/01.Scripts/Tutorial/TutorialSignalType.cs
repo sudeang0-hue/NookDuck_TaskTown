@@ -14,7 +14,7 @@ namespace TaskTown.Tutorial
         AnimalAssigned = 5,
         AutoProductionConfirmed = 6,
         VillageInfoOpened = 7,
-        AnyUpgradePurchased = 8,
+        VillageUpgradePanelOpened = 8,
         TownWindowMinimized = 9,
         TownWindowExpanded = 10,
         VillageAnimalPlaced = 11
