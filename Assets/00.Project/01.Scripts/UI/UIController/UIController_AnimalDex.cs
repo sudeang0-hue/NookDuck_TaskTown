@@ -8,6 +8,9 @@ namespace UI
 {
     public class UIController_AnimalDex : MonoBehaviour
     {
+        [SerializeField] private bool useProfileImageToslot;
+        [SerializeField] private bool useProfileImageToPage;
+
         [Header("동물 인벤토리")]
         [SerializeField] private InventoryManager_Animal animalInventory;
 
@@ -54,20 +57,20 @@ namespace UI
 
             SubscribeEvents();
 
-            // ----------------08.08.KAY (패널 오픈 시 도감 Dif 갱신)------------------
-            // 패널을 다시 열 때 현재 난이도 기준 Dif 표시를 맞춥니다.
-            if (isInitialized)
-                RefreshInventory();
-            // ---------------------------------------------------------
+            // 해금 상태 갱신은 Start / NotifyPanelOpened에서만 수행합니다.
+            // OnEnable은 DexRecordManager.Awake보다 먼저 호출될 수 있어 Instance null Warning이 납니다.
         }
 
         /// <summary>
         /// 도감 패널이 열릴 때 호출합니다.
-        /// 상세 페이지를 닫힌 상태로 맞춥니다.
+        /// 상세 페이지를 닫힌 상태로 맞추고, 해금 상태를 최신으로 갱신합니다.
         /// </summary>
         public void NotifyPanelOpened()
         {
             animalPageController?.CloseAnimalDexPage();
+
+            if (isInitialized)
+                RefreshInventory();
         }
 
         private void OnDisable()
@@ -86,6 +89,9 @@ namespace UI
 
             if (!ValidateReferences())
                 return;
+
+            // 상세 페이지 아이콘 분기(Icon / ProfileImage)를 AnimalDex에서 일괄 제어
+            animalPageController.SetUseProfileImage(useProfileImageToPage);
 
             CreateAnimalSlots();
 
@@ -133,8 +139,8 @@ namespace UI
 
                 SlotUI_AnimalDex slot = Instantiate(animalSlotPrefab, animalSlotContentRoot);
 
-                // slot.Initialize(toolData, animalPageController);
-                slot.Initialize(animalData, animalPageController, false);
+                // useProfileImageToslot == false: Icon / true: AnimalDataSO.ProfileImage
+                slot.Initialize(animalData, animalPageController, false, useProfileImageToslot);
 
                 slotMap.Add(animalId, slot);
                 createdSlots.Add(slot);

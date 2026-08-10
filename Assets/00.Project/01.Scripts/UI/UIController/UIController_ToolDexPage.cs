@@ -1,3 +1,4 @@
+using Animal.Data;
 using TaskTown.KDH;
 using TMPro;
 using Tool.Data;
@@ -8,19 +9,24 @@ namespace UI
 {
     public class UIController_ToolDexPage : MonoBehaviour
     {
-        // Dex_Page ÀÚ½Å¿¡ ºÙ¾î ÀÖÀ¸¹Ç·Î SerializeField ¾øÀÌ gameObject¸¦ »ç¿ëÇÕ´Ï´Ù.
+        // Dex_Page ï¿½Ú½Å¿ï¿½ ï¿½Ù¾ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ SerializeField ï¿½ï¿½ï¿½ï¿½ gameObjectï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.
         private GameObject ToolDexPagePanel => gameObject;
 
-        [Header("µµ±¸ »ó¼¼ Á¤º¸")]
+        [Header("ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½")]
         [SerializeField] private Image toolIconImage;
         [SerializeField] private TMP_Text toolNameText;
         [SerializeField] private TMP_Text toolDescriptionText;
 
-        [Header("¹ÌÇØ±Ý ¹Ý¿µ »çÇ×")]
+        [SerializeField] private Image animaImage;
+        [SerializeField] private TMP_Text animalNameText;
+
+        [Header("ï¿½ï¿½ï¿½Ø±ï¿½ ï¿½Ý¿ï¿½ ï¿½ï¿½ï¿½ï¿½")]
         [SerializeField] private Sprite unknownToolIcon;
+        [SerializeField] private Sprite unknownAnimalIcon;
         [SerializeField] private string unknownToolName = "???";
+        [SerializeField] private string unknownAnimalName = "???";
         [SerializeField, TextArea(2, 4)]
-        private string unlokedMessage = "ÀÌ µµ±¸´Â ¾ÆÁ÷ ¹ß°ßÇÏÁö ¸ø Çß¾î¿ä.";
+        private string unlokedMessage = "ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ß°ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ß¾ï¿½ï¿½.";
 
         private ToolDataSO currentToolData;
 
@@ -29,7 +35,7 @@ namespace UI
         public string CurrentToolId => currentToolData != null ? currentToolData.Id : string.Empty;
 
         /// <summary>
-        /// »ó¼¼ ÆäÀÌÁö ÆÐ³ÎÀÌ ÇöÀç ¿­·Á ÀÖ´ÂÁö ¿©ºÎ
+        /// ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ð³ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ö´ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public bool IsOpen => ToolDexPagePanel != null && ToolDexPagePanel.activeSelf;
 
@@ -39,13 +45,13 @@ namespace UI
         }
 
         /// <summary>
-        /// µµ°¨ ½½·Ô Å¬¸¯ ½Ã ¼±ÅÃÇÑ µµ±¸ÀÇ Á¤º¸·Î »ó¼¼ ÆäÀÌÁö¸¦ °»½ÅÇÏ°í ÆÐ³ÎÀ» ¿±´Ï´Ù.
+        /// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Å¬ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï°ï¿½ ï¿½Ð³ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ï´ï¿½.
         /// </summary>
         public void OpenToolDexPage(ToolDataSO toolData)
         {
             if (toolData == null)
             {
-                Debug.LogWarning("[UIController_ToolDexPage] Ç¥½ÃÇÒ µµ±¸ µ¥ÀÌÅÍ°¡ ¾ø½À´Ï´Ù.");
+                Debug.LogWarning("[UIController_ToolDexPage] Ç¥ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Í°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.");
                 return;
             }
 
@@ -57,15 +63,15 @@ namespace UI
         }
 
         /// <summary>
-        /// ÇöÀç ¼±ÅÃµÈ µµ±¸ µ¥ÀÌÅÍ·Î »ó¼¼ ÆäÀÌÁö¸¦ °»½ÅÇÕ´Ï´Ù.
-        /// ÇØ±Ý/¹ÌÇØ±Ý¿¡ µû¶ó ¾ÆÀÌÄÜ¡¤ÀÌ¸§¡¤¼³¸íÀ» ºÐ±âÇÕ´Ï´Ù.
+        /// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ãµï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Í·ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.
+        /// ï¿½Ø±ï¿½/ï¿½ï¿½ï¿½Ø±Ý¿ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ü¡ï¿½ï¿½Ì¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ð±ï¿½ï¿½Õ´Ï´ï¿½.
         /// </summary>
         private void RefreshToolDexPage()
         {
             if (currentToolData == null)
                 return;
 
-            // ----------------08.09.KAY (¹ÌÇØ±Ý µµ±¸ »ó¼¼ ÆäÀÌÁö Ç¥½Ã)------------------
+            // ----------------08.09.KAY (ï¿½ï¿½ï¿½Ø±ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Ç¥ï¿½ï¿½)------------------
             bool isUnlocked = IsToolDiscovered(currentToolData.Id);
 
             if (isUnlocked)
@@ -91,6 +97,9 @@ namespace UI
 
             if (toolDescriptionText != null)
                 toolDescriptionText.text = currentToolData.ToolDescription;
+
+            // Æ¯È­ ï¿½Ø±ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ü¡ï¿½ï¿½Ì¸ï¿½, ï¿½Æ´Ï¸ï¿½ unknown Ç¥ï¿½ï¿½
+            ApplySpecialAnimalInfo();
         }
 
         private void ShowLockedToolView()
@@ -106,6 +115,70 @@ namespace UI
 
             if (toolDescriptionText != null)
                 toolDescriptionText.text = unlokedMessage;
+
+            // ï¿½ï¿½È¹ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ animaImage/animalNameTextï¿½ï¿½ unknownï¿½ï¿½ï¿½ï¿½ Ç¥ï¿½ï¿½
+            ApplySpecialAnimalInfo();
+        }
+
+        /// <summary>
+        /// animaImage / animalNameText ï¿½ï¿½ï¿½ï¿½.
+        /// ï¿½âº»: unknownAnimalIcon / unknownAnimalName
+        /// Æ¯È­ ï¿½Ø±ï¿½(HasRevealedSpecialAnimal): ï¿½Ø´ï¿½ ï¿½ï¿½ï¿½ï¿½ Icon / AnimalDisplayName_
+        /// </summary>
+        private void ApplySpecialAnimalInfo()
+        {
+            bool hasRevealedAnimal = TryGetRevealedSpecialAnimal(CurrentToolId, out AnimalDataSO animalData)
+                && animalData != null;
+
+            if (animaImage != null)
+            {
+                Sprite animalIcon = hasRevealedAnimal ? animalData.Icon : null;
+
+                if (animalIcon != null)
+                {
+                    animaImage.sprite = animalIcon;
+                    animaImage.enabled = true;
+                }
+                else
+                {
+                    animaImage.sprite = unknownAnimalIcon;
+                    animaImage.enabled = unknownAnimalIcon != null;
+                }
+            }
+
+            if (animalNameText != null)
+            {
+                animalNameText.text = hasRevealedAnimal
+                    ? animalData.AnimalDisplayName_
+                    : unknownAnimalName;
+            }
+        }
+
+        /// <summary>
+        /// Æ¯È­ ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¸ï¿½ï¿½ï¿½ ï¿½Ø±Ýµï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Æ¯È­ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Í¸ï¿½ ï¿½ï¿½È¯ï¿½Õ´Ï´ï¿½.
+        /// </summary>
+        private static bool TryGetRevealedSpecialAnimal(string toolId, out AnimalDataSO animalData)
+        {
+            animalData = null;
+
+            if (string.IsNullOrEmpty(toolId) || InventoryManager_Tool.Instance == null)
+                return false;
+
+            if (!InventoryManager_Tool.Instance.TryGetToolSlot(toolId, out SlotData_Tool toolSlot))
+                return false;
+
+            if (toolSlot == null || !toolSlot.HasRevealedSpecialAnimal || toolSlot.ToolData == null)
+                return false;
+
+            string specialAnimalId = toolSlot.ToolData.SpecialAnimalId;
+            if (string.IsNullOrEmpty(specialAnimalId))
+                return false;
+
+            if (InventoryManager_Animal.Instance == null)
+                return false;
+
+            animalData = InventoryManager_Animal.Instance.GetAnimalData(specialAnimalId);
+            return animalData != null;
         }
 
         private static bool IsToolDiscovered(string toolId)
@@ -117,8 +190,8 @@ namespace UI
         }
 
         /// <summary>
-        /// »ó¼¼ ÆäÀÌÁö ´Ý±â ¹öÆ°¿ë.
-        /// ¼±ÅÃ µ¥ÀÌÅÍµµ ÇÔ²² ÃÊ±âÈ­ÇÕ´Ï´Ù.
+        /// ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ý±ï¿½ ï¿½ï¿½Æ°ï¿½ï¿½.
+        /// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Íµï¿½ ï¿½Ô²ï¿½ ï¿½Ê±ï¿½È­ï¿½Õ´Ï´ï¿½.
         /// </summary>
         public void CloseToolDexPage()
         {

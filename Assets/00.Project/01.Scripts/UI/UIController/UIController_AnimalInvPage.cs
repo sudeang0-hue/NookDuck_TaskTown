@@ -305,7 +305,7 @@ namespace UI
             }
 
             if (animalNameText != null)
-                animalNameText.text = data.DisplayName;
+                animalNameText.text = data.AnimalDisplayName_;
 
             ApplyGradeImage(data.Grade);
         }
