@@ -4,7 +4,7 @@ using UnityEngine;
 namespace TaskTown.Tutorial
 {
     /// <summary>
-    /// 수동 코인 획득 튜토리얼에서만 전체 코인 텍스트에 짧은 Punch 피드백을 재생합니다.
+    /// 수동 코인 획득 및 자동 생산 확인 튜토리얼에서만 전체 코인 텍스트에 짧은 Punch 피드백을 재생합니다.
     /// 연속 입력 시 기존 Tween을 종료하고 원래 크기에서 다시 시작하여 Scale 누적을 막습니다.
     /// </summary>
     public sealed class TutorialManualCoinFeedback : MonoBehaviour

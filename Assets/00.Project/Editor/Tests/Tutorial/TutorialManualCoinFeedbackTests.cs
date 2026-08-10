@@ -2,7 +2,6 @@ using System.Reflection;
 using DG.Tweening;
 using NUnit.Framework;
 using TaskTown.Tutorial;
-using TMPro;
 using UnityEngine;
 
 namespace TaskTown.EditorTests.Tutorial
@@ -59,52 +58,41 @@ namespace TaskTown.EditorTests.Tutorial
         }
 
         [Test]
-        public void GlobalCoinPunch_같은프레임의연속획득은_Tween하나로합친다()
+        public void TutorialCoinHandlers_수동과자동획득시_Feedback을재생한다()
         {
-            GameObject controllerObject = new(
-                "GlobalCoinPunchTest",
-                typeof(UIController_Coin));
-            GameObject textObject = new(
-                "AllCoinText",
-                typeof(RectTransform),
-                typeof(TextMeshProUGUI));
-            textObject.transform.SetParent(controllerObject.transform);
-
-            UIController_Coin controller =
-                controllerObject.GetComponent<UIController_Coin>();
-            TMP_Text text = textObject.GetComponent<TMP_Text>();
+            GameObject bridgeObject = new(
+                "TutorialCoinFeedbackBridgeTest",
+                typeof(TutorialEventBridge),
+                typeof(TutorialManualCoinFeedback));
+            GameObject targetObject = new("AllCoinText", typeof(RectTransform));
+            TutorialEventBridge bridge =
+                bridgeObject.GetComponent<TutorialEventBridge>();
+            TutorialManualCoinFeedback feedback =
+                bridgeObject.GetComponent<TutorialManualCoinFeedback>();
+            RectTransform target = targetObject.GetComponent<RectTransform>();
             Vector3 originalScale = new(0.9f, 0.9f, 1f);
-            text.rectTransform.localScale = originalScale;
+            target.localScale = originalScale;
 
             try
             {
-                SetPrivateField(controller, "allCoinText", text);
-                SetPrivateField(controller, "allCoinOriginalScale", originalScale);
+                SetPrivateField(bridge, "manualCoinFeedback", feedback);
+                feedback.Bind(target);
 
-                InvokePrivate(controller, "HandleCoinGranted", 1);
-                InvokePrivate(controller, "HandleCoinGranted", 1);
-                InvokePrivate(controller, "HandleCoinGranted", 1);
-                InvokePrivate(controller, "PlayRequestedGainPunch");
+                InvokePrivate(bridge, "HandleManualCoinGranted", 1);
+                Assert.AreEqual(1, DOTween.TweensByTarget(target)?.Count);
 
-                var tweens = DOTween.TweensByTarget(text.rectTransform);
-                Assert.IsNotNull(tweens);
-                Assert.AreEqual(1, tweens.Count);
-                Tween firstTween = tweens[0];
+                feedback.StopAndRestore();
+                feedback.Bind(target);
 
-                InvokePrivate(controller, "HandleCoinGranted", 1);
-                InvokePrivate(controller, "HandleCoinGranted", 1);
-                InvokePrivate(controller, "PlayRequestedGainPunch");
-
-                tweens = DOTween.TweensByTarget(text.rectTransform);
-                Assert.IsNotNull(tweens);
-                Assert.AreEqual(1, tweens.Count);
-                Assert.AreSame(firstTween, tweens[0]);
+                InvokePrivate(bridge, "HandleProductionCoinGranted", 1);
+                Assert.AreEqual(1, DOTween.TweensByTarget(target)?.Count);
             }
             finally
             {
-                InvokePrivate(controller, "StopGainPunchAndRestore");
-                Assert.AreEqual(originalScale, text.rectTransform.localScale);
-                Object.DestroyImmediate(controllerObject);
+                feedback.StopAndRestore();
+                Assert.AreEqual(originalScale, target.localScale);
+                Object.DestroyImmediate(bridgeObject);
+                Object.DestroyImmediate(targetObject);
             }
         }
 
