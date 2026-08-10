@@ -669,8 +669,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
-  m_AnchoredPosition: {x: 60, y: 70}
-  m_SizeDelta: {x: 120, y: 120}
+  m_AnchoredPosition: {x: 65, y: 126}
+  m_SizeDelta: {x: 140, y: 140}
   m_Pivot: {x: 0, y: 0.5}
 --- !u!222 &7723791704914186822
 CanvasRenderer:
@@ -700,9 +700,9 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -302642155, guid: 0ec76af56ea416942b1da00da069379c, type: 3}
+  m_Sprite: {fileID: 1279377753, guid: 2e1ff39be1a49734a9011af1b4824a0f, type: 3}
   m_Type: 0
-  m_PreserveAspect: 1
+  m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
   m_FillAmount: 1
@@ -2491,6 +2491,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 5163933688845920643}
+  - {fileID: 5113054757603558510}
   - {fileID: 8030637392430857504}
   - {fileID: 1381288350576643455}
   - {fileID: 1160375140204748543}
@@ -2506,7 +2507,6 @@ RectTransform:
   - {fileID: 6517025216613152435}
   - {fileID: 8179885233352472216}
   - {fileID: 3730568440170341777}
-  - {fileID: 5113054757603558510}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -2629,6 +2629,9 @@ MonoBehaviour:
   toolSetOffButton: {fileID: 6959189206109951919}
   toolSettingPage: {fileID: 8088537472073453312}
   animalInvPage: {fileID: 2015619895530911372}
+  toolSettingOpenFromAnchoredPos: {x: 0, y: 0}
+  toolSettingOpenDuration: 0.35
+  toolSettingOpenEase: 9
 --- !u!1 &7925992336761444020
 GameObject:
   m_ObjectHideFlags: 0
