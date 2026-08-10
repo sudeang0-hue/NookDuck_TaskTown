@@ -2491,7 +2491,6 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 5163933688845920643}
-  - {fileID: 5113054757603558510}
   - {fileID: 8030637392430857504}
   - {fileID: 1381288350576643455}
   - {fileID: 1160375140204748543}
@@ -2507,6 +2506,7 @@ RectTransform:
   - {fileID: 6517025216613152435}
   - {fileID: 8179885233352472216}
   - {fileID: 3730568440170341777}
+  - {fileID: 5113054757603558510}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -2629,9 +2629,10 @@ MonoBehaviour:
   toolSetOffButton: {fileID: 6959189206109951919}
   toolSettingPage: {fileID: 8088537472073453312}
   animalInvPage: {fileID: 2015619895530911372}
-  toolSettingOpenFromAnchoredPos: {x: 0, y: 0}
-  toolSettingOpenDuration: 0.35
-  toolSettingOpenEase: 9
+  startPosX: 85
+  endPosX: 345
+  slideDuration: 0.3
+  slideEase: 9
 --- !u!1 &7925992336761444020
 GameObject:
   m_ObjectHideFlags: 0

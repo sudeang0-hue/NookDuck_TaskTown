@@ -408,7 +408,7 @@ namespace UI
 
         public void RefreshVillageLevel(int townLevel)
         {
-            SetText(villageLevel, "Town Level : " + townLevel);
+            SetText(villageLevel, "Lv : " + townLevel);
         }
 
         /// <summary>
