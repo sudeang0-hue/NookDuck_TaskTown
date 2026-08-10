@@ -1,4 +1,5 @@
-﻿using Animal.Data;
+﻿using System.Collections.Generic;
+using Animal.Data;
 using TaskTown.Gacha;
 using TaskTown.KDH;
 using TMPro;
@@ -14,12 +15,23 @@ namespace UI
 
         [Header("동물 상세 정보")]
         [SerializeField] private Image animalIconImage;
+        [Tooltip("동물 타입 텍스트(오리,개,고양이)")]
         [SerializeField] private TMP_Text animalNameText;
-        [SerializeField] private TMP_Text animalDescriptionText;
+        [Tooltip("동물 실제 이름 텍스트(신사오리,퍼피,케이트)")]
+        [SerializeField] private TMP_Text animalDisplayNameText;
+
+        [SerializeField] private Image toolImage;
+        [SerializeField] private TMP_Text toolNameText;
+
+        [SerializeField] private TMP_Text animalDescriptionText; // 동물 설명
+        [SerializeField] private TMP_Text hintDescriptionText; // 도구에 대한 힌트
 
         [Header("미해금 반영 사항")]
         [SerializeField] private Sprite unknownAnimalIcon;
-        [SerializeField] private string unknownAnimalName = "???";
+        [SerializeField] private Sprite unknownToolIcon;
+        [SerializeField] private string unknownAnimalName = "-";
+        [SerializeField] private string unknownAnimalDispalName = "???";
+        [SerializeField] private string unknownToollName = "???";
         [SerializeField, TextArea(2, 4)]
         private string unlokedMessage = "이 주민은 아직 마을에 방문하지 않았어요.";
         [SerializeField, TextArea(2, 4)]
@@ -92,8 +104,18 @@ namespace UI
             if (animalNameText != null)
                 animalNameText.text = currentAnimalData.DisplayName;
 
+            if (animalDisplayNameText != null)
+                animalDisplayNameText.text = currentAnimalData.AnimalDisplayName_;
+
             if (animalDescriptionText != null)
                 animalDescriptionText.text = currentAnimalData.AnimalDescription;
+
+            // 힌트 텍스트가 추가되면 AnimalDescription 부분을 해당 항목으로 변경합니다.
+            if (hintDescriptionText != null)
+                hintDescriptionText.text = currentAnimalData.AnimalHintDescription;
+
+            // 특화 해금 시 실제 도구 아이콘·이름, 아니면 unknown 표시
+            ApplySpecialToolInfo();
         }
 
         private void ShowLockedAnimalView(bool unavailableOnDifficulty)
@@ -107,12 +129,90 @@ namespace UI
             if (animalNameText != null)
                 animalNameText.text = unknownAnimalName;
 
+            if (animalDisplayNameText != null)
+                animalDisplayNameText.text = unknownAnimalDispalName;
+
             if (animalDescriptionText != null)
             {
                 animalDescriptionText.text = unavailableOnDifficulty
                     ? unlokedDifficultyMessage
                     : unlokedMessage;
             }
+
+            string emptytxt = " ";
+            string hinttxt = " ";
+            // 힌트 텍스트 추가
+            if (hintDescriptionText != null)
+            {
+                hintDescriptionText.text = unavailableOnDifficulty
+                    ? hinttxt
+                    : emptytxt;
+            }
+
+            // 미획득 동물도 toolImage/toolNameText는 unknown으로 표시
+            ApplySpecialToolInfo();
+        }
+
+        /// <summary>
+        /// toolImage / toolNameText 갱신.
+        /// 기본: unknownToolIcon / unknownToollName
+        /// 특화 해금(HasRevealedSpecialAnimal): 해당 도구 Icon / DisplayName
+        /// </summary>
+        private void ApplySpecialToolInfo()
+        {
+            SlotData_Tool revealedToolSlot = FindRevealedSpecialToolSlot(CurrentAnimalId);
+            bool hasRevealedTool = revealedToolSlot != null && revealedToolSlot.ToolData != null;
+
+            if (toolImage != null)
+            {
+                Sprite toolIcon = hasRevealedTool ? revealedToolSlot.ToolData.Icon : null;
+
+                if (toolIcon != null)
+                {
+                    toolImage.sprite = toolIcon;
+                    toolImage.enabled = true;
+                }
+                else
+                {
+                    toolImage.sprite = unknownToolIcon;
+                    toolImage.enabled = unknownToolIcon != null;
+                }
+            }
+
+            if (toolNameText != null)
+            {
+                toolNameText.text = hasRevealedTool
+                    ? revealedToolSlot.ToolData.DisplayName
+                    : unknownToollName;
+            }
+        }
+
+        /// <summary>
+        /// 특화 동물 이름이 해금된 도구 슬롯을 찾습니다. 없으면 null.
+        /// </summary>
+        private static SlotData_Tool FindRevealedSpecialToolSlot(string animalId)
+        {
+            if (string.IsNullOrEmpty(animalId) || InventoryManager_Tool.Instance == null)
+                return null;
+
+            IReadOnlyList<SlotData_Tool> toolSlots = InventoryManager_Tool.Instance.ToolSlotsList;
+            if (toolSlots == null)
+                return null;
+
+            for (int i = 0; i < toolSlots.Count; i++)
+            {
+                SlotData_Tool toolSlot = toolSlots[i];
+                if (toolSlot == null || toolSlot.ToolData == null)
+                    continue;
+
+                if (!toolSlot.HasRevealedSpecialAnimal)
+                    continue;
+
+                if (toolSlot.ToolData.SpecialAnimalId == animalId)
+                    return toolSlot;
+            }
+
+            return null;
         }
 
         private static bool IsAnimalDiscovered(string animalId)

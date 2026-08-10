@@ -11,7 +11,7 @@ public class UIController_Coin_mini : MonoBehaviour
 
     private CoinManager coinManager;
 
-    [Header("ȹ�� ���� �ؽ�Ʈ")]
+    [Header("획득 코인 텍스트")]
     [SerializeField] private TMP_Text allCoinText;
 
     private bool isSubscribed;
@@ -72,8 +72,8 @@ public class UIController_Coin_mini : MonoBehaviour
         if (!isSubscribed && GetCoinManager() == null)
         {
             Debug.LogWarning(
-                "[UIController_Coin_mini] CoinManager�� �����ϴ�. " +
-                "Inspector ���� �Ǵ� ���� Ȱ�� CoinManager�� Ȯ���ϼ���.");
+                "[UIController_Coin_mini] CoinManager가 없습니다. " +
+                "Inspector 참조 또는 씬의 활성 CoinManager를 확인하세요.");
         }
     }
 
@@ -91,7 +91,7 @@ public class UIController_Coin_mini : MonoBehaviour
             return;
 
         //-----------------26.08.05 KDH-------------------------
-        // Prefab�� �ؽ�Ʈ �̿��� �������� ���� �� �־�, ǥ�� ����� ������ �������� �ʽ��ϴ�.
+        // Prefab에 텍스트 외 다른 오브젝트가 연결될 수 있어, 표시 대상이 없으면 구독하지 않습니다.
         if (allCoinText == null)
             return;
         //----------------------------------------
@@ -100,7 +100,7 @@ public class UIController_Coin_mini : MonoBehaviour
         if (source == null)
             return;
 
-        // Inspector �̿��� �� Instance�� ����
+        // Inspector 미연결 시 Instance로 보정
         if (coinManager == null)
             coinManager = source;
 
@@ -113,7 +113,7 @@ public class UIController_Coin_mini : MonoBehaviour
     {
         if (allCoinText == null)
         {
-            Debug.LogWarning("[UIController_Coin_mini] allCoinText�� ������� �ʾҽ��ϴ�.");
+            Debug.LogWarning("[UIController_Coin_mini] allCoinText가 연결되지 않았습니다.");
             return;
         }
 
