@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using Manager;
 using TaskTown.KDH;
@@ -8,9 +9,7 @@ using UnityEngine.UI;
 namespace UI
 {
     /// <summary>
-    /// 마을 동물 배치 UI.
-    /// Edit 모드에서 드래프트로 배치/제거하고, Confirm_AnimalSet_btn으로 확정합니다.
-    /// 목록은 이미 배치(드래프트 포함)된 animalId를 제외합니다.
+    /// 마을 동물 배치 UI 제어 및 서브 패널 슬라이딩 연출을 담당하는 매니저 클래스
     /// </summary>
     public class VillageAnimalSetUI_Manager : MonoBehaviour
     {
@@ -33,6 +32,25 @@ namespace UI
         [Tooltip("SetAnimalList_Panel의 UIController_VillageAnimalSetList")]
         [SerializeField] private UIController_VillageAnimalSetList animalSetList;
 
+        // =========================================================================
+        // [ 서브 패널 슬라이드 연출 설정 ]
+        // =========================================================================
+        [Header("서브 패널 슬라이드 연출 설정")]
+        [Tooltip("스르륵 나타날 SetAnimalList_root의 RectTransform")]
+        [SerializeField] private RectTransform subPanelRect;
+
+        [Tooltip("메인 UI 뒤에 숨어있을 때의 로컬 좌표")]
+        [SerializeField] private Vector2 hiddenAnchoredPos = Vector2.zero;
+
+        [Tooltip("오른쪽(또는 지정 위치)으로 튀어나왔을 때의 로컬 좌표")]
+        [SerializeField] private Vector2 visibleAnchoredPos = new Vector2(450f, 0f);
+
+        [Tooltip("슬라이드 애니메이션 재생 시간 (초)")]
+        [SerializeField] private float slideDuration = 0.25f;
+
+        private Coroutine slideCoroutine;
+        // =========================================================================
+
         [Header("인벤토리 (미연결 시 Instance 사용)")]
         private InventoryManager_Animal animalInventory;
 
@@ -44,17 +62,13 @@ namespace UI
 
         [Header("Unlocked 규칙 (테스트)")]
         [SerializeField] private int unlockedAtLevel1 = DefaultUnlockedAtLevel1;
-        //[SerializeField] private int[] unlockedByLevel = new int[0];                                        기존코드
-        [SerializeField] private int[] unlockedByLevel = new int[10] { 5, 6, 7, 9, 10, 12, 13, 14, 16, 20 };  // 26.07.28 KDH 수정
-        // 기존 VillageAnimalSet_Canvas_tab프리펩의 인스펙터에 unlockedByLevel을 위 배열의 숫자를 그대로 집어넣으면 잘 작동함
+        [SerializeField] private int[] unlockedByLevel = new int[10] { 5, 6, 7, 9, 10, 12, 13, 14, 16, 20 };
         [SerializeField] private int testTownLevel = 1;
         [SerializeField] private VillageUpgradeUI_Manager villageUpgradeUIManager;
 
-        
         private bool openPanelOnPlay = false;
         private bool hidePanelOnAwake = true;
 
-        /// <summary>Edit 중 작업용 드래프트. Confirm 시 확정본으로 복사됩니다.</summary>
         private List<string> editDraftIds;
 
         private bool isPanelOpen;
@@ -63,7 +77,6 @@ namespace UI
         private int pendingSlotIndex = -1;
 
         public event Action<int> OnRequestOpenAnimalSetList;
-        // 확정본(villageAnimalIds) 배치가 Confirm으로 변경되었을 때
         public event Action OnVillagePlacementChanged;
 
         public bool IsPanelOpen => isPanelOpen;
@@ -78,7 +91,13 @@ namespace UI
             EnsurePlacementBuffer();
             ResolveEditButton();
             ResolveConfirmButton();
-            HideSetAnimalListPanel();
+            ResolveSubPanelRect(); // 서브 패널 RectTransform 자동으로 감지
+
+            // 초기 위치 숨김 처리 (애니메이션 없이 즉시 이동)
+            if (subPanelRect != null)
+                subPanelRect.anchoredPosition = hiddenAnchoredPos;
+
+            HideSetAnimalListPanelImmediate();
             SetConfirmButtonActive(false);
 
             if (hidePanelOnAwake && !openPanelOnPlay)
@@ -113,12 +132,25 @@ namespace UI
 
         private void OnDisable()
         {
-            // 컴포넌트 비활성 시에도 Edit 잔존 방지 (패널만 닫힌 경우는 PanelClosed에서 처리)
             DiscardEditOnPanelLeave();
             UnbindEditButton();
             UnbindConfirmButton();
             UnsubscribeEvents();
             UnsubscribePanelEvents();
+
+            // 비활성화 시 진행 중인 슬라이드 코루틴 정지 및 상태 복구
+            if (slideCoroutine != null)
+            {
+                StopCoroutine(slideCoroutine);
+                slideCoroutine = null;
+            }
+
+            // 비활성화될 때 UI 위치를 즉시 숨김 상태로 초기화
+            if (subPanelRect != null)
+            {
+                subPanelRect.anchoredPosition = hiddenAnchoredPos;
+                subPanelRect.gameObject.SetActive(false);
+            }
         }
 
         private void OnDestroy()
@@ -131,11 +163,8 @@ namespace UI
 
         public int GetUnlockedSlotCount()
         {
-            //------------------26.08.05 KAY 추가 (마을 레벨 설정 연동)---------------------------------
-            // 배치 상한 진실 소스는 VillageSystemManager. 로컬 배열은 폴백으로만 사용.
             if (VillageSystemManager.Instance != null)
                 return Mathf.Clamp(VillageSystemManager.Instance.GetUnlockedPlacementSlotCount(), 0, MaxCapacity);
-            //-----------------------------------------------------------------------------
 
             return GetUnlockedSlotCount(GetCurrentTownLevel());
         }
@@ -145,67 +174,42 @@ namespace UI
             int level = Mathf.Max(1, townLevel);
             int unlocked;
 
-            //if (unlockedByLevel != null && unlockedByLevel.Length > level)   기존코드
-            if (unlockedByLevel != null && unlockedByLevel.Length > level - 1) // 26.07.28 KDH 수정
-                //unlocked = unlockedByLevel[level];                          기존코드
-                unlocked = unlockedByLevel[level - 1];                      // 26.07.28 KDH 수정
+            if (unlockedByLevel != null && unlockedByLevel.Length > level - 1)
+                unlocked = unlockedByLevel[level - 1];
             else
-                //unlocked = Mathf.Max(0, unlockedAtLevel1) + (level - 1);  기존코드
-                unlocked = unlockedAtLevel1;                              // 26.07.28 KDH 수정
+                unlocked = unlockedAtLevel1;
 
             return Mathf.Clamp(unlocked, 0, MaxCapacity);
         }
 
-        public bool CanUseSlot(int index)
-        {
-            return index >= 0 && index < GetUnlockedSlotCount();
-        }
+        public bool CanUseSlot(int index) => index >= 0 && index < GetUnlockedSlotCount();
 
-        /// <summary>
-        /// 현재 활성 배치(Edit 중이면 드래프트)에 이미 있는지 판별합니다. 중복 배치 가드.
-        /// </summary>
         public bool IsPlaced(string animalId)
         {
-            if (string.IsNullOrEmpty(animalId))
-                return false;
-
+            if (string.IsNullOrEmpty(animalId)) return false;
             IReadOnlyList<string> ids = GetActivePlacementIds();
             for (int i = 0; i < ids.Count; i++)
             {
-                if (ids[i] == animalId)
-                    return true;
+                if (ids[i] == animalId) return true;
             }
-
             return false;
         }
 
-        /// <summary>
-        /// 확정본(villageAnimalIds)에만 있는지 판별합니다. Edit 드래프트는 무시합니다.
-        /// Animal Inv 슬롯의 setVillage 아이콘용.
-        /// </summary>
         public bool IsConfirmedPlaced(string animalId)
         {
-            if (string.IsNullOrEmpty(animalId) || villageAnimalIds == null)
-                return false;
-
+            if (string.IsNullOrEmpty(animalId) || villageAnimalIds == null) return false;
             for (int i = 0; i < villageAnimalIds.Count; i++)
             {
-                if (villageAnimalIds[i] == animalId)
-                    return true;
+                if (villageAnimalIds[i] == animalId) return true;
             }
-
             return false;
         }
 
         public bool IsSlotEmpty(int index)
         {
-            if (!CanUseSlot(index))
-                return true;
-
+            if (!CanUseSlot(index)) return true;
             IReadOnlyList<string> ids = GetActivePlacementIds();
-            if (index < 0 || index >= ids.Count)
-                return true;
-
+            if (index < 0 || index >= ids.Count) return true;
             return string.IsNullOrEmpty(ids[index]);
         }
 
@@ -213,10 +217,8 @@ namespace UI
         {
             if (VillageSystemManager.Instance != null)
                 return VillageSystemManager.Instance.TownLevel;
-
             if (villageUpgradeUIManager != null)
                 return Mathf.Max(1, villageUpgradeUIManager.UiTownLevel);
-
             return Mathf.Max(1, testTownLevel);
         }
 
@@ -224,7 +226,6 @@ namespace UI
         {
             ShowPanel();
             isPanelOpen = true;
-            // 패널 재오픈 시 Edit 잔존 없이 확정본으로 표시
             DiscardEditOnPanelLeave();
             RefreshUI();
         }
@@ -255,10 +256,6 @@ namespace UI
 
         public void EnterEditMode()
         {
-            Debug.Log(
-                "[VillageAnimalSetUI.EnterEditMode] Edit 단계 시작 — 드래프트 생성",
-                this);
-
             isEditMode = true;
             BeginEditDraft();
             SetConfirmButtonActive(true);
@@ -266,9 +263,6 @@ namespace UI
             RefreshUI();
         }
 
-        /// <summary>
-        /// Edit 취소: 드래프트를 버리고 확정본으로 되돌립니다.
-        /// </summary>
         public void CancelEditMode()
         {
             if (!isEditMode)
@@ -276,10 +270,6 @@ namespace UI
                 SetConfirmButtonActive(false);
                 return;
             }
-
-            Debug.Log(
-                "[VillageAnimalSetUI.CancelEditMode] Edit 취소 — 드래프트 폐기, 확정본으로 복귀",
-                this);
 
             isEditMode = false;
             pendingSlotIndex = -1;
@@ -290,9 +280,6 @@ namespace UI
             RefreshUI();
         }
 
-        /// <summary>
-        /// Confirm 없이 패널을 떠날 때: 수정 중 드래프트를 버리고 Edit/Confirm 이전 상태로 되돌립니다.
-        /// </summary>
         private void DiscardEditOnPanelLeave()
         {
             if (!isEditMode && editDraftIds == null)
@@ -300,11 +287,6 @@ namespace UI
                 SetConfirmButtonActive(false);
                 return;
             }
-
-            Debug.Log(
-                "[VillageAnimalSetUI.DiscardEditOnPanelLeave] 패널 이탈 — Confirm 없이 Edit 초기화",
-                this);
-
             CancelEditMode();
         }
 
@@ -317,7 +299,6 @@ namespace UI
 
         private void HandlePanelClosed()
         {
-            // 탭/메뉴가 UIPanelWindow.ClosePanel만 호출해도 Edit이 남지 않도록 처리
             DiscardEditOnPanelLeave();
             HideSetAnimalListPanel();
             isPanelOpen = false;
@@ -325,9 +306,7 @@ namespace UI
 
         private void SubscribePanelEvents()
         {
-            if (villageAnimalSetPanel == null)
-                return;
-
+            if (villageAnimalSetPanel == null) return;
             villageAnimalSetPanel.OnPanelOpened -= HandlePanelOpened;
             villageAnimalSetPanel.OnPanelOpened += HandlePanelOpened;
             villageAnimalSetPanel.OnPanelClosed -= HandlePanelClosed;
@@ -336,34 +315,16 @@ namespace UI
 
         private void UnsubscribePanelEvents()
         {
-            if (villageAnimalSetPanel == null)
-                return;
-
+            if (villageAnimalSetPanel == null) return;
             villageAnimalSetPanel.OnPanelOpened -= HandlePanelOpened;
             villageAnimalSetPanel.OnPanelClosed -= HandlePanelClosed;
         }
 
-        /// <summary>
-        /// Confirm_AnimalSet_btn: 현재 드래프트(배치/Remove 반영본)를 확정하고 UI를 Refresh합니다.
-        /// </summary>
         public void OnClickConfirmAnimalSet()
         {
-            if (!isEditMode)
-                return;
+            if (!isEditMode) return;
 
-            Debug.Log(
-                "[VillageAnimalSetUI.OnClickConfirmAnimalSet] Confirm 단계 시작 — 드래프트 확정 시도",
-                this);
-
-            // Remove로 비운 슬롯 포함, 현재 드래프트를 확정본에 그대로 반영
             bool committed = CommitEditDraft();
-            if (!committed)
-            {
-                Debug.LogWarning(
-                    "[VillageAnimalSetUI.OnClickConfirmAnimalSet] 확정할 드래프트가 없습니다. Edit 상태를 종료합니다.",
-                    this);
-            }
-
             isEditMode = false;
             pendingSlotIndex = -1;
             editDraftIds = null;
@@ -374,7 +335,6 @@ namespace UI
             if (committed)
                 SynchronizeConfirmedPlacementToVillageSystem();
 
-            // 확정본 기준으로 슬롯 UI를 다시 그림 (비운 슬롯은 empty 유지)
             RefreshUI();
 
             if (committed)
@@ -384,162 +344,90 @@ namespace UI
             }
 
             ClosePanel();
-            Debug.Log("[VillageAnimalSetUI.OnClickConfirmAnimalSet] Confirm 완료 — RefreshUI 반영, 창 닫기", this);
         }
 
+        /// <summary>
+        /// (+) 버튼 클릭 시 서브 목록 패널을 슬라이드로 엽니다.
+        /// </summary>
         public void OnClickSetAnimal(int slotIndex)
         {
             if (!isEditMode || !CanUseSlot(slotIndex) || !IsSlotEmpty(slotIndex))
                 return;
-
-            Debug.Log(
-                $"[VillageAnimalSetUI.OnClickSetAnimal] 배치 준비 — 슬롯 {slotIndex} 목록 오픈",
-                this);
 
             pendingSlotIndex = slotIndex;
             OnRequestOpenAnimalSetList?.Invoke(slotIndex);
 
             if (animalSetList != null)
             {
-                // 이미 배치된(드래프트 포함) ID는 목록에서 제외
                 animalSetList.Open(slotIndex, OnAnimalSelectedFromList, IsPlaced);
-                return;
             }
-
-            if (setAnimalListPanel != null)
+            else if (setAnimalListPanel != null)
             {
                 setAnimalListPanel.SetActive(true);
-                setAnimalListPanel.transform.SetAsLastSibling();
             }
-            else
-            {
-                Debug.Log(
-                    "[VillageAnimalSetUI.OnClickSetAnimal] animalSetList / setAnimalListPanel이 없습니다.",
-                    this);
-            }
+
+            // 서브 패널 슬라이드 오픈 연출 실행
+            AnimateSubPanel(true);
         }
 
-        /// <summary>
-        /// 목록에서 동물 선택 → 드래프트 슬롯에 반영 (확정은 Confirm).
-        /// </summary>
         private void OnAnimalSelectedFromList(int villageSlotIndex, string animalId)
         {
-            Debug.Log(
-                $"[VillageAnimalSetUI.OnAnimalSelectedFromList] 목록 선택 — slot={villageSlotIndex}, animalId={animalId}",
-                this);
-
             if (!TryPlaceAt(villageSlotIndex, animalId))
                 return;
 
-            animalSetList?.Close();
+            // 동물 선택 성공 시 슬라이드 닫기 연출 후 종료
+            HideSetAnimalListPanel();
         }
 
         public void OnClickRemoveAnimal(int slotIndex)
         {
-            Debug.Log(
-                $"[VillageAnimalSetUI.OnClickRemoveAnimal] Remove 버튼 — 슬롯 {slotIndex}",
-                this);
             TryRemoveAt(slotIndex);
         }
 
-        /// <summary>
-        /// Edit 중 드래프트에 배치합니다. 중복 animalId는 거부합니다.
-        /// </summary>
         public bool TryPlaceAt(int slotIndex, string animalId)
         {
-            if (!isEditMode)
-            {
-                Debug.LogWarning(
-                    "[VillageAnimalSetUI.TryPlaceAt] Edit 모드에서만 배치할 수 있습니다.",
-                    this);
-                return false;
-            }
+            if (!isEditMode) return false;
 
             EnsureEditDraft();
-
-            if (!CanUseSlot(slotIndex))
-                return false;
-
-            if (string.IsNullOrEmpty(animalId))
-                return false;
-
-            if (!string.IsNullOrEmpty(editDraftIds[slotIndex]))
-                return false;
-
-            if (IsPlaced(animalId))
-            {
-                Debug.LogWarning(
-                    $"[VillageAnimalSetUI.TryPlaceAt] 이미 배치된 동물입니다(중복 가드): {animalId}",
-                    this);
-                return false;
-            }
+            if (!CanUseSlot(slotIndex) || string.IsNullOrEmpty(animalId)) return false;
+            if (!string.IsNullOrEmpty(editDraftIds[slotIndex])) return false;
+            if (IsPlaced(animalId)) return false;
 
             ResolveInventory();
             if (animalInventory != null && !animalInventory.TryGetAnimalSlot(animalId, out _))
-            {
-                Debug.LogWarning(
-                    $"[VillageAnimalSetUI.TryPlaceAt] 인벤에 없는 동물은 배치할 수 없습니다: {animalId}",
-                    this);
                 return false;
-            }
 
             editDraftIds[slotIndex] = animalId;
             pendingSlotIndex = -1;
+
+            // 배치 완료 시 서브패널 슬라이드 닫기
             HideSetAnimalListPanel();
             RefreshUI();
 
-            Debug.Log(
-                $"[VillageAnimalSetUI.TryPlaceAt] 배치 단계 완료 — slot={slotIndex}, animalId={animalId}",
-                this);
             return true;
         }
 
-        /// <summary>
-        /// Edit 중 배치 취소. 드래프트 슬롯을 비우고 UI를 Refresh합니다.
-        /// </summary>
         public bool TryRemoveAt(int slotIndex)
         {
-            if (!isEditMode)
-            {
-                Debug.LogWarning(
-                    "[VillageAnimalSetUI.TryRemoveAt] Edit 모드에서만 배치를 취소할 수 있습니다.",
-                    this);
-                return false;
-            }
+            if (!isEditMode) return false;
 
             EnsureEditDraft();
+            if (!CanUseSlot(slotIndex)) return false;
 
-            if (!CanUseSlot(slotIndex))
-                return false;
-
-            string removedId = editDraftIds[slotIndex];
-            // 이미 비어 있어도 UI 동기화를 위해 Refresh 수행
             editDraftIds[slotIndex] = string.Empty;
-
-            if (pendingSlotIndex == slotIndex)
-                pendingSlotIndex = -1;
+            if (pendingSlotIndex == slotIndex) pendingSlotIndex = -1;
 
             RefreshUI();
-
-            Debug.Log(
-                $"[VillageAnimalSetUI.TryRemoveAt] Remove 단계 완료 — slot={slotIndex}, removedId={(string.IsNullOrEmpty(removedId) ? "(empty)" : removedId)}",
-                this);
             return true;
         }
 
         [ContextMenu("Refresh UI")]
         public void RefreshUI()
         {
-            if (uiController == null)
-            {
-                Debug.LogWarning("[VillageAnimalSetUI_Manager] uiController가 없습니다.", this);
-                return;
-            }
+            if (uiController == null) return;
 
             EnsurePlacementBuffer();
-            // Edit 중에는 기존 드래프트를 유지한 채 길이만 맞춘다. (확정본으로 덮어쓰지 않음)
-            if (isEditMode)
-                EnsureEditDraft();
+            if (isEditMode) EnsureEditDraft();
 
             SanitizeActivePlacement();
 
@@ -548,32 +436,132 @@ namespace UI
             uiController.BindSlotCallbacks(OnClickSetAnimal, OnClickRemoveAnimal);
             uiController.RefreshSlots(activeIds, unlocked, isEditMode);
             uiController.SetConfirmButtonActive(isEditMode);
-
-            // set: 확정본만 카운트 (Edit 드래프트는 Confirm 전까지 미반영)
-            // max: unlockedCount (레벨업 시 OnVillageUpgradeStateChanged → RefreshUI)
             uiController.RefreshCountTexts(CountPlacedIds(villageAnimalIds), unlocked);
         }
 
+        // =========================================================================
+        // [ 서브 패널 슬라이딩 연출 로직 ]
+        // =========================================================================
+
+        /// <summary>
+        /// 애니메이션 호출 매개자
+        /// </summary>
+        private void AnimateSubPanel(bool show)
+        {
+            ResolveSubPanelRect();
+            if (subPanelRect == null) return;
+
+            // 연속 클릭으로 코루틴 중첩 방지
+            if (slideCoroutine != null)
+                StopCoroutine(slideCoroutine);
+
+            // 오브젝트가 비활성화 상태면 코루틴 실행이 불가능하므로 예외 처리
+            if (gameObject.activeInHierarchy)
+            {
+                slideCoroutine = StartCoroutine(Co_SlideSubPanel(show));
+            }
+            else
+            {
+                subPanelRect.anchoredPosition = show ? visibleAnchoredPos : hiddenAnchoredPos;
+                subPanelRect.gameObject.SetActive(show);
+            }
+        }
+
+        /// <summary>
+        /// SmoothStep 함수 기반 슬라이드 애니메이션 코루틴
+        /// </summary>
+        private IEnumerator Co_SlideSubPanel(bool show)
+        {
+            if (show)
+            {
+                subPanelRect.gameObject.SetActive(true);
+                // 메인 UI 패널 뒤로 들어가서 그려지도록 Sibling 순서를 맨 앞으로 보냄
+                subPanelRect.SetAsFirstSibling();
+            }
+
+            Vector2 startPos = subPanelRect.anchoredPosition;
+            Vector2 targetPos = show ? visibleAnchoredPos : hiddenAnchoredPos;
+            float elapsedTime = 0f;
+
+            // slideDuration이 0 이하일 경우 몫 나누기 예외 처리
+            if (slideDuration <= 0f)
+            {
+                subPanelRect.anchoredPosition = targetPos;
+            }
+            else
+            {
+                while (elapsedTime < slideDuration)
+                {
+                    elapsedTime += Time.deltaTime;
+                    float t = Mathf.Clamp01(elapsedTime / slideDuration);
+
+                    // 3차 SmoothStep 보간 ($S(t) = 3t^2 - 2t^3$): 부드러운 출발 및 감속
+                    float smoothT = Mathf.SmoothStep(0f, 1f, t);
+
+                    subPanelRect.anchoredPosition = Vector2.Lerp(startPos, targetPos, smoothT);
+                    yield return null; // Garbage Collection 없는 Frame 대기
+                }
+            }
+
+            subPanelRect.anchoredPosition = targetPos;
+
+            // 닫히는 연출 완료 후 오브젝트 비활성화
+            if (!show)
+            {
+                subPanelRect.gameObject.SetActive(false);
+                animalSetList?.Close();
+            }
+
+            slideCoroutine = null;
+        }
+
+        private void ResolveSubPanelRect()
+        {
+            if (subPanelRect != null) return;
+
+            if (animalSetList != null)
+                subPanelRect = animalSetList.GetComponent<RectTransform>();
+            else if (setAnimalListPanel != null)
+                subPanelRect = setAnimalListPanel.GetComponent<RectTransform>();
+        }
+
+        /// <summary>
+        /// 슬라이드 애니메이션 연출과 함께 닫기
+        /// </summary>
+        private void HideSetAnimalListPanel()
+        {
+            AnimateSubPanel(false);
+        }
+
+        /// <summary>
+        /// 애니메이션 없이 즉시 닫기 (Awake 전용)
+        /// </summary>
+        private void HideSetAnimalListPanelImmediate()
+        {
+            ResolveSubPanelRect();
+            if (subPanelRect != null)
+            {
+                subPanelRect.anchoredPosition = hiddenAnchoredPos;
+                subPanelRect.gameObject.SetActive(false);
+            }
+            animalSetList?.Close();
+        }
+        // =========================================================================
+
         private static int CountPlacedIds(IReadOnlyList<string> ids)
         {
-            if (ids == null)
-                return 0;
-
+            if (ids == null) return 0;
             int count = 0;
             for (int i = 0; i < ids.Count; i++)
             {
-                if (!string.IsNullOrEmpty(ids[i]))
-                    count++;
+                if (!string.IsNullOrEmpty(ids[i])) count++;
             }
-
             return count;
         }
 
         private IReadOnlyList<string> GetActivePlacementIds()
         {
-            if (isEditMode && editDraftIds != null)
-                return editDraftIds;
-
+            if (isEditMode && editDraftIds != null) return editDraftIds;
             return villageAnimalIds;
         }
 
@@ -588,9 +576,6 @@ namespace UI
             }
         }
 
-        /// <summary>
-        /// 드래프트가 없으면 확정본에서 생성. 이미 있으면 Remove/Place 결과를 절대 덮어쓰지 않고 길이만 보정.
-        /// </summary>
         private void EnsureEditDraft()
         {
             if (editDraftIds == null)
@@ -598,138 +583,85 @@ namespace UI
                 BeginEditDraft();
                 return;
             }
-
-            while (editDraftIds.Count < MaxCapacity)
-                editDraftIds.Add(string.Empty);
-
-            if (editDraftIds.Count > MaxCapacity)
-                editDraftIds.RemoveRange(MaxCapacity, editDraftIds.Count - MaxCapacity);
+            while (editDraftIds.Count < MaxCapacity) editDraftIds.Add(string.Empty);
+            if (editDraftIds.Count > MaxCapacity) editDraftIds.RemoveRange(MaxCapacity, editDraftIds.Count - MaxCapacity);
         }
 
-        /// <summary>
-        /// 드래프트를 확정본에 원소 단위로 복사합니다. (SerializeField 리스트 참조 유지)
-        /// </summary>
         private bool CommitEditDraft()
         {
-            if (editDraftIds == null)
-                return false;
-
+            if (editDraftIds == null) return false;
             EnsurePlacementBuffer();
-
-            // 확정 직전 Sanitize만 수행. BeginEditDraft/확정본 재로드 금지.
             SanitizeList(editDraftIds);
 
             int capacity = MaxCapacity;
-            int placedCount = 0;
             for (int i = 0; i < capacity; i++)
             {
                 string id = i < editDraftIds.Count ? editDraftIds[i] : string.Empty;
                 villageAnimalIds[i] = id ?? string.Empty;
-                if (!string.IsNullOrEmpty(villageAnimalIds[i]))
-                    placedCount++;
             }
-
-            Debug.Log(
-                $"[VillageAnimalSetUI.CommitEditDraft] 확정 복사 완료 — placedCount={placedCount}/{capacity}",
-                this);
             return true;
         }
 
         private void SanitizeActivePlacement()
         {
-            if (isEditMode && editDraftIds != null)
-                SanitizeList(editDraftIds);
-            else
-                SanitizeList(villageAnimalIds);
+            if (isEditMode && editDraftIds != null) SanitizeList(editDraftIds);
+            else SanitizeList(villageAnimalIds);
         }
 
         private void SanitizeList(List<string> ids)
         {
-            if (ids == null)
-                return;
-
+            if (ids == null) return;
             int unlocked = GetUnlockedSlotCount();
             var seen = new HashSet<string>();
 
             for (int i = 0; i < ids.Count; i++)
             {
-                if (ids[i] == null)
-                    ids[i] = string.Empty;
-
-                if (i >= unlocked)
-                    continue;
+                if (ids[i] == null) ids[i] = string.Empty;
+                if (i >= unlocked) continue;
 
                 string id = ids[i];
-                if (string.IsNullOrEmpty(id))
-                    continue;
+                if (string.IsNullOrEmpty(id)) continue;
 
-                if (!seen.Add(id))
-                    ids[i] = string.Empty;
+                if (!seen.Add(id)) ids[i] = string.Empty;
             }
         }
 
         private void ApplyEditModeToSlots()
         {
-            if (uiController == null)
-                return;
-
+            if (uiController == null) return;
             uiController.SetEditMode(isEditMode);
             uiController.SetConfirmButtonActive(isEditMode);
-            if (!isEditMode)
-                pendingSlotIndex = -1;
+            if (!isEditMode) pendingSlotIndex = -1;
         }
 
-        private void OnVillageUpgradeStateChanged()
-        {
-            RefreshUI();
-        }
+        private void OnVillageUpgradeStateChanged() => RefreshUI();
 
         private void EnsurePlacementBuffer()
         {
-            if (villageAnimalIds == null)
-                villageAnimalIds = new List<string>();
-
+            if (villageAnimalIds == null) villageAnimalIds = new List<string>();
             int capacity = MaxCapacity;
-            while (villageAnimalIds.Count < capacity)
-                villageAnimalIds.Add(string.Empty);
-
-            if (villageAnimalIds.Count > capacity)
-                villageAnimalIds.RemoveRange(capacity, villageAnimalIds.Count - capacity);
+            while (villageAnimalIds.Count < capacity) villageAnimalIds.Add(string.Empty);
+            if (villageAnimalIds.Count > capacity) villageAnimalIds.RemoveRange(capacity, villageAnimalIds.Count - capacity);
         }
 
-        // -----------------------------------------------------------------------------
-        // [ 2026.08.06 - Choi - 마을 동물 배치 저장 연동 ]
-        // 기능: 시스템 확정본을 UI 슬롯에 복원하고, Confirm 결과를 시스템과 즉시 동기화합니다.
-        // -----------------------------------------------------------------------------
         private void RestoreConfirmedPlacementFromVillageSystem()
         {
             VillageSystemManager villageSystem = VillageSystemManager.Instance;
-            if (villageSystem == null)
-                return;
+            if (villageSystem == null) return;
 
             EnsurePlacementBuffer();
-
             IReadOnlyList<string> restoredIds = villageSystem.PlacedAnimalIds;
             for (int i = 0; i < MaxCapacity; i++)
             {
-                string animalId = i < restoredIds.Count
-                    ? restoredIds[i] ?? string.Empty
-                    : string.Empty;
-
-                // 동물 인벤토리 복원이 끝난 뒤 존재하지 않는 ID는 빈 슬롯으로 보정합니다.
-                if (!string.IsNullOrEmpty(animalId) &&
-                    animalInventory != null &&
-                    !animalInventory.TryGetAnimalSlot(animalId, out _))
+                string animalId = i < restoredIds.Count ? restoredIds[i] ?? string.Empty : string.Empty;
+                if (!string.IsNullOrEmpty(animalId) && animalInventory != null && !animalInventory.TryGetAnimalSlot(animalId, out _))
                 {
                     animalId = string.Empty;
                 }
-
                 villageAnimalIds[i] = animalId;
             }
 
             SanitizeList(villageAnimalIds);
-
-            // 잘못된 ID, null, 용량 초과를 보정했다면 시스템 확정본도 같은 값으로 맞춥니다.
             if (!PlacementListsEqual(villageSystem.PlacedAnimalIds, villageAnimalIds))
                 villageSystem.SetPlacedAnimalIds(villageAnimalIds);
         }
@@ -737,125 +669,87 @@ namespace UI
         private void SynchronizeConfirmedPlacementToVillageSystem()
         {
             VillageSystemManager villageSystem = VillageSystemManager.Instance;
-            if (villageSystem == null)
-            {
-                Debug.LogWarning(
-                    "[VillageAnimalSetUI_Manager] VillageSystemManager가 없어 배치 확정본을 저장 시스템에 전달하지 못했습니다.",
-                    this);
-                return;
-            }
-
-            villageSystem.SetPlacedAnimalIds(villageAnimalIds);
+            if (villageSystem != null)
+                villageSystem.SetPlacedAnimalIds(villageAnimalIds);
         }
 
-        private static bool PlacementListsEqual(
-            IReadOnlyList<string> left,
-            IReadOnlyList<string> right)
+        private static bool PlacementListsEqual(IReadOnlyList<string> left, IReadOnlyList<string> right)
         {
-            if (ReferenceEquals(left, right))
-                return true;
-            if (left == null || right == null || left.Count != right.Count)
-                return false;
-
+            if (ReferenceEquals(left, right)) return true;
+            if (left == null || right == null || left.Count != right.Count) return false;
             for (int i = 0; i < left.Count; i++)
             {
-                if (!string.Equals(left[i] ?? string.Empty, right[i] ?? string.Empty, StringComparison.Ordinal))
-                    return false;
+                if (!string.Equals(left[i] ?? string.Empty, right[i] ?? string.Empty, StringComparison.Ordinal)) return false;
             }
-
             return true;
         }
 
         private void ResolveEditButton()
         {
-            if (editAnimalSetButton != null)
-                return;
-
-            if (uiController != null)
+            if (editAnimalSetButton == null && uiController != null)
                 editAnimalSetButton = uiController.EditSetAnimalButton;
         }
 
         private void ResolveConfirmButton()
         {
-            if (confirmAnimalSetButton != null)
-                return;
-
-            if (uiController != null)
+            if (confirmAnimalSetButton == null && uiController != null)
                 confirmAnimalSetButton = uiController.ConfirmSetAnimalButton;
         }
 
         private void BindEditButton()
         {
             ResolveEditButton();
-            if (editAnimalSetButton == null)
-                return;
-
+            if (editAnimalSetButton == null) return;
             editAnimalSetButton.onClick.RemoveListener(ToggleEditMode);
             editAnimalSetButton.onClick.AddListener(ToggleEditMode);
         }
 
         private void UnbindEditButton()
         {
-            if (editAnimalSetButton == null)
-                return;
-
-            editAnimalSetButton.onClick.RemoveListener(ToggleEditMode);
+            if (editAnimalSetButton != null)
+                editAnimalSetButton.onClick.RemoveListener(ToggleEditMode);
         }
 
         private void BindConfirmButton()
         {
             ResolveConfirmButton();
-            if (confirmAnimalSetButton == null)
-                return;
-
+            if (confirmAnimalSetButton == null) return;
             confirmAnimalSetButton.onClick.RemoveListener(OnClickConfirmAnimalSet);
             confirmAnimalSetButton.onClick.AddListener(OnClickConfirmAnimalSet);
         }
 
         private void UnbindConfirmButton()
         {
-            if (confirmAnimalSetButton == null)
-                return;
-
-            confirmAnimalSetButton.onClick.RemoveListener(OnClickConfirmAnimalSet);
+            if (confirmAnimalSetButton != null)
+                confirmAnimalSetButton.onClick.RemoveListener(OnClickConfirmAnimalSet);
         }
 
         private void SetConfirmButtonActive(bool active)
         {
             ResolveConfirmButton();
-            if (confirmAnimalSetButton == null)
-                return;
-
+            if (confirmAnimalSetButton == null) return;
             if (confirmAnimalSetButton.gameObject.activeSelf != active)
                 confirmAnimalSetButton.gameObject.SetActive(active);
-
             confirmAnimalSetButton.interactable = active;
         }
 
         private void SubscribeEvents()
         {
-            if (isSubscribed)
-                return;
-
+            if (isSubscribed) return;
             TryResolveVillageUpgradeManager();
-
             if (villageUpgradeUIManager != null)
             {
                 villageUpgradeUIManager.OnVillageUpgradeStateChanged -= OnVillageUpgradeStateChanged;
                 villageUpgradeUIManager.OnVillageUpgradeStateChanged += OnVillageUpgradeStateChanged;
             }
-
             isSubscribed = villageUpgradeUIManager != null;
         }
 
         private void UnsubscribeEvents()
         {
-            if (!isSubscribed)
-                return;
-
+            if (!isSubscribed) return;
             if (villageUpgradeUIManager != null)
                 villageUpgradeUIManager.OnVillageUpgradeStateChanged -= OnVillageUpgradeStateChanged;
-
             isSubscribed = false;
         }
 
@@ -867,9 +761,7 @@ namespace UI
 
         private void TryResolveVillageUpgradeManager()
         {
-            if (villageUpgradeUIManager != null)
-                return;
-
+            if (villageUpgradeUIManager != null) return;
             villageUpgradeUIManager = FindFirstObjectByType<VillageUpgradeUI_Manager>();
         }
 
@@ -884,14 +776,5 @@ namespace UI
             if (villageAnimalSetPanel != null)
                 villageAnimalSetPanel.ClosePanel();
         }
-
-        private void HideSetAnimalListPanel()
-        {
-            if (animalSetList != null)
-                animalSetList.Close();
-            else if (setAnimalListPanel != null)
-                setAnimalListPanel.SetActive(false);
-        }
-
     }
 }
