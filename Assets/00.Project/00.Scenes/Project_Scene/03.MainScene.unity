@@ -1063,7 +1063,7 @@ PrefabInstance:
     - target: {fileID: 5053529533350446894, guid: 997a9f26b2b231440ae5a8bd9650135f, type: 3}
       propertyPath: btnUnfocus
       value: 
-      objectReference: {fileID: 1747582283218800487}
+      objectReference: {fileID: 0}
     - target: {fileID: 5053529533350446894, guid: 997a9f26b2b231440ae5a8bd9650135f, type: 3}
       propertyPath: miniVillagePos
       value: 
@@ -2001,11 +2001,6 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 3544760734370386666, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
   m_PrefabInstance: {fileID: 1556606970}
   m_PrefabAsset: {fileID: 0}
---- !u!23 &1498590197 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 3040344725384721215, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
-  m_PrefabInstance: {fileID: 1556606970}
-  m_PrefabAsset: {fileID: 0}
 --- !u!114 &1498590199
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2018,11 +2013,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7d6ab04e0a8d69e4a82e8dff13bb767e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HoverOutlineTarget
-  targetRenderer: {fileID: 1498590197}
-  outlineMaterialIndex: 1
-  outlineSizeProperty: _OutlineSize
-  defaultOutlineSize: 1
-  hoveredOutlineSize: 1.03
+  rendererData: {fileID: 11400000, guid: f288ae1f4751b564a96ac7587541f7a2, type: 2}
+  maskFeatureName: VillageHouseOutlineMask
+  outlineFeatureName: VillageHouseOutline
+  outlineMaterial: {fileID: 0}
+  thicknessProperty: _Outline_Thickness
+  hoveredThickness: 0.06
 --- !u!4 &1515754172 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3379269147016771667, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
@@ -3457,9 +3453,53 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2084103651789294347, guid: ebc8143c021e0744bafe6f8227635e41, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 222
+      objectReference: {fileID: 0}
+    - target: {fileID: 2084103651789294347, guid: ebc8143c021e0744bafe6f8227635e41, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -6
+      objectReference: {fileID: 0}
+    - target: {fileID: 2823015180392360996, guid: ebc8143c021e0744bafe6f8227635e41, type: 3}
+      propertyPath: m_fontSize
+      value: 28.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 2823015180392360996, guid: ebc8143c021e0744bafe6f8227635e41, type: 3}
+      propertyPath: m_margin.w
+      value: 15.765564
+      objectReference: {fileID: 0}
+    - target: {fileID: 2823015180392360996, guid: ebc8143c021e0744bafe6f8227635e41, type: 3}
+      propertyPath: m_margin.z
+      value: 229.95581
+      objectReference: {fileID: 0}
+    - target: {fileID: 2823015180392360996, guid: ebc8143c021e0744bafe6f8227635e41, type: 3}
+      propertyPath: m_fontSizeMin
+      value: 13
+      objectReference: {fileID: 0}
+    - target: {fileID: 2823015180392360996, guid: ebc8143c021e0744bafe6f8227635e41, type: 3}
+      propertyPath: m_fontSizeBase
+      value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 2823015180392360996, guid: ebc8143c021e0744bafe6f8227635e41, type: 3}
+      propertyPath: m_enableAutoSizing
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2823015180392360996, guid: ebc8143c021e0744bafe6f8227635e41, type: 3}
+      propertyPath: m_VerticalAlignment
+      value: 512
+      objectReference: {fileID: 0}
     - target: {fileID: 3212911487202495013, guid: ebc8143c021e0744bafe6f8227635e41, type: 3}
       propertyPath: m_Name
       value: NB_IconCanvas
+      objectReference: {fileID: 0}
+    - target: {fileID: 4387531459921655493, guid: ebc8143c021e0744bafe6f8227635e41, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 340
+      objectReference: {fileID: 0}
+    - target: {fileID: 4558196826087313901, guid: ebc8143c021e0744bafe6f8227635e41, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: -93
       objectReference: {fileID: 0}
     - target: {fileID: 6463803620415134873, guid: ebc8143c021e0744bafe6f8227635e41, type: 3}
       propertyPath: m_Pivot.x
@@ -3541,8 +3581,21 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8700335775879926540, guid: ebc8143c021e0744bafe6f8227635e41, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 40
+      objectReference: {fileID: 0}
+    - target: {fileID: 8700335775879926540, guid: ebc8143c021e0744bafe6f8227635e41, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 40
+      objectReference: {fileID: 0}
+    - target: {fileID: 8700335775879926540, guid: ebc8143c021e0744bafe6f8227635e41, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: -31
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 3182104667126633729, guid: ebc8143c021e0744bafe6f8227635e41, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: ebc8143c021e0744bafe6f8227635e41, type: 3}
@@ -3603,17 +3656,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 704b0debcb807d549b725ba334015186, type: 3}
---- !u!114 &1747582283218800487 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 4288663362366789157, guid: ebc8143c021e0744bafe6f8227635e41, type: 3}
-  m_PrefabInstance: {fileID: 1345245583145195381}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
 --- !u!1001 &2008931152390479547
 PrefabInstance:
   m_ObjectHideFlags: 0
