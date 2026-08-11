@@ -32,6 +32,7 @@ public class GameMasterManager : MonoBehaviour
     [Header("하단 메인 아이콘들")]
     public RectTransform[] bottomIcons;
     private Vector2[] iconOriginalPositions;
+    private Graphic menuPanelRaycastBlocker;
 
     [Header("티켓 알림 설정")]
     public GameObject ticketNotification;
@@ -81,6 +82,11 @@ public class GameMasterManager : MonoBehaviour
                 iconOriginalPositions[i] = bottomIcons[i].anchoredPosition;
             }
         }
+
+        // [ 2026.08.11 - Choi - 축소 화면 클릭 통과 제어 ]
+        // btnMinimize의 부모인 Menu_Panel_root의 투명 Graphic을 캐싱합니다.
+        CacheMenuPanelRaycastBlocker();
+        SetMenuPanelRaycastBlocking(true);
 
         // 3. 버튼 리스너 바인딩 (자체 리스너만 제거하여 다른 기능과 버튼음을 보존)
         InitButtonListeners();
@@ -172,6 +178,7 @@ public class GameMasterManager : MonoBehaviour
     {
         isTransitioning = true;
         isExpanded = false;
+        SetMenuPanelRaycastBlocking(false);
 
         CloseAllUI();
 
@@ -210,6 +217,7 @@ public class GameMasterManager : MonoBehaviour
     {
         isTransitioning = true;
         isExpanded = true;
+        SetMenuPanelRaycastBlocking(true);
 
         if (expandedPanel) expandedPanel.SetActive(true);
         if (minimizedPanel) minimizedPanel.SetActive(false);
@@ -235,6 +243,20 @@ public class GameMasterManager : MonoBehaviour
     public bool GetIsExpanded()
     {
         return isExpanded;
+    }
+
+    private void CacheMenuPanelRaycastBlocker()
+    {
+        if (btnMinimize == null || btnMinimize.transform.parent == null) return;
+
+        btnMinimize.transform.parent.TryGetComponent(out menuPanelRaycastBlocker);
+    }
+
+    private void SetMenuPanelRaycastBlocking(bool shouldBlock)
+    {
+        if (menuPanelRaycastBlocker == null) return;
+
+        menuPanelRaycastBlocker.raycastTarget = shouldBlock;
     }
 
     #endregion
