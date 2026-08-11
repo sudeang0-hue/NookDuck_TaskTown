@@ -4,7 +4,7 @@ using TaskTown.KDH;
 using Tool.Data;
 using UI;
 using UnityEngine;
-/*#if UNITY_EDITOR || DEVELOPMENT_BUILD*/
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
 /// <summary>
 /// 코인/획득량/시간당 한도/리텐션 상태에 사용하는 디버그 패널.
 /// OnGUI로 간단히 만들어서(백쿼트 키) 토글로 켜고 끕니다.
@@ -713,7 +713,7 @@ public class DebugTool : MonoBehaviour
         }
     }
 }
-/*#else
+#else
 // 릴리즈 빌드에서는 컴포넌트만 남겨 둬 레퍼런스가 깨지지 않게 하지만 동작하지 않게 합니다.
 public class DebugTool : MonoBehaviour { }
-#endif*/
+#endif
