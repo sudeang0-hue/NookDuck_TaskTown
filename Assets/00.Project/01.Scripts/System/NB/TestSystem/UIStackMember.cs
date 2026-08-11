@@ -20,10 +20,11 @@ public class UIStackMember : MonoBehaviour
 
     private void OnDisable()
     {
-        // UI가 켜진 상태에서 다른 로직으로 꺼졌을 때, 스택에서 자동으로 제거
-        if (GlobalUIStackManager.Instance != null)
+        // Instance 접근 시 null이 반환될 수 있으므로 안전하게 호출
+        var manager = GlobalUIStackManager.Instance;
+        if (manager != null)
         {
-            GlobalUIStackManager.Instance.UnregisterUI(this);
+            manager.UnregisterUI(this);
         }
     }
 

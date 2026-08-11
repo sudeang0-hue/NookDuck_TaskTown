@@ -12,9 +12,13 @@ public class CameraDirector : MonoBehaviour
     // 싱글톤
     public static CameraDirector Instance { get; private set; }
 
+    // [이벤트 추가] 확대/축소 상태 변경 이벤트 (isExpanded)
+    public static event Action<bool> OnExpandedStateChanged; // <--- 추가!
+
     // [이벤트 추가] 카메라가 팔로우 모드에 진입할 때 / 해제될 때 발생하는 이벤트
     public static event Action OnCameraFocusStarted;
     public static event Action OnCameraFocusEnded; // <--- 추가됨!
+
 
     // [프로퍼티 추가] 외부에서 현재 팔로우/포커스 상태인지 즉시 확인할 수 있는 Read-Only 프로퍼티
     public bool IsFocused => _targetAnimal != null || _isFollowing; // <--- 추가됨!
@@ -198,6 +202,9 @@ public class CameraDirector : MonoBehaviour
         UnfocusAnimal();
         _isExpanded = false;
 
+        // [이벤트 알림] 모든 주민에게 축소 모드 진입(false) 알림
+        OnExpandedStateChanged?.Invoke(false); // <--- 추가!
+
         if (_mainCamera != null && miniVillagePos != null)
         {
             KillAllCameraTweens();
@@ -212,6 +219,10 @@ public class CameraDirector : MonoBehaviour
     public void SetExpandedView()
     {
         _isExpanded = true;
+
+        // [이벤트 알림] 모든 주민에게 확장 모드 진입(true) 알림
+        OnExpandedStateChanged?.Invoke(true); // <--- 추가!
+
         if (_mainCamera != null)
         {
             KillAllCameraTweens();

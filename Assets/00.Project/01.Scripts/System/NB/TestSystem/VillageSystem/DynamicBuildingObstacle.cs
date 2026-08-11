@@ -19,7 +19,7 @@ public class DynamicBuildingObstacle : MonoBehaviour
         obstacle = GetComponent<NavMeshObstacle>();
 
         // 1. 기본 옵션 설정 (이동하지 않는 고정 장애물 모드)
-        obstacle.shape = NavMeshObstacleShape.Box;
+        obstacle.shape = NavMeshObstacleShape.Capsule;
         obstacle.carveOnlyStationary = true;
 
         // 초기 상태에는 Carving을 꺼두어 낙하 전 길을 막지 않도록 함
