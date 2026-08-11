@@ -1,18 +1,25 @@
 using UnityEngine;
+using UnityEngine.Rendering.Universal;
 
+/// <summary>
+/// VillageHouse 호버 시 PC_Renderer의 Stencil Outline Feature만 켭니다.
+/// 메시 슬롯 Outline 없이 RenderObjects Override로 실루엣만 그립니다.
+/// </summary>
 public class HoverOutlineTarget : MonoBehaviour
 {
-    [Header("Renderer")]
-    [SerializeField] private Renderer targetRenderer;
-    [SerializeField, Min(0)] private int outlineMaterialIndex = 1;
+    [Header("URP Outline Features")]
+    [SerializeField] private UniversalRendererData rendererData;
+    [SerializeField] private string maskFeatureName = "VillageHouseOutlineMask";
+    [SerializeField] private string outlineFeatureName = "VillageHouseOutline";
 
-    [Header("Outline")]
-    [SerializeField] private string outlineSizeProperty = "_OutlineSize";
-    [SerializeField] private float defaultOutlineSize = 1f;
-    [SerializeField] private float hoveredOutlineSize = 1.03f;
+    [Header("Outline Material (RenderObjects Override)")]
+    [SerializeField] private Material outlineMaterial;
+    [SerializeField] private string thicknessProperty = "_Outline_Thickness";
+    [SerializeField, Min(0f)] private float hoveredThickness = 0.06f;
 
-    private MaterialPropertyBlock propertyBlock;
-    private int outlineSizePropertyId;
+    private ScriptableRendererFeature maskFeature;
+    private ScriptableRendererFeature outlineFeature;
+    private int thicknessPropertyId;
     private bool isInitialized;
 
     private void Awake()
@@ -31,17 +38,18 @@ public class HoverOutlineTarget : MonoBehaviour
         if (!isInitialized)
             return;
 
-        targetRenderer.GetPropertyBlock(
-            propertyBlock,
-            outlineMaterialIndex);
+        if (maskFeature != null)
+            maskFeature.SetActive(isActive);
 
-        propertyBlock.SetFloat(
-            outlineSizePropertyId,
-            isActive ? hoveredOutlineSize : defaultOutlineSize);
+        if (outlineFeature != null)
+            outlineFeature.SetActive(isActive);
 
-        targetRenderer.SetPropertyBlock(
-            propertyBlock,
-            outlineMaterialIndex);
+        if (outlineMaterial != null)
+        {
+            outlineMaterial.SetFloat(
+                thicknessPropertyId,
+                isActive ? hoveredThickness : 0f);
+        }
     }
 
     private void Initialize()
@@ -49,44 +57,36 @@ public class HoverOutlineTarget : MonoBehaviour
         if (isInitialized)
             return;
 
-        if (targetRenderer == null)
-            targetRenderer = GetComponentInChildren<Renderer>();
-
-        if (targetRenderer == null)
+        if (rendererData == null)
         {
             Debug.LogWarning(
-                $"[{nameof(HoverOutlineTarget)}] Renderer가 없습니다.",
+                $"[{nameof(HoverOutlineTarget)}] UniversalRendererData가 없습니다.",
                 this);
-
             return;
         }
 
-        Material[] sharedMaterials = targetRenderer.sharedMaterials;
+        for (int i = 0; i < rendererData.rendererFeatures.Count; i++)
+        {
+            ScriptableRendererFeature feature = rendererData.rendererFeatures[i];
+            if (feature == null)
+                continue;
 
-        if (outlineMaterialIndex < 0 ||
-            outlineMaterialIndex >= sharedMaterials.Length)
+            if (feature.name == maskFeatureName)
+                maskFeature = feature;
+            else if (feature.name == outlineFeatureName)
+                outlineFeature = feature;
+        }
+
+        if (maskFeature == null && outlineFeature == null)
         {
             Debug.LogWarning(
-                $"[{nameof(HoverOutlineTarget)}] " +
-                $"Outline Material Index가 올바르지 않습니다. " +
-                $"현재 Material 수: {sharedMaterials.Length}",
+                $"[{nameof(HoverOutlineTarget)}] Outline Feature를 찾지 못했습니다. " +
+                $"names=({maskFeatureName}, {outlineFeatureName})",
                 this);
-
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(outlineSizeProperty))
-        {
-            Debug.LogWarning(
-                $"[{nameof(HoverOutlineTarget)}] " +
-                "Outline Size Property가 비어 있습니다.",
-                this);
-
-            return;
-        }
-
-        propertyBlock = new MaterialPropertyBlock();
-        outlineSizePropertyId = Shader.PropertyToID(outlineSizeProperty);
+        thicknessPropertyId = Shader.PropertyToID(thicknessProperty);
         isInitialized = true;
     }
 
