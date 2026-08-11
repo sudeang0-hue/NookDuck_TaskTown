@@ -135,7 +135,7 @@ namespace UI
 
             if (animalNameText != null)
             {
-                animalNameText.text = animalData.DisplayName;
+                animalNameText.text = animalData.AnimalDisplayName_;
             }
         }
 
