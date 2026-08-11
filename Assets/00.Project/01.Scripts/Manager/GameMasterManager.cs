@@ -111,6 +111,7 @@ public class GameMasterManager : MonoBehaviour
                 ticketNotification.SetActive(true);
             }
         }
+
     }
 
     private void OnEnable()
