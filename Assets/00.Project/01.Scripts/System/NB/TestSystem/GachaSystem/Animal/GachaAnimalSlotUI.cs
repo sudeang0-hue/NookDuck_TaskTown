@@ -4,6 +4,7 @@ using TaskTown.Gacha;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using Animal.Data;
 
 // 동물 가챠 결과물 단일 슬롯 UI 컴포넌트
 public class GachaAnimalSlotUI : MonoBehaviour
@@ -29,25 +30,57 @@ public class GachaAnimalSlotUI : MonoBehaviour
 
         CurrentEntryData = entryData;
 
-        // 1. 아이콘 렌더링 및 비율 보정
+        // 1. 동물 전용 프로필 이미지(ProfileImage) 및 기본 아이콘(Icon) 추출 ($O(1)$)
+        Sprite targetSprite = GetBestSprite(entryData);
+
+        // 1-1. 아이콘 렌더링 및 비율 보정
         if (iconImage == null) iconImage = GetComponentInChildren<Image>();
         if (iconImage != null)
         {
-            iconImage.sprite = entryData.Icon;
-            iconImage.enabled = (entryData.Icon != null);
+            iconImage.sprite = targetSprite;
+            iconImage.enabled = (targetSprite != null);
 
-            if (entryData.Icon != null)
+            if (targetSprite != null)
             {
                 iconImage.type = Image.Type.Simple;
                 iconImage.preserveAspect = true;
             }
         }
 
-        // 2. 등급 스프라이트 및 텍스트 바인딩 ★
+        // 2. 등급 스프라이트 바인딩
         UpdateGradeUI(entryData);
 
-        // 3. 이름 텍스트 바인딩
-        if (nameText != null) nameText.text = entryData.DisplayName;
+        // 3. 동물 전용 이름(AnimalDisplayName_) 바인딩
+        UpdateNameText(entryData);
+    }
+
+
+    // AnimalDataSO의 AnimalDisplayName_을 우선 표출하고, 데이터가 없거나 비어있을 경우 기본 DisplayName으로 Fallback 처리
+    private void UpdateNameText(GachaEntryData entryData)
+    {
+        if (nameText == null) return;
+
+        // C# Pattern Matching 사용 (타입 검사 + 변수 할당을 1회 연산으로 최소화)
+        if (entryData is AnimalDataSO animalData && !string.IsNullOrEmpty(animalData.AnimalDisplayName_))
+        {
+            nameText.text = animalData.AnimalDisplayName_;
+        }
+        else
+        {
+            // Fallback: 부모 클래스의 공통 DisplayName 사용
+            nameText.text = entryData.DisplayName;
+        }
+    }
+
+    // AnimalDataSO의 ProfileImage를 우선 탐색하고, 없으면 부모의 Icon을 반환
+    private Sprite GetBestSprite(GachaEntryData entryData)
+    {
+        if (entryData is AnimalDataSO animalData && animalData.ProfileImage != null)
+        {
+            return animalData.ProfileImage;
+        }
+
+        return entryData.Icon;
     }
 
     // 등급 Enum 값을 안전하게 인덱싱하여 스프라이트 및 텍스트 업데이트
@@ -71,7 +104,6 @@ public class GachaAnimalSlotUI : MonoBehaviour
                 gradeImage.enabled = false;
             }
         }
-
     }
 
     public void ClearSlot()
