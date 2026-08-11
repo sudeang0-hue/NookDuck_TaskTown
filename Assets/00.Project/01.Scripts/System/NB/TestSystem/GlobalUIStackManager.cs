@@ -4,21 +4,22 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
+[DefaultExecutionOrder(-200)]
 public class GlobalUIStackManager : MonoBehaviour
 {
     private static GlobalUIStackManager _instance;
 
-    // ÃÖ½Å À¯´ÏÆ¼ API ¸í¼¼°¡ Àû¿ëµÈ ½Ì±ÛÅæ ÇÁ·ÎÆÛÆ¼
+    // ìµœì‹  ìœ ë‹ˆí‹° API ëª…ì„¸ê°€ ì ìš©ëœ ì‹±ê¸€í†¤ í”„ë¡œí¼í‹°
     public static GlobalUIStackManager Instance
     {
         get
         {
             if (_instance == null)
             {
-                // 1. CS0618 °æ°í ÇØ°á: Á¤·Ä ¿À¹öÇìµå°¡ ¾ø´Â FindAnyObjectByType »ç¿ë
+                // 1. CS0618 ê²½ê³  í•´ê²°: ì •ë ¬ ì˜¤ë²„í—¤ë“œê°€ ì—†ëŠ” FindAnyObjectByType ì‚¬ìš©
                 _instance = Object.FindAnyObjectByType<GlobalUIStackManager>();
 
-                // 2. ¾À¿¡ ¸Å´ÏÀú ¿ÀºêÁ§Æ®°¡ ¾øÀ» °æ¿ì ÀÚ»ı(Auto-Creation) ·ÎÁ÷
+                // 2. ì”¬ì— ë§¤ë‹ˆì € ì˜¤ë¸Œì íŠ¸ê°€ ì—†ì„ ê²½ìš° ììƒ(Auto-Creation) ë¡œì§
                 if (_instance == null)
                 {
                     GameObject singletonObject = new GameObject("@GlobalUIStackManager");
@@ -26,18 +27,31 @@ public class GlobalUIStackManager : MonoBehaviour
                     DontDestroyOnLoad(singletonObject);
                 }
             }
+
             return _instance;
         }
     }
 
     private readonly List<UIStackMember> _activeUIList = new List<UIStackMember>();
 
-    [Header("ÀÏ½ÃÁ¤Áö / ¿É¼ÇÃ¢ ¿¬µ¿ ¼³Á¤")]
-    [Tooltip("½ºÅÃÀÌ ºñ¾îÀÖÀ» ¶§ Á÷Á¢ ¿­¾îÁÙ ¿É¼Ç/ÀÏ½ÃÁ¤Áö UIÀÇ UIStackMember")]
+    [Header("ì¼ì‹œì •ì§€ / ì˜µì…˜ì°½ ì—°ë™ ì„¤ì •")]
+    [Tooltip("ìŠ¤íƒì´ ë¹„ì–´ìˆì„ ë•Œ ì§ì ‘ ì—´ì–´ì¤„ ì˜µì…˜/ì¼ì‹œì •ì§€ UIì˜ UIStackMember")]
     [SerializeField] private UIStackMember _pauseMenuUI;
 
-    [Tooltip("½ºÅÃÀÌ ºñ¾îÀÖÀ» ¶§ Ãß°¡·Î ½ÇÇàÇÒ ÀÌº¥Æ® (ÇÊ¿ä ½Ã »ç¿ë)")]
+    [Tooltip("ìŠ¤íƒì´ ë¹„ì–´ìˆì„ ë•Œ ì¶”ê°€ë¡œ ì‹¤í–‰í•  ì´ë²¤íŠ¸ (í•„ìš” ì‹œ ì‚¬ìš©)")]
     [SerializeField] private UnityEvent _onEmptyStackEvent;
+
+    public static bool TryGetExisting(out GlobalUIStackManager manager)
+    {
+        manager = _instance;
+        return manager != null;
+    }
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics()
+    {
+        _instance = null;
+    }
 
     private void Awake()
     {
@@ -45,11 +59,23 @@ public class GlobalUIStackManager : MonoBehaviour
         {
             _instance = this;
             DontDestroyOnLoad(gameObject);
+            return;
         }
-        else if (_instance != this)
-        {
-            Destroy(gameObject);
-        }
+
+        if (_instance == this)
+            return;
+
+        // MainScene ì¬ì§„ì… ì‹œ ìƒˆ Sceneì˜ UI ì°¸ì¡°ë¥¼ ì˜êµ¬ ì¸ìŠ¤í„´ìŠ¤ì— ë„˜ê¹ë‹ˆë‹¤.
+        _instance.RebindSceneReferences(_pauseMenuUI, _onEmptyStackEvent);
+
+        // ê°™ì€ GameObjectì˜ SaveManager ë“± ë‹¤ë¥¸ ì»´í¬ë„ŒíŠ¸ê¹Œì§€ ì œê±°í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤.
+        Destroy(this);
+    }
+
+    private void OnDestroy()
+    {
+        if (_instance == this)
+            _instance = null;
     }
 
     private void Update()
@@ -62,53 +88,78 @@ public class GlobalUIStackManager : MonoBehaviour
 
     public void RegisterUI(UIStackMember ui)
     {
-        if (ui == null || _activeUIList.Contains(ui)) return;
+        RemoveInvalidStackEntries();
+
+        if (ui == null || _activeUIList.Contains(ui))
+            return;
 
         _activeUIList.Add(ui);
-        Debug.Log($"<color=green>[UIStackManager] UI µî·Ï ¼º°ø:</color> {ui.gameObject.name} | ÇöÀç ½ºÅÃ ¼ö: {_activeUIList.Count}");
+        Debug.Log($"<color=green>[UIStackManager] UI ë“±ë¡ ì„±ê³µ:</color> {ui.gameObject.name} | í˜„ì¬ ìŠ¤íƒ ìˆ˜: {_activeUIList.Count}");
     }
 
     public void UnregisterUI(UIStackMember ui)
     {
-        if (ui == null) return;
+        if (ui == null)
+        {
+            RemoveInvalidStackEntries();
+            return;
+        }
 
         if (_activeUIList.Remove(ui))
         {
-            Debug.Log($"<color=red>[UIStackManager] UI ÇØÁ¦ ¿Ï·á:</color> {ui.gameObject.name} | ³²¾ÆÀÖ´Â UI ¼ö: {_activeUIList.Count}");
+            Debug.Log($"<color=red>[UIStackManager] UI í•´ì œ ì™„ë£Œ:</color> {ui.gameObject.name} | ë‚¨ì•„ìˆëŠ” UI ìˆ˜: {_activeUIList.Count}");
         }
     }
 
     private void PopAndCloseTopUI()
     {
-        int lastIndex = _activeUIList.Count - 1;
+        RemoveInvalidStackEntries();
 
+        int lastIndex = _activeUIList.Count - 1;
         if (lastIndex < 0)
         {
             OnEmptyStack();
             return;
         }
 
-        UIStackMember topUI = _activeUIList[lastIndex];
-        if (topUI != null)
+        _activeUIList[lastIndex].CloseSelf();
+    }
+
+    private void RebindSceneReferences(UIStackMember pauseMenuUI, UnityEvent onEmptyStackEvent)
+    {
+        if (pauseMenuUI != null)
+            _pauseMenuUI = pauseMenuUI;
+
+        if (onEmptyStackEvent != null)
+            _onEmptyStackEvent = onEmptyStackEvent;
+
+        RemoveInvalidStackEntries();
+    }
+
+    private void RemoveInvalidStackEntries()
+    {
+        for (int i = _activeUIList.Count - 1; i >= 0; i--)
         {
-            topUI.CloseSelf();
+            UIStackMember ui = _activeUIList[i];
+            if (ui == null || !ui.isActiveAndEnabled)
+                _activeUIList.RemoveAt(i);
         }
     }
 
-    // ½ºÅÃ¿¡ ³²¾ÆÀÖ´Â UI°¡ ¾øÀ» ¶§ ESC¸¦ ´©¸£¸é ½ÇÇàµÇ´Â ·ÎÁ÷
+    // ìŠ¤íƒì— ë‚¨ì•„ìˆëŠ” UIê°€ ì—†ì„ ë•Œ ESCë¥¼ ëˆ„ë¥´ë©´ ì‹¤í–‰ë˜ëŠ” ë¡œì§
     private void OnEmptyStack()
     {
-        Debug.Log("[UIStackManager] ´İÀ» UI°¡ ¾ø½À´Ï´Ù. ¿É¼Ç/ÀÏ½ÃÁ¤Áö ¸Ş´º¸¦ È£ÃâÇÕ´Ï´Ù.");
+        Debug.Log("[UIStackManager] ë‹«ì„ UIê°€ ì—†ìŠµë‹ˆë‹¤. ì˜µì…˜/ì¼ì‹œì •ì§€ ë©”ë‰´ë¥¼ í˜¸ì¶œí•©ë‹ˆë‹¤.");
 
-        // 1. Á÷Á¢ ¿¬°áµÈ ¿É¼Ç UI°¡ ÀÖ´Ù¸é È°¼ºÈ­
+        // 1. ì§ì ‘ ì—°ê²°ëœ ì˜µì…˜ UIê°€ ìˆë‹¤ë©´ í™œì„±í™”
         if (_pauseMenuUI != null)
         {
-            // GameObject¸¦ ÄÑ¸é ¿É¼Ç UIÀÇ UIStackMember.OnEnable()ÀÌ ½ÇÇàµÇ¸é¼­
-            // ½º½º·Î ½ºÅÃ¿¡ µî·ÏµË´Ï´Ù!
+            // GameObjectë¥¼ ì¼œë©´ ì˜µì…˜ UIì˜ UIStackMember.OnEnable()ì´ ì‹¤í–‰ë˜ë©´ì„œ
+            // ìŠ¤ìŠ¤ë¡œ ìŠ¤íƒì— ë“±ë¡ë©ë‹ˆë‹¤!
             _pauseMenuUI.gameObject.SetActive(true);
         }
 
-        // 2. Ãß°¡ À¯´ÏÆ¼ ÀÌº¥Æ® È£Ãâ (»ç¿îµå Àç»ı, °ÔÀÓ ÀÏ½ÃÁ¤Áö ·ÎÁ÷ µî ¿¬µ¿¿ë)
+        // 2. ì¶”ê°€ ìœ ë‹ˆí‹° ì´ë²¤íŠ¸ í˜¸ì¶œ (ì‚¬ìš´ë“œ ì¬ìƒ, ê²Œì„ ì¼ì‹œì •ì§€ ë¡œì§ ë“± ì—°ë™ìš©)
         _onEmptyStackEvent?.Invoke();
     }
 }

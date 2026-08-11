@@ -1996,33 +1996,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e258d1eca156b9f4da752baa1e792622, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::VillageUpgradeUI_Manager
---- !u!1 &1498590190 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 3544760734370386666, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
-  m_PrefabInstance: {fileID: 1556606970}
-  m_PrefabAsset: {fileID: 0}
---- !u!23 &1498590197 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 3040344725384721215, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
-  m_PrefabInstance: {fileID: 1556606970}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &1498590199
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1498590190}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7d6ab04e0a8d69e4a82e8dff13bb767e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HoverOutlineTarget
-  targetRenderer: {fileID: 1498590197}
-  outlineMaterialIndex: 1
-  outlineSizeProperty: _OutlineSize
-  defaultOutlineSize: 1
-  hoveredOutlineSize: 1.03
 --- !u!4 &1515754172 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3379269147016771667, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
@@ -2905,10 +2878,7 @@ PrefabInstance:
     - {fileID: 1617978710636902102, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
     - {fileID: 1501729825042024829, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 3544760734370386666, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1498590199}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 7af478e76dd5aa1459254febb7a26624, type: 3}
 --- !u!1 &1566871425
 GameObject:
@@ -3677,8 +3647,32 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 3709761523516988655, guid: 01500b7ce6a787c44a8881e8a02e9195, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2008931152390479549}
   m_SourcePrefab: {fileID: 100100000, guid: 01500b7ce6a787c44a8881e8a02e9195, type: 3}
+--- !u!1 &2008931152390479548 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3709761523516988655, guid: 01500b7ce6a787c44a8881e8a02e9195, type: 3}
+  m_PrefabInstance: {fileID: 2008931152390479547}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &2008931152390479549
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2008931152390479548}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 979e159e234a6a145adca94f8cedb7bd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GlobalUIStackManager
+  _pauseMenuUI: {fileID: 1612957961}
+  _onEmptyStackEvent:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!114 &3484704931197526066 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 1577602778389969716, guid: ebc8143c021e0744bafe6f8227635e41, type: 3}
@@ -3816,7 +3810,8 @@ PrefabInstance:
       propertyPath: m_Name
       value: _GameManager
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 615826804846376687, guid: 59071ad23f9e4e440a0edc334079d2df, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
