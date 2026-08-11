@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿//NB
+
+using UnityEngine;
 using UnityEngine.AI;
 using System.Collections.Generic;
 
@@ -23,8 +25,6 @@ public class ObjectDragger : MonoBehaviour
     // 위치 상태 관리 필드 변수 (미사용 변수 제거 완료)
     private Vector3 savedExpandedPos;
     private Vector3 savedMinimizedPos;
-
-    private bool _hasLoggedZero = false; //추가
 
     void Awake()
     {
@@ -52,44 +52,38 @@ public class ObjectDragger : MonoBehaviour
     /// </summary>
     private void LoadIslandPosition()
     {
-        // 1. 확장 위치 로드
-        if (PlayerPrefs.HasKey("Island_Exp_X"))
+        // 1. 플레이어 프리팹에 최초 실행 플래그("IsPositionInitialized")가 존재하는지 확인합니다.
+        if (PlayerPrefs.HasKey("IsPositionInitialized"))
         {
-            float x = PlayerPrefs.GetFloat("Island_Exp_X");
-            float y = PlayerPrefs.GetFloat("Island_Exp_Y");
-            float z = PlayerPrefs.GetFloat("Island_Exp_Z");
-            savedExpandedPos = new Vector3(x, y, z);
+            // --- [재방문 유저]: 저장된 정밀 위치 로드 ---
+            float expX = PlayerPrefs.GetFloat("Island_Exp_X", 0f);
+            float expY = PlayerPrefs.GetFloat("Island_Exp_Y", 0f);
+            float expZ = PlayerPrefs.GetFloat("Island_Exp_Z", 0f);
+            savedExpandedPos = new Vector3(expX, expY, expZ);
 
-            transform.position = savedExpandedPos;
-            Debug.Log($"<color=cyan>[ObjectDragger] 저장된 확장 섬 위치 로드 성공: {savedExpandedPos}</color>");
+            float minX = PlayerPrefs.GetFloat("Island_Min_X", 0f);
+            float minY = PlayerPrefs.GetFloat("Island_Min_Y", 0f);
+            float minZ = PlayerPrefs.GetFloat("Island_Min_Z", 0f);
+            savedMinimizedPos = new Vector3(minX, minY, minZ);
+
+            // 현재 확장/축소 상태에 맞는 위치를 즉시 반영합니다.
+            bool isExpanded = gameManager == null || gameManager.GetIsExpanded();
+            transform.position = isExpanded ? savedExpandedPos : savedMinimizedPos;
+
+            Debug.Log($"<color=cyan>[ObjectDragger] 저장된 위치 로드 완료 - 확장: {savedExpandedPos}, 축소: {savedMinimizedPos}</color>");
         }
         else
         {
-            savedExpandedPos = transform.position;
-        }
+            // --- [최초 실행]: (0, 0, 0) 원점 고정 및 초기화 ---
+            savedExpandedPos = Vector3.zero;
+            savedMinimizedPos = Vector3.zero;
+            transform.position = Vector3.zero;
 
-        // 2. 축소 위치 로드 (0,0,0으로 오염된 값이 들어오는 것 예방)
-        if (PlayerPrefs.HasKey("Island_Min_X"))
-        {
-            float x = PlayerPrefs.GetFloat("Island_Min_X");
-            float y = PlayerPrefs.GetFloat("Island_Min_Y");
-            float z = PlayerPrefs.GetFloat("Island_Min_Z");
-            Vector3 loadedMin = new Vector3(x, y, z);
+            // 최초 실행 플래그를 심고 현재의 제로(0) 벡터 상태를 데이터베이스에 영구 기록합니다.
+            PlayerPrefs.SetInt("IsPositionInitialized", 1);
+            SaveIslandPosition();
 
-            if (loadedMin == Vector3.zero)
-            {
-                savedMinimizedPos = transform.position;
-                Debug.LogWarning($"<color=yellow>[ObjectDragger] 저장된 축소 위치가 (0,0,0)으로 오염되어 현재 위치로 대체합니다.</color>");
-            }
-            else
-            {
-                savedMinimizedPos = loadedMin;
-                Debug.Log($"<color=cyan>[ObjectDragger] 저장된 축소 섬 위치 로드 성공: {savedMinimizedPos}</color>");
-            }
-        }
-        else
-        {
-            savedMinimizedPos = transform.position;
+            Debug.Log("<color=yellow>[ObjectDragger] 감지된 저장 데이터 없음 (최초 실행): 섬 위치를 (0,0,0) 원점으로 초기화합니다.</color>");
         }
     }
 
@@ -118,6 +112,10 @@ public class ObjectDragger : MonoBehaviour
     {
         SaveIslandPosition();
     }
+    public Vector3 GetSavedMinimizedPos()
+    {
+        return savedMinimizedPos;
+    }
 
     void Update()
     {
@@ -134,25 +132,6 @@ public class ObjectDragger : MonoBehaviour
 
         bool isExpanded = gameManager == null || gameManager.GetIsExpanded();
         bool isBusSummoning = placementDirector != null && placementDirector.IsBusSummoning;
-
-        // 확장/축소 상태 변경 시 위치 대입 및 Collider 상태 제어
-        if (_lastExpandedState != isExpanded)
-        {
-            _lastExpandedState = isExpanded;
-            SetVillageHouseCollidersEnabled(isExpanded);
-
-            // [핵심] 모드 전환 시 저장된 커스텀 위치를 대입합니다!
-            if (isExpanded)
-            {
-                transform.position = savedExpandedPos;
-                Debug.Log($"<color=green>[ObjectDragger] 확장 모드 진입 -> 저장된 확장 위치 대입: {savedExpandedPos}</color>");
-            }
-            else
-            {
-                transform.position = savedMinimizedPos;
-                Debug.Log($"<color=green>[ObjectDragger] 축소 모드 진입 -> 저장된 축소 위치 대입: {savedMinimizedPos}</color>");
-            }
-        }
 
         // 확장/축소 상태 변경 시 Collider 상태 최적화 제어
         if (_lastExpandedState != isExpanded)

@@ -219,17 +219,5 @@ public class CameraDirector : MonoBehaviour
             _mainCamera.transform.DOMove(_camOriginalPos, 0.5f).SetEase(Ease.InOutQuad);
         }
     }
-
-    // [시각적 디버깅] 카메라가 누구를 쫓고 있는지 에디터에서 선으로 표시
-    private void OnDrawGizmos()
-    {
-        if (_isFollowing && _targetAnimal != null)
-        {
-            Gizmos.color = Color.cyan;
-            Vector3 targetPos = new Vector3(_targetAnimal.position.x, _targetAnimal.position.y, transform.position.z) + followOffset;
-            Gizmos.DrawWireSphere(targetPos, 0.3f);
-            Gizmos.DrawLine(transform.position, targetPos);
-        }
-    }
 }
 
