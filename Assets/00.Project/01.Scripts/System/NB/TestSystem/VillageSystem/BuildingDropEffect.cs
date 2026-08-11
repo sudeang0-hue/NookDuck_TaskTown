@@ -22,7 +22,7 @@ public class SubPropData
     [HideInInspector] public Vector3 cachedLocalTargetPos;
 }
 
-// 메인 건물 및 서브 프롭 수직 낙하, 바운스, 충돌 연출 제어 컴포넌트
+// 메인 건물 및 서브 프롭 수직 낙하, 바운스 연출 제어 컴포넌트
 public class BuildingDropEffect : MonoBehaviour
 {
     [Header("메인 건물 낙하 설정")]
@@ -46,16 +46,17 @@ public class BuildingDropEffect : MonoBehaviour
     [SerializeField] private Vector3 mainVfxOffset = Vector3.zero;
     [SerializeField] private Vector3 mainVfxScale = Vector3.one;
 
-    // C# Action을 활용한 고성능 매핑 이벤트 (필요 시 코드에서 구독 가능, GC Alloc 없음)
+    // C# Action 이벤트 (필요 시 외부 스크립트 연동)
     public event Action<Vector3> OnMainLandedAction;
     public event Action<Vector3> OnSubPropLandedAction;
 
-    private Vector3 targetPosition;
+    //월드 좌표 대신 안전한 로컬 목표 좌표를 저장합니다.
+    private Vector3 targetLocalPosition;
     private bool isPositionCached = false;
     private DynamicBuildingObstacle buildingObstacle;
     private bool isMainLanded = false;
 
-    // GC Alloc 최적화를 위한 WaitForSeconds 캐싱 딕셔너리
+    // GC Alloc 최적화를 위한 WaitForSeconds 캐싱
     private readonly Dictionary<float, WaitForSeconds> waitForSecondsCache = new Dictionary<float, WaitForSeconds>();
 
     private void Awake()
@@ -68,12 +69,13 @@ public class BuildingDropEffect : MonoBehaviour
         CacheTargetPosition();
     }
 
-    // 건물 및 부속 오브젝트의 원본 로컬 위치를 백업합니다.
+    // 건물 및 부속 오브젝트의 원본 '로컬(Local)' 위치를 안전하게 백업
     public void CacheTargetPosition()
     {
         if (isPositionCached) return;
 
-        targetPosition = transform.position;
+        // 월드 좌표(transform.position)가 아닌 로컬 좌표(transform.localPosition) 백업
+        targetLocalPosition = transform.localPosition;
 
         foreach (var propData in subProps)
         {
@@ -109,7 +111,8 @@ public class BuildingDropEffect : MonoBehaviour
 
     private void SetupInitialPositions()
     {
-        transform.position = targetPosition + new Vector3(0, dropHeight, 0);
+        // 로컬 Y축 기준으로 낙하 시작 위치 설정
+        transform.localPosition = targetLocalPosition + new Vector3(0, dropHeight, 0);
 
         foreach (var propData in subProps)
         {
@@ -132,10 +135,10 @@ public class BuildingDropEffect : MonoBehaviour
         return worldUpOffset;
     }
 
-    // 메인 건물 낙하 코루틴
+    // 메인 건물 낙하 코루틴 (로컬 좌표계 기반)
     private IEnumerator MainDropRoutine()
     {
-        Vector3 startPos = targetPosition + new Vector3(0, dropHeight, 0);
+        Vector3 startLocalPos = targetLocalPosition + new Vector3(0, dropHeight, 0);
         float elapsedTime = 0f;
 
         // 1. 수직 낙하 (가속도 적용: EaseInQuad -> t^2)
@@ -145,22 +148,23 @@ public class BuildingDropEffect : MonoBehaviour
             float t = elapsedTime / dropDuration;
             t = t * t;
 
-            transform.position = Vector3.Lerp(startPos, targetPosition, t);
+            // localPosition을 보간하여 섬이 드래그되어도 완벽히 추종함
+            transform.localPosition = Vector3.Lerp(startLocalPos, targetLocalPosition, t);
             yield return null;
         }
 
-        transform.position = targetPosition;
+        transform.localPosition = targetLocalPosition;
         isMainLanded = true;
 
-        // 2. 메인 건물 착지 VFX 스폰 및 C# Action 이벤트 호출
+        // 2. 메인 건물 착지 VFX 스폰 (VFX는 스폰 시점의 실시간 월드 좌표 전달)
         Vector3 mainLandWorldPos = transform.TransformPoint(mainVfxOffset);
         SpawnDustVfx(mainDustVfxPrefab, mainLandWorldPos, mainVfxScale);
 
-        OnMainLandedAction?.Invoke(targetPosition);
+        OnMainLandedAction?.Invoke(transform.position);
 
         OnDropComplete();
 
-        // 3. 메인 건물 바운스 연출
+        // 3. 메인 건물 바운스 연출 (로컬 좌표 기준)
         if (enableBounce && bounceCount > 0)
         {
             elapsedTime = 0f;
@@ -174,24 +178,22 @@ public class BuildingDropEffect : MonoBehaviour
                                    * Mathf.Pow(1f - t, dampingPower)
                                    * bounceHeight;
 
-                transform.position = targetPosition + new Vector3(0, bounceOffset, 0);
+                transform.localPosition = targetLocalPosition + new Vector3(0, bounceOffset, 0);
                 yield return null;
             }
         }
 
-        transform.position = targetPosition;
+        transform.localPosition = targetLocalPosition;
     }
 
     // 서브 프롭(부속품) 연쇄 낙하 코루틴
     private IEnumerator SubPropDropRoutine(SubPropData propData)
     {
-        // 메인 건물이 착지할 때까지 대기
         while (!isMainLanded)
         {
             yield return null;
         }
 
-        // 지연 시간(Delay) 대기
         if (propData.delay > 0f)
         {
             yield return GetCachedWaitForSeconds(propData.delay);
@@ -209,7 +211,7 @@ public class BuildingDropEffect : MonoBehaviour
         {
             elapsedTime += Time.deltaTime;
             float t = elapsedTime / subPropDropDuration;
-            t = t * t; // 가속 낙하
+            t = t * t;
 
             propTransform.localPosition = Vector3.Lerp(startLocalPos, targetLocalPos, t);
             yield return null;
@@ -217,9 +219,7 @@ public class BuildingDropEffect : MonoBehaviour
 
         propTransform.localPosition = targetLocalPos;
 
-        // C# Action 이벤트만 발동 (필요 시 외부 스크립트 연동용)
-        Vector3 landedWorldPos = propTransform.position;
-        OnSubPropLandedAction?.Invoke(landedWorldPos);
+        OnSubPropLandedAction?.Invoke(propTransform.position);
 
         // 서브 프롭 바운스 연출
         if (enableBounce && bounceCount > 0)
@@ -246,7 +246,6 @@ public class BuildingDropEffect : MonoBehaviour
         propTransform.localPosition = targetLocalPos;
     }
 
-    // 메인 건물 전용 VFX 파티클 스폰 및 수명 자동 관리
     private void SpawnDustVfx(GameObject vfxPrefab, Vector3 spawnPosition, Vector3 scale)
     {
         if (vfxPrefab == null) return;
@@ -274,7 +273,6 @@ public class BuildingDropEffect : MonoBehaviour
         }
     }
 
-    // WaitForSeconds 객체 재사용으로 GC 할당 최소화
     private WaitForSeconds GetCachedWaitForSeconds(float seconds)
     {
         if (!waitForSecondsCache.TryGetValue(seconds, out var wait))
@@ -283,5 +281,16 @@ public class BuildingDropEffect : MonoBehaviour
             waitForSecondsCache.Add(seconds, wait);
         }
         return wait;
+    }
+
+    //씬 뷰에서 목표 로컬 위치를 실시간 모니터링
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.green;
+        Vector3 currentTargetWorldPos = transform.parent != null
+            ? transform.parent.TransformPoint(targetLocalPosition)
+            : targetLocalPosition;
+
+        Gizmos.DrawWireSphere(currentTargetWorldPos, 0.5f);
     }
 }
