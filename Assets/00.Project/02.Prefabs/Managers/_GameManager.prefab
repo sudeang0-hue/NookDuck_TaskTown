@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8681498883085489135}
   - component: {fileID: 4933528331104165554}
+  - component: {fileID: 615826804846376687}
   m_Layer: 0
   m_Name: _GameManager
   m_TagString: Untagged
@@ -25,7 +26,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8974993471934371354}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 1026.1376, y: 474.19733, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -56,4 +57,21 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
+  - {fileID: 0}
   ticketNotification: {fileID: 0}
+--- !u!114 &615826804846376687
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8974993471934371354}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 979e159e234a6a145adca94f8cedb7bd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GlobalUIStackManager
+  _pauseMenuUI: {fileID: 0}
+  _onEmptyStackEvent:
+    m_PersistentCalls:
+      m_Calls: []
