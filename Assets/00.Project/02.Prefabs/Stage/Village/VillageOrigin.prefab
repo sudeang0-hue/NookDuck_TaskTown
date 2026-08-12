@@ -4878,9 +4878,6 @@ PrefabInstance:
       addedObject: {fileID: 7924594737668808352}
     - targetCorrespondingSourceObject: {fileID: 6988751306508845572, guid: f7d242584f875794a97eccc0ced6e4e3, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 4559999989054628245}
-    - targetCorrespondingSourceObject: {fileID: 6988751306508845572, guid: f7d242584f875794a97eccc0ced6e4e3, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 4472645448729858107}
   m_SourcePrefab: {fileID: 100100000, guid: f7d242584f875794a97eccc0ced6e4e3, type: 3}
 --- !u!1 &3544760734370386666 stripped
@@ -4952,24 +4949,6 @@ MonoBehaviour:
   mainDustVfxPrefab: {fileID: 0}
   mainVfxOffset: {x: 0, y: 0, z: 0}
   mainVfxScale: {x: 1, y: 1, z: 1}
---- !u!114 &4559999989054628245
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3544760734370386666}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7d6ab04e0a8d69e4a82e8dff13bb767e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HoverOutlineTarget
-  rendererData: {fileID: 11400000, guid: f288ae1f4751b564a96ac7587541f7a2, type: 2}
-  maskFeatureName: VillageHouseOutlineMask
-  outlineFeatureName: VillageHouseOutline
-  outlineMaterial: {fileID: 0}
-  thicknessProperty: _Outline_Thickness
-  hoveredThickness: 0.06
 --- !u!208 &4472645448729858107
 NavMeshObstacle:
   m_ObjectHideFlags: 0

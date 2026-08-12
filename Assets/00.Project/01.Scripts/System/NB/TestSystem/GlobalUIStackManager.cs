@@ -3,21 +3,22 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[DefaultExecutionOrder(-200)]
 public class GlobalUIStackManager : MonoBehaviour
 {
     private static GlobalUIStackManager _instance;
 
-    // ¾Û Á¾·á ¹× ¾À ÀüÈ¯ ÆÄ±« »óÅÂ¸¦ ÃßÀûÇÏ´Â Á¤Àû ÇÃ·¡±× (¸Ş¸ğ¸® ¿À¹öÇìµå $\approx 0\text{ bytes}$)
-    private static bool _isQuitting = false;
+    // ì•± ì¢…ë£Œ ì¤‘ UI ë¹„í™œì„±í™” ì½œë°±ì—ì„œ ì‹±ê¸€í†¤ì´ ë‹¤ì‹œ ìƒì„±ë˜ì§€ ì•Šë„ë¡ ë§‰ìŠµë‹ˆë‹¤.
+    private static bool _isQuitting;
 
     public static GlobalUIStackManager Instance
     {
         get
         {
-            // ¾ÛÀÌ Á¾·áµÇ´Â ÁßÀÌ¶ó¸é Àı´ë·Î »õ GameObject¸¦ »ı¼ºÇÏÁö ¾Ê°í nullÀ» ¹İÈ¯ÇÕ´Ï´Ù.
+            // ì•±ì´ ì¢…ë£Œë˜ëŠ” ì¤‘ì´ë¼ë©´ ì ˆëŒ€ë¡œ ìƒˆ GameObjectë¥¼ ìƒì„±í•˜ì§€ ì•Šê³  nullì„ ë°˜í™˜í•©ë‹ˆë‹¤.
             if (_isQuitting)
             {
-                Debug.LogWarning("[UIStackManager] ¾ÛÀÌ Á¾·á ÁßÀÌ¹Ç·Î ÀÎ½ºÅÏ½º »ı¼ºÀ» Â÷´ÜÇÕ´Ï´Ù.");
+                Debug.LogWarning("[UIStackManager] ì•±ì´ ì¢…ë£Œ ì¤‘ì´ë¯€ë¡œ ì¸ìŠ¤í„´ìŠ¤ ìƒì„±ì„ ì°¨ë‹¨í•©ë‹ˆë‹¤.");
                 return null;
             }
 
@@ -38,17 +39,33 @@ public class GlobalUIStackManager : MonoBehaviour
 
     private readonly List<UIStackMember> _activeUIList = new List<UIStackMember>();
 
+    public static bool TryGetExisting(out GlobalUIStackManager manager)
+    {
+        manager = _instance;
+        return manager != null;
+    }
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics()
+    {
+        _instance = null;
+        _isQuitting = false;
+    }
+
     private void Awake()
     {
         if (_instance == null)
         {
             _instance = this;
             DontDestroyOnLoad(gameObject);
+            return;
         }
-        else if (_instance != this)
-        {
-            Destroy(gameObject);
-        }
+
+        if (_instance == this)
+            return;
+
+        // MainScene ì¬ì§„ì… ì‹œ ê°™ì€ GameObjectì˜ ë‹¤ë¥¸ ë§¤ë‹ˆì €ê¹Œì§€ ì œê±°í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤.
+        Destroy(this);
     }
 
     private void Update()
@@ -61,43 +78,56 @@ public class GlobalUIStackManager : MonoBehaviour
 
     public void RegisterUI(UIStackMember ui)
     {
-        if (ui == null || _activeUIList.Contains(ui)) return;
+        RemoveInvalidStackEntries();
+
+        if (ui == null || _activeUIList.Contains(ui))
+            return;
 
         _activeUIList.Add(ui);
     }
 
     public void UnregisterUI(UIStackMember ui)
     {
-        if (ui == null) return;
+        if (ui == null)
+        {
+            RemoveInvalidStackEntries();
+            return;
+        }
 
         _activeUIList.Remove(ui);
     }
 
     private void PopAndCloseTopUI()
     {
+        RemoveInvalidStackEntries();
+
         int lastIndex = _activeUIList.Count - 1;
 
-        if (lastIndex < 0) return;
+        if (lastIndex < 0)
+            return;
 
-        UIStackMember topUI = _activeUIList[lastIndex];
-        if (topUI != null)
+        _activeUIList[lastIndex].CloseSelf();
+    }
+
+    private void RemoveInvalidStackEntries()
+    {
+        for (int i = _activeUIList.Count - 1; i >= 0; i--)
         {
-            topUI.CloseSelf();
+            UIStackMember ui = _activeUIList[i];
+            if (ui == null || !ui.isActiveAndEnabled)
+                _activeUIList.RemoveAt(i);
         }
     }
 
-    // À¯´ÏÆ¼ ¿¡µğÅÍ ÇÃ·¹ÀÌ Á¾·á ¶Ç´Â ¾Û Á¾·á ½Ã ÀÚµ¿ È£ÃâµÇ´Â »ı¸íÁÖ±â ÇÔ¼ö
+    // ìœ ë‹ˆí‹° ì—ë””í„° í”Œë ˆì´ ì¢…ë£Œ ë˜ëŠ” ì•± ì¢…ë£Œ ì‹œ ìë™ í˜¸ì¶œë˜ëŠ” ìƒëª…ì£¼ê¸° í•¨ìˆ˜
     private void OnApplicationQuit()
     {
         _isQuitting = true;
     }
 
-    // ½Ì±ÛÅæ ¿ÀºêÁ§Æ®°¡ ÆÄ±«µÉ ¶§ ÇÃ·¡±× µ¿±âÈ­
     private void OnDestroy()
     {
         if (_instance == this)
-        {
-            _isQuitting = true;
-        }
+            _instance = null;
     }
 }

@@ -2,33 +2,33 @@
 
 using UnityEngine;
 
-// ÆÀ¿øµéÀÇ ±âÁ¸ ÄÚµå¸¦ ÀüÇô ¼öÁ¤ÇÏÁö ¾Ê°í, GameObjectÀÇ È°¼ºÈ­ »óÅÂ¸¸ °¨ÁöÇÏ´Â Å¬·¡½º
+// íŒ€ì›ë“¤ì˜ ê¸°ì¡´ ì½”ë“œë¥¼ ì „í˜€ ìˆ˜ì •í•˜ì§€ ì•Šê³ , GameObjectì˜ í™œì„±í™” ìƒíƒœë§Œ ê°ì§€í•˜ëŠ” í´ë˜ìŠ¤
 public class UIStackMember : MonoBehaviour
 {
-    [Header("UI ¼³Á¤")]
-    [Tooltip("ESC Å°·Î ´İÈú ¶§ ¿ÏÀüÈ÷ ²ôÁö ¾Ê°í ¼û±â±â¸¸ ÇÒÁö ¿©ºÎ")]
+    [Header("UI ì„¤ì •")]
+    [Tooltip("ESC í‚¤ë¡œ ë‹«í ë•Œ ì™„ì „íˆ ë„ì§€ ì•Šê³  ìˆ¨ê¸°ê¸°ë§Œ í• ì§€ ì—¬ë¶€")]
     [SerializeField] private bool _deactivateOnClose = true;
 
     private void OnEnable()
     {
-        // UI°¡ È­¸é¿¡ ÄÑÁö´Â ¼ø°£, Áß¾Ó ¸Å´ÏÀú ½ºÅÃ¿¡ ÀÚ±â ÀÚ½ÅÀ» µî·Ï
-        if (GlobalUIStackManager.Instance != null)
+        // UIê°€ í™”ë©´ì— ì¼œì§€ëŠ” ìˆœê°„, ì¤‘ì•™ ë§¤ë‹ˆì € ìŠ¤íƒì— ìê¸° ìì‹ ì„ ë“±ë¡
+        GlobalUIStackManager manager = GlobalUIStackManager.Instance;
+        if (manager != null)
         {
-            GlobalUIStackManager.Instance.RegisterUI(this);
+            manager.RegisterUI(this);
         }
     }
 
     private void OnDisable()
     {
-        // Instance Á¢±Ù ½Ã nullÀÌ ¹İÈ¯µÉ ¼ö ÀÖÀ¸¹Ç·Î ¾ÈÀüÇÏ°Ô È£Ãâ
-        var manager = GlobalUIStackManager.Instance;
-        if (manager != null)
+        // Scene ì¢…ë£Œ ì¤‘ì—ëŠ” ìƒˆ Managerë¥¼ ìë™ ìƒì„±í•˜ì§€ ì•Šê³  ê¸°ì¡´ ì¸ìŠ¤í„´ìŠ¤ì—ì„œë§Œ ì œê±°í•©ë‹ˆë‹¤.
+        if (GlobalUIStackManager.TryGetExisting(out GlobalUIStackManager manager))
         {
             manager.UnregisterUI(this);
         }
     }
 
-    // ESC Å° ÀÔ·Â ½Ã Áß¾Ó ¸Å´ÏÀú°¡ È£ÃâÇÏ´Â UI ´İ±â ¸Ş¼­µå
+    // ESC í‚¤ ì…ë ¥ ì‹œ ì¤‘ì•™ ë§¤ë‹ˆì €ê°€ í˜¸ì¶œí•˜ëŠ” UI ë‹«ê¸° ë©”ì„œë“œ
     public void CloseSelf()
     {
         if (_deactivateOnClose)
