@@ -171,7 +171,17 @@ public class GameMasterManager : MonoBehaviour
 
     public void SetMinimizedScreen()
     {
+        // 이미 확장 상태가 아니거나 전환 연출 중이면 차단
         if (!isExpanded || isTransitioning) return;
+
+        // 씬 내의 VillagerPlacementDirector를 탐색하여 버스 소환 연출 중인지 확인
+        VillagerPlacementDirector placementDirector = FindFirstObjectByType<VillagerPlacementDirector>();
+        if (placementDirector != null && placementDirector.IsBusSummoning)
+        {
+            Debug.Log("<color=yellow>[GameMasterManager] 버스 소환 연출 중에는 축소 모드로 전환할 수 없습니다.</color>");
+            return;
+        }
+
         StartCoroutine(MinimizeRoutine());
     }
 
