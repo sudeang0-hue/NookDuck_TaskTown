@@ -5,14 +5,20 @@ using UnityEngine.UI;
 namespace TaskTown.SceneFlow
 {
     /// <summary>
-    /// Title 화면에서 Startup Pipeline 진행률을 표시하고 완료 시 대상 Scene을 자동 활성화합니다.
+    /// Title Scene에서 Startup Pipeline 진행률을 표시하고,
+    /// Main Scene과 튜토리얼 오버레이가 준비된 뒤 로딩 화면을 제거합니다.
     /// </summary>
     public sealed class TitleLoadingController : MonoBehaviour
     {
+        private const float MainSceneProgressWeight = 0.9f;
+
         [Header("Loading")]
         [SerializeField] private StartupLoadPipeline startupLoadPipeline;
         [SerializeField] private Slider progressSlider;
         [SerializeField] private Text statusText;
+
+        [Header("Handoff")]
+        [SerializeField, Min(0f)] private float fadeOutDuration = 0.2f;
 
         [Header("BGM")]
         [SerializeField] private bool playLoadingBgmOnStart = true;
@@ -22,13 +28,15 @@ namespace TaskTown.SceneFlow
 
         private Coroutine activationRoutine;
         private bool loadingBgmStarted;
+        private StartupLoadingHandoff loadingHandoff;
+        //-----------------26.08.05 KDH-------------------------
+        private SceneId pendingTargetScene = SceneId.Main;
+        //----------------------------------------
 
         private void OnEnable()
         {
             if (startupLoadPipeline == null)
-            {
                 return;
-            }
 
             startupLoadPipeline.ProgressChanged += HandleProgressChanged;
             startupLoadPipeline.Completed += HandleCompleted;
@@ -43,6 +51,17 @@ namespace TaskTown.SceneFlow
                 return;
             }
 
+            Canvas loadingCanvas = ResolveLoadingCanvas();
+            loadingHandoff = GetComponent<StartupLoadingHandoff>();
+            if (loadingHandoff == null)
+                loadingHandoff = gameObject.AddComponent<StartupLoadingHandoff>();
+
+            if (loadingCanvas == null || !loadingHandoff.Prepare(loadingCanvas, fadeOutDuration))
+            {
+                ShowFailure("Title 로딩 Canvas를 Main Scene까지 인계할 수 없습니다.");
+                return;
+            }
+
             if (progressSlider != null)
             {
                 progressSlider.minValue = 0f;
@@ -50,12 +69,13 @@ namespace TaskTown.SceneFlow
                 progressSlider.value = 0f;
             }
 
-            HandleProgressChanged(0f, "시작 준비");
+            ShowProgress(0f, "시작 준비");
             PlayLoadingBgm();
 
             if (!startupLoadPipeline.Run())
             {
                 StopLoadingBgm();
+                loadingHandoff.Cancel();
             }
         }
 
@@ -73,12 +93,15 @@ namespace TaskTown.SceneFlow
 
         private void HandleProgressChanged(float progress, string stepName)
         {
+            ShowProgress(Mathf.Clamp01(progress) * MainSceneProgressWeight, stepName);
+        }
+
+        private void ShowProgress(float progress, string stepName)
+        {
             float clampedProgress = Mathf.Clamp01(progress);
 
             if (progressSlider != null)
-            {
                 progressSlider.value = clampedProgress;
-            }
 
             if (statusText != null)
             {
@@ -89,49 +112,77 @@ namespace TaskTown.SceneFlow
 
         private void HandleCompleted(StartupLoadContext context)
         {
-            HandleProgressChanged(1f, "로딩 완료");
+            //-----------------26.08.05 KDH-------------------------
+            pendingTargetScene = context != null ? context.TargetScene : SceneId.Main;
+
+            string readyLabel = pendingTargetScene == SceneId.Main
+                ? "Main Scene 활성화 준비"
+                : $"{pendingTargetScene} 활성화 준비";
+            ShowProgress(MainSceneProgressWeight, readyLabel);
+            //----------------------------------------
 
             if (activationRoutine == null)
-            {
                 activationRoutine = StartCoroutine(ActivateTargetSceneRoutine());
-            }
         }
 
         private IEnumerator ActivateTargetSceneRoutine()
         {
-            // 100% UI가 반영된 다음 프레임에 입력 없이 자동 전환합니다.
+            // 90% UI를 한 프레임 표시한 뒤 대상 Scene을 활성화합니다.
             yield return null;
-
-            StopLoadingBgm();
 
             SceneFlowManager manager = SceneFlowManager.EnsureInstance();
             if (!manager.ActivatePreloadedScene())
             {
                 ShowFailure(manager.LastError);
+                loadingHandoff?.Cancel();
+                yield break;
             }
+
+            if (loadingHandoff != null)
+            {
+                //-----------------26.08.05 KDH-------------------------
+                // DifficultySelect 등 Main이 아닌 대상에는 TutorialOverlayLoader가 없습니다.
+                bool expectTutorial = pendingTargetScene == SceneId.Main;
+                yield return loadingHandoff.CompleteAfterSceneActivation(
+                    manager,
+                    ShowProgress,
+                    expectTutorial);
+                //----------------------------------------
+            }
+
+            StopLoadingBgm();
         }
 
         private void HandleFailed(string errorMessage)
         {
             ShowFailure(errorMessage);
+            loadingHandoff?.Cancel();
         }
 
         private void ShowFailure(string errorMessage)
         {
             if (statusText != null)
-            {
                 statusText.text = "로딩 실패";
-            }
 
             Debug.LogError($"[TitleLoadingController] {errorMessage}", this);
+        }
+
+        private Canvas ResolveLoadingCanvas()
+        {
+            if (progressSlider != null)
+            {
+                Canvas sliderCanvas = progressSlider.GetComponentInParent<Canvas>();
+                if (sliderCanvas != null)
+                    return sliderCanvas;
+            }
+
+            return statusText != null ? statusText.GetComponentInParent<Canvas>() : null;
         }
 
         private void PlayLoadingBgm()
         {
             if (!playLoadingBgmOnStart || string.IsNullOrWhiteSpace(loadingBgmSoundId))
-            {
                 return;
-            }
 
             if (SoundManager.Instance == null)
             {
@@ -156,14 +207,10 @@ namespace TaskTown.SceneFlow
         private void StopLoadingBgm()
         {
             if (!stopLoadingBgmOnExit || !loadingBgmStarted)
-            {
                 return;
-            }
 
             if (SoundManager.Instance != null)
-            {
                 SoundManager.Instance.StopBGM();
-            }
 
             loadingBgmStarted = false;
         }

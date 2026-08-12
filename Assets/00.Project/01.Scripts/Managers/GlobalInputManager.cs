@@ -1,29 +1,41 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 
 public class GlobalInputManager : MonoBehaviour
 {
+    private EarnProcessor earnProcessor;
+
+    private void Start()
+    {
+        earnProcessor = EarnProcessor.Instance;
+    }
+
     private void Update()
     {
-        // 1. ¸¶¿ì½º ¿ŞÂÊ Å¬¸¯ °¨Áö (È­¸é ¾Æ¹« µ¥³ª ´­·¯µµ ÀÛµ¿)
+        // 1. ë§ˆìš°ìŠ¤ ì™¼ìª½ í´ë¦­ ê°ì§€ (í™”ë©´ ì•„ë¬´ ë°ë‚˜ ëˆŒëŸ¬ë„ ì‘ë™)
         if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
         {
-            // [¼±ÅÃ »çÇ×] ¸¸¾à ³ªÁß¿¡ °ÔÀÓ¿¡ »óÁ¡ ¹öÆ° µîÀÌ Ãß°¡µÇ¾úÀ» ¶§, 
-            // ¹öÆ°À» ´©¸£´Â Å¬¸¯Àº 'ºó °÷ Å¬¸¯'¿¡¼­ Á¦¿ÜÇÏ°í ½Í´Ù¸é ¾Æ·¡ Á¶°Ç¹®À» »ç¿ëÇÕ´Ï´Ù.
+            // [ì„ íƒ ì‚¬í•­] ë§Œì•½ ë‚˜ì¤‘ì— ê²Œì„ì— ìƒì  ë²„íŠ¼ ë“±ì´ ì¶”ê°€ë˜ì—ˆì„ ë•Œ, 
+            // ë²„íŠ¼ì„ ëˆ„ë¥´ëŠ” í´ë¦­ì€ 'ë¹ˆ ê³³ í´ë¦­'ì—ì„œ ì œì™¸í•˜ê³  ì‹¶ë‹¤ë©´ ì•„ë˜ ì¡°ê±´ë¬¸ì„ ì‚¬ìš©í•©ë‹ˆë‹¤.
             if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
             {
-                // UI ¿ä¼Ò¸¦ Å¬¸¯ÇÑ °æ¿ìÀÌ¹Ç·Î ºó °÷ Å¬¸¯ Ã³¸® ¾È ÇÔ
+                // UIController_AnimalInvPage ìš”ì†Œë¥¼ í´ë¦­í•œ ê²½ìš°ì´ë¯€ë¡œ ë¹ˆ ê³³ í´ë¦­ ì²˜ë¦¬ ì•ˆ í•¨
                 return;
             }
 
-            EarnProcessor.Instance.ProcessGlobalClick();
+            earnProcessor.ProcessGlobalClick();
         }
 
-        // 2. Å°º¸µå Å¸ÀÌÇÎ °¨Áö (ºó »óÅÂ¿¡¼­ Å°º¸µå¸¦ ÃÄµµ ½Ç½Ã°£ ÀÔ·Â ¹®ÀÚ¿­À» °¡Á®¿È)
-        if (Keyboard.current != null && Keyboard.current.anyKey.wasPressedThisFrame)
+        // 2. í‚¤ë³´ë“œ íƒ€ì´í•‘ ê°ì§€ (ë¹ˆ ìƒíƒœì—ì„œ í‚¤ë³´ë“œë¥¼ ì³ë„ ì‹¤ì‹œê°„ ì…ë ¥ ë¬¸ìì—´ì„ ê°€ì ¸ì˜´)
+        if (Keyboard.current == null) return;
+        foreach (var key in Keyboard.current.allKeys)
         {
-            EarnProcessor.Instance.ProcessGlobalTyping();
+            if (key != null && key.wasPressedThisFrame)
+            {
+                earnProcessor.ProcessGlobalTyping();
+                break; // ê°™ì€ í”„ë ˆì„ì— ì—¬ëŸ¬ í‚¤ê°€ ëˆŒë ¤ë„ í•œ ë²ˆë§Œ ì²˜ë¦¬
+            }
         }
     }
 }

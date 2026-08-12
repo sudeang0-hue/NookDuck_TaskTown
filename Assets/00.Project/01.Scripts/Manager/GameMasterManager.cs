@@ -1,139 +1,108 @@
-// NB
+//NB
+
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
+using System;
+using System.Collections;
 
+// 메인 화면의 확장/축소 상태, 카메라 포커스 연동, 하단 아이콘 애니메이션을 전담하는 씬 전용 매니저
 public class GameMasterManager : MonoBehaviour
 {
+    // 씬 내에서 접근 가능한 씬 싱글톤
+    public static GameMasterManager Instance { get; private set; }
+
+    // 외부 UI 매니저가 구독할 수 있는 전역 UI 수거 이벤트
+    public static event Action OnCloseAllUIRequested;
+
     [Header("3D 오브젝트 및 카메라 설정")]
     public Transform villageOrigin;
-    private Camera mainCamera;
-
-    private Vector3 camOriginalPos;
-    private float camOriginalSize;
     private Vector3 originalVillagePos;
     private Vector3 savedDraggedPosition;
-
-    [Header("축소 화면용 카메라 타겟 셋팅")]
-    public Transform miniVillagePos;
 
     [Header("메인 패널 참조")]
     public GameObject expandedPanel;
     public GameObject minimizedPanel;
-    public GameObject menuPanel;
-    public CanvasGroup menuCanvasGroup;
-
-    [Header("독립 팝업 패널들 (RectTransform)")]
-    public RectTransform panelDex;       // 1. 도감 (좌 -> 우 등장)
-    public RectTransform panelGacha;     // 2. 가챠 (아래 -> 위 등장)
-    public RectTransform panelManage;    // 3. 동물 인벤토리/관리 (우 -> 좌 등장)
-    public RectTransform panelOption;    // 4. 옵션/설정 (위 -> 아래 등장)
-    public RectTransform panelToolInv;   // 5. 도구 인벤토리 (우 -> 좌 등장)
-
-    // 열렸을 때의 오리지널 기준 좌표 저장 변수들
-    private Vector2 posDexOpen;
-    private Vector2 posGachaOpen;
-    private Vector2 posManageOpen;
-    private Vector2 posOptionOpen;
-    private Vector2 posToolInvOpen;
 
     [Header("전환 및 시스템 버튼들")]
     public Button btnMinimize;
     public Button btnMaximize;
     public Button btnQuit;
-    public Button btnCloseMenu;
 
     [Header("하단 메인 아이콘들")]
     public RectTransform[] bottomIcons;
     private Vector2[] iconOriginalPositions;
+    private Graphic menuPanelRaycastBlocker;
 
     [Header("티켓 알림 설정")]
     public GameObject ticketNotification;
-    private float ticketTimer = 0f;
-    private const float TICKET_COOLDOWN = 1800f;
+    private float ticketTimer = 30f;
+    private const float TICKET_COOLDOWN = 1800f; // 쿨타임 시간(초): $T_{\text{cooldown}} = 1800\text{s}$
 
+    // 상태 관리 플래그
     private bool isExpanded = true;
-    private bool isMenuOpen = false;
-    private bool isMenuAnimating = false;
+    private bool isTransitioning = false; // 화면 전환 연타 방지용 가드 플래그
 
-    void Awake()
+    private void Awake()
     {
-        // 씬 시작 시 오리지널 좌표를 기억하고, 우선은 패널들을 비활성화(-2000f 등 화면 바깥 배치 후 꺼두기)
-        CacheAndHidePanels();
+        // 1. 씬 내부 싱글톤 할당 (씬이 재로드되면 자동으로 새 인스턴스로 교체됨)
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+
+        // static 이벤트 초기화 (씬 재로드 시 이전 씬의 구독 찌꺼기 제거)
+        OnCloseAllUIRequested = null;
     }
 
     void Start()
     {
-        mainCamera = Camera.main;
-        if (mainCamera != null)
-        {
-            camOriginalPos = mainCamera.transform.position;
-            camOriginalSize = mainCamera.orthographicSize;
-        }
-
+        // 1. 마을 원본 좌표 캐싱 및 카메라 디렉터 연동
         if (villageOrigin != null)
         {
             originalVillagePos = villageOrigin.position;
             savedDraggedPosition = originalVillagePos;
+
+            if (CameraDirector.Instance != null)
+            {
+                CameraDirector.Instance.SetupVillageOrigin(originalVillagePos);
+            }
         }
 
-        iconOriginalPositions = new Vector2[bottomIcons.Length];
-        for (int i = 0; i < bottomIcons.Length; i++)
+        // 2. 하단 아이콘 원본 좌표 캐싱 (Null 방어 구문 추가)
+        if (bottomIcons != null && bottomIcons.Length > 0)
         {
-            if (bottomIcons[i] == null) continue;
-            iconOriginalPositions[i] = bottomIcons[i].anchoredPosition;
+            iconOriginalPositions = new Vector2[bottomIcons.Length];
+            for (int i = 0; i < bottomIcons.Length; i++)
+            {
+                if (bottomIcons[i] == null) continue;
+                bottomIcons[i].DOKill(); // 잔류 트윈 제거
+                iconOriginalPositions[i] = bottomIcons[i].anchoredPosition;
+            }
         }
 
-        if (btnMinimize) btnMinimize.onClick.AddListener(SetMinimizedScreen);
-        if (btnMaximize) btnMaximize.onClick.AddListener(SetExpandedScreen);
-        if (btnQuit) btnQuit.onClick.AddListener(QuitGame);
-        if (btnCloseMenu) btnCloseMenu.onClick.AddListener(ToggleMenu);
+        // [ 2026.08.11 - Choi - 축소 화면 클릭 통과 제어 ]
+        // btnMinimize의 부모인 Menu_Panel_root의 투명 Graphic을 캐싱합니다.
+        CacheMenuPanelRaycastBlocker();
+        SetMenuPanelRaycastBlocking(true);
 
-        expandedPanel.SetActive(true);
-        minimizedPanel.SetActive(false);
-        menuPanel.SetActive(false);
-        menuCanvasGroup.alpha = 0f;
+        // 3. 버튼 리스너 바인딩 (자체 리스너만 제거하여 다른 기능과 버튼음을 보존)
+        InitButtonListeners();
 
+        // 4. 초기 UI 패널 상태 설정
+        if (expandedPanel) expandedPanel.SetActive(true);
+        if (minimizedPanel) minimizedPanel.SetActive(false);
+        if (ticketNotification) ticketNotification.SetActive(false);
+
+        // 5. 하단 아이콘 등장 연출
         AnimateIcons();
-    }
-
-    // 패널들의 원래 위치를 저장하고, 시작하자마자 구석으로 치운 뒤 비활성화
-    private void CacheAndHidePanels()
-    {
-        if (panelDex != null)
-        {
-            posDexOpen = panelDex.anchoredPosition;
-            panelDex.anchoredPosition = new Vector2(posDexOpen.x - 2000f, posDexOpen.y);
-            panelDex.gameObject.SetActive(false);
-        }
-        if (panelGacha != null)
-        {
-            posGachaOpen = panelGacha.anchoredPosition;
-            panelGacha.anchoredPosition = new Vector2(posGachaOpen.x, posGachaOpen.y - 1200f);
-            panelGacha.gameObject.SetActive(false);
-        }
-        if (panelManage != null)
-        {
-            posManageOpen = panelManage.anchoredPosition;
-            panelManage.anchoredPosition = new Vector2(posManageOpen.x + 2000f, posManageOpen.y);
-            panelManage.gameObject.SetActive(false);
-        }
-        if (panelOption != null)
-        {
-            posOptionOpen = panelOption.anchoredPosition;
-            panelOption.anchoredPosition = new Vector2(posOptionOpen.x, posOptionOpen.y + 1200f);
-            panelOption.gameObject.SetActive(false);
-        }
-        if (panelToolInv != null)
-        {
-            posToolInvOpen = panelToolInv.anchoredPosition;
-            panelToolInv.anchoredPosition = new Vector2(posToolInvOpen.x + 2000f, posToolInvOpen.y);
-            panelToolInv.gameObject.SetActive(false);
-        }
     }
 
     void Update()
     {
+        // 화면이 축소 상태일 때 티켓 타이머 누적: $t_{\text{ticket}} \leftarrow t_{\text{ticket}} + \Delta t$
         if (!isExpanded)
         {
             ticketTimer += Time.deltaTime;
@@ -143,40 +112,150 @@ public class GameMasterManager : MonoBehaviour
             }
         }
 
-        if (Input.GetKeyDown(KeyCode.Escape))
+    }
+
+    private void OnEnable()
+    {
+        // 카메라 포커스 시작 이벤트 수신 시 UI 수거 함수 연결
+        CameraDirector.OnCameraFocusStarted += CloseAllUI;
+    }
+
+    private void OnDisable()
+    {
+        // 메모리 누수 방지를 위한 이벤트 구독 해제
+        CameraDirector.OnCameraFocusStarted -= CloseAllUI;
+    }
+
+    // 씬 전환/파괴 시 메모리 누수 방지 cleanup
+    private void OnDestroy()
+    {
+        if (bottomIcons != null)
         {
-            ToggleMenu();
+            for (int i = 0; i < bottomIcons.Length; i++)
+            {
+                if (bottomIcons[i] != null) bottomIcons[i].DOKill();
+            }
+        }
+
+        if (villageOrigin != null) villageOrigin.DOKill();
+
+        OnCloseAllUIRequested = null;
+        if (Instance == this) Instance = null;
+    }
+
+    private void InitButtonListeners()
+    {
+        if (btnMinimize)
+        {
+            btnMinimize.onClick.RemoveListener(SetMinimizedScreen);
+            btnMinimize.onClick.AddListener(SetMinimizedScreen);
+        }
+        if (btnMaximize)
+        {
+            btnMaximize.onClick.RemoveListener(SetExpandedScreen);
+            btnMaximize.onClick.AddListener(SetExpandedScreen);
+        }
+        if (btnQuit)
+        {
+            btnQuit.onClick.RemoveListener(QuitGame);
+            btnQuit.onClick.AddListener(QuitGame);
         }
     }
 
+    public void CloseAllUI()
+    {
+        OnCloseAllUIRequested?.Invoke();
+    }
+
+    #region 화면 확장 / 축소 제어
+
     public void SetMinimizedScreen()
     {
-        isExpanded = false;
-        CloseAllPopups(); // 축소 상태가 될 때는 예외적으로 모든 팝업 닫기
+        // 이미 확장 상태가 아니거나 전환 연출 중이면 차단
+        if (!isExpanded || isTransitioning) return;
 
-        expandedPanel.SetActive(false);
-        minimizedPanel.SetActive(true);
+        // 씬 내의 VillagerPlacementDirector를 탐색하여 버스 소환 연출 중인지 확인
+        VillagerPlacementDirector placementDirector = FindFirstObjectByType<VillagerPlacementDirector>();
+        if (placementDirector != null && placementDirector.IsBusSummoning)
+        {
+            Debug.Log("<color=yellow>[GameMasterManager] 버스 소환 연출 중에는 축소 모드로 전환할 수 없습니다.</color>");
+            return;
+        }
+
+        StartCoroutine(MinimizeRoutine());
+    }
+
+    private IEnumerator MinimizeRoutine()
+    {
+        isTransitioning = true;
+        isExpanded = false;
+        SetMenuPanelRaycastBlocking(false);
+
+        CloseAllUI();
+
+        if (expandedPanel) expandedPanel.SetActive(false);
+        if (minimizedPanel) minimizedPanel.SetActive(true);
 
         if (villageOrigin != null)
         {
+            // 현재 드래그된 확장 위치를 백업합니다 ($p_{\text{exp}} \leftarrow \text{current}$ 좌표)
             savedDraggedPosition = villageOrigin.position;
-            villageOrigin.DOMove(originalVillagePos, 0.5f).SetEase(Ease.InOutQuad);
+            villageOrigin.DOKill();
+
+            //ObjectDragger를 찾아 저장된 축소 위치를 동기화하여 (0,0,0) 오염을 방지
+            ObjectDragger dragger = villageOrigin.GetComponent<ObjectDragger>();
+            Vector3 targetMinPos = (dragger != null) ? dragger.GetSavedMinimizedPos() : originalVillagePos;
+
+            // 지정된 축소 위치로 부드럽게 이동합니다
+            villageOrigin.DOMove(targetMinPos, 0.5f).SetEase(Ease.InOutQuad);
         }
 
-        if (mainCamera != null && miniVillagePos != null)
-        {
-            float targetSize = camOriginalSize / 0.3f;
-            mainCamera.DOOrthoSize(targetSize, 0.5f).SetEase(Ease.InOutQuad);
-
-            Vector3 targetCamPos = miniVillagePos.position + (camOriginalPos - originalVillagePos);
-            mainCamera.transform.DOMove(targetCamPos, 0.5f).SetEase(Ease.InOutQuad);
-        }
+        if (CameraDirector.Instance != null)
+            CameraDirector.Instance.SetMinimizedView();
 
         for (int i = 0; i < bottomIcons.Length; i++)
         {
             if (bottomIcons[i] == null) continue;
+
+            bottomIcons[i].DOKill();
             bottomIcons[i].anchoredPosition = iconOriginalPositions[i] + new Vector2(0, -400f);
         }
+
+        yield return new WaitForSeconds(0.5f);
+        isTransitioning = false;
+    }
+
+    public void SetExpandedScreen()
+    {
+        if (isExpanded || isTransitioning) return;
+        StartCoroutine(ExpandRoutine());
+    }
+
+    private IEnumerator ExpandRoutine()
+    {
+        isTransitioning = true;
+        isExpanded = true;
+        SetMenuPanelRaycastBlocking(true);
+
+        if (expandedPanel) expandedPanel.SetActive(true);
+        if (minimizedPanel) minimizedPanel.SetActive(false);
+
+        if (ticketNotification) ticketNotification.SetActive(false);
+        ticketTimer = 0f;
+
+        if (villageOrigin != null)
+        {
+            villageOrigin.DOKill();
+            villageOrigin.DOMove(savedDraggedPosition, 0.5f).SetEase(Ease.InOutQuad);
+        }
+
+        if (CameraDirector.Instance != null)
+            CameraDirector.Instance.SetExpandedView();
+
+        AnimateIcons();
+
+        yield return new WaitForSeconds(1.4f);
+        isTransitioning = false;
     }
 
     public bool GetIsExpanded()
@@ -184,147 +263,40 @@ public class GameMasterManager : MonoBehaviour
         return isExpanded;
     }
 
-    public void SetExpandedScreen()
+    private void CacheMenuPanelRaycastBlocker()
     {
-        isExpanded = true;
+        if (btnMinimize == null || btnMinimize.transform.parent == null) return;
 
-        expandedPanel.SetActive(true);
-        minimizedPanel.SetActive(false);
-        if (ticketNotification) ticketNotification.SetActive(false);
-        ticketTimer = 0f;
-
-        if (villageOrigin != null)
-        {
-            villageOrigin.DOMove(savedDraggedPosition, 0.5f).SetEase(Ease.InOutQuad);
-        }
-
-        if (mainCamera != null)
-        {
-            mainCamera.DOOrthoSize(camOriginalSize, 0.5f).SetEase(Ease.InOutQuad);
-            mainCamera.transform.DOMove(camOriginalPos, 0.5f).SetEase(Ease.InOutQuad);
-        }
-
-        AnimateIcons();
+        btnMinimize.transform.parent.TryGetComponent(out menuPanelRaycastBlocker);
     }
 
-
-    #region UI 개별 제어 세트 (독립 제어 및 SetActive 통합 설계)
-
-    // 1. 도감 (Dex) 제어
-    public void OpenDex()
+    private void SetMenuPanelRaycastBlocking(bool shouldBlock)
     {
-        if (panelDex == null) return;
-        panelDex.gameObject.SetActive(true); // 두트윈 실행 전 활성화!
-        panelDex.DOKill();
-        panelDex.DOAnchorPosX(posDexOpen.x, 0.4f).SetEase(Ease.OutQuad);
-    }
-    public void CloseDex()
-    {
-        if (panelDex == null) return;
-        panelDex.DOKill();
-        panelDex.DOAnchorPosX(posDexOpen.x - 2000f, 0.4f).SetEase(Ease.InQuad)
-                 .OnComplete(() => panelDex.gameObject.SetActive(false)); // 닫히는 연출 끝나면 완전히 비활성화!
+        if (menuPanelRaycastBlocker == null) return;
+
+        menuPanelRaycastBlocker.raycastTarget = shouldBlock;
     }
 
-    // 2. 가챠 (Gacha) 제어
-    public void OpenGacha()
-    {
-        if (panelGacha == null) return;
-        panelGacha.gameObject.SetActive(true);
-        panelGacha.DOKill();
-        panelGacha.DOAnchorPosY(posGachaOpen.y, 0.4f).SetEase(Ease.OutQuad);
-    }
-    public void CloseGacha()
-    {
-        if (panelGacha == null) return;
-        panelGacha.DOKill();
-        panelGacha.DOAnchorPosY(posGachaOpen.y - 1200f, 0.4f).SetEase(Ease.InQuad)
-                 .OnComplete(() => panelGacha.gameObject.SetActive(false));
-    }
+    #endregion
 
-    // 3. 동물 관리 (Manage) 제어
-    public void OpenManage()
-    {
-        if (panelManage == null) return;
-        panelManage.gameObject.SetActive(true);
-        panelManage.DOKill();
-        panelManage.DOAnchorPosX(posManageOpen.x, 0.4f).SetEase(Ease.OutQuad);
-    }
-    public void CloseManage()
-    {
-        if (panelManage == null) return;
-        panelManage.DOKill();
-        panelManage.DOAnchorPosX(posManageOpen.x + 2000f, 0.4f).SetEase(Ease.InQuad)
-                 .OnComplete(() => panelManage.gameObject.SetActive(false));
-    }
-
-    // 4. 옵션 (Option) 제어 
-    public void OpenOption()
-    {
-        if (panelOption == null) return;
-        panelOption.gameObject.SetActive(true);
-        panelOption.DOKill();
-        panelOption.DOAnchorPosY(posOptionOpen.y, 0.4f).SetEase(Ease.OutQuad);
-    }
-    public void CloseOption()
-    {
-        if (panelOption == null) return;
-        panelOption.DOKill();
-        panelOption.DOAnchorPosY(posOptionOpen.y + 1200f, 0.4f).SetEase(Ease.InQuad)
-                 .OnComplete(() => panelOption.gameObject.SetActive(false));
-    }
-
-    // 5. 도구 인벤토리 (Tool_Inv) 제어 
-    public void OpenToolInv()
-    {
-        if (panelToolInv == null) return;
-        panelToolInv.gameObject.SetActive(true);
-        panelToolInv.DOKill();
-        panelToolInv.DOAnchorPosX(posToolInvOpen.x, 0.4f).SetEase(Ease.OutQuad);
-    }
-    public void CloseToolInv()
-    {
-        if (panelToolInv == null) return;
-        panelToolInv.DOKill();
-        panelToolInv.DOAnchorPosX(posToolInvOpen.x + 2000f, 0.4f).SetEase(Ease.InQuad)
-                 .OnComplete(() => panelToolInv.gameObject.SetActive(false));
-    }
-
-    // 화면 축소 시 모든 UI를 쓸어 담는 전체 닫기 기능
-    public void CloseAllPopups()
-    {
-        if (panelDex != null) { panelDex.DOKill(); panelDex.DOAnchorPosX(posDexOpen.x - 2000f, 0.2f).OnComplete(() => panelDex.gameObject.SetActive(false)); }
-        if (panelGacha != null) { panelGacha.DOKill(); panelGacha.DOAnchorPosY(posGachaOpen.y - 1200f, 0.2f).OnComplete(() => panelGacha.gameObject.SetActive(false)); }
-        if (panelManage != null) { panelManage.DOKill(); panelManage.DOAnchorPosX(posManageOpen.x + 2000f, 0.2f).OnComplete(() => panelManage.gameObject.SetActive(false)); }
-        if (panelOption != null) { panelOption.DOKill(); panelOption.DOAnchorPosY(posOptionOpen.y + 1200f, 0.2f).OnComplete(() => panelOption.gameObject.SetActive(false)); }
-        if (panelToolInv != null) { panelToolInv.DOKill(); panelToolInv.DOAnchorPosX(posToolInvOpen.x + 2000f, 0.2f).OnComplete(() => panelToolInv.gameObject.SetActive(false)); }
-    }
+    #region 시스템 및 연출 제어
 
     private void AnimateIcons()
     {
+        if (bottomIcons == null) return;
+
         for (int i = 0; i < bottomIcons.Length; i++)
         {
             if (bottomIcons[i] == null) continue;
+
+            bottomIcons[i].DOKill();
+
             float startY = iconOriginalPositions[i].y - 300f;
             bottomIcons[i].anchoredPosition = new Vector2(iconOriginalPositions[i].x, startY);
-            bottomIcons[i].DOAnchorPosY(iconOriginalPositions[i].y, 0.6f).SetEase(Ease.OutBounce).SetDelay(0.2f + (i * 0.15f));
-        }
-    }
 
-    private void ToggleMenu()
-    {
-        if (isMenuAnimating || menuPanel == null) return;
-        isMenuOpen = !isMenuOpen;
-        isMenuAnimating = true;
-
-        if (isMenuOpen)
-        {
-            menuPanel.SetActive(true);
-            menuCanvasGroup.DOFade(1f, 0.25f).SetUpdate(true).OnComplete(() => isMenuAnimating = false);
-        }
-        else
-        {
-            menuCanvasGroup.DOFade(0f, 0.25f).SetUpdate(true).OnComplete(() => { menuPanel.SetActive(false); isMenuAnimating = false; });
+            bottomIcons[i].DOAnchorPosY(iconOriginalPositions[i].y, 0.6f)
+                .SetEase(Ease.OutBounce)
+                .SetDelay(0.2f + (i * 0.15f));
         }
     }
 
@@ -335,5 +307,6 @@ public class GameMasterManager : MonoBehaviour
         UnityEditor.EditorApplication.isPlaying = false;
 #endif
     }
+
     #endregion
 }

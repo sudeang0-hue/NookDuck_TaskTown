@@ -15,6 +15,8 @@ namespace TaskTown.KDH
         [SerializeField] private bool currentSet = false;
         [SerializeField] private bool currentAnimalSet = false;
         [SerializeField] private string currentAnimalId = null;
+        // 26.07.29. KAY 수정
+        [SerializeField] private bool hasRevealedSpecialAnimal = false;
 
         [Header("레벨업 요구 데이터")]
         [SerializeField] private bool isMaxLevel;
@@ -31,12 +33,24 @@ namespace TaskTown.KDH
         public bool CurrentSet => currentSet;
         public bool CurrentAnimalSet => currentAnimalSet;
         public string CurrentAnimalId => currentAnimalId != null ? currentAnimalId : string.Empty;
+        // 26.07.29. KAY 수정
+        public bool HasRevealedSpecialAnimal => hasRevealedSpecialAnimal;
         public bool IsMaxLevel => isMaxLevel;
         public int LevelUpCost => levelUpCost;
         public int RequiredUpgradeCount => requiredUpgradeCount;
 
 
-        public SlotData_Tool(ToolDataSO toolData, int level, int currentCount, bool currentSet, bool currentAnimalSet, string currentAnimalId)
+        // public SlotData_Tool(ToolDataSO toolData, int level, int currentCount, bool currentSet, bool currentAnimalSet, string currentAnimalId)
+        // {
+        //     this.toolData = toolData;
+        //     this.level = Mathf.Max(1, level);
+        //     this.currentCount = Mathf.Max(1, currentCount);
+        //     this.currentSet = currentSet;
+        //     this.currentAnimalSet = currentAnimalSet;
+        //     this.currentAnimalId = currentAnimalId;
+        // }
+        // 26.07.29. KAY 수정
+        public SlotData_Tool(ToolDataSO toolData, int level, int currentCount, bool currentSet, bool currentAnimalSet, string currentAnimalId, bool hasRevealedSpecialAnimal = false)
         {
             this.toolData = toolData;
             this.level = Mathf.Max(1, level);
@@ -44,6 +58,7 @@ namespace TaskTown.KDH
             this.currentSet = currentSet;
             this.currentAnimalSet = currentAnimalSet;
             this.currentAnimalId = currentAnimalId;
+            this.hasRevealedSpecialAnimal = hasRevealedSpecialAnimal;
         }
 
         /// <summary>
@@ -56,14 +71,17 @@ namespace TaskTown.KDH
 
         /// <summary>
         /// 도구 레벨을 1 증가시킵니다.
+        /// endlessMode가 true면(#19 엔드리스 모드) 레벨 5 상한을 무시하고, 이전에 이미 상한에
+        /// 도달해 있던 슬롯도 다시 풀어줍니다.
         /// </summary>
-        public void ToolLevelUp()
+        public void ToolLevelUp(bool endlessMode = false)
         {
-            if (IsMaxLevel) return;
+            if (!endlessMode && IsMaxLevel) return;
 
             level++;
 
-            if (level == 5) isMaxLevel = true;
+            if (endlessMode) isMaxLevel = false;
+            else if (level == 5) isMaxLevel = true;
         }
 
         /// <summary>
@@ -99,6 +117,15 @@ namespace TaskTown.KDH
         }
 
         /// <summary>
+        /// 특화 동물에게 1회 이상 장착되어 이름이 해금된 상태로 표시합니다.
+        /// </summary>
+        // 26.07.29. KAY 수정
+        public void RevealSpecialAnimal()
+        {
+            hasRevealedSpecialAnimal = true;
+        }
+
+        /// <summary>
         /// 다음 레벨로 가기 위해 이번 단계에서 필요한 중복 개수입니다 (표시용).
         /// LevelUpRequirementCalculator(TaskTown.Gacha) 기준값을 그대로 씁니다.
         /// </summary>
@@ -123,16 +150,17 @@ namespace TaskTown.KDH
         /// <summary>
         /// 레벨업 가능 여부.
         /// 본체 1개를 제외한 나머지 개수가 요구 개수 이상인지 확인합니다.
+        /// endlessMode가 true면(#19) 레벨 5 상한 체크를 건너뜁니다.
         /// </summary>
-        public bool CanLevelUp()
+        public bool CanLevelUp(bool endlessMode = false)
         {
-            if (isMaxLevel)
+            if (!endlessMode && isMaxLevel)
                 return false;
 
             if (requiredUpgradeCount <= 0)
                 return false;
 
-            // UI 표시 개수(CurrentCount - 1)가 요구 개수를 충족했는지 판정
+            // UIController_AnimalInvPage 표시 개수(CurrentCount - 1)가 요구 개수를 충족했는지 판정
             return (currentCount - 1) >= requiredUpgradeCount;
         }
 
@@ -140,9 +168,9 @@ namespace TaskTown.KDH
         /// 레벨업에 필요한 개수를 소비합니다.
         /// 본체 1개는 남기고, 요구 개수만큼만 소모합니다.
         /// </summary>
-        public bool TryConsumeForLevelUp()
+        public bool TryConsumeForLevelUp(bool endlessMode = false)
         {
-            if (!CanLevelUp())
+            if (!CanLevelUp(endlessMode))
                 return false;
 
             currentCount -= requiredUpgradeCount;
@@ -160,6 +188,15 @@ namespace TaskTown.KDH
         public long GetLevelUpCoinCost()
         {
             return toolData != null ? toolData.CalculateLevelUpCoinCost(level) : 0L;
+        }
+
+        /// <summary>
+        /// 디버그 전용: 재료/코인 없이 레벨을 바로 설정합니다. (최대 5)    26.07.24 KDH 추가
+        /// </summary>
+        public void DebugSetLevel(int targetLevel)
+        {
+            level = Mathf.Clamp(targetLevel, 1, 5);
+            isMaxLevel = level >= 5;
         }
     }
 }

@@ -5,7 +5,9 @@
  * 주요 기능:
  * - JSON에 저장된 볼륨을 로드해 UI에 반영합니다.
  * - 슬라이더 변경 시 AudioMixer에 즉시 적용하고 SoundSettingsStore에 저장합니다.
+ * - 볼륨 아이콘 클릭 시 해당 채널을 음소거하거나 마지막 볼륨으로 복원합니다.
  * - 볼륨이 0이면 mute icon, 0보다 크면 playing icon으로 갱신합니다.
+ * - Master, BGM, UI 채널은 각각 전용 playing/mute icon을 사용할 수 있습니다.
  */
 using TMPro;
 using UnityEngine;
@@ -26,28 +28,40 @@ public class SoundSettingsPanel : MonoBehaviour
     [FormerlySerializedAs("animalVolumeParameter")]
     [SerializeField] private string environmentVolumeParameter = "EnvironmentVolume";
 
-    [Header("Sound Icons")]
+    [Header("Sound Icon Fallback")]
+    [Tooltip("채널별 아이콘이 연결되지 않았을 때 사용하는 기본 재생 아이콘입니다.")]
     [SerializeField] private Sprite soundPlayingIcon;
+    [Tooltip("채널별 아이콘이 연결되지 않았을 때 사용하는 기본 음소거 아이콘입니다.")]
     [SerializeField] private Sprite soundMuteIcon;
 
     [Header("Master")]
+    [SerializeField] private Sprite masterPlayingIcon;
+    [SerializeField] private Sprite masterMuteIcon;
     [SerializeField] private Image masterIconImage;
+    [SerializeField] private Button masterMuteButton;
     [SerializeField] private Slider masterSlider;
     [SerializeField] private TextMeshProUGUI masterPercentText;
 
     [Header("BGM")]
+    [SerializeField] private Sprite bgmPlayingIcon;
+    [SerializeField] private Sprite bgmMuteIcon;
     [SerializeField] private Image bgmIconImage;
+    [SerializeField] private Button bgmMuteButton;
     [SerializeField] private Slider bgmSlider;
     [SerializeField] private TextMeshProUGUI bgmPercentText;
 
     [Header("UI")]
+    [SerializeField] private Sprite uiPlayingIcon;
+    [SerializeField] private Sprite uiMuteIcon;
     [SerializeField] private Image uiIconImage;
+    [SerializeField] private Button uiMuteButton;
     [SerializeField] private Slider uiSlider;
     [SerializeField] private TextMeshProUGUI uiPercentText;
 
     [Header("Environment")]
     [FormerlySerializedAs("toolIconImage")]
     [SerializeField] private Image environmentIconImage;
+    [SerializeField] private Button environmentMuteButton;
     [FormerlySerializedAs("animalSlider")]
     [SerializeField] private Slider environmentSlider;
     [FormerlySerializedAs("animalPercentText")]
@@ -118,6 +132,26 @@ public class SoundSettingsPanel : MonoBehaviour
             environmentSlider.onValueChanged.AddListener(OnEnvironmentSliderChanged);
         }
 
+        if (masterMuteButton != null)
+        {
+            masterMuteButton.onClick.AddListener(OnMasterMuteButtonClicked);
+        }
+
+        if (bgmMuteButton != null)
+        {
+            bgmMuteButton.onClick.AddListener(OnBGMMuteButtonClicked);
+        }
+
+        if (uiMuteButton != null)
+        {
+            uiMuteButton.onClick.AddListener(OnUIMuteButtonClicked);
+        }
+
+        if (environmentMuteButton != null)
+        {
+            environmentMuteButton.onClick.AddListener(OnEnvironmentMuteButtonClicked);
+        }
+
         listenersRegistered = true;
     }
 
@@ -146,6 +180,26 @@ public class SoundSettingsPanel : MonoBehaviour
         if (environmentSlider != null)
         {
             environmentSlider.onValueChanged.RemoveListener(OnEnvironmentSliderChanged);
+        }
+
+        if (masterMuteButton != null)
+        {
+            masterMuteButton.onClick.RemoveListener(OnMasterMuteButtonClicked);
+        }
+
+        if (bgmMuteButton != null)
+        {
+            bgmMuteButton.onClick.RemoveListener(OnBGMMuteButtonClicked);
+        }
+
+        if (uiMuteButton != null)
+        {
+            uiMuteButton.onClick.RemoveListener(OnUIMuteButtonClicked);
+        }
+
+        if (environmentMuteButton != null)
+        {
+            environmentMuteButton.onClick.RemoveListener(OnEnvironmentMuteButtonClicked);
         }
 
         listenersRegistered = false;
@@ -201,6 +255,43 @@ public class SoundSettingsPanel : MonoBehaviour
         HandleSliderChanged(SoundVolumeChannel.Environment, sliderValue, environmentPercentText);
     }
 
+    private void OnMasterMuteButtonClicked()
+    {
+        ToggleMute(SoundVolumeChannel.Master);
+    }
+
+    private void OnBGMMuteButtonClicked()
+    {
+        ToggleMute(SoundVolumeChannel.BGM);
+    }
+
+    private void OnUIMuteButtonClicked()
+    {
+        ToggleMute(SoundVolumeChannel.UI);
+    }
+
+    private void OnEnvironmentMuteButtonClicked()
+    {
+        ToggleMute(SoundVolumeChannel.Environment);
+    }
+
+    private void ToggleMute(SoundVolumeChannel channel)
+    {
+        Slider slider = GetSlider(channel);
+
+        if (slider == null)
+        {
+            return;
+        }
+
+        float currentPercent = Mathf.Round(AudioVolumeUtility.SliderValueToPercent(slider.value));
+        float targetPercent = currentPercent > 0f
+            ? 0f
+            : SoundSettingsStore.GetLastNonZeroVolume(channel);
+
+        slider.value = AudioVolumeUtility.PercentToSliderValue(targetPercent);
+    }
+
     private void HandleSliderChanged(SoundVolumeChannel channel, float sliderValue, TextMeshProUGUI percentText)
     {
         float percent = Mathf.Round(AudioVolumeUtility.SliderValueToPercent(sliderValue));
@@ -237,7 +328,8 @@ public class SoundSettingsPanel : MonoBehaviour
             return;
         }
 
-        Sprite targetIcon = percent <= 0f ? soundMuteIcon : soundPlayingIcon;
+        bool isMuted = percent <= 0f;
+        Sprite targetIcon = GetVolumeIcon(channel, isMuted);
 
         if (targetIcon == null)
         {
@@ -249,6 +341,24 @@ public class SoundSettingsPanel : MonoBehaviour
         iconImage.preserveAspect = true;
     }
 
+    private Sprite GetVolumeIcon(SoundVolumeChannel channel, bool isMuted)
+    {
+        Sprite channelIcon = channel switch
+        {
+            SoundVolumeChannel.Master => isMuted ? masterMuteIcon : masterPlayingIcon,
+            SoundVolumeChannel.BGM => isMuted ? bgmMuteIcon : bgmPlayingIcon,
+            SoundVolumeChannel.UI => isMuted ? uiMuteIcon : uiPlayingIcon,
+            _ => null
+        };
+
+        if (channelIcon != null)
+        {
+            return channelIcon;
+        }
+
+        return isMuted ? soundMuteIcon : soundPlayingIcon;
+    }
+
     private Image GetIconImage(SoundVolumeChannel channel)
     {
         return channel switch
@@ -257,6 +367,18 @@ public class SoundSettingsPanel : MonoBehaviour
             SoundVolumeChannel.BGM => bgmIconImage,
             SoundVolumeChannel.UI => uiIconImage,
             SoundVolumeChannel.Environment => environmentIconImage,
+            _ => null
+        };
+    }
+
+    private Slider GetSlider(SoundVolumeChannel channel)
+    {
+        return channel switch
+        {
+            SoundVolumeChannel.Master => masterSlider,
+            SoundVolumeChannel.BGM => bgmSlider,
+            SoundVolumeChannel.UI => uiSlider,
+            SoundVolumeChannel.Environment => environmentSlider,
             _ => null
         };
     }

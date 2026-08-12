@@ -2,20 +2,11 @@ using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public enum GameMenuState
-{
-    Compact,
-    ExpandedTown,
-    Gacha,
-    AnimalDex,
-    ToolPlacement,
-    VillageUpgrade,
-    MiniGame
-}
 
 namespace UI
 {
 
+    // 현재 단계: 패널 드래그 비활성 — IBeginDragHandler / IDragHandler 는 주석 처리
     public class UIPanelWindow : MonoBehaviour, IBeginDragHandler, IDragHandler, IPointerDownHandler
     {
         [Header("Canvas Layer")]
@@ -23,13 +14,23 @@ namespace UI
 
         [Header("Panel")]
         [SerializeField] private RectTransform panelRect;
+        [SerializeField] private GameMenuType gameMenuType;
+        [SerializeField] private GameTabType gameTabType;
 
-        private Canvas rootCanvas;
-        private Vector2 defaultUIPanelPosition; // UI �г��� �ʱ� ��ġ
-        private Vector2 dragOffset;
+        public GameMenuType MenuType => gameMenuType;
+        public GameTabType TabType => gameTabType;
+
+        /// <summary>OpenPanel* 호출로 패널이 활성화된 직후.</summary>
+        public event Action OnPanelOpened;
+
+        /// <summary>ClosePanel 호출로 비활성화되기 직전. (Edit 취소 등 정리용)</summary>
+        public event Action OnPanelClosed;
+
+        private Vector2 defaultUIPanelPosition; // UIController_AnimalInvPage 패널의 초기 위치
+        private Vector2 dragOffset; // 드래그 비활성 (복구 시 주석 해제)
 
         private bool isInitialized;
-
+        [SerializeField] private bool isDragging = false;
 
         private void Awake()
         {
@@ -39,7 +40,7 @@ namespace UI
 
         private void Start()
         {
-            if(panelCanvas == null)
+            if (panelCanvas == null)
             {
                 panelCanvas = gameObject.GetComponentInParent<Canvas>();
             }
@@ -54,11 +55,9 @@ namespace UI
 
             if (panelCanvas == null) panelCanvas = GetComponentInParent<Canvas>();
 
-            if (panelCanvas != null) rootCanvas = panelCanvas.rootCanvas;
-
             if (panelRect == null)
             {
-                Debug.LogWarning($"[UIPanelWindow] {gameObject.name}�� RectTransform�� �����ϴ�.");
+                Debug.LogWarning($"[UIPanelWindow] {gameObject.name}�� RectTransform�� �����ϴ�.");
 
                 return;
             }
@@ -68,9 +67,6 @@ namespace UI
         }
 
 
-        /// <summary>
-        /// �ʱ� ��ġ���� �г� Ȱ��ȭ
-        /// </summary>
         public void OpenPanelDefaultPosition()
         {
             Initialize();
@@ -79,27 +75,41 @@ namespace UI
                 panelRect.anchoredPosition = defaultUIPanelPosition;
 
             gameObject.SetActive(true);
-            
+
             BringToFront();
+            PlayOpenScaleTween();
+            OnPanelOpened?.Invoke();
         }
 
-        /// <summary>
-        /// �̵��� ��ġ���� �г� Ȱ��ȭ
-        /// </summary>
         public void OpenPanelSetPosition()
         {
             gameObject.SetActive(true);
             ResetPosition();
             BringToFront();
+            PlayOpenScaleTween();
+            OnPanelOpened?.Invoke();
         }
 
-        /// <summary>
-        /// �г� �ݱ�
-        /// </summary>
         public void ClosePanel()
         {
+            // SetActive(false) 전에 통지 — 구독자가 Edit 취소 등을 활성 상태에서 처리
+            OnPanelClosed?.Invoke();
+
+            StopOpenScaleTween();
             ResetPosition();
             gameObject.SetActive(false);
+        }
+
+        private void PlayOpenScaleTween()
+        {
+            if (UITweenManager.Instance != null)
+                UITweenManager.Instance.PlayOpenScale(panelRect);
+        }
+
+        private void StopOpenScaleTween()
+        {
+            if (UITweenManager.Instance != null)
+                UITweenManager.Instance.StopAndReset(panelRect);
         }
 
         private void ResetPosition()
@@ -126,20 +136,25 @@ namespace UI
                 OpenPanelSetPosition();
         }
 
+        // --- 패널 드래그 (현재 단계 비활성 / 복구 시 주석 해제 + 클래스 인터페이스도 복구) ---
         public void OnBeginDrag(PointerEventData eventData)
         {
             if (panelRect == null)
                 return;
 
-            BringToFront();
+            if (isDragging == true)
+            {
+                BringToFront();
 
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                panelRect.parent as RectTransform,
-                eventData.position,
-                eventData.pressEventCamera,
-                out Vector2 localPointerPosition);
+                RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    panelRect.parent as RectTransform,
+                    eventData.position,
+                    eventData.pressEventCamera,
+                    out Vector2 localPointerPosition);
 
-            dragOffset = panelRect.anchoredPosition - localPointerPosition;
+                dragOffset = panelRect.anchoredPosition - localPointerPosition;
+            }
+
         }
 
         public void OnDrag(PointerEventData eventData)
@@ -147,35 +162,52 @@ namespace UI
             if (panelRect == null)
                 return;
 
-            RectTransform parentRect = panelRect.parent as RectTransform;
+            if (isDragging == true)
 
-            if (parentRect == null)
-                return;
-
-            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                    parentRect,
-                    eventData.position,
-                    eventData.pressEventCamera,
-                    out Vector2 localPointerPosition))
             {
-                panelRect.anchoredPosition = localPointerPosition + dragOffset;
+                RectTransform parentRect = panelRect.parent as RectTransform;
+
+                if (parentRect == null)
+                    return;
+
+                if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                        parentRect,
+                        eventData.position,
+                        eventData.pressEventCamera,
+                        out Vector2 localPointerPosition))
+                {
+                    panelRect.anchoredPosition = localPointerPosition + dragOffset;
+                }
             }
+
         }
 
         /// <summary>
-        /// �г��� Ŭ������ �� �ش� Canvas�� ���� ������ �̵��մϴ�.
+        /// 패널을 클릭했을 때 해당 Canvas를 맨 앞으로 이동합니다.
         /// </summary>
         public void OnPointerDown(PointerEventData eventData)
         {
             BringToFront();
         }
 
+        /// <summary>
+        /// 이 패널의 Canvas sortingOrder를 최상단으로 올립니다.
+        /// UIController_AnimalInvPage / ToolInvPage 오픈 시에도 호출됩니다.
+        /// </summary>
+        public void BringCanvasToFront()
+        {
+            Initialize();
+            BringToFront();
+        }
+
         private void BringToFront()
         {
+            if (panelCanvas == null)
+                panelCanvas = GetComponentInParent<Canvas>();
+
             if (UIWindowLayerManager.Instance == null)
             {
-                Debug.LogWarning("[UIPanelWindow] UIWindowLayerManager.Instance�� �����ϴ�.");
-
+                Debug.LogWarning("[UIPanelWindow] UIWindowLayerManager.Instance가 없습니다.");
                 return;
             }
 

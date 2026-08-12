@@ -3,8 +3,9 @@
  * - 하나의 사운드 ID에 연결되는 재생 설정 ScriptableObject입니다.
  *
  * 주요 기능:
- * - BGM/UI/Environment category 지정
+ * - BGM/UIController_AnimalInvPage/Environment category 지정
  * - 하나 이상의 AudioClip 중 랜덤 선택
+ * - 플레이리스트 재생을 위한 인덱스 기반 순서 접근
  * - 개별 볼륨 스케일, 루프, 피치 랜덤 범위 관리
  */
 using UnityEngine;
@@ -31,6 +32,7 @@ public class SoundClipData : ScriptableObject
     public float VolumeScale => volumeScale;
     public bool Loop => loop;
     public bool HasClip => clips != null && clips.Length > 0;
+    public int ClipCount => clips?.Length ?? 0;
 
     public AudioClip GetClip()
     {
@@ -45,6 +47,18 @@ public class SoundClipData : ScriptableObject
         }
 
         return clips[Random.Range(0, clips.Length)];
+    }
+
+    public bool TryGetClip(int index, out AudioClip clip)
+    {
+        if (clips == null || index < 0 || index >= clips.Length)
+        {
+            clip = null;
+            return false;
+        }
+
+        clip = clips[index];
+        return clip != null;
     }
 
     public float GetPitch()

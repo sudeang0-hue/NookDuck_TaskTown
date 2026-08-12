@@ -6,6 +6,7 @@ using UnityEngine;
 
 namespace TaskTown.KDH
 {
+    [DefaultExecutionOrder(-100)]
     public class InventoryManager_Tool : MonoBehaviour
     {
         public static InventoryManager_Tool Instance { get; private set; }
@@ -13,6 +14,20 @@ namespace TaskTown.KDH
         [Tooltip("ICoinWallet을 구현한 컴포넌트(CoinManager)를 연결합니다. 비워두면 코인 비용 체크 없이 중복 개수만으로 레벨업합니다.")]
         [SerializeField] private MonoBehaviour coinWalletSource;
         private ICoinWallet CoinWallet => coinWalletSource as ICoinWallet;
+
+        // #18(도구 상한): ITownLevelProvider를 구현한 컴포넌트(VillageUpgradeUI_Manager)를 연결합니다.
+        // 비워두면 마을 레벨 1로 취급합니다(GachaManagerBase와 동일한 패턴).
+        [Tooltip("ITownLevelProvider(+ IEndlessModeProvider)를 구현한 컴포넌트(VillageUpgradeUI_Manager)를 연결합니다. 비워두면 마을 레벨 1/일반 모드로 취급합니다.")]
+        [SerializeField] private MonoBehaviour townLevelProviderSource;
+        private ITownLevelProvider townLevelProvider;
+        private IEndlessModeProvider endlessModeProvider;
+
+        // 도구 상한(동시에 "동물이 장착된 도구" 슬롯 개수 제한). 마을 레벨을 올리면 늘어납니다.
+        // 레벨40 확장(#20) 실험을 철회하고 레벨10 설계로 되돌리면서, 레벨19~36 부근 페이스 문제를
+        // 풀기 위해 설계했던 점근 곡선(#19)도 함께 되돌립니다 - 상한이 10이면 그 문제 자체가 없습니다.
+        [Header("도구 상한 (#18)")]
+        [SerializeField] private int toolCapacityBase = 5;
+        [SerializeField] private int toolCapacityPerLevel = 2;
 
         [Header("도구 런타임 슬롯")]
         [Tooltip("현재 플레이어가 보유한 도구 슬롯 목록")]
@@ -44,7 +59,59 @@ namespace TaskTown.KDH
 
             DontDestroyOnLoad(gameObject);
 
+            townLevelProvider = townLevelProviderSource as ITownLevelProvider;
+            endlessModeProvider = townLevelProviderSource as IEndlessModeProvider;
+
             InitializeDictionary();
+            SortToolSlots();
+
+            //-----------------26.08.05 KDH-------------------------
+            // 엔딩 리셋 직후: DDOL/세이브 잔여로 옛 슬롯이 남지 않게 한 번 더 비웁니다.
+            if (TaskTown.EndingMeta.ForceEmptyInventoryOnNextMain)
+                ClearToolInventory();
+            //----------------------------------------
+        }
+
+        //-----------------26.08.05 KDH-------------------------
+        private void OnDestroy()
+        {
+            // 리셋 시 DDOL 루트 파괴 / 씬 중복본 정리 후 Instance가 파괴된 객체를 가리키지 않게 합니다.
+            if (Instance == this)
+                Instance = null;
+        }
+        //----------------------------------------
+
+        private int GetCurrentTownLevel()
+        {
+            return townLevelProvider != null ? townLevelProvider.CurrentTownLevel : 1;
+        }
+
+        // #19: 엔드리스 모드에서는 도구 개별 레벨 5 상한을 해제합니다.
+        private bool IsEndlessMode()
+        {
+            return endlessModeProvider != null && endlessModeProvider.IsEndlessMode;
+        }
+
+        /// <summary>
+        /// 현재 마을 레벨 기준 도구 상한(동시에 생산 가능한 "동물 장착 도구" 개수)을 반환합니다.
+        /// </summary>
+        public int GetToolCapacity()
+        {
+            return toolCapacityBase + (GetCurrentTownLevel() - 1) * toolCapacityPerLevel;
+        }
+
+        /// <summary>
+        /// 현재 동물이 장착되어 생산 중인 도구 슬롯 개수를 반환합니다.
+        /// </summary>
+        public int GetActiveToolCount()
+        {
+            int count = 0;
+            for (int i = 0; i < toolSlotsList.Count; i++)
+            {
+                if (toolSlotsList[i] != null && toolSlotsList[i].CurrentAnimalSet)
+                    count++;
+            }
+            return count;
         }
 
         /// <summary>
@@ -66,7 +133,7 @@ namespace TaskTown.KDH
 
                 if (string.IsNullOrWhiteSpace(slot.ToolId))
                 {
-                    Debug.LogWarning("[InventoryManager_Tool] ToolId�� ��� �ִ� ������ �����մϴ�.");
+                    Debug.LogWarning("[InventoryManager_Tool] ToolId가 비어 있는 슬롯을 제거합니다.");
 
                     toolSlotsList.RemoveAt(i);
                     continue;
@@ -74,7 +141,7 @@ namespace TaskTown.KDH
 
                 if (toolSlotsDic.ContainsKey(slot.ToolId))
                 {
-                    Debug.LogWarning($"[InventoryManager_Tool] �ߺ� ToolId ������ �����մϴ�: {slot.ToolId}");
+                    Debug.LogWarning($"[InventoryManager_Tool] 중복 ToolId 슬롯을 제거합니다: {slot.ToolId}");
 
                     toolSlotsList.RemoveAt(i);
                     continue;
@@ -82,7 +149,7 @@ namespace TaskTown.KDH
 
                 toolSlotsDic.Add(slot.ToolId, slot);
 
-                // ���� ��ġ ��� �ý��� ����
+                // 성장 수치 계산 시스템 연결
                 RefreshSlotGrowthData(slot);
             }
         }
@@ -96,7 +163,7 @@ namespace TaskTown.KDH
 
             if (toolDatabase == null)
             {
-                Debug.LogWarning("[InventoryManager_Tool] ToolDatabase�� ������� �ʾҽ��ϴ�.");
+                Debug.LogWarning("[InventoryManager_Tool] ToolDatabase가 연결되지 않았습니다.");
                 return null;
             }
 
@@ -110,13 +177,13 @@ namespace TaskTown.KDH
         {
             if (toolData == null)
             {
-                Debug.LogWarning("[InventoryManager_Tool] �߰��� ToolDataSO�� �����ϴ�.");
+                Debug.LogWarning("[InventoryManager_Tool] 도구의 ToolDataSO가 없습니다..");
                 return false;
             }
 
             if (string.IsNullOrWhiteSpace(toolData.Id))
             {
-                Debug.LogWarning($"[InventoryManager_Tool] {toolData.DisplayName} �� Id �� ����ֽ��ϴ�.");
+                Debug.LogWarning($"[InventoryManager_Tool] {toolData.DisplayName} 도구 Id가 비어있습니다.");
                 return false;
             }
 
@@ -146,9 +213,10 @@ namespace TaskTown.KDH
             toolSlotsList.Add(newSlot);
             toolSlotsDic.Add(toolData.Id, newSlot);
 
+            SortToolSlots();
             NotifySlotChanged(newSlot);
 
-            Debug.Log($"[InventoryManager_Tool] ���ο� ���� ȹ��: {toolData.DisplayName}");
+            Debug.Log($"[InventoryManager_Tool] 신규 도구 획득: {toolData.DisplayName}");
 
             return true;
         }
@@ -188,7 +256,7 @@ namespace TaskTown.KDH
         {
             if (!TryGetToolSlot(toolId, out SlotData_Tool slot)) return false;
 
-            if (!slot.CanLevelUp()) return false;
+            if (!slot.CanLevelUp(IsEndlessMode())) return false;
 
             long coinCost = slot.GetLevelUpCoinCost();
 
@@ -208,13 +276,14 @@ namespace TaskTown.KDH
         {
             if (!TryGetToolSlot(toolId, out SlotData_Tool slot))
             {
-                Debug.LogWarning($"[InventoryManager_Tool] �������� ���� �����Դϴ�: {toolId}");
+                Debug.LogWarning($"[InventoryManager_Tool] 존재하지 않는 슬롯입니다: {toolId}");
                 return false;
             }
 
-            if (slot.IsMaxLevel)
+            bool endless = IsEndlessMode();
+            if (!endless && slot.IsMaxLevel)
             {
-                Debug.Log($"[InventoryManager_Tool] �̹� �ִ� ������ �����Դϴ�: {toolId}");
+                Debug.Log($"[InventoryManager_Tool] 이미 최대 레벨인 도구입니다: {toolId}");
                 return false;
             }
 
@@ -229,32 +298,32 @@ namespace TaskTown.KDH
             }
 
             // 재료 소모 후 레벨업 (본체 1개는 유지)
-            if (!slot.TryConsumeForLevelUp())
+            if (!slot.TryConsumeForLevelUp(endless))
             {
                 Debug.Log($"[InventoryManager_Tool] 재료 소모 실패: {toolId}");
                 return false;
             }
 
-            slot.ToolLevelUp();
+            slot.ToolLevelUp(endless);
 
             // 다음 레벨 요구치 갱신
             RefreshSlotGrowthData(slot);
 
             NotifySlotChanged(slot);
 
-            Debug.Log($"[InventoryManager_Tool] ���� ������ ����: {toolId} / ���� ���� {slot.Level}");
+            Debug.Log($"[InventoryManager_Tool] 도구 레벨업 성공: {toolId} / 현재 레벨 {slot.Level}");
 
             return true;
         }
 
         /// <summary>
-        /// ������ ��ġ ���·� �����մϴ�.
+        /// 도구를 배치 상태로 설정합니다.
         /// </summary>
         public bool TrySetTool(string toolId)
         {
             if (!TryGetToolSlot(toolId, out SlotData_Tool slot))
             {
-                Debug.LogWarning($"[InventoryManager_Tool] �������� ���� �����Դϴ�: {toolId}");
+                Debug.LogWarning($"[InventoryManager_Tool] 존재하지 않는 슬롯입니다: {toolId}");
                 return false;
             }
 
@@ -265,13 +334,13 @@ namespace TaskTown.KDH
         }
 
         /// <summary>
-        /// ���� ��ġ�� �����մϴ�.
+        /// 도구 배치를 해제합니다.
         /// </summary>
         public bool TryUnsetTool(string toolId)
         {
             if (!TryGetToolSlot(toolId, out SlotData_Tool slot))
             {
-                Debug.LogWarning($"[InventoryManager_Tool] �������� ���� �����Դϴ�: {toolId}");
+                Debug.LogWarning($"[InventoryManager_Tool] 존재하지 않는 슬롯입니다: {toolId}");
                 return false;
             }
 
@@ -283,36 +352,54 @@ namespace TaskTown.KDH
         }
 
         /// <summary>
-        /// ������ ������ ��ġ�մϴ�.
+        /// 도구에 동물을 배치합니다.
         /// </summary>
         public bool TryAssignAnimalToTool(string toolId, string animalId)
         {
             if (!TryGetToolSlot(toolId, out SlotData_Tool slot))
             {
-                Debug.LogWarning($"[InventoryManager_Tool] �������� ���� �����Դϴ�: {toolId}");
+                Debug.LogWarning($"[InventoryManager_Tool] 존재하지 않는 슬롯입니다: {toolId}");
                 return false;
             }
 
             if (string.IsNullOrWhiteSpace(animalId))
             {
-                Debug.LogWarning("[InventoryManager_Tool] ��ġ�� AnimalId�� ��� �ֽ��ϴ�.");
+                Debug.LogWarning("[InventoryManager_Tool] 배치할 AnimalId가 비어 있습니다.");
+                return false;
+            }
+
+            // #18(도구 상한): 이 슬롯이 지금 비활성 상태에서 새로 활성화되는 경우에만 상한 체크.
+            // 이미 활성 상태인 도구에 다른 동물을 재배치하는 건 활성 슬롯 개수가 늘지 않으므로 통과.
+            if (!slot.CurrentAnimalSet && GetActiveToolCount() >= GetToolCapacity())
+            {
+                Debug.Log($"[InventoryManager_Tool] 도구 상한 초과로 장착 불가: {toolId} (상한 {GetToolCapacity()})");
                 return false;
             }
 
             slot.SetAssignedAnimal(animalId);
+
+            // 26.07.29. KAY 수정
+            // 특화 동물에게 장착되면 상세 UI에서 이름을 해금합니다.
+            if (slot.ToolData != null &&
+                !string.IsNullOrEmpty(slot.ToolData.SpecialAnimalId) &&
+                slot.ToolData.SpecialAnimalId == animalId)
+            {
+                slot.RevealSpecialAnimal();
+            }
+
             NotifySlotChanged(slot);
 
             return true;
         }
 
         /// <summary>
-        /// ������ ��ġ�� ������ �����մϴ�.
+        /// 도구에 배치된 동물을 해제합니다.
         /// </summary>
         public bool TryRemoveAnimalFromTool(string toolId)
         {
             if (!TryGetToolSlot(toolId, out SlotData_Tool slot))
             {
-                Debug.LogWarning($"[InventoryManager_Tool] �������� ���� �����Դϴ�: {toolId}");
+                Debug.LogWarning($"[InventoryManager_Tool] 존재하지 않는 슬롯입니다: {toolId}");
                 return false;
             }
 
@@ -337,13 +424,22 @@ namespace TaskTown.KDH
                 if (string.IsNullOrWhiteSpace(slot.ToolId))
                     continue;
 
+                // SlotSaveData_Tool saveData = new SlotSaveData_Tool(
+                //     slot.ToolData,
+                //     slot.Level,
+                //     slot.CurrentCount,
+                //     slot.CurrentSet,
+                //     slot.CurrentAnimalSet,
+                //     slot.CurrentAnimalId);
+                // 26.07.29. KAY 수정
                 SlotSaveData_Tool saveData = new SlotSaveData_Tool(
                     slot.ToolData,
                     slot.Level,
                     slot.CurrentCount,
                     slot.CurrentSet,
                     slot.CurrentAnimalSet,
-                    slot.CurrentAnimalId);
+                    slot.CurrentAnimalId,
+                    slot.HasRevealedSpecialAnimal);
 
                 saveDataList.Add(saveData);
             }
@@ -378,26 +474,67 @@ namespace TaskTown.KDH
 
                 if (toolSlotsDic.ContainsKey(saveData.tooldata.Id))
                 {
-                    Debug.LogWarning($"[InventoryManager_Tool] ���� �����Ϳ� �ߺ� ID�� �ֽ��ϴ�: {saveData.tooldata.Id}");
+                    Debug.LogWarning($"[InventoryManager_Tool] 저장 데이터에 중복 ID가 있습니다: {saveData.tooldata.Id}");
                     continue;
                 }
 
+                // SlotData_Tool runtimeSlot = new SlotData_Tool(
+                //     saveData.tooldata,
+                //     saveData.level,
+                //     saveData.currentCount,
+                //     saveData.currentSet,
+                //     saveData.currentAnimalSet,
+                //     saveData.currentAnimalId);
+                // 26.07.29. KAY 수정
                 SlotData_Tool runtimeSlot = new SlotData_Tool(
                     saveData.tooldata,
                     saveData.level,
                     saveData.currentCount,
                     saveData.currentSet,
                     saveData.currentAnimalSet,
-                    saveData.currentAnimalId);
+                    saveData.currentAnimalId,
+                    saveData.hasRevealedSpecialAnimal);
 
-                // ���� ��ġ ��� �ý��� ����
+                // 구 세이브 호환: 이미 특화 동물이 장착된 상태면 해금으로 보정
+                // 26.07.29. KAY 수정
+                if (!runtimeSlot.HasRevealedSpecialAnimal &&
+                    runtimeSlot.CurrentAnimalSet &&
+                    runtimeSlot.ToolData != null &&
+                    !string.IsNullOrEmpty(runtimeSlot.ToolData.SpecialAnimalId) &&
+                    runtimeSlot.CurrentAnimalId == runtimeSlot.ToolData.SpecialAnimalId)
+                {
+                    runtimeSlot.RevealSpecialAnimal();
+                }
+
+                // 성장 수치 계산 시스템 연결
                 RefreshSlotGrowthData(runtimeSlot);
 
                 toolSlotsList.Add(runtimeSlot);
                 toolSlotsDic.Add(runtimeSlot.ToolId, runtimeSlot);
             }
 
+            SortToolSlots();
             NotifyInventoryChanged();
+        }
+
+        /// <summary>
+        /// 등급 높은 순으로만 정렬합니다. (동일 등급 내 Index 정렬은 추후 단계)
+        /// </summary>
+        private void SortToolSlots()
+        {
+            toolSlotsList.Sort(CompareToolSlots);
+        }
+
+        private static int CompareToolSlots(SlotData_Tool a, SlotData_Tool b)
+        {
+            ToolDataSO dataA = a != null ? a.ToolData : null;
+            ToolDataSO dataB = b != null ? b.ToolData : null;
+
+            if (dataA == null && dataB == null) return 0;
+            if (dataA == null) return 1;
+            if (dataB == null) return -1;
+
+            return ((int)dataB.Grade).CompareTo((int)dataA.Grade);
         }
 
         /// <summary>
@@ -411,7 +548,11 @@ namespace TaskTown.KDH
 
             int requiredCount = LevelUpRequirementCalculator.GetRequiredDuplicateCount(slot.Level);
 
-            slot.ApplyGrowthData(requiredCount, slot.LevelUpCost, false);
+            // 기존엔 maxLevel 인자가 항상 false로 고정되어 있어서, ToolLevelUp()이 레벨5에서 설정한
+            // isMaxLevel을 이 호출이 곧바로 다시 풀어버리는 버그가 있었습니다(#19 작업 중 발견).
+            // 실제 레벨 기준으로 다시 계산하도록 수정 - 엔드리스 모드에서는 항상 false(상한 없음).
+            bool isMax = !IsEndlessMode() && slot.Level >= 5;
+            slot.ApplyGrowthData(requiredCount, slot.LevelUpCost, isMax);
         }
 
         /// <summary>
@@ -438,6 +579,41 @@ namespace TaskTown.KDH
         private void NotifyInventoryChanged()
         {
             OnToolInventoryChanged?.Invoke();
+        }
+
+
+        /// <summary>
+        /// 디버그 전용: 지정 개수만큼 도구를 지급합니다.    26.07.24 KDH 추가
+        /// </summary>
+        public bool DebugAddTool(string toolId, int count)
+        {
+            ToolDataSO data = GetToolData(toolId);
+            if (data == null)
+            {
+                Debug.LogWarning($"[InventoryManager_Tool] 존재하지 않는 ToolId: {toolId}");
+                return false;
+            }
+            count = Mathf.Max(1, count);
+            for (int i = 0; i < count; i++)
+                AddToolSlot(data);
+            return true;
+        }
+        /// <summary>
+        /// 디버그 전용: 보유 도구의 레벨을 바로 설정합니다. 미보유면 1개 지급 후 설정.     26.07.24 KDH 추가
+        /// </summary>
+        public bool DebugSetToolLevel(string toolId, int targetLevel)
+        {
+            if (!TryGetToolSlot(toolId, out SlotData_Tool slot))
+            {
+                if (!DebugAddTool(toolId, 1))
+                    return false;
+                if (!TryGetToolSlot(toolId, out slot))
+                    return false;
+            }
+            slot.DebugSetLevel(targetLevel);
+            RefreshSlotGrowthData(slot);
+            NotifySlotChanged(slot);
+            return true;
         }
     }
 }

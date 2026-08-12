@@ -1,0 +1,1619 @@
+using System.Collections;
+using System.Collections.Generic;
+using TaskTown.Gacha;
+using TaskTown.KDH;
+using UI;
+using UnityEngine;
+using UnityEngine.UI;
+
+namespace TaskTown.Tutorial
+{
+    /// <summary>
+    /// 현재 튜토리얼 단계에 필요한 게임 이벤트 하나만 구독하여 진행 신호로 변환합니다.
+    /// 단계 전환 또는 튜토리얼 완료 시 이전 구독을 즉시 해제합니다.
+    /// </summary>
+    [DefaultExecutionOrder(-80)]
+    public sealed class TutorialEventBridge : MonoBehaviour
+    {
+        [Header("튜토리얼")]
+        [SerializeField] private TutorialManager tutorialManager;
+
+        [Header("게임 이벤트 소스 (비어 있으면 시작 시 1회 자동 탐색)")]
+        [SerializeField] private EarnProcessor earnProcessor;
+        [SerializeField] private AnimalGachaManager animalGachaManager;
+        [SerializeField] private ToolGachaManager toolGachaManager;
+        [SerializeField] private InventoryManager_Tool toolInventoryManager;
+        [SerializeField] private RealProductionTicker realProductionTicker;
+        [SerializeField] private VillageAnimalSetUI_Manager villageAnimalSetUIManager;
+        [SerializeField] private VillageInfoUI_Manager villageInfoUIManager;
+        [SerializeField] private GameMasterManager gameMasterManager;
+
+        [Header("튜토리얼 버튼 강조")]
+        [SerializeField] private TutorialButtonHighlighter buttonHighlighter;
+        [SerializeField] private TutorialHighlightCoordinator highlightCoordinator;
+        [SerializeField] private TutorialManualCoinFeedback manualCoinFeedback;
+        [SerializeField] private UIController_Coin coinController;
+        [SerializeField] private UIController_Menu menuController;
+        [SerializeField] private UIController_Gacha gachaController;
+        [SerializeField] private GachaPortalController animalGachaPortalController;
+        [SerializeField] private GachaDirector toolGachaDirector;
+        [SerializeField] private UIController_AnimalInv animalInventoryController;
+        [SerializeField] private UIController_AnimalInvPage animalInventoryPageController;
+        [SerializeField] private TabUIManager_Town townTabController;
+        [SerializeField] private UIController_VillageAnimalSet villageAnimalSetController;
+
+        [Header("튜토리얼 강조 슬롯 (기획 번호는 1번, 코드 인덱스는 0)")]
+        [SerializeField, Min(0)] private int animalInventorySlotIndex;
+        [SerializeField, Min(0)] private int villagePlacementSlotIndex;
+
+        [Header("단계별 손가락 위치 보정")]
+        [Tooltip("동물 배치 탭 버튼 중앙 기준 픽셀 보정")]
+        [SerializeField] private Vector2 animalPlacementTabPointerOffset =
+            new(10f, 0f);
+        [Tooltip("마을 업그레이드 탭 버튼 내부 기준점 (1, 0.5 = 오른쪽 중앙)")]
+        [SerializeField] private Vector2 townUpgradeTabPointerAnchor =
+            new(1f, 0.5f);
+        [Tooltip("마을 업그레이드 탭 기준점에서의 픽셀 보정")]
+        [SerializeField] private Vector2 townUpgradeTabPointerOffset =
+            new(-10f, 0f);
+
+        private readonly HashSet<string> assignedToolIds = new HashSet<string>();
+        private readonly List<string> initialVillageAnimalIds = new List<string>();
+
+        private bool hasStarted;
+        private bool isConnected;
+        private TutorialStep? subscribedStep;
+        private Coroutine windowStateSyncCoroutine;
+        private Coroutine highlightRefreshCoroutine;
+        private Button subscribedAnimalSlotButton;
+        private Button subscribedVillageSlotButton;
+        private Collider villageHouseCollider;
+        private GachaDrawHighlightPhase animalDrawHighlightPhase;
+        private GachaDrawHighlightPhase toolDrawHighlightPhase;
+        private bool isWaitingForAnimalResultConfirmation;
+        private bool isWaitingForToolResultConfirmation;
+        private AssignAnimalHighlightPhase assignAnimalHighlightPhase;
+        private VillagePlacementHighlightPhase villagePlacementHighlightPhase;
+        private UpgradeVillageHighlightPhase upgradeVillageHighlightPhase;
+
+        private const TutorialHighlightEffect InnerGachaButtonEffects =
+            TutorialHighlightEffect.ScalePulse |
+            TutorialHighlightEffect.Pointer;
+
+        private enum GachaDrawHighlightPhase
+        {
+            MenuButton = 0,
+            OnePickButton = 1,
+            WaitingForResult = 2
+        }
+
+        private enum AssignAnimalHighlightPhase
+        {
+            InventoryButton = 0,
+            AnimalSlot = 1,
+            SetToolButton = 2,
+            WaitingForAssignment = 3
+        }
+
+        private enum VillagePlacementHighlightPhase
+        {
+            VillageButton = 0,
+            AnimalPlacementTab = 1,
+            EditButton = 2,
+            EmptySlot = 3,
+            WaitingForPlacement = 4
+        }
+
+        private enum UpgradeVillageHighlightPhase
+        {
+            VillageButton = 0,
+            UpgradeTab = 1,
+            Completed = 2
+        }
+
+        private void Start()
+        {
+            hasStarted = true;
+            Connect();
+        }
+
+        private void OnEnable()
+        {
+            if (hasStarted)
+                Connect();
+        }
+
+        private void OnDisable()
+        {
+            Disconnect();
+        }
+
+        private void OnDestroy()
+        {
+            Disconnect();
+        }
+
+        /// <summary>
+        /// Additive Scene에서는 다른 Scene 오브젝트를 직렬화 참조할 수 없으므로,
+        /// 비어 있는 참조만 시작 시 한 번 탐색합니다.
+        /// </summary>
+        public void Connect()
+        {
+            if (isConnected)
+                return;
+
+            ResolveReferences();
+            if (tutorialManager == null)
+            {
+                Debug.LogWarning(
+                    "[TutorialEventBridge] TutorialManager를 찾을 수 없어 이벤트를 연결하지 않습니다.",
+                    this);
+                return;
+            }
+
+            tutorialManager.StepChanged -= HandleStepChanged;
+            tutorialManager.StepChanged += HandleStepChanged;
+            tutorialManager.ProgressChanged -= HandleProgressChanged;
+            tutorialManager.ProgressChanged += HandleProgressChanged;
+            tutorialManager.TutorialRestarted -= HandleTutorialRestarted;
+            tutorialManager.TutorialRestarted += HandleTutorialRestarted;
+            tutorialManager.TutorialCompleted -= HandleTutorialCompleted;
+            tutorialManager.TutorialCompleted += HandleTutorialCompleted;
+
+            SubscribeWindowState();
+            SubscribeGachaGuidanceEvents();
+            isConnected = true;
+
+            if (!tutorialManager.IsCompleted)
+                SubscribeCurrentStep(tutorialManager.CurrentStep);
+        }
+
+        public void Disconnect()
+        {
+            UnsubscribeCurrentStep();
+            UnsubscribeWindowState();
+            UnsubscribeGachaGuidanceEvents();
+            EndAnimalResultConfirmationGuidance();
+            EndToolResultConfirmationGuidance();
+            manualCoinFeedback?.StopAndRestore();
+
+            if (tutorialManager != null)
+            {
+                tutorialManager.StepChanged -= HandleStepChanged;
+                tutorialManager.ProgressChanged -= HandleProgressChanged;
+                tutorialManager.TutorialRestarted -= HandleTutorialRestarted;
+                tutorialManager.TutorialCompleted -= HandleTutorialCompleted;
+            }
+
+            isConnected = false;
+        }
+
+        private void ResolveReferences()
+        {
+            if (tutorialManager == null)
+            {
+                tutorialManager = GetComponent<TutorialManager>();
+                if (tutorialManager == null)
+                    tutorialManager = FindAnyObjectByType<TutorialManager>();
+            }
+
+            if (earnProcessor == null)
+                earnProcessor = EarnProcessor.Instance;
+            if (animalGachaManager == null)
+                animalGachaManager = FindAnyObjectByType<AnimalGachaManager>();
+            if (toolGachaManager == null)
+                toolGachaManager = FindAnyObjectByType<ToolGachaManager>();
+            if (toolInventoryManager == null)
+                toolInventoryManager = InventoryManager_Tool.Instance;
+            if (realProductionTicker == null)
+                realProductionTicker = RealProductionTicker.Instance;
+            if (villageAnimalSetUIManager == null)
+            {
+                villageAnimalSetUIManager = FindFirstObjectByType<VillageAnimalSetUI_Manager>(
+                    FindObjectsInactive.Include);
+            }
+            if (villageInfoUIManager == null)
+                villageInfoUIManager = FindAnyObjectByType<VillageInfoUI_Manager>();
+            if (gameMasterManager == null)
+                gameMasterManager = FindAnyObjectByType<GameMasterManager>();
+            if (buttonHighlighter == null)
+                TryGetComponent(out buttonHighlighter);
+            if (highlightCoordinator == null)
+                TryGetComponent(out highlightCoordinator);
+            if (manualCoinFeedback == null)
+                TryGetComponent(out manualCoinFeedback);
+            if (coinController == null)
+            {
+                coinController = FindFirstObjectByType<UIController_Coin>(
+                    FindObjectsInactive.Include);
+            }
+            if (menuController == null)
+                menuController = FindAnyObjectByType<UIController_Menu>();
+            if (gachaController == null)
+                gachaController = FindAnyObjectByType<UIController_Gacha>();
+            if (animalGachaPortalController == null)
+            {
+                animalGachaPortalController =
+                    FindFirstObjectByType<GachaPortalController>(
+                        FindObjectsInactive.Include);
+            }
+            if (toolGachaDirector == null)
+            {
+                toolGachaDirector = FindFirstObjectByType<GachaDirector>(
+                    FindObjectsInactive.Include);
+            }
+            if (animalInventoryController == null)
+            {
+                animalInventoryController = FindFirstObjectByType<UIController_AnimalInv>(
+                    FindObjectsInactive.Include);
+            }
+            if (animalInventoryPageController == null)
+            {
+                animalInventoryPageController =
+                    FindFirstObjectByType<UIController_AnimalInvPage>(
+                        FindObjectsInactive.Include);
+            }
+            if (townTabController == null)
+            {
+                townTabController = FindFirstObjectByType<TabUIManager_Town>(
+                    FindObjectsInactive.Include);
+            }
+            if (villageAnimalSetController == null)
+            {
+                villageAnimalSetController = FindFirstObjectByType<UIController_VillageAnimalSet>(
+                    FindObjectsInactive.Include);
+            }
+        }
+
+        private void SubscribeGachaGuidanceEvents()
+        {
+            if (gachaController != null)
+            {
+                gachaController.PanelOpened -= HandleGachaPanelOpened;
+                gachaController.PanelOpened += HandleGachaPanelOpened;
+            }
+
+            if (animalGachaPortalController != null)
+            {
+                animalGachaPortalController.OnPortalOpened -=
+                    HandleAnimalResultOpened;
+                animalGachaPortalController.OnPortalOpened +=
+                    HandleAnimalResultOpened;
+                animalGachaPortalController.ResultConfirmed -=
+                    HandleAnimalResultConfirmed;
+                animalGachaPortalController.ResultConfirmed +=
+                    HandleAnimalResultConfirmed;
+            }
+
+            if (toolGachaDirector != null)
+            {
+                toolGachaDirector.ResultOpened -= HandleToolResultOpened;
+                toolGachaDirector.ResultOpened += HandleToolResultOpened;
+                toolGachaDirector.ResultConfirmed -= HandleToolResultConfirmed;
+                toolGachaDirector.ResultConfirmed += HandleToolResultConfirmed;
+            }
+        }
+
+        private void UnsubscribeGachaGuidanceEvents()
+        {
+            if (gachaController != null)
+                gachaController.PanelOpened -= HandleGachaPanelOpened;
+
+            if (animalGachaPortalController != null)
+            {
+                animalGachaPortalController.OnPortalOpened -=
+                    HandleAnimalResultOpened;
+                animalGachaPortalController.ResultConfirmed -=
+                    HandleAnimalResultConfirmed;
+            }
+
+            if (toolGachaDirector != null)
+            {
+                toolGachaDirector.ResultOpened -= HandleToolResultOpened;
+                toolGachaDirector.ResultConfirmed -= HandleToolResultConfirmed;
+            }
+        }
+
+        private void HandleStepChanged(TutorialStep previousStep, TutorialStep nextStep)
+        {
+            UnsubscribeCurrentStep();
+
+            if (nextStep != TutorialStep.Completed)
+                SubscribeCurrentStep(nextStep);
+        }
+
+        private void HandleProgressChanged(TutorialSaveData progress)
+        {
+            // 수동 코인 진행도는 입력마다 갱신됩니다. 이 단계의 도넛 강조는 단계 진입 시
+            // 한 번만 시작하고 독립적으로 Loop해야 하므로 코인 Punch마다 재생성하지 않습니다.
+            if (subscribedStep == TutorialStep.EarnManualCoin ||
+                subscribedStep == TutorialStep.ConfirmAutoProduction)
+                return;
+
+            RefreshButtonHighlight();
+        }
+
+        private void HandleTutorialRestarted()
+        {
+            EndAnimalResultConfirmationGuidance();
+            EndToolResultConfirmationGuidance();
+            UnsubscribeCurrentStep();
+
+            if (tutorialManager != null && !tutorialManager.IsCompleted)
+                SubscribeCurrentStep(tutorialManager.CurrentStep);
+
+            RefreshButtonHighlight();
+        }
+
+        private void HandleTutorialCompleted()
+        {
+            Disconnect();
+            enabled = false;
+        }
+
+        private void SubscribeWindowState()
+        {
+            if (gameMasterManager == null)
+                return;
+
+            if (gameMasterManager.btnMinimize != null)
+            {
+                gameMasterManager.btnMinimize.onClick.RemoveListener(HandleWindowStateButtonClicked);
+                gameMasterManager.btnMinimize.onClick.AddListener(HandleWindowStateButtonClicked);
+            }
+
+            if (gameMasterManager.btnMaximize != null)
+            {
+                gameMasterManager.btnMaximize.onClick.RemoveListener(HandleWindowStateButtonClicked);
+                gameMasterManager.btnMaximize.onClick.AddListener(HandleWindowStateButtonClicked);
+            }
+
+            SynchronizeWindowState();
+        }
+
+        private void UnsubscribeWindowState()
+        {
+            if (windowStateSyncCoroutine != null)
+            {
+                StopCoroutine(windowStateSyncCoroutine);
+                windowStateSyncCoroutine = null;
+            }
+
+            if (gameMasterManager == null)
+                return;
+
+            if (gameMasterManager.btnMinimize != null)
+                gameMasterManager.btnMinimize.onClick.RemoveListener(HandleWindowStateButtonClicked);
+
+            if (gameMasterManager.btnMaximize != null)
+                gameMasterManager.btnMaximize.onClick.RemoveListener(HandleWindowStateButtonClicked);
+        }
+
+        private void HandleWindowStateButtonClicked()
+        {
+            if (windowStateSyncCoroutine != null)
+                StopCoroutine(windowStateSyncCoroutine);
+
+            windowStateSyncCoroutine = StartCoroutine(SyncWindowStateNextFrame());
+        }
+
+        private IEnumerator SyncWindowStateNextFrame()
+        {
+            yield return null;
+
+            windowStateSyncCoroutine = null;
+            SynchronizeWindowState();
+        }
+
+        private void SynchronizeWindowState()
+        {
+            if (tutorialManager == null || gameMasterManager == null)
+                return;
+
+            bool isExpanded = gameMasterManager.GetIsExpanded();
+            bool isWindowTutorial =
+                tutorialManager.CurrentStep == TutorialStep.CollapseAndExpandTown;
+
+            if (isWindowTutorial && tutorialManager.IsTownWindowGuideCompleted)
+            {
+                if (isExpanded)
+                {
+                    if (tutorialManager.IsTownWindowMinimized &&
+                        !tutorialManager.IsTownWindowExpanded)
+                    {
+                        tutorialManager.ReportSignal(
+                            TutorialSignalType.TownWindowExpanded);
+                    }
+                }
+                else if (!tutorialManager.IsTownWindowMinimized)
+                {
+                    tutorialManager.ReportSignal(
+                        TutorialSignalType.TownWindowMinimized);
+                }
+            }
+
+            tutorialManager.SetPaused(!isExpanded);
+            RefreshButtonHighlight();
+        }
+
+        private void SubscribeCurrentStep(TutorialStep step)
+        {
+            subscribedStep = step;
+
+            switch (step)
+            {
+                case TutorialStep.EarnManualCoin:
+                    BindCoinGainFeedbackTarget();
+                    if (earnProcessor != null)
+                        earnProcessor.ManualCoinGranted += HandleManualCoinGranted;
+                    else
+                        WarnMissingSource(nameof(EarnProcessor), step);
+                    break;
+
+                case TutorialStep.CollapseAndExpandTown:
+                    SynchronizeWindowState();
+                    break;
+
+                case TutorialStep.DrawAnimal:
+                    animalDrawHighlightPhase = IsButtonVisible(
+                        gachaController?.AnimalOnePickButton)
+                        ? GachaDrawHighlightPhase.OnePickButton
+                        : GachaDrawHighlightPhase.MenuButton;
+                    if (animalGachaManager != null)
+                        animalGachaManager.OnGachaResolved += HandleAnimalDrawn;
+                    else
+                        WarnMissingSource(nameof(AnimalGachaManager), step);
+                    break;
+
+                case TutorialStep.DrawTool:
+                    toolDrawHighlightPhase = IsButtonVisible(
+                        gachaController?.ToolOnePickButton)
+                        ? GachaDrawHighlightPhase.OnePickButton
+                        : GachaDrawHighlightPhase.MenuButton;
+                    if (toolGachaManager != null)
+                        toolGachaManager.OnGachaResolved += HandleToolDrawn;
+                    else
+                        WarnMissingSource(nameof(ToolGachaManager), step);
+                    break;
+
+                case TutorialStep.AssignAnimal:
+                    SubscribeAssignAnimalHighlightFlow();
+                    if (toolInventoryManager != null)
+                    {
+                        CaptureAssignedTools();
+                        toolInventoryManager.OnToolSlotChanged += HandleToolSlotChanged;
+                    }
+                    else
+                    {
+                        WarnMissingSource(nameof(InventoryManager_Tool), step);
+                    }
+                    break;
+
+                case TutorialStep.ConfirmAutoProduction:
+                    BindCoinGainFeedbackTarget();
+                    if (realProductionTicker != null)
+                        realProductionTicker.ProductionCoinGranted += HandleProductionCoinGranted;
+                    else
+                        WarnMissingSource(nameof(RealProductionTicker), step);
+                    break;
+
+                case TutorialStep.PlaceAnimalInVillage:
+                    SubscribeVillagePlacementHighlightFlow();
+                    if (villageAnimalSetUIManager != null)
+                    {
+                        CaptureVillagePlacement();
+                        villageAnimalSetUIManager.OnVillagePlacementChanged +=
+                            HandleVillagePlacementChanged;
+                    }
+                    else
+                    {
+                        WarnMissingSource(nameof(VillageAnimalSetUI_Manager), step);
+                    }
+                    break;
+
+                case TutorialStep.OpenVillageInfo:
+                    if (villageInfoUIManager != null)
+                        villageInfoUIManager.PanelOpened += HandleVillageInfoOpened;
+                    else
+                        WarnMissingSource(nameof(VillageInfoUI_Manager), step);
+                    break;
+
+                case TutorialStep.UpgradeVillage:
+                    SubscribeUpgradeVillageHighlightFlow();
+                    break;
+            }
+
+            RefreshButtonHighlight();
+        }
+
+        private void UnsubscribeCurrentStep()
+        {
+            ClearHighlights();
+
+            if (highlightRefreshCoroutine != null)
+            {
+                StopCoroutine(highlightRefreshCoroutine);
+                highlightRefreshCoroutine = null;
+            }
+
+            if (!subscribedStep.HasValue)
+                return;
+
+            switch (subscribedStep.Value)
+            {
+                case TutorialStep.EarnManualCoin:
+                    if (earnProcessor != null)
+                        earnProcessor.ManualCoinGranted -= HandleManualCoinGranted;
+                    break;
+
+                case TutorialStep.DrawAnimal:
+                    if (animalGachaManager != null)
+                        animalGachaManager.OnGachaResolved -= HandleAnimalDrawn;
+                    animalDrawHighlightPhase = GachaDrawHighlightPhase.MenuButton;
+                    break;
+
+                case TutorialStep.DrawTool:
+                    if (toolGachaManager != null)
+                        toolGachaManager.OnGachaResolved -= HandleToolDrawn;
+                    toolDrawHighlightPhase = GachaDrawHighlightPhase.MenuButton;
+                    break;
+
+                case TutorialStep.AssignAnimal:
+                    UnsubscribeAssignAnimalHighlightFlow();
+                    if (toolInventoryManager != null)
+                        toolInventoryManager.OnToolSlotChanged -= HandleToolSlotChanged;
+                    assignedToolIds.Clear();
+                    break;
+
+                case TutorialStep.ConfirmAutoProduction:
+                    if (realProductionTicker != null)
+                        realProductionTicker.ProductionCoinGranted -= HandleProductionCoinGranted;
+                    break;
+
+                case TutorialStep.PlaceAnimalInVillage:
+                    UnsubscribeVillagePlacementHighlightFlow();
+                    if (villageAnimalSetUIManager != null)
+                    {
+                        villageAnimalSetUIManager.OnVillagePlacementChanged -=
+                            HandleVillagePlacementChanged;
+                    }
+                    initialVillageAnimalIds.Clear();
+                    break;
+
+                case TutorialStep.OpenVillageInfo:
+                    if (villageInfoUIManager != null)
+                        villageInfoUIManager.PanelOpened -= HandleVillageInfoOpened;
+                    break;
+
+                case TutorialStep.UpgradeVillage:
+                    UnsubscribeUpgradeVillageHighlightFlow();
+                    break;
+            }
+
+            subscribedStep = null;
+        }
+
+        private void CaptureAssignedTools()
+        {
+            assignedToolIds.Clear();
+            if (toolInventoryManager == null)
+                return;
+
+            foreach (SlotData_Tool slot in toolInventoryManager.ToolSlotsList)
+            {
+                if (slot != null && slot.CurrentAnimalSet && !string.IsNullOrEmpty(slot.ToolId))
+                    assignedToolIds.Add(slot.ToolId);
+            }
+        }
+
+        private void HandleManualCoinGranted(int amount)
+        {
+            manualCoinFeedback?.Play();
+            tutorialManager?.ReportSignal(TutorialSignalType.ManualCoinEarned, amount);
+        }
+
+        private void BindCoinGainFeedbackTarget()
+        {
+            manualCoinFeedback?.Bind(coinController?.AllCoinText?.rectTransform);
+        }
+
+        private void HandleGachaPanelOpened()
+        {
+            if (subscribedStep == TutorialStep.DrawAnimal)
+            {
+                animalDrawHighlightPhase = GachaDrawHighlightPhase.OnePickButton;
+                ScheduleHighlightRefresh();
+                return;
+            }
+
+            if (subscribedStep == TutorialStep.DrawTool)
+            {
+                toolDrawHighlightPhase = GachaDrawHighlightPhase.OnePickButton;
+                ScheduleHighlightRefresh();
+            }
+        }
+
+        private void HandleAnimalDrawn(GachaResult result)
+        {
+            animalDrawHighlightPhase = GachaDrawHighlightPhase.WaitingForResult;
+            ClearHighlights();
+
+            bool didAdvance = tutorialManager?.ReportSignal(
+                TutorialSignalType.AnimalDrawn) == true;
+            if (!didAdvance || animalGachaPortalController == null)
+                return;
+
+            isWaitingForAnimalResultConfirmation = true;
+            tutorialManager.SetPaused(true);
+        }
+
+        private void HandleToolDrawn(GachaResult result)
+        {
+            toolDrawHighlightPhase = GachaDrawHighlightPhase.WaitingForResult;
+            ClearHighlights();
+
+            bool didAdvance = tutorialManager?.ReportSignal(
+                TutorialSignalType.ToolDrawn) == true;
+            if (!didAdvance || toolGachaDirector == null)
+                return;
+
+            isWaitingForToolResultConfirmation = true;
+            tutorialManager.SetPaused(true);
+            ClearHighlights();
+        }
+
+        private void HandleAnimalResultOpened()
+        {
+            if (!isWaitingForAnimalResultConfirmation ||
+                tutorialManager == null ||
+                tutorialManager.CurrentStep != TutorialStep.AnimalDrawExplanation)
+            {
+                return;
+            }
+
+            Button confirmButton = animalGachaPortalController?.ConfirmButton;
+            ApplyHighlight(
+                TutorialStep.AnimalDrawExplanation,
+                InnerGachaButtonEffects,
+                new[] { confirmButton },
+                new[] { confirmButton });
+        }
+
+        private void HandleAnimalResultConfirmed()
+        {
+            if (!isWaitingForAnimalResultConfirmation)
+                return;
+
+            EndAnimalResultConfirmationGuidance();
+            RefreshButtonHighlight();
+        }
+
+        private void EndAnimalResultConfirmationGuidance()
+        {
+            if (!isWaitingForAnimalResultConfirmation)
+                return;
+
+            isWaitingForAnimalResultConfirmation = false;
+            ClearHighlights();
+            tutorialManager?.SetPaused(false);
+        }
+
+        private void HandleToolResultOpened()
+        {
+            if (!isWaitingForToolResultConfirmation ||
+                tutorialManager == null ||
+                tutorialManager.CurrentStep != TutorialStep.AssignAnimal)
+            {
+                return;
+            }
+
+            Button confirmButton = toolGachaDirector?.ConfirmButton;
+            ApplyHighlight(
+                TutorialStep.AssignAnimal,
+                InnerGachaButtonEffects,
+                new[] { confirmButton },
+                new[] { confirmButton });
+        }
+
+        private void HandleToolResultConfirmed()
+        {
+            if (!isWaitingForToolResultConfirmation)
+                return;
+
+            EndToolResultConfirmationGuidance();
+            RefreshButtonHighlight();
+        }
+
+        private void EndToolResultConfirmationGuidance()
+        {
+            if (!isWaitingForToolResultConfirmation)
+                return;
+
+            isWaitingForToolResultConfirmation = false;
+            ClearHighlights();
+            tutorialManager?.SetPaused(false);
+        }
+
+        private static bool IsButtonVisible(Button button)
+        {
+            return button != null && button.isActiveAndEnabled &&
+                   button.gameObject.activeInHierarchy;
+        }
+
+        private void HandleToolSlotChanged(SlotData_Tool slot)
+        {
+            if (slot == null || string.IsNullOrEmpty(slot.ToolId))
+                return;
+
+            bool wasAssigned = assignedToolIds.Contains(slot.ToolId);
+            if (!slot.CurrentAnimalSet)
+            {
+                assignedToolIds.Remove(slot.ToolId);
+                return;
+            }
+
+            assignedToolIds.Add(slot.ToolId);
+            if (!wasAssigned)
+                tutorialManager?.ReportSignal(TutorialSignalType.AnimalAssigned);
+        }
+
+        private void HandleProductionCoinGranted(int amount)
+        {
+            manualCoinFeedback?.Play();
+            tutorialManager?.ReportSignal(
+                TutorialSignalType.AutoProductionConfirmed,
+                amount);
+        }
+
+        private void CaptureVillagePlacement()
+        {
+            initialVillageAnimalIds.Clear();
+            if (villageAnimalSetUIManager == null)
+                return;
+
+            IReadOnlyList<string> placedIds = villageAnimalSetUIManager.PlacedAnimalIds;
+            if (placedIds == null)
+                return;
+
+            for (int index = 0; index < placedIds.Count; index++)
+                initialVillageAnimalIds.Add(placedIds[index] ?? string.Empty);
+        }
+
+        private void HandleVillagePlacementChanged()
+        {
+            if (!HasValidVillagePlacementChange())
+                return;
+
+            tutorialManager?.ReportSignal(TutorialSignalType.VillageAnimalPlaced);
+        }
+
+        private bool HasValidVillagePlacementChange()
+        {
+            if (villageAnimalSetUIManager == null)
+                return false;
+
+            IReadOnlyList<string> currentIds = villageAnimalSetUIManager.PlacedAnimalIds;
+            if (currentIds == null)
+                return false;
+
+            int initialPlacedCount = 0;
+            int currentPlacedCount = 0;
+            bool hasChanged = currentIds.Count != initialVillageAnimalIds.Count;
+            int compareCount = Mathf.Max(currentIds.Count, initialVillageAnimalIds.Count);
+
+            for (int index = 0; index < compareCount; index++)
+            {
+                string initialId = index < initialVillageAnimalIds.Count
+                    ? initialVillageAnimalIds[index]
+                    : string.Empty;
+                string currentId = index < currentIds.Count
+                    ? currentIds[index] ?? string.Empty
+                    : string.Empty;
+
+                if (!string.IsNullOrEmpty(initialId))
+                    initialPlacedCount++;
+                if (!string.IsNullOrEmpty(currentId))
+                    currentPlacedCount++;
+                if (!string.Equals(initialId, currentId, System.StringComparison.Ordinal))
+                    hasChanged = true;
+            }
+
+            // 단순 확정이나 주민 제거만으로는 완료하지 않고, 한 명 이상을 유지한 실제 배치 변경만 인정합니다.
+            return hasChanged &&
+                   currentPlacedCount > 0 &&
+                   currentPlacedCount >= initialPlacedCount;
+        }
+
+        private void SubscribeAssignAnimalHighlightFlow()
+        {
+            assignAnimalHighlightPhase = AssignAnimalHighlightPhase.InventoryButton;
+
+            Button inventoryButton = menuController?.InventoryButton;
+            if (inventoryButton != null)
+            {
+                inventoryButton.onClick.RemoveListener(HandleInventoryButtonClicked);
+                inventoryButton.onClick.AddListener(HandleInventoryButtonClicked);
+            }
+
+            Button setToolButton = animalInventoryPageController?.SettingToolButton;
+            if (setToolButton != null)
+            {
+                setToolButton.onClick.RemoveListener(HandleSetToolButtonClicked);
+                setToolButton.onClick.AddListener(HandleSetToolButtonClicked);
+            }
+        }
+
+        private void UnsubscribeAssignAnimalHighlightFlow()
+        {
+            Button inventoryButton = menuController?.InventoryButton;
+            if (inventoryButton != null)
+                inventoryButton.onClick.RemoveListener(HandleInventoryButtonClicked);
+
+            Button setToolButton = animalInventoryPageController?.SettingToolButton;
+            if (setToolButton != null)
+                setToolButton.onClick.RemoveListener(HandleSetToolButtonClicked);
+
+            BindAnimalSlotButton(null);
+            assignAnimalHighlightPhase = AssignAnimalHighlightPhase.InventoryButton;
+        }
+
+        private void SubscribeVillagePlacementHighlightFlow()
+        {
+            villagePlacementHighlightPhase =
+                VillagePlacementHighlightPhase.VillageButton;
+
+            Button villageButton = menuController?.VillageButton;
+            if (villageButton != null)
+            {
+                villageButton.onClick.RemoveListener(HandleVillageButtonClicked);
+                villageButton.onClick.AddListener(HandleVillageButtonClicked);
+            }
+
+            if (townTabController?.OpenAnimalSetButtons != null)
+            {
+                foreach (Button tabButton in townTabController.OpenAnimalSetButtons)
+                {
+                    if (tabButton == null)
+                        continue;
+
+                    tabButton.onClick.RemoveListener(HandleAnimalPlacementTabClicked);
+                    tabButton.onClick.AddListener(HandleAnimalPlacementTabClicked);
+                }
+            }
+
+            Button editButton = villageAnimalSetController?.EditSetAnimalButton;
+            if (editButton != null)
+            {
+                editButton.onClick.RemoveListener(HandleVillageEditButtonClicked);
+                editButton.onClick.AddListener(HandleVillageEditButtonClicked);
+            }
+        }
+
+        private void UnsubscribeVillagePlacementHighlightFlow()
+        {
+            Button villageButton = menuController?.VillageButton;
+            if (villageButton != null)
+                villageButton.onClick.RemoveListener(HandleVillageButtonClicked);
+
+            if (townTabController?.OpenAnimalSetButtons != null)
+            {
+                foreach (Button tabButton in townTabController.OpenAnimalSetButtons)
+                {
+                    if (tabButton != null)
+                    {
+                        tabButton.onClick.RemoveListener(
+                            HandleAnimalPlacementTabClicked);
+                    }
+                }
+            }
+
+            Button editButton = villageAnimalSetController?.EditSetAnimalButton;
+            if (editButton != null)
+                editButton.onClick.RemoveListener(HandleVillageEditButtonClicked);
+
+            BindVillageSlotButton(null);
+            villagePlacementHighlightPhase =
+                VillagePlacementHighlightPhase.VillageButton;
+        }
+
+        private void SubscribeUpgradeVillageHighlightFlow()
+        {
+            upgradeVillageHighlightPhase = UpgradeVillageHighlightPhase.VillageButton;
+
+            Button villageButton = menuController?.VillageButton;
+            if (villageButton != null)
+            {
+                villageButton.onClick.RemoveListener(
+                    HandleUpgradeVillageButtonClicked);
+                villageButton.onClick.AddListener(
+                    HandleUpgradeVillageButtonClicked);
+            }
+
+            if (townTabController?.OpenVillageUpgradeButtons == null)
+                return;
+
+            foreach (Button tabButton in townTabController.OpenVillageUpgradeButtons)
+            {
+                if (tabButton == null)
+                    continue;
+
+                tabButton.onClick.RemoveListener(HandleTownUpgradeTabClicked);
+                tabButton.onClick.AddListener(HandleTownUpgradeTabClicked);
+            }
+        }
+
+        private void UnsubscribeUpgradeVillageHighlightFlow()
+        {
+            Button villageButton = menuController?.VillageButton;
+            if (villageButton != null)
+            {
+                villageButton.onClick.RemoveListener(
+                    HandleUpgradeVillageButtonClicked);
+            }
+
+            if (townTabController?.OpenVillageUpgradeButtons != null)
+            {
+                foreach (Button tabButton in townTabController.OpenVillageUpgradeButtons)
+                {
+                    if (tabButton != null)
+                        tabButton.onClick.RemoveListener(HandleTownUpgradeTabClicked);
+                }
+            }
+
+            upgradeVillageHighlightPhase = UpgradeVillageHighlightPhase.VillageButton;
+        }
+
+        private void HandleInventoryButtonClicked()
+        {
+            assignAnimalHighlightPhase = AssignAnimalHighlightPhase.AnimalSlot;
+            ScheduleHighlightRefresh();
+        }
+
+        private void HandleAnimalSlotClicked()
+        {
+            assignAnimalHighlightPhase = AssignAnimalHighlightPhase.SetToolButton;
+            ScheduleHighlightRefresh();
+        }
+
+        private void HandleSetToolButtonClicked()
+        {
+            assignAnimalHighlightPhase =
+                AssignAnimalHighlightPhase.WaitingForAssignment;
+            ClearHighlights();
+        }
+
+        private void HandleVillageButtonClicked()
+        {
+            villagePlacementHighlightPhase =
+                VillagePlacementHighlightPhase.AnimalPlacementTab;
+            ScheduleHighlightRefresh();
+        }
+
+        private void HandleAnimalPlacementTabClicked()
+        {
+            villagePlacementHighlightPhase =
+                VillagePlacementHighlightPhase.EditButton;
+            ScheduleHighlightRefresh();
+        }
+
+        private void HandleVillageEditButtonClicked()
+        {
+            villagePlacementHighlightPhase =
+                VillagePlacementHighlightPhase.EmptySlot;
+            ScheduleHighlightRefresh();
+        }
+
+        private void HandleVillageSlotClicked()
+        {
+            villagePlacementHighlightPhase =
+                VillagePlacementHighlightPhase.WaitingForPlacement;
+            ClearHighlights();
+        }
+
+        private void HandleUpgradeVillageButtonClicked()
+        {
+            // 업그레이드 화면을 한 번 확인한 뒤에는 마을 버튼이 패널 닫기에도
+            // 사용되더라도 완료된 강조 흐름을 다시 시작하지 않습니다.
+            if (upgradeVillageHighlightPhase ==
+                UpgradeVillageHighlightPhase.Completed)
+            {
+                return;
+            }
+
+            upgradeVillageHighlightPhase = UpgradeVillageHighlightPhase.UpgradeTab;
+            ScheduleHighlightRefresh();
+        }
+
+        private void HandleTownUpgradeTabClicked()
+        {
+            upgradeVillageHighlightPhase = UpgradeVillageHighlightPhase.UpgradeTab;
+            ScheduleHighlightRefresh();
+        }
+
+        private void BindAnimalSlotButton(Button target)
+        {
+            if (subscribedAnimalSlotButton == target)
+                return;
+
+            if (subscribedAnimalSlotButton != null)
+            {
+                subscribedAnimalSlotButton.onClick.RemoveListener(
+                    HandleAnimalSlotClicked);
+            }
+
+            subscribedAnimalSlotButton = target;
+            if (subscribedAnimalSlotButton != null)
+            {
+                subscribedAnimalSlotButton.onClick.RemoveListener(
+                    HandleAnimalSlotClicked);
+                subscribedAnimalSlotButton.onClick.AddListener(
+                    HandleAnimalSlotClicked);
+            }
+        }
+
+        private void BindVillageSlotButton(Button target)
+        {
+            if (subscribedVillageSlotButton == target)
+                return;
+
+            if (subscribedVillageSlotButton != null)
+            {
+                subscribedVillageSlotButton.onClick.RemoveListener(
+                    HandleVillageSlotClicked);
+            }
+
+            subscribedVillageSlotButton = target;
+            if (subscribedVillageSlotButton != null)
+            {
+                subscribedVillageSlotButton.onClick.RemoveListener(
+                    HandleVillageSlotClicked);
+                subscribedVillageSlotButton.onClick.AddListener(
+                    HandleVillageSlotClicked);
+            }
+        }
+
+        private void ScheduleHighlightRefresh()
+        {
+            if (highlightRefreshCoroutine != null)
+                StopCoroutine(highlightRefreshCoroutine);
+
+            highlightRefreshCoroutine = StartCoroutine(
+                RefreshHighlightAfterUiUpdate());
+        }
+
+        private IEnumerator RefreshHighlightAfterUiUpdate()
+        {
+            const int maxWaitFrames = 5;
+
+            for (int frame = 0; frame < maxWaitFrames; frame++)
+            {
+                yield return null;
+
+                if (!subscribedStep.HasValue)
+                    break;
+
+                ResolveReferences();
+                if (!IsCurrentHighlightTargetReady())
+                    continue;
+
+                RefreshButtonHighlight();
+                highlightRefreshCoroutine = null;
+                yield break;
+            }
+
+            RefreshButtonHighlight();
+            highlightRefreshCoroutine = null;
+        }
+
+        private bool IsCurrentHighlightTargetReady()
+        {
+            if (!subscribedStep.HasValue)
+                return false;
+
+            switch (subscribedStep.Value)
+            {
+                case TutorialStep.AssignAnimal:
+                    return assignAnimalHighlightPhase switch
+                    {
+                        AssignAnimalHighlightPhase.AnimalSlot =>
+                            animalInventoryController?.GetSlotButtonAt(
+                                animalInventorySlotIndex) != null,
+                        AssignAnimalHighlightPhase.SetToolButton =>
+                            animalInventoryPageController?.SettingToolButton != null &&
+                            animalInventoryPageController.SettingToolButton.gameObject
+                                .activeInHierarchy,
+                        _ => true
+                    };
+
+                case TutorialStep.PlaceAnimalInVillage:
+                    return villagePlacementHighlightPhase switch
+                    {
+                        VillagePlacementHighlightPhase.EmptySlot =>
+                            villageAnimalSetController?.GetSetAnimalButtonAt(
+                                villagePlacementSlotIndex) != null,
+                        _ => true
+                    };
+
+                case TutorialStep.UpgradeVillage:
+                    return townTabController?.IsVillageUpgradeTabOpen == true ||
+                           upgradeVillageHighlightPhase !=
+                               UpgradeVillageHighlightPhase.UpgradeTab ||
+                           HasActiveButton(townTabController?.OpenVillageUpgradeButtons);
+
+                default:
+                    return true;
+            }
+        }
+
+        private Button[] GetAnimalPlacementTabButtons()
+        {
+            if (townTabController?.OpenAnimalSetButtons == null)
+                return System.Array.Empty<Button>();
+
+            IReadOnlyList<Button> source = townTabController.OpenAnimalSetButtons;
+            Button[] result = new Button[source.Count];
+            for (int index = 0; index < source.Count; index++)
+                result[index] = source[index];
+
+            return result;
+        }
+
+        private Button[] GetTownUpgradeTabButtons()
+        {
+            if (townTabController?.OpenVillageUpgradeButtons == null)
+                return System.Array.Empty<Button>();
+
+            IReadOnlyList<Button> source = townTabController.OpenVillageUpgradeButtons;
+            Button[] result = new Button[source.Count];
+            for (int index = 0; index < source.Count; index++)
+                result[index] = source[index];
+
+            return result;
+        }
+
+        private static bool HasActiveButton(IReadOnlyList<Button> buttons)
+        {
+            if (buttons == null)
+                return false;
+
+            for (int index = 0; index < buttons.Count; index++)
+            {
+                Button button = buttons[index];
+                if (button != null && button.isActiveAndEnabled &&
+                    button.gameObject.activeInHierarchy)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private Collider ResolveVillageHouseCollider()
+        {
+            if (villageHouseCollider != null)
+                return villageHouseCollider;
+
+            int villageLayer = LayerMask.NameToLayer("VillageHouse");
+            BoxCollider layerFallback = null;
+            BoxCollider[] colliders = FindObjectsByType<BoxCollider>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+
+            foreach (BoxCollider candidate in colliders)
+            {
+                if (candidate == null)
+                    continue;
+
+                bool isVillageLayer = villageLayer < 0 ||
+                                      candidate.gameObject.layer == villageLayer;
+                if (!isVillageLayer)
+                    continue;
+
+                if (string.Equals(
+                        candidate.gameObject.name,
+                        "village_house",
+                        System.StringComparison.OrdinalIgnoreCase))
+                {
+                    villageHouseCollider = candidate;
+                    return villageHouseCollider;
+                }
+
+                layerFallback ??= candidate;
+            }
+
+            villageHouseCollider = layerFallback;
+            return villageHouseCollider;
+        }
+
+        private void RefreshButtonHighlight()
+        {
+            if (tutorialManager == null ||
+                (highlightCoordinator == null && buttonHighlighter == null))
+                return;
+
+            switch (tutorialManager.CurrentStep)
+            {
+                case TutorialStep.EarnManualCoin:
+                    RefreshManualCoinHighlight();
+                    break;
+
+                case TutorialStep.CollapseAndExpandTown:
+                    if (!tutorialManager.IsTownWindowGuideCompleted)
+                    {
+                        ClearHighlights();
+                    }
+                    else if (!tutorialManager.IsTownWindowMinimized)
+                    {
+                        Button minimizeButton = gameMasterManager?.btnMinimize;
+                        ApplyHighlight(
+                            TutorialStep.CollapseAndExpandTown,
+                            new[] { minimizeButton },
+                            new[] { minimizeButton });
+                    }
+                    else if (!tutorialManager.IsTownWindowExpanded)
+                    {
+                        Button maximizeButton = gameMasterManager?.btnMaximize;
+                        ApplyHighlight(
+                            TutorialStep.CollapseAndExpandTown,
+                            new[] { maximizeButton },
+                            new[] { maximizeButton });
+                    }
+                    else
+                    {
+                        ClearHighlights();
+                    }
+                    break;
+
+                case TutorialStep.DrawAnimal:
+                    RefreshDrawAnimalHighlight();
+                    break;
+
+                case TutorialStep.DrawTool:
+                    RefreshDrawToolHighlight();
+                    break;
+
+                case TutorialStep.ConfirmAutoProduction:
+                    RefreshAutoProductionHighlight();
+                    break;
+
+                case TutorialStep.AssignAnimal:
+                    RefreshAssignAnimalHighlight();
+                    break;
+
+                case TutorialStep.PlaceAnimalInVillage:
+                    RefreshVillagePlacementHighlight();
+                    break;
+
+                case TutorialStep.OpenVillageInfo:
+                    RefreshVillageInfoHighlight();
+                    break;
+
+                case TutorialStep.UpgradeVillage:
+                    RefreshUpgradeVillageHighlight();
+                    break;
+
+                default:
+                    ApplyHighlight(
+                        tutorialManager.CurrentStep,
+                        System.Array.Empty<Button>(),
+                        System.Array.Empty<Button>());
+                    break;
+            }
+        }
+
+        private void RefreshManualCoinHighlight()
+        {
+            BindCoinGainFeedbackTarget();
+            RectTransform target = coinController?.AllCoinText?.rectTransform;
+            if (highlightCoordinator == null || target == null)
+            {
+                ClearHighlights();
+                return;
+            }
+
+            highlightCoordinator.HighlightUiTarget(
+                TutorialStep.EarnManualCoin,
+                target);
+        }
+
+        private void RefreshDrawAnimalHighlight()
+        {
+            switch (animalDrawHighlightPhase)
+            {
+                case GachaDrawHighlightPhase.MenuButton:
+                    Button menuButton = menuController?.GachaButton;
+                    ApplyHighlight(
+                        TutorialStep.DrawAnimal,
+                        new[] { menuButton },
+                        new[] { menuButton });
+                    break;
+
+                case GachaDrawHighlightPhase.OnePickButton:
+                    Button onePickButton = gachaController?.AnimalOnePickButton;
+                    ApplyHighlight(
+                        TutorialStep.DrawAnimal,
+                        InnerGachaButtonEffects,
+                        new[] { onePickButton },
+                        new[] { onePickButton });
+                    break;
+
+                default:
+                    ClearHighlights();
+                    break;
+            }
+        }
+
+        private void RefreshDrawToolHighlight()
+        {
+            switch (toolDrawHighlightPhase)
+            {
+                case GachaDrawHighlightPhase.MenuButton:
+                    Button menuButton = menuController?.GachaButton;
+                    ApplyHighlight(
+                        TutorialStep.DrawTool,
+                        new[] { menuButton },
+                        new[] { menuButton });
+                    break;
+
+                case GachaDrawHighlightPhase.OnePickButton:
+                    Button onePickButton = gachaController?.ToolOnePickButton;
+                    ApplyHighlight(
+                        TutorialStep.DrawTool,
+                        InnerGachaButtonEffects,
+                        new[] { onePickButton },
+                        new[] { onePickButton });
+                    break;
+
+                default:
+                    ClearHighlights();
+                    break;
+            }
+        }
+
+        private void RefreshAutoProductionHighlight()
+        {
+            RectTransform target = coinController?.AutoCoinText?.rectTransform;
+            if (highlightCoordinator == null || target == null)
+            {
+                ClearHighlights();
+                return;
+            }
+
+            highlightCoordinator.HighlightUiTarget(
+                TutorialStep.ConfirmAutoProduction,
+                target);
+        }
+
+        private void RefreshAssignAnimalHighlight()
+        {
+            switch (assignAnimalHighlightPhase)
+            {
+                case AssignAnimalHighlightPhase.InventoryButton:
+                    Button inventoryButton = menuController?.InventoryButton;
+                    ApplyHighlight(
+                        TutorialStep.AssignAnimal,
+                        new[] { inventoryButton },
+                        new[] { inventoryButton });
+                    break;
+
+                case AssignAnimalHighlightPhase.AnimalSlot:
+                    Button animalSlotButton = animalInventoryController?.GetSlotButtonAt(
+                        animalInventorySlotIndex);
+                    BindAnimalSlotButton(animalSlotButton);
+                    ApplyHighlight(
+                        TutorialStep.AssignAnimal,
+                        System.Array.Empty<Button>(),
+                        new[] { animalSlotButton });
+                    break;
+
+                case AssignAnimalHighlightPhase.SetToolButton:
+                    Button setToolButton =
+                        animalInventoryPageController?.SettingToolButton;
+                    ApplyHighlight(
+                        TutorialStep.AssignAnimal,
+                        new[] { setToolButton },
+                        new[] { setToolButton });
+                    break;
+
+                default:
+                    ClearHighlights();
+                    break;
+            }
+        }
+
+        private void RefreshVillagePlacementHighlight()
+        {
+            switch (villagePlacementHighlightPhase)
+            {
+                case VillagePlacementHighlightPhase.VillageButton:
+                    Button villageButton = menuController?.VillageButton;
+                    ApplyHighlight(
+                        TutorialStep.PlaceAnimalInVillage,
+                        new[] { villageButton },
+                        new[] { villageButton });
+                    break;
+
+                case VillagePlacementHighlightPhase.AnimalPlacementTab:
+                    ApplyHighlight(
+                        TutorialStep.PlaceAnimalInVillage,
+                        System.Array.Empty<Button>(),
+                        GetAnimalPlacementTabButtons(),
+                        new Vector2(0.5f, 0.5f),
+                        animalPlacementTabPointerOffset);
+                    break;
+
+                case VillagePlacementHighlightPhase.EditButton:
+                    Button editButton = villageAnimalSetController?.EditSetAnimalButton;
+                    ApplyHighlight(
+                        TutorialStep.PlaceAnimalInVillage,
+                        new[] { editButton },
+                        new[] { editButton });
+                    break;
+
+                case VillagePlacementHighlightPhase.EmptySlot:
+                    Button emptySlotButton =
+                        villageAnimalSetController?.GetSetAnimalButtonAt(
+                            villagePlacementSlotIndex);
+                    BindVillageSlotButton(emptySlotButton);
+                    ApplyHighlight(
+                        TutorialStep.PlaceAnimalInVillage,
+                        System.Array.Empty<Button>(),
+                        new[] { emptySlotButton });
+                    break;
+
+                default:
+                    ClearHighlights();
+                    break;
+            }
+        }
+
+        private void RefreshVillageInfoHighlight()
+        {
+            Collider target = ResolveVillageHouseCollider();
+            if (highlightCoordinator == null || target == null)
+            {
+                ClearHighlights();
+                return;
+            }
+
+            highlightCoordinator.HighlightWorldPointer(
+                TutorialStep.OpenVillageInfo,
+                target,
+                Camera.main);
+        }
+
+        private void RefreshUpgradeVillageHighlight()
+        {
+            // 패널 열림을 확인한 뒤에는 강조를 종료하고 퀘스트 완료 신호를 보냅니다.
+            // 버튼 클릭 직후가 아니라 실제 UI 활성 상태를 확인하므로 닫기 동작을
+            // 완료로 잘못 처리하지 않습니다.
+            if (upgradeVillageHighlightPhase ==
+                UpgradeVillageHighlightPhase.Completed)
+            {
+                ClearHighlights();
+                return;
+            }
+
+            if (townTabController?.IsVillageUpgradeTabOpen == true)
+            {
+                upgradeVillageHighlightPhase = UpgradeVillageHighlightPhase.Completed;
+                ClearHighlights();
+                tutorialManager?.ReportSignal(
+                    TutorialSignalType.VillageUpgradePanelOpened);
+                return;
+            }
+
+            if (upgradeVillageHighlightPhase == UpgradeVillageHighlightPhase.UpgradeTab &&
+                townTabController != null && !townTabController.IsAnyTabOpen)
+            {
+                upgradeVillageHighlightPhase = UpgradeVillageHighlightPhase.VillageButton;
+            }
+
+            switch (upgradeVillageHighlightPhase)
+            {
+                case UpgradeVillageHighlightPhase.VillageButton:
+                    Button villageButton = menuController?.VillageButton;
+                    ApplyHighlight(
+                        TutorialStep.UpgradeVillage,
+                        new[] { villageButton },
+                        new[] { villageButton });
+                    break;
+
+                case UpgradeVillageHighlightPhase.UpgradeTab:
+                    ApplyHighlight(
+                        TutorialStep.UpgradeVillage,
+                        System.Array.Empty<Button>(),
+                        GetTownUpgradeTabButtons(),
+                        townUpgradeTabPointerAnchor,
+                        townUpgradeTabPointerOffset);
+                    break;
+
+                default:
+                    ClearHighlights();
+                    break;
+            }
+        }
+
+        private void ApplyHighlight(
+            TutorialStep step,
+            Button[] scaleTargets,
+            Button[] pointerTargets)
+        {
+            ApplyHighlight(
+                step,
+                scaleTargets,
+                pointerTargets,
+                new Vector2(0.5f, 0.5f),
+                Vector2.zero);
+        }
+
+        private void ApplyHighlight(
+            TutorialStep step,
+            TutorialHighlightEffect effects,
+            Button[] scaleTargets,
+            Button[] pointerTargets)
+        {
+            if (highlightCoordinator != null)
+            {
+                highlightCoordinator.Highlight(
+                    step,
+                    effects,
+                    scaleTargets,
+                    pointerTargets,
+                    new Vector2(0.5f, 0.5f),
+                    Vector2.zero);
+                return;
+            }
+
+            if ((effects & TutorialHighlightEffect.ScalePulse) != 0)
+                buttonHighlighter?.Highlight(scaleTargets);
+            else
+                buttonHighlighter?.Clear();
+        }
+
+        private void ApplyHighlight(
+            TutorialStep step,
+            Button[] scaleTargets,
+            Button[] pointerTargets,
+            Vector2 pointerTargetAnchor,
+            Vector2 pointerAdditionalOffset)
+        {
+            if (highlightCoordinator != null)
+            {
+                highlightCoordinator.Highlight(
+                    step,
+                    scaleTargets,
+                    pointerTargets,
+                    pointerTargetAnchor,
+                    pointerAdditionalOffset);
+                return;
+            }
+
+            buttonHighlighter?.Highlight(scaleTargets);
+        }
+
+        private void ClearHighlights()
+        {
+            if (highlightCoordinator != null)
+            {
+                highlightCoordinator.ClearAllHighlights();
+                return;
+            }
+
+            buttonHighlighter?.Clear();
+        }
+
+        private void HandleVillageInfoOpened()
+        {
+            tutorialManager?.ReportSignal(TutorialSignalType.VillageInfoOpened);
+        }
+
+        private void WarnMissingSource(string sourceName, TutorialStep step)
+        {
+            Debug.LogWarning(
+                $"[TutorialEventBridge] {step} 단계 이벤트 소스 {sourceName}을(를) 찾을 수 없습니다.",
+                this);
+        }
+    }
+}

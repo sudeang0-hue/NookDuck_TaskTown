@@ -1,13 +1,13 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 /// <summary>
-/// ¼­·Î ´Ù¸¥ Canvas¿¡ ¹èÄ¡µÈ UI Ã¢ÀÇ Ç¥½Ã ¼ø¼­¸¦ °ü¸®ÇÕ´Ï´Ù.
+/// ì„œë¡œ ë‹¤ë¥¸ Canvasì— ë°°ì¹˜ëœ UI ì°½(ì˜ˆ: ìƒì„¸ í˜ì´ì§€ ë“±)ì˜ í‘œì‹œ ìˆœì„œë¥¼ ê´€ë¦¬í•©ë‹ˆë‹¤.
 /// </summary>
 public class UIWindowLayerManager : MonoBehaviour
 {
     public static UIWindowLayerManager Instance { get; private set; }
 
-    [Header("Ã¢ Á¤·Ä ¼ø¼­")]
+    [Header("ì°½ ì •ë ¬ ì„¤ì •")]
     [SerializeField] private int baseSortingOrder = 10;
 
     private int currentSortingOrder;
@@ -16,7 +16,7 @@ public class UIWindowLayerManager : MonoBehaviour
     {
         if (Instance != null && Instance != this)
         {
-            Debug.LogWarning("[UIWindowLayerManager] Áßº¹µÈ ·¹ÀÌ¾î °ü¸®ÀÚ°¡ Á¸ÀçÇÏ¿© Á¦°ÅÇÕ´Ï´Ù.");
+            Debug.LogWarning("[UIWindowLayerManager] ì¤‘ë³µëœ ë ˆì´ì–´ ê´€ë¦¬ìê°€ ì¡´ì¬í•˜ì—¬ ì œê±°í•©ë‹ˆë‹¤.");
 
             Destroy(gameObject);
             return;
@@ -27,13 +27,13 @@ public class UIWindowLayerManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Àü´Ş¹ŞÀº Canvas¸¦ ÇöÀç UI Ã¢ Áß °¡Àå ¾ÕÀ¸·Î ÀÌµ¿ÇÕ´Ï´Ù.
+    /// ì „ë‹¬ë°›ì€ Canvasë¥¼ í˜„ì¬ UI ì°½ ì¤‘ ê°€ì¥ ì•ìœ¼ë¡œ ì´ë™í•©ë‹ˆë‹¤.
     /// </summary>
     public void BringToFront(Canvas targetCanvas)
     {
         if (targetCanvas == null)
         {
-            Debug.LogWarning("[UIWindowLayerManager] ¾ÕÀ¸·Î ÀÌµ¿ÇÒ Canvas°¡ ¾ø½À´Ï´Ù.");
+            Debug.LogWarning("[UIWindowLayerManager] ì•ìœ¼ë¡œ ì´ë™í•  Canvasê°€ ì—†ìŠµë‹ˆë‹¤.");
 
             return;
         }

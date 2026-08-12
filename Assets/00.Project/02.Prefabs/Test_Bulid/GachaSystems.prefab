@@ -11,8 +11,7 @@ GameObject:
   - component: {fileID: 1066419776458539979}
   - component: {fileID: 5052898533250768301}
   - component: {fileID: 4278152603540216987}
-  - component: {fileID: 7983547880734414462}
-  - component: {fileID: 8433689165559621666}
+  - component: {fileID: 7060871763739530346}
   m_Layer: 0
   m_Name: GachaSystems
   m_TagString: Untagged
@@ -51,24 +50,25 @@ MonoBehaviour:
   costConfig:
     levelCosts:
     - townLevelThreshold: 1
-      cost: 1700
+      cost: 1500
     - townLevelThreshold: 2
-      cost: 2550
+      cost: 2200
     - townLevelThreshold: 3
-      cost: 3825
+      cost: 3400
     - townLevelThreshold: 4
-      cost: 5738
+      cost: 5100
     - townLevelThreshold: 5
-      cost: 8607
+      cost: 7600
     - townLevelThreshold: 6
-      cost: 12910
+      cost: 11400
     - townLevelThreshold: 7
-      cost: 19365
+      cost: 17100
     - townLevelThreshold: 8
-      cost: 29047
+      cost: 25600
     - townLevelThreshold: 9
-      cost: 43570
-  townLevelProviderSource: {fileID: 7983547880734414462}
+      cost: 38400
+  townLevelProviderSource: {fileID: 7060871763739530346}
+  difficultyProviderSource: {fileID: 0}
 --- !u!114 &4278152603540216987
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -85,25 +85,26 @@ MonoBehaviour:
   costConfig:
     levelCosts:
     - townLevelThreshold: 1
-      cost: 1700
+      cost: 1500
     - townLevelThreshold: 2
-      cost: 2550
+      cost: 2200
     - townLevelThreshold: 3
-      cost: 3825
+      cost: 3400
     - townLevelThreshold: 4
-      cost: 5738
+      cost: 5100
     - townLevelThreshold: 5
-      cost: 8607
+      cost: 7600
     - townLevelThreshold: 6
-      cost: 12910
+      cost: 11400
     - townLevelThreshold: 7
-      cost: 19365
+      cost: 17100
     - townLevelThreshold: 8
-      cost: 29047
+      cost: 25600
     - townLevelThreshold: 9
-      cost: 43570
-  townLevelProviderSource: {fileID: 7983547880734414462}
---- !u!114 &7983547880734414462
+      cost: 38400
+  townLevelProviderSource: {fileID: 7060871763739530346}
+  difficultyProviderSource: {fileID: 0}
+--- !u!114 &7060871763739530346
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -112,52 +113,37 @@ MonoBehaviour:
   m_GameObject: {fileID: 7420439736619146514}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2fd360a2e13206f45ba7efcc7d6b5275, type: 3}
+  m_Script: {fileID: 11500000, guid: a41cd27fa0c2f904d80d26aa23c4f1c7, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: TaskTown.Gacha.Demo::TaskTown.Gacha.Demo.DemoTownLevelProvider
+  m_EditorClassIdentifier: Assembly-CSharp::Manager.VillageSystemManager
   townLevel: 1
---- !u!114 &8433689165559621666
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7420439736619146514}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 88b7fd53951b8c847851f6400b5305e2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: TaskTown.Gacha.Demo::TaskTown.Gacha.Demo.GachaDemoUI
-  animalGachaManager: {fileID: 5052898533250768301}
-  toolGachaManager: {fileID: 4278152603540216987}
-  townLevelProvider: {fileID: 7983547880734414462}
+  cycleClickDone: 0
+  cycleTypingDone: 0
+  cycleToolDone: 0
+  isEndlessMode: 0
   townUpgradeCostConfig:
     levelCosts:
     - townLevelThreshold: 1
-      cost: 220000
+      cost: 77000
     - townLevelThreshold: 2
-      cost: 1000000
+      cost: 425000
     - townLevelThreshold: 3
-      cost: 1750000
+      cost: 1220000
     - townLevelThreshold: 4
-      cost: 2200000
+      cost: 2610000
     - townLevelThreshold: 5
-      cost: 2900000
+      cost: 7820000
     - townLevelThreshold: 6
-      cost: 4350000
+      cost: 15050000
     - townLevelThreshold: 7
-      cost: 5800000
+      cost: 21450000
     - townLevelThreshold: 8
-      cost: 6000000
+      cost: 35700000
     - townLevelThreshold: 9
-      cost: 15500000
-  coinWalletSource: {fileID: 0}
-  animalGachaButton: {fileID: 0}
-  toolGachaButton: {fileID: 0}
-  animalGachaX10Button: {fileID: 0}
-  toolGachaX10Button: {fileID: 0}
-  increaseTownLevelButton: {fileID: 0}
-  addTestCoinButton: {fileID: 0}
-  resultText: {fileID: 0}
-  costText: {fileID: 0}
-  townLevelText: {fileID: 0}
+      cost: 45200000
+    postMaxLevelGrowthRate: 1.2661
+  placedAnimalIds: []
+  maxPlacementCapacity: 20
+  unlockedSlotsAtTownLevel1: 5
+  unlockedSlotsByTownLevel: 050000000600000007000000090000000a0000000c0000000d0000000e0000001000000014000000
+  villageDecoBuilding: []

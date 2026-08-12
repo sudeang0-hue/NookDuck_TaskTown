@@ -1,77 +1,189 @@
+using System;
 using Animal.Data;
 using TaskTown.Gacha;
 using UnityEngine;
 
 namespace TaskTown.KDH
 {
-    // InventoryManager_Tool에 배치된(CurrentSet=true) 도구 + 배치된 동물 기준으로 1초마다
-    // 실제 생산량(FinalProductionCalculator, 뽑기/밸런스 쪽과 동일한 계산식)을 계산해서
-    // CoinManager에 적립합니다. Test_KDH_CoinProductionManager/InventoryProductionCalculator는
-    // AnimalDataSO에 baseCoinPerSecond가 없던 시절 만든 임시 버전이라 이 클래스로 대체합니다.
+    // 동물이 도구에 장착된(CurrentAnimalSet=true) 슬롯 기준으로 1초마다 실제 생산량
+    // (FinalProductionCalculator, 뽑기/밸런스 쪽과 동일한 계산식)을 계산해서 CoinManager에
+    // 적립합니다. Test_KDH_CoinProductionManager/InventoryProductionCalculator는 AnimalDataSO에
+    // baseCoinPerSecond가 없던 시절 만든 임시 버전이라 이 클래스로 대체합니다.
     //
-    // 도구에 동물이 배치되지 않으면 도구 단독 생산만 계산됩니다. 반대로 동물은 도구에 배치되어야만
-    // 생산에 기여합니다(InventoryManager_Animal 쪽에는 별도의 "배치" 개념이 없음 - 도구 슬롯의
-    // CurrentAnimalId로만 동물이 연결됩니다).
-    public class RealProductionTicker : MonoBehaviour
+    // 도구 자체의 "마을 배치"(CurrentSet/TrySetTool) UI가 아직 없어서, 생산 여부는 도구 배치가
+    // 아니라 "동물이 그 도구에 장착됐는지"(CurrentAnimalSet)로 판단합니다(사용자 확인). 동물이
+    // 장착된 도구는 도구 자체 생산 + 동물 생산(+특화 보너스)을 함께 계산합니다(InventoryManager_Animal
+    // 쪽에는 별도의 "배치" 개념이 없음 - 도구 슬롯의 CurrentAnimalId로만 동물이 연결됩니다).
+    public class RealProductionTicker : MonoBehaviour, IDifficultyProvider
     {
+        public static RealProductionTicker Instance { get; private set; }
+
+        //-----------------26.08.05 KDH-------------------------
+        // 앱 재시작 시에도 난이도를 유지하기 위한 PlayerPrefs 키 (세이브 JSON과 함께 사용)
+        public const string DifficultyPrefsKey = "GameDifficulty";
+        //----------------------------------------
+
+        // -----------------------------------------------------------------------------
+        // [ 2026.07.27 - Choi - 튜토리얼 기능 업데이트 ]
+        // 기능: 자동 생산 코인이 실제 지급된 시점을 튜토리얼 진행 판정에 전달합니다.
+        // -----------------------------------------------------------------------------
+        /// <summary>
+        /// 자동 생산 코인이 지갑에 실제 지급된 경우에만 발생합니다.
+        /// </summary>
+        public event Action<int> ProductionCoinGranted;
+
         [SerializeField] private DifficultyProductionTable difficultyTable;
         [SerializeField] private DifficultyType difficulty = DifficultyType.Normal;
-
-        [Tooltip("ITownLevelProvider를 구현한 컴포넌트를 연결합니다. 비워두면 마을 레벨 1로 취급합니다.")]
-        [SerializeField] private MonoBehaviour townLevelProviderSource;
-        [SerializeField] private TownUpgradeEffectConfig townUpgradeEffectConfig;
 
         [Tooltip("ICoinWallet을 구현한 컴포넌트(CoinManager)를 연결합니다.")]
         [SerializeField] private MonoBehaviour coinWalletSource;
 
         private float productionBuffer;
 
-        private ITownLevelProvider TownLevelProvider => townLevelProviderSource as ITownLevelProvider;
-        private ICoinWallet CoinWallet => coinWalletSource as ICoinWallet;
+        // -----------------------------------------------------------------------------
+        // [ 2026.07.31 - KAY - 자동 생산 코인 표시 주기 개선 ]
+        // 기능: 자동 생산분은 일정 주기마다 지갑에 일괄 지급해 UI가 프레임 단위로 갱신되지 않게 합니다.
+        // -----------------------------------------------------------------------------
+        [Tooltip("자동 생산 코인을 지갑에 지급하는 주기(초). 타이핑/클릭 코인은 EarnProcessor에서 즉시 반영됩니다.")]
+        [SerializeField] private float grantIntervalSeconds = 1f;
 
-        private float TownUpgradeMultiplier
+        private float grantTimer;
+
+        // 현재 초당 생산량. UIController_Coin 등 시간당 획득량 표시용 UI가 참조합니다.
+        public float CurrentCoinPerSecond { get; private set; }
+
+        //----------------------------------26.08.05 KDH--------------------------------
+        ///Before
+        //private ICoinWallet CoinWallet => coinWalletSource as ICoinWallet;
+
+        ///After
+        private ICoinWallet CoinWallet
         {
             get
             {
-                int townLevel = TownLevelProvider?.CurrentTownLevel ?? 1;
-                return townUpgradeEffectConfig != null
-                    ? townUpgradeEffectConfig.GetProductionMultiplier(townLevel)
-                    : 1f;
+                // 씬 리로드 후 Inspector 참조가 파괴되면 현재 CoinManager로 폴백합니다.
+                if (coinWalletSource != null)
+                    return coinWalletSource as ICoinWallet;
+
+                if (CoinManager.Instance != null)
+                {
+                    coinWalletSource = CoinManager.Instance;
+                    return CoinManager.Instance;
+                }
+
+                return null;
             }
         }
+
+        private void Awake()
+        {
+            // 인벤 DDOL 루트 중복본이 같은 프레임에 Awake될 때 Instance를 훔치지 않습니다.
+            if (Instance != null && Instance != this)
+                return;
+
+            Instance = this;
+        }
+
+        private void Start()
+        {
+            // SaveManager.LoadGame / 이전 세션 PlayerPrefs에서 복원합니다.
+            // PendingDifficulty(난이도 선택 직후)는 DifficultyApplier가 이후에 덮어쓸 수 있습니다.
+            if (PlayerPrefs.HasKey(DifficultyPrefsKey))
+            {
+                int stored = PlayerPrefs.GetInt(DifficultyPrefsKey, (int)DifficultyType.Normal);
+                if (Enum.IsDefined(typeof(DifficultyType), stored))
+                    difficulty = (DifficultyType)stored;
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (Instance == this)
+                Instance = null;
+        }
+        //-------------------------------------------------------------------------------------------------
+
+        // 이슈 #72: 예전에는 마을 레벨이 오르면 자동으로 전체 생산량에 배율이 붙었지만(TownUpgradeEffectConfig),
+        // 이제는 플레이어가 직접 구매하는 도구 효율 업그레이드(TownUpgradeManager)만큼만 배율이 오릅니다.
+        private float ToolEfficiencyMultiplier =>
+            TownUpgradeManager.Instance != null ? TownUpgradeManager.Instance.ToolEfficiencyMultiplier : 1f;
 
         public void SetDifficulty(DifficultyType newDifficulty)
         {
             difficulty = newDifficulty;
+            //-----------------26.08.05 KDH-----------------------------
+            PlayerPrefs.SetInt(DifficultyPrefsKey, (int)newDifficulty);
+            PlayerPrefs.Save();
         }
+
+        /// <summary>엔딩 리셋 시 저장된 난이도 선택을 지웁니다.</summary>
+        public static void ClearStoredDifficulty()
+        {
+            if (PlayerPrefs.HasKey(DifficultyPrefsKey))
+            {
+                PlayerPrefs.DeleteKey(DifficultyPrefsKey);
+                PlayerPrefs.Save();
+            }
+            //--------------------------------------------------------
+        }
+
+        // IDifficultyProvider - 시크릿 동물 등 난이도 전용 뽑기 항목이 GachaManagerBase를 통해 참조합니다.
+        public DifficultyType CurrentDifficulty => difficulty;
 
         private void Update()
         {
-            productionBuffer += CalculateTotalCoinPerSecond() * Time.deltaTime;
+            CurrentCoinPerSecond = CalculateTotalCoinPerSecond();
+            productionBuffer += CurrentCoinPerSecond * Time.deltaTime;
 
-            if (productionBuffer < 1f) return;
+            // -----------------------------------------------------------------------------
+            // [ 2026.07.31 - KAY - 자동 생산 코인 표시 주기 개선 ]
+            // 기능: 버퍼가 1 이상일 때마다 즉시 지급하던 방식을 주기 지급으로 변경합니다.
+            // -----------------------------------------------------------------------------
+            // if (productionBuffer < 1f) return;
+            //
+            // int wholeCoins = Mathf.FloorToInt(productionBuffer);
+            // productionBuffer -= wholeCoins;
+            //
+            // // -----------------------------------------------------------------------------
+            // // [ 2026.07.27 - Choi - 튜토리얼 기능 업데이트 ]
+            // // 기능: 유효한 지갑에 정수 코인이 지급된 경우에만 자동 생산 이벤트를 보냅니다.
+            // // -----------------------------------------------------------------------------
+            // ICoinWallet coinWallet = CoinWallet;
+            // if (coinWallet == null)
+            //     return;
+            //
+            // coinWallet.Add(wholeCoins);
+            // ProductionCoinGranted?.Invoke(wholeCoins);
 
-            int wholeCoins = Mathf.FloorToInt(productionBuffer);
-            productionBuffer -= wholeCoins;
-            CoinWallet?.Add(wholeCoins);
+            // -----------------------------------------------------------------------------
+            // [ 2026.07.31 - KAY - 자동 생산 코인 표시 주기 개선 ]
+            // 기능: grantIntervalSeconds마다 버퍼의 정수 코인만 지갑에 반영합니다.
+            // -----------------------------------------------------------------------------
+            float interval = grantIntervalSeconds > 0f ? grantIntervalSeconds : 1f;
+            grantTimer += Time.deltaTime;
+            if (grantTimer < interval)
+                return;
+
+            grantTimer -= interval;
+            TryGrantBufferedProductionCoins();
         }
 
-        private float CalculateTotalCoinPerSecond()
+        // 프레임을 기다리지 않고 즉시 현재 생산량을 계산합니다(오프라인 보상 등 앱 시작 직후에 필요).
+        public float CalculateTotalCoinPerSecond()
         {
             if (InventoryManager_Tool.Instance == null) return 0f;
 
             float total = 0f;
-            float townUpgradeMultiplier = TownUpgradeMultiplier;
+            float townUpgradeMultiplier = ToolEfficiencyMultiplier;
 
             foreach (SlotData_Tool toolSlot in InventoryManager_Tool.Instance.ToolSlotsList)
             {
-                if (toolSlot == null || !toolSlot.CurrentSet) continue;
+                if (toolSlot == null || !toolSlot.CurrentAnimalSet) continue;
 
                 AnimalDataSO animalData = null;
                 int animalLevel = 1;
 
-                if (toolSlot.CurrentAnimalSet
-                    && InventoryManager_Animal.Instance != null
+                if (InventoryManager_Animal.Instance != null
                     && InventoryManager_Animal.Instance.TryGetAnimalSlot(toolSlot.CurrentAnimalId, out SlotData_Animal animalSlot))
                 {
                     animalData = animalSlot.AnimalData;
@@ -89,6 +201,26 @@ namespace TaskTown.KDH
             }
 
             return total;
+        }
+
+        // -----------------------------------------------------------------------------
+        // [ 2026.07.31 - KAY - 자동 생산 코인 표시 주기 개선 ]
+        // 기능: 생산 버퍼의 정수 코인을 지갑에 지급하고, 성공 시에만 자동 생산 이벤트를 보냅니다.
+        // -----------------------------------------------------------------------------
+        private void TryGrantBufferedProductionCoins()
+        {
+            if (productionBuffer < 1f)
+                return;
+
+            int wholeCoins = Mathf.FloorToInt(productionBuffer);
+            productionBuffer -= wholeCoins;
+
+            ICoinWallet coinWallet = CoinWallet;
+            if (coinWallet == null)
+                return;
+
+            coinWallet.Add(wholeCoins);
+            ProductionCoinGranted?.Invoke(wholeCoins);
         }
     }
 }

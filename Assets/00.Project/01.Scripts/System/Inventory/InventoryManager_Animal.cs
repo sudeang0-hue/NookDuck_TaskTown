@@ -3,9 +3,11 @@ using System;
 using System.Collections.Generic;
 using TaskTown.Gacha;
 using UnityEngine;
+using EndingMeta = TaskTown.EndingMeta;
 
 namespace TaskTown.KDH
 {
+    [DefaultExecutionOrder(-100)]
     public class InventoryManager_Animal : MonoBehaviour
     {
         public static InventoryManager_Animal Instance { get; private set; }
@@ -13,6 +15,10 @@ namespace TaskTown.KDH
         [Tooltip("ICoinWallet을 구현한 컴포넌트(CoinManager)를 연결합니다. 비워두면 코인 비용 체크 없이 중복 개수만으로 레벨업합니다.")]
         [SerializeField] private MonoBehaviour coinWalletSource;
         private ICoinWallet CoinWallet => coinWalletSource as ICoinWallet;
+
+        [Tooltip("IEndlessModeProvider를 구현한 컴포넌트(VillageUpgradeUI_Manager)를 연결합니다. 비워두면 일반 모드로 취급합니다.")]
+        [SerializeField] private MonoBehaviour endlessModeProviderSource;
+        private IEndlessModeProvider endlessModeProvider;
 
         //인벤토리 최대 슬롯 수
         // public int maxSlots = 999;
@@ -48,7 +54,42 @@ namespace TaskTown.KDH
 
             DontDestroyOnLoad(gameObject);
 
+            endlessModeProvider = endlessModeProviderSource as IEndlessModeProvider;
+
             InitializeDictionary();
+            SortAnimalSlots();
+
+            //-----------------26.08.05 KDH-------------------------
+            // 엔딩 리셋 직후: DDOL/세이브 잔여로 옛 슬롯이 남지 않게 한 번 더 비웁니다.
+            if (EndingMeta.ForceEmptyInventoryOnNextMain)
+                ClearAnimalInventory();
+            //----------------------------------------
+        }
+
+        //-----------------26.08.05 KDH-------------------------
+        private void Start()
+        {
+            // Tool Awake까지 끝난 뒤 플래그를 소비하고 자동저장을 재개합니다.
+            if (!EndingMeta.ForceEmptyInventoryOnNextMain)
+                return;
+
+            EndingMeta.ForceEmptyInventoryOnNextMain = false;
+            if (SaveManager.Instance != null)
+                SaveManager.Instance.EndProgressReset();
+        }
+
+        private void OnDestroy()
+        {
+            // 리셋 시 DDOL 루트 파괴 / 씬 중복본 정리 후 Instance가 파괴된 객체를 가리키지 않게 합니다.
+            if (Instance == this)
+                Instance = null;
+        }
+        //----------------------------------------
+
+        // #19: 엔드리스 모드에서는 동물 개별 레벨 5 상한을 해제합니다.
+        private bool IsEndlessMode()
+        {
+            return endlessModeProvider != null && endlessModeProvider.IsEndlessMode;
         }
 
         /// <summary>
@@ -143,6 +184,7 @@ namespace TaskTown.KDH
             animalSlotsList.Add(newSlot);
             animalSlotsDic.Add(animalData.Id, newSlot);
 
+            SortAnimalSlots();
             NotifySlotChanged(newSlot);
 
             Debug.Log($"[InventoryManager_Animal] 신규 동물 획득: {animalData.DisplayName}");
@@ -185,7 +227,7 @@ namespace TaskTown.KDH
         {
             if (!TryGetAnimalSlot(animalId, out SlotData_Animal slot)) return false;
 
-            if (!slot.CanLevelUp()) return false;
+            if (!slot.CanLevelUp(IsEndlessMode())) return false;
 
             long coinCost = slot.GetLevelUpCoinCost();
 
@@ -206,7 +248,8 @@ namespace TaskTown.KDH
                 return false;
             }
 
-            if (slot.IsMaxLevel)
+            bool endless = IsEndlessMode();
+            if (!endless && slot.IsMaxLevel)
             {
                 Debug.Log($"[InventoryManager_Animal] 이미 최대 레벨인 동물입니다: {animalId}");
                 return false;
@@ -223,13 +266,13 @@ namespace TaskTown.KDH
             }
 
             // 재료 소모 후 레벨업 (본체 1개는 유지)
-            if (!slot.TryConsumeForLevelUp())
+            if (!slot.TryConsumeForLevelUp(endless))
             {
                 Debug.Log($"[InventoryManager_Animal] 재료 소모 실패: {animalId}");
                 return false;
             }
 
-            slot.AnimalLevelUp();
+            slot.AnimalLevelUp(endless);
 
             // 다음 레벨 요구치 갱신
             RefreshSlotGrowthData(slot);
@@ -305,7 +348,32 @@ namespace TaskTown.KDH
                 animalSlotsDic.Add(runtimeSlot.AnimalId, runtimeSlot);
             }
 
+            SortAnimalSlots();
             NotifyInventoryChanged();
+        }
+
+        /// <summary>
+        /// 등급 높은 순 → 동일 등급이면 DexIndex 작은 순으로 정렬합니다.
+        /// </summary>
+        private void SortAnimalSlots()
+        {
+            animalSlotsList.Sort(CompareAnimalSlots);
+        }
+
+        private static int CompareAnimalSlots(SlotData_Animal a, SlotData_Animal b)
+        {
+            AnimalDataSO dataA = a != null ? a.AnimalData : null;
+            AnimalDataSO dataB = b != null ? b.AnimalData : null;
+
+            if (dataA == null && dataB == null) return 0;
+            if (dataA == null) return 1;
+            if (dataB == null) return -1;
+
+            int gradeCompare = ((int)dataB.Grade).CompareTo((int)dataA.Grade);
+            if (gradeCompare != 0)
+                return gradeCompare;
+
+            return dataA.DexIndex.CompareTo(dataB.DexIndex);
         }
 
         /// <summary>
@@ -319,7 +387,12 @@ namespace TaskTown.KDH
 
             int requiredCount = LevelUpRequirementCalculator.GetRequiredDuplicateCount(slot.Level);
 
-            slot.ApplyGrowthData(requiredCount, slot.LevelUpCost, false);
+            // 기존엔 maxLevel 인자가 항상 false로 고정되어 있어서, AnimalLevelUp()이 레벨5에서 설정한
+            // isMaxLevel을 이 호출이 곧바로 다시 풀어버리는 버그가 있었습니다(#19 작업 중 발견,
+            // InventoryManager_Tool과 동일한 버그). 실제 레벨 기준으로 다시 계산하도록 수정 -
+            // 엔드리스 모드에서는 항상 false(상한 없음).
+            bool isMax = !IsEndlessMode() && slot.Level >= 5;
+            slot.ApplyGrowthData(requiredCount, slot.LevelUpCost, isMax);
         }
 
         /// <summary>
@@ -346,6 +419,42 @@ namespace TaskTown.KDH
         private void NotifyInventoryChanged()
         {
             OnAnimalInventoryChanged?.Invoke();
+        }
+
+
+
+        /// <summary>
+        /// 디버그 전용: 지정 개수만큼 동물을 지급합니다.        26.07.24 KDH 추가
+        /// </summary>
+        public bool DebugAddAnimal(string animalId, int count)
+        {
+            AnimalDataSO data = GetAnimalData(animalId);
+            if (data == null)
+            {
+                Debug.LogWarning($"[InventoryManager_Animal] 존재하지 않는 AnimalId: {animalId}");
+                return false;
+            }
+            count = Mathf.Max(1, count);
+            for (int i = 0; i < count; i++)
+                AddAnimalSlot(data);
+            return true;
+        }
+        /// <summary>
+        /// 디버그 전용: 보유 동물의 레벨을 바로 설정합니다. 미보유면 1개 지급 후 설정.      26.07.24 KDH 추가
+        /// </summary>
+        public bool DebugSetAnimalLevel(string animalId, int targetLevel)
+        {
+            if (!TryGetAnimalSlot(animalId, out SlotData_Animal slot))
+            {
+                if (!DebugAddAnimal(animalId, 1))
+                    return false;
+                if (!TryGetAnimalSlot(animalId, out slot))
+                    return false;
+            }
+            slot.DebugSetLevel(targetLevel);
+            RefreshSlotGrowthData(slot);
+            NotifySlotChanged(slot);
+            return true;
         }
     }
 }
