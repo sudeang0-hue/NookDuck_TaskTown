@@ -2,23 +2,30 @@
 
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Events;
 
+[DefaultExecutionOrder(-200)]
 public class GlobalUIStackManager : MonoBehaviour
 {
     private static GlobalUIStackManager _instance;
 
-    // ÃÖ½Å À¯´ÏÆ¼ API ¸í¼¼°¡ Àû¿ëµÈ ½Ì±ÛÅæ ÇÁ·ÎÆÛÆ¼
+    // ì•± ì¢…ë£Œ ì¤‘ UI ë¹„í™œì„±í™” ì½œë°±ì—ì„œ ì‹±ê¸€í†¤ì´ ë‹¤ì‹œ ìƒì„±ë˜ì§€ ì•Šë„ë¡ ë§‰ìŠµë‹ˆë‹¤.
+    private static bool _isQuitting;
+
     public static GlobalUIStackManager Instance
     {
         get
         {
+            // ì•±ì´ ì¢…ë£Œë˜ëŠ” ì¤‘ì´ë¼ë©´ ì ˆëŒ€ë¡œ ìƒˆ GameObjectë¥¼ ìƒì„±í•˜ì§€ ì•Šê³  nullì„ ë°˜í™˜í•©ë‹ˆë‹¤.
+            if (_isQuitting)
+            {
+                Debug.LogWarning("[UIStackManager] ì•±ì´ ì¢…ë£Œ ì¤‘ì´ë¯€ë¡œ ì¸ìŠ¤í„´ìŠ¤ ìƒì„±ì„ ì°¨ë‹¨í•©ë‹ˆë‹¤.");
+                return null;
+            }
+
             if (_instance == null)
             {
-                // 1. CS0618 °æ°í ÇØ°á: Á¤·Ä ¿À¹öÇìµå°¡ ¾ø´Â FindAnyObjectByType »ç¿ë
                 _instance = Object.FindAnyObjectByType<GlobalUIStackManager>();
 
-                // 2. ¾À¿¡ ¸Å´ÏÀú ¿ÀºêÁ§Æ®°¡ ¾øÀ» °æ¿ì ÀÚ»ı(Auto-Creation) ·ÎÁ÷
                 if (_instance == null)
                 {
                     GameObject singletonObject = new GameObject("@GlobalUIStackManager");
@@ -32,12 +39,18 @@ public class GlobalUIStackManager : MonoBehaviour
 
     private readonly List<UIStackMember> _activeUIList = new List<UIStackMember>();
 
-    [Header("ÀÏ½ÃÁ¤Áö / ¿É¼ÇÃ¢ ¿¬µ¿ ¼³Á¤")]
-    [Tooltip("½ºÅÃÀÌ ºñ¾îÀÖÀ» ¶§ Á÷Á¢ ¿­¾îÁÙ ¿É¼Ç/ÀÏ½ÃÁ¤Áö UIÀÇ UIStackMember")]
-    [SerializeField] private UIStackMember _pauseMenuUI;
+    public static bool TryGetExisting(out GlobalUIStackManager manager)
+    {
+        manager = _instance;
+        return manager != null;
+    }
 
-    [Tooltip("½ºÅÃÀÌ ºñ¾îÀÖÀ» ¶§ Ãß°¡·Î ½ÇÇàÇÒ ÀÌº¥Æ® (ÇÊ¿ä ½Ã »ç¿ë)")]
-    [SerializeField] private UnityEvent _onEmptyStackEvent;
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics()
+    {
+        _instance = null;
+        _isQuitting = false;
+    }
 
     private void Awake()
     {
@@ -45,11 +58,14 @@ public class GlobalUIStackManager : MonoBehaviour
         {
             _instance = this;
             DontDestroyOnLoad(gameObject);
+            return;
         }
-        else if (_instance != this)
-        {
-            Destroy(gameObject);
-        }
+
+        if (_instance == this)
+            return;
+
+        // MainScene ì¬ì§„ì… ì‹œ ê°™ì€ GameObjectì˜ ë‹¤ë¥¸ ë§¤ë‹ˆì €ê¹Œì§€ ì œê±°í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤.
+        Destroy(this);
     }
 
     private void Update()
@@ -62,53 +78,56 @@ public class GlobalUIStackManager : MonoBehaviour
 
     public void RegisterUI(UIStackMember ui)
     {
-        if (ui == null || _activeUIList.Contains(ui)) return;
+        RemoveInvalidStackEntries();
+
+        if (ui == null || _activeUIList.Contains(ui))
+            return;
 
         _activeUIList.Add(ui);
-        Debug.Log($"<color=green>[UIStackManager] UI µî·Ï ¼º°ø:</color> {ui.gameObject.name} | ÇöÀç ½ºÅÃ ¼ö: {_activeUIList.Count}");
     }
 
     public void UnregisterUI(UIStackMember ui)
     {
-        if (ui == null) return;
-
-        if (_activeUIList.Remove(ui))
+        if (ui == null)
         {
-            Debug.Log($"<color=red>[UIStackManager] UI ÇØÁ¦ ¿Ï·á:</color> {ui.gameObject.name} | ³²¾ÆÀÖ´Â UI ¼ö: {_activeUIList.Count}");
+            RemoveInvalidStackEntries();
+            return;
         }
+
+        _activeUIList.Remove(ui);
     }
 
     private void PopAndCloseTopUI()
     {
+        RemoveInvalidStackEntries();
+
         int lastIndex = _activeUIList.Count - 1;
 
         if (lastIndex < 0)
-        {
-            OnEmptyStack();
             return;
-        }
 
-        UIStackMember topUI = _activeUIList[lastIndex];
-        if (topUI != null)
+        _activeUIList[lastIndex].CloseSelf();
+    }
+
+    private void RemoveInvalidStackEntries()
+    {
+        for (int i = _activeUIList.Count - 1; i >= 0; i--)
         {
-            topUI.CloseSelf();
+            UIStackMember ui = _activeUIList[i];
+            if (ui == null || !ui.isActiveAndEnabled)
+                _activeUIList.RemoveAt(i);
         }
     }
 
-    // ½ºÅÃ¿¡ ³²¾ÆÀÖ´Â UI°¡ ¾øÀ» ¶§ ESC¸¦ ´©¸£¸é ½ÇÇàµÇ´Â ·ÎÁ÷
-    private void OnEmptyStack()
+    // ìœ ë‹ˆí‹° ì—ë””í„° í”Œë ˆì´ ì¢…ë£Œ ë˜ëŠ” ì•± ì¢…ë£Œ ì‹œ ìë™ í˜¸ì¶œë˜ëŠ” ìƒëª…ì£¼ê¸° í•¨ìˆ˜
+    private void OnApplicationQuit()
     {
-        Debug.Log("[UIStackManager] ´İÀ» UI°¡ ¾ø½À´Ï´Ù. ¿É¼Ç/ÀÏ½ÃÁ¤Áö ¸Ş´º¸¦ È£ÃâÇÕ´Ï´Ù.");
+        _isQuitting = true;
+    }
 
-        // 1. Á÷Á¢ ¿¬°áµÈ ¿É¼Ç UI°¡ ÀÖ´Ù¸é È°¼ºÈ­
-        if (_pauseMenuUI != null)
-        {
-            // GameObject¸¦ ÄÑ¸é ¿É¼Ç UIÀÇ UIStackMember.OnEnable()ÀÌ ½ÇÇàµÇ¸é¼­
-            // ½º½º·Î ½ºÅÃ¿¡ µî·ÏµË´Ï´Ù!
-            _pauseMenuUI.gameObject.SetActive(true);
-        }
-
-        // 2. Ãß°¡ À¯´ÏÆ¼ ÀÌº¥Æ® È£Ãâ (»ç¿îµå Àç»ı, °ÔÀÓ ÀÏ½ÃÁ¤Áö ·ÎÁ÷ µî ¿¬µ¿¿ë)
-        _onEmptyStackEvent?.Invoke();
+    private void OnDestroy()
+    {
+        if (_instance == this)
+            _instance = null;
     }
 }

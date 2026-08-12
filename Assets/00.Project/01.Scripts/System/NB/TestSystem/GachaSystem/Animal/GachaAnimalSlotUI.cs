@@ -75,12 +75,14 @@ public class GachaAnimalSlotUI : MonoBehaviour
     // AnimalDataSO의 ProfileImage를 우선 탐색하고, 없으면 부모의 Icon을 반환
     private Sprite GetBestSprite(GachaEntryData entryData)
     {
+        /*
         if (entryData is AnimalDataSO animalData && animalData.ProfileImage != null)
         {
             return animalData.ProfileImage;
         }
-
+         */
         return entryData.Icon;
+     
     }
 
     // 등급 Enum 값을 안전하게 인덱싱하여 스프라이트 및 텍스트 업데이트

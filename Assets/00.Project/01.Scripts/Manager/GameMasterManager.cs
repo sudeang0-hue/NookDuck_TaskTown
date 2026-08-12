@@ -111,6 +111,7 @@ public class GameMasterManager : MonoBehaviour
                 ticketNotification.SetActive(true);
             }
         }
+
     }
 
     private void OnEnable()
@@ -170,7 +171,17 @@ public class GameMasterManager : MonoBehaviour
 
     public void SetMinimizedScreen()
     {
+        // 이미 확장 상태가 아니거나 전환 연출 중이면 차단
         if (!isExpanded || isTransitioning) return;
+
+        // 씬 내의 VillagerPlacementDirector를 탐색하여 버스 소환 연출 중인지 확인
+        VillagerPlacementDirector placementDirector = FindFirstObjectByType<VillagerPlacementDirector>();
+        if (placementDirector != null && placementDirector.IsBusSummoning)
+        {
+            Debug.Log("<color=yellow>[GameMasterManager] 버스 소환 연출 중에는 축소 모드로 전환할 수 없습니다.</color>");
+            return;
+        }
+
         StartCoroutine(MinimizeRoutine());
     }
 
@@ -187,9 +198,16 @@ public class GameMasterManager : MonoBehaviour
 
         if (villageOrigin != null)
         {
+            // 현재 드래그된 확장 위치를 백업합니다 ($p_{\text{exp}} \leftarrow \text{current}$ 좌표)
             savedDraggedPosition = villageOrigin.position;
             villageOrigin.DOKill();
-            villageOrigin.DOMove(originalVillagePos, 0.5f).SetEase(Ease.InOutQuad);
+
+            //ObjectDragger를 찾아 저장된 축소 위치를 동기화하여 (0,0,0) 오염을 방지
+            ObjectDragger dragger = villageOrigin.GetComponent<ObjectDragger>();
+            Vector3 targetMinPos = (dragger != null) ? dragger.GetSavedMinimizedPos() : originalVillagePos;
+
+            // 지정된 축소 위치로 부드럽게 이동합니다
+            villageOrigin.DOMove(targetMinPos, 0.5f).SetEase(Ease.InOutQuad);
         }
 
         if (CameraDirector.Instance != null)

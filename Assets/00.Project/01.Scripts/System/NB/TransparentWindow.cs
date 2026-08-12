@@ -181,20 +181,5 @@ public class TransparentWindow : MonoBehaviour
         SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);
         isClickThrough = transparent;
     }
-    private void OnDrawGizmos()
-    {
-        if (mainCam == null) return;
-
-        Ray ray = mainCam.ScreenPointToRay(Input.mousePosition);
-        bool hit = Physics.Raycast(ray, out RaycastHit hitInfo, float.MaxValue, clickable3DLayers);
-
-        Gizmos.color = hit ? Color.green : Color.red;
-        Gizmos.DrawRay(ray.origin, ray.direction * 100f);
-
-        if (hit)
-        {
-            Gizmos.DrawWireSphere(hitInfo.point, 0.5f);
-        }
-    }
 
 }
